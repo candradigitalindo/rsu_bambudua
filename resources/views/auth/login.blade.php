@@ -35,7 +35,7 @@
                 </a>
 
                 <h4 class="mb-4">Login</h4>
-                <form action="{{ route('login') }}" method="POST" class="g-3 needs-validation" novalidate>
+                <form action="{{ route('login') }}" method="POST" id="submit" class="g-3 needs-validation" novalidate>
                     @csrf
                     <div class="mb-3">
                         <label class="form-label" for="username">Username <span class="text-danger">*</span></label>
@@ -50,7 +50,7 @@
                     <div class="mb-2">
                         <label class="form-label" for="pwd">Password <span class="text-danger">*</span></label>
                         <div class="input-group">
-                            <input type="password" name="password" id="pwd" class="form-control"
+                            <input type="password" name="password" id="password" class="form-control"
                                 placeholder="Enter password" value="{{ old('password') }}" required>
                             <button class="btn btn-outline-secondary" type="button">
                                 <i class="ri-eye-line text-primary"></i>
@@ -62,7 +62,10 @@
                     </div>
 
                     <div class="mb-3 d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">Login</button>
+                        <button type="submit" class="btn btn-primary" id="login">
+                            <span class="btn-txt">LOGIN</span>
+                            <span class="spinner-border spinner-border-sm d-none"></span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -73,8 +76,24 @@
     </div>
     <!-- Container ends -->
 
+    <script src="{{ asset('js/jquery.min.js') }}"></script>
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+
     <!-- Validations -->
     <script src="{{ asset('js/validations.js') }}"></script>
+    <script>
+        $(document).ready(function() {
+            $("#submit").submit(function() {
+                if ($('#username').val() != "" && $('#password').val() != "") {
+                    $(".spinner-border").removeClass("d-none");
+                    $("#login").attr("disabled", true);
+                    $(".btn-txt").text("Mohon Tunggu ...");
+                }
+            });
+        });
+
+
+    </script>
 
 </body>
 

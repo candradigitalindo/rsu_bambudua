@@ -31,7 +31,7 @@
 
             <div class="auth-box">
                 <a href="{{ route('login') }}" class="auth-logo mb-4">
-                    <img src="{{ asset('images/logo2.png') }}" alt="Bootstrap Gallery">
+                    <img class="text-center" src="{{ asset('images/bdc.png') }}" alt="Bootstrap Gallery">
                 </a>
 
                 <h4 class="mb-4">Login</h4>
@@ -91,8 +91,6 @@
                 }
             });
         });
-
-
     </script>
 
 </body>

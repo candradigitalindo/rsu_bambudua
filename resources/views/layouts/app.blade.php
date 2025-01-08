@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ID">
 
 <head>
     <meta charset="utf-8">
@@ -38,7 +38,7 @@
                     <!-- App brand starts -->
                     <div class="app-brand ms-3">
                         <a href="index.html">
-                            <img src="{{ asset('images/logo2.png') }}" class="logo" alt="Medicare Admin Template">
+                            <img src="{{ asset('images/bdc.png') }}" class="logo" alt="Medicare Admin Template">
                         </a>
                     </div>
                     <!-- App brand ends -->
@@ -55,22 +55,20 @@
                 <!-- Sidebar profile starts -->
                 <div class="sidebar-profile">
                     <img src="{{ asset('images/doctor6.png') }}" class="rounded-5" alt="Hospital Admin Templates">
-                    <h6 class="mb-1 profile-name text-nowrap text-truncate text-primary">{{ auth()->user()->name }}</h6>
+                    <h6 class="mb-1 profile-name text-nowrap text-truncate text-primary"><span
+                            class="badge bg-primary-subtle text-primary fs-6">{{ auth()->user()->name }}</span></h6>
                     <small class="profile-name text-nowrap text-truncate">
                         @switch(auth()->user()->role)
                             @case(1)
-                                <span class="badge bg-primary-subtle text-primary fs-6">Owner</span>
-                                @break
+                                <span class="text-primary fs-6">Owner</span>
+                            @break
+
                             @case(2)
+                            @break
 
-                                @break
                             @default
-
                         @endswitch
                     </small>
-                    <a href="" class="btn btn-primary mt-2">
-                        <i class="ri-account-pin-circle-line"></i> Profile
-                    </a>
                 </div>
                 <!-- Sidebar profile ends -->
 
@@ -78,18 +76,6 @@
                 @include('components.sidebar')
 
                 <!-- Sidebar menu ends -->
-
-                <!-- Sidebar contact starts -->
-                <div class="sidebar-contact">
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ri-logout-box-line"></i> Keluar Aplikasi
-                        </button>
-                    </form>
-
-                </div>
-                <!-- Sidebar contact ends -->
 
             </nav>
             <!-- Sidebar wrapper ends -->
@@ -121,45 +107,24 @@
                     <!-- Brand container sm ends -->
 
                     <!-- App header actions starts -->
-                    <div class="header-actions text-center">
+                    <div class="header-actions">
 
-                        <span>Aplikasi SIMRS Bambu Dua Clinic</span>
-
+                        <div class="d-lg-flex d-none gap-2">
+                            <a href="{{ route('home.profile', auth()->user()->id) }}" class="btn btn-primary">
+                                <i class="ri-account-pin-circle-line"></i> Profile
+                            </a>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="ri-logout-box-line"></i> Keluar Aplikasi
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     <!-- App header actions ends -->
 
                 </div>
                 <!-- App header ends -->
-
-                <!-- App hero header starts -->
-                <div class="app-hero-header d-flex align-items-center">
-
-                    <!-- Breadcrumb starts -->
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item">
-                            <a href="index.html">
-                                <i class="ri-home-3-line"></i>
-                            </a>
-                        </li>
-                        <li class="breadcrumb-item text-primary" aria-current="page">
-                            Hospital Dashboard
-                        </li>
-                    </ol>
-                    <!-- Breadcrumb ends -->
-
-                    <!-- Sales stats starts -->
-                    <div class="ms-auto d-lg-flex d-none flex-row">
-                        <div class="input-group">
-                            <span class="input-group-text bg-primary-lighten">
-                                <i class="ri-calendar-2-line text-primary"></i>
-                            </span>
-                            <input type="text" id="abc" class="form-control custom-daterange">
-                        </div>
-                    </div>
-                    <!-- Sales stats ends -->
-
-                </div>
-                <!-- App Hero header ends -->
 
                 <!-- App body starts -->
                 <div class="app-body">
@@ -168,12 +133,6 @@
 
                 </div>
                 <!-- App body ends -->
-
-                <!-- App footer starts -->
-                <div class="app-footer">
-                    <span>© Candra 2024</span>
-                </div>
-                <!-- App footer ends -->
 
             </div>
             <!-- App container ends -->

@@ -1752,7 +1752,7 @@ input[type="file"]::file-selector-button {
         top: 175px;
         right: 50px;
       }
-      
+
       &:before {
         content: '';
         position: relative;
@@ -1766,11 +1766,11 @@ input[type="file"]::file-selector-button {
         background-color: $danger;
         animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
       }
-      
+
       &:after {
         content: '';
         position: absolute;
-        left: 0; 
+        left: 0;
         top: 0;
         display: block;
         width: 100%;
@@ -2090,8 +2090,8 @@ input[type="file"]::file-selector-button {
 .auth-logo {
 	display: inline-flex;
 	img {
-		max-width: 180px;
-		max-height: 48px;
+		max-width: 380px;
+		max-height: 100px;
 	}
 }
 @media (max-width: 991.98px) {

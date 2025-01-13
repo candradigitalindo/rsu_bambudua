@@ -92,7 +92,7 @@
                         <!-- App brand starts -->
                         <div class="app-brand">
                             <a href="index.html">
-                                <img src="{{ asset('images/logo2.png') }}" class="logo" alt="logo">
+                                <img src="{{ asset('images/bdc.png') }}" class="logo" alt="logo">
                             </a>
                         </div>
                         <!-- App brand ends -->

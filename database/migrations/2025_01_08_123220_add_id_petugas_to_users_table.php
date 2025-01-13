@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->integer('id_petugas')->default(10000)->after('role');
+            $table->string('id_satusehat')->nullable()->after('role');
         });
     }
 
@@ -23,6 +24,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('id_petugas');
+            $table->dropColumn('id_satusehat');
         });
     }
 };

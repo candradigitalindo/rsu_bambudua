@@ -54,7 +54,18 @@
 
                 <!-- Sidebar profile starts -->
                 <div class="sidebar-profile">
-                    <img src="{{ asset('images/doctor6.png') }}" class="rounded-5" alt="Hospital Admin Templates">
+                    @if (auth()->user()->profile == null)
+                        <img src="{{ asset('images/no Photo.png') }}" class="rounded-5" alt="Hospital Admin Templates">
+                    @else
+                        @if (auth()->user()->profile->foto == null)
+                            <img src="{{ asset('images/no Photo.png') }}" class="rounded-5"
+                                alt="Hospital Admin Templates">
+                        @else
+                            <img src="{{ route('home.profile.filename', auth()->user()->profile->foto) }}" class="rounded-5"
+                                alt="Hospital Admin Templates">
+                        @endif
+                    @endif
+
                     <h6 class="mb-1 profile-name text-nowrap text-truncate text-primary"><span
                             class="badge bg-primary-subtle text-primary fs-6">{{ auth()->user()->name }}</span></h6>
                     <small class="profile-name text-nowrap text-truncate">

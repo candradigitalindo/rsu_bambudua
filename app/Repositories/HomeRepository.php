@@ -3,9 +3,13 @@
 namespace App\Repositories;
 
 use App\Interfaces\HomeInterface;
+use App\Models\City;
 use App\Models\Profile;
+use App\Models\Province;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class HomeRepository implements HomeInterface
 {
@@ -25,7 +29,7 @@ class HomeRepository implements HomeInterface
     public function updateProfile($request, $id)
     {
         $user = User::findOrFail($id);
-        
+
         if ($request->new_password == null) {
             $user->update(['name' => $request->name, 'username' => $request->username]);
         } else {
@@ -33,10 +37,18 @@ class HomeRepository implements HomeInterface
         }
 
         $profile = Profile::where('user_id', $user->id)->first();
+        $request->provinsi == null ? $provinsi = null : $provinsi = Province::where('code', $request->provinsi)->first();
+        $request->kota == null ? $kota = null : $kota = City::where('code', $request->kota)->first();
         if ($profile) {
             if ($request->foto) {
-                $file = $request->file('foto');
-                $file->storeAs('public/profile', $file->hashName());
+                if ($profile->foto == null) {
+                    $file = $request->file('foto');
+                    $file->storeAs('public/profile', $file->hashName());
+                }else {
+                    Storage::disk('local')->delete('public/profile/' . basename($profile->foto));
+                    $file = $request->file('foto');
+                    $file->storeAs('public/profile', $file->hashName());
+                }
                 $profile->update([
                     'nik'   => $request->nik,
                     'tgl_lahir' => $request->tgl_lahir,
@@ -46,8 +58,10 @@ class HomeRepository implements HomeInterface
                     'status_menikah'    => $request->status_menikah,
                     'gol_darah' => $request->gol_darah,
                     'alamat'    => $request->alamat,
-                    'kode_provinsi' => $request->provinsi,
-                    'kode_kota' => $request->kota,
+                    'kode_provinsi' => $provinsi == null ? null : $provinsi->code,
+                    'provinsi'  => $provinsi == null ? null : $provinsi->name,
+                    'kode_kota' => $kota == null ? null : $kota->code,
+                    'kota'      => $kota == null ? null : $kota->name,
                     'foto'      => $file->hashName()
                 ]);
             } else {
@@ -60,8 +74,10 @@ class HomeRepository implements HomeInterface
                     'status_menikah'    => $request->status_menikah,
                     'gol_darah' => $request->gol_darah,
                     'alamat'    => $request->alamat,
-                    'kode_provinsi' => $request->provinsi,
-                    'kode_kota' => $request->kota,
+                    'kode_provinsi' => $provinsi == null ? null : $provinsi->code,
+                    'provinsi'  => $provinsi == null ? null : $provinsi->name,
+                    'kode_kota' => $kota == null ? null : $kota->code,
+                    'kota'      => $kota == null ? null : $kota->name,
                 ]);
             }
         } else {

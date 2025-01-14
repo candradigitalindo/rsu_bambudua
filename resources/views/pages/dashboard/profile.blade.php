@@ -80,7 +80,7 @@
                                                     </span>
                                                     <input type="date" name="tgl_lahir" class="form-control"
                                                         id="a2"
-                                                        value="{{ $user->profile == null ? null : $user->profile->tgl_lahir }}">
+                                                        value="{{ $user->profile == null ? null : date('Y-m-d', strtotime($user->profile->tgl_lahir)) }}">
                                                 </div>
                                                 <p class="text-danger">{{ $errors->first('tgl_lahir') }}</p>
                                             </div>
@@ -112,14 +112,15 @@
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" type="radio" name="gender"
                                                                 id="selectGender1" value="1"
-                                                                selected>
+                                                                {{ $user->profile->gender == 1 ? 'checked' : '' }}>
                                                             <label class="form-check-label"
                                                                 for="selectGender1">Pria</label>
                                                         </div>
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" name="gender" type="radio"
                                                                 name="selectGenderOptions" id="selectGender2"
-                                                                value="2" {{ $user->profile->gender == 2 ? 'selected' : '' }}>
+                                                                value="2"
+                                                                {{ $user->profile->gender == 2 ? 'checked' : '' }}>
                                                             <label class="form-check-label"
                                                                 for="selectGender2">Wanita</label>
                                                         </div>
@@ -185,7 +186,8 @@
                                                             <option value="2">Menikah</option>
                                                         @else
                                                             <option value="1"
-                                                                {{ $user->profile->status_menikah == 1 ? 'selected' : '' }}>Belum
+                                                                {{ $user->profile->status_menikah == 1 ? 'selected' : '' }}>
+                                                                Belum
                                                                 Menikah</option>
                                                             <option value="2"
                                                                 {{ $user->profile->status_menikah == 2 ? 'selected' : '' }}>
@@ -258,11 +260,19 @@
                                                     </span>
                                                     <select class="form-select" id="province" name="provinsi">
                                                         <option value="">-- Pilih Provinsi --</option>
-                                                        
-                                                        @foreach ($provinces as $p)
-                                                            <option value="{{ $p->code }}">{{ $p->name }}
-                                                            </option>
-                                                        @endforeach
+                                                        @if ($user->profile == null)
+                                                            @foreach ($provinces as $p)
+                                                                <option value="{{ $p->code }}">{{ $p->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        @else
+                                                            @foreach ($provinces as $p)
+                                                                <option value="{{ $p->code }}"
+                                                                    {{ $user->profile->kode_provinsi == $p->code ? 'selected' : '' }}>
+                                                                    {{ $p->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        @endif
                                                     </select>
                                                 </div>
                                                 <p class="text-danger">{{ $errors->first('provinsi') }}</p>
@@ -280,7 +290,7 @@
                                                             <option value="">-- Pilih Kota / Kabupaten --</option>
                                                         @else
                                                             <option value="{{ $user->profile->kode_kota }}">
-                                                                {{ $user->profile->provinsi }}</option>
+                                                                {{ $user->profile->kota }}</option>
                                                         @endif
                                                     </select>
                                                 </div>
@@ -299,6 +309,8 @@
                                                         <img src="{{ asset('images/no Photo.png') }}"
                                                             class="img-fluid rounded-2" alt="">
                                                     @else
+                                                        <img src="{{ route('home.profile.filename', $user->profile->foto) }}"
+                                                            class="img-fluid rounded-2" alt="">
                                                     @endif
                                                 @endif
 

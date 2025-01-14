@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\WilayahController;
 use App\Models\City;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +15,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/home/{id}/profile', [HomeController::class, 'getProfile'])->name('home.profile');
     Route::post('/home/{id}/profile', [HomeController::class, 'updateProfile'])->name('home.profile.update');
+    Route::get('/public/profile/{filename}', [StorageController::class, 'profile'])->name('home.profile.filename');
     Route::get('/provinsi', function () {
         // $request = Http::withHeaders([
         //     'Authorization'     => 'Bearer Ok0HbRti60BoG1uqvV3OZTc54He7'

@@ -2,7 +2,6 @@
 
 namespace App\Repositories;
 
-use App\Interfaces\HomeInterface;
 use App\Models\City;
 use App\Models\Profile;
 use App\Models\Province;
@@ -11,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 
-class HomeRepository implements HomeInterface
+class HomeRepository
 {
     /**
      * Create a new class instance.

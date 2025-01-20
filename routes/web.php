@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SatusehatController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\WilayahController;
 use App\Models\City;
+use App\Models\District;
+use App\Models\Province;
+use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
@@ -25,11 +29,30 @@ Route::middleware(['auth'])->group(function () {
 
         // $response = json_decode($request, true)['data'];
         // return $response;
-        City::truncate();
+        // $time = date("Y-m-d H:i:s", time() + 14399);
+        // return $time;
+        $desa = Subdistrict::where('parent_code', '120506')->get();
+        // Province::truncate();
+        // City::truncate();
+        // District::truncate();
+        // Subdistrict::truncate();
+        return $desa;
+    });
+
+    Route::prefix('setting')->group(function () {
+        // SATUSEHAT
+        Route::get('/satusehat', [SatusehatController::class, 'getSatusehat'])->name('satusehat.index');
+        Route::post('/satusehat', [SatusehatController::class, 'saveSatusehat'])->name('satusehat.store');
+
     });
 
     //Master Wilayah
-    Route::get('/wilayah', [WilayahController::class, 'saveWilayah'])->name('wilayah.index');
+    Route::get('/wilayah', [WilayahController::class, 'getWilayah'])->name('wilayah.index');
     Route::get('/wilayah/province', [WilayahController::class, 'getProvinces'])->name('wilayah.province');
     Route::get('/wilayah/city/{code}', [WilayahController::class, 'getCity'])->name('wilayah.city');
+
+    Route::get('/wilayah/province/save', [WilayahController::class, 'saveProvince'])->name('wilayah.saveProvince');
+    Route::get('/wilayah/kota/save/{code}', [WilayahController::class, 'saveCity'])->name('wilayah.saveCity');
+    Route::get('/wilayah/kecamatan/save/{code}', [WilayahController::class, 'saveDistrict'])->name('wilayah.saveDistrict');
+    Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
 });

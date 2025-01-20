@@ -8,5 +8,5 @@ use Illuminate\Database\Eloquent\Model;
 class Subdistrict extends Model
 {
     use HasUuids;
-    protected $fillable = ['code', 'parent_code', 'bps_code', 'name'];
+    protected $fillable = ['code', 'parent_code', 'bps_code', 'name', 'province_code'];
 }

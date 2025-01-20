@@ -152,6 +152,7 @@
         <!-- Main container ends -->
 
     </div>
+    @include('sweetalert::alert')
     <!-- Page wrapper ends -->
 
     <!-- *************

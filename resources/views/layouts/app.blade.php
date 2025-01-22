@@ -22,7 +22,7 @@
 </head>
 
 <body>
-
+    @stack('loading')
     <!-- Page wrapper starts -->
     <div class="page-wrapper">
 

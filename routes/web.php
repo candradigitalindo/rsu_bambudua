@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\JaminanController;
 use App\Http\Controllers\SatusehatController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\WilayahController;
@@ -46,13 +47,18 @@ Route::middleware(['auth'])->group(function () {
 
     });
 
-    //Master Wilayah
-    Route::get('/wilayah', [WilayahController::class, 'getWilayah'])->name('wilayah.index');
-    Route::get('/wilayah/province', [WilayahController::class, 'getProvinces'])->name('wilayah.province');
-    Route::get('/wilayah/city/{code}', [WilayahController::class, 'getCity'])->name('wilayah.city');
+    Route::prefix('masterdata')->group(function () {
+        //Master Wilayah
+        Route::get('/wilayah', [WilayahController::class, 'getWilayah'])->name('wilayah.index');
+        Route::get('/wilayah/province', [WilayahController::class, 'getProvinces'])->name('wilayah.province');
+        Route::get('/wilayah/city/{code}', [WilayahController::class, 'getCity'])->name('wilayah.city');
 
-    Route::get('/wilayah/province/save', [WilayahController::class, 'saveProvince'])->name('wilayah.saveProvince');
-    Route::get('/wilayah/kota/save/{code}', [WilayahController::class, 'saveCity'])->name('wilayah.saveCity');
-    Route::get('/wilayah/kecamatan/save/{code}', [WilayahController::class, 'saveDistrict'])->name('wilayah.saveDistrict');
-    Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
+        Route::get('/wilayah/province/save', [WilayahController::class, 'saveProvince'])->name('wilayah.saveProvince');
+        Route::get('/wilayah/kota/save/{code}', [WilayahController::class, 'saveCity'])->name('wilayah.saveCity');
+        Route::get('/wilayah/kecamatan/save/{code}', [WilayahController::class, 'saveDistrict'])->name('wilayah.saveDistrict');
+        Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
+
+        Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store','edit', 'destroy']);
+    });
+
 });

@@ -152,7 +152,7 @@ class WilayahRepository
             return true;
         } catch (\Throwable $th) {
             //throw $th;
-            dd($th);
+            return false;
         }
     }
 

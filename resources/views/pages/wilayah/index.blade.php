@@ -14,6 +14,7 @@
         }
     </style>
 @endpush
+
 @section('content')
     <!-- Row starts -->
     <div class="row gx-3">
@@ -35,15 +36,7 @@
                                     <p class="m-0">Provinsi</p>
                                 </div>
                             </div>
-                            {{-- <div class="d-flex align-items-end justify-content-between mt-4">
-                                <a href="{{ route('wilayah.saveProvince') }}" class="btn btn-outline-primary btn-sm"
-                                    id="provinsi">
-                                    <span class="btn-text" id="text-provinsi">Tambah Data Provinsi</span>
-                                    <span class="spinner-border spinner-border-sm d-none" id="spiner-provinsi"></span>
-                                    <i class="ri-download-cloud-line text-primary ms-1"></i>
-                                </a>
 
-                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -138,11 +131,13 @@
                                             <td class="ms-2 text-center">
                                                 <a href="{{ route('wilayah.saveCity', $provinsi->code) }}"
                                                     class="btn btn-outline-primary btn-sm" id="kota">
-                                                    <span class="btn-text" id="text-kota">Update Data Kota</span>
+                                                    <span class="btn-text" id="text-kota">Update
+                                                        Data Kota</span>
                                                     <span class="spinner-border spinner-border-sm d-none"
                                                         id="spiner-kota"></span>
                                                     <i class="ri-download-cloud-line text-primary ms-1"></i>
                                                 </a>
+
                                             </td>
                                             <td class="text-center">
                                                 {{ formatPrice($provinsi->kecamatan) }}
@@ -194,41 +189,33 @@
     <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         $(document).ready(function() {
-            $("#provinsi").click(function() {
-                $("#spiner-provinsi").removeClass("d-none");
-                $("#provinsi").addClass("disabled", true);
-                $("#kota").addClass("disabled", true);
-                $("#kecamatan").addClass("disabled", true);
-                $("#desa").addClass("disabled", true);
-                $("#text-provinsi").text("Mohon Tunggu ...");
-            });
 
-            $("#kota").click(function() {
-                $("#spiner-kota").removeClass("d-none");
-                $("#provinsi").addClass("disabled", true);
-                $("#kota").addClass("disabled", true);
-                $("#kecamatan").addClass("disabled", true);
-                $("#desa").addClass("disabled", true);
-                $("#text-kota").text("Mohon Tunggu ...");
-            });
+            // $("#kota").click(function() {
+            //     $("#spiner-kota").removeClass("d-none");
+            //     $("#provinsi").addClass("disabled", true);
+            //     $("#kota").addClass("disabled", true);
+            //     $("#kecamatan").addClass("disabled", true);
+            //     $("#desa").addClass("disabled", true);
+            //     $("#text-kota").text("Mohon Tunggu ...");
+            // });
 
-            $("#kecamatan").click(function() {
-                $("#spiner-kecamatan").removeClass("d-none");
-                $("#provinsi").addClass("disabled", true);
-                $("#kota").addClass("disabled", true);
-                $("#kecamatan").addClass("disabled", true);
-                $("#desa").addClass("disabled", true);
-                $("#text-kecamatan").text("Mohon Tunggu ...");
-            });
+            // $("#kecamatan").click(function() {
+            //     $("#spiner-kecamatan").removeClass("d-none");
+            //     $("#provinsi").addClass("disabled", true);
+            //     $("#kota").addClass("disabled", true);
+            //     $("#kecamatan").addClass("disabled", true);
+            //     $("#desa").addClass("disabled", true);
+            //     $("#text-kecamatan").text("Mohon Tunggu ...");
+            // });
 
-            $("#desa").click(function() {
-                $("#spiner-desa").removeClass("d-none");
-                $("#provinsi").addClass("disabled", true);
-                $("#kota").addClass("disabled", true);
-                $("#kecamatan").addClass("disabled", true);
-                $("#desa").addClass("disabled", true);
-                $("#text-desa").text("Mohon Tunggu ...");
-            });
+            // $("#desa").click(function() {
+            //     $("#spiner-desa").removeClass("d-none");
+            //     $("#provinsi").addClass("disabled", true);
+            //     $("#kota").addClass("disabled", true);
+            //     $("#kecamatan").addClass("disabled", true);
+            //     $("#desa").addClass("disabled", true);
+            //     $("#text-desa").text("Mohon Tunggu ...");
+            // });
         });
     </script>
 @endpush

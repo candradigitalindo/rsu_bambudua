@@ -6,11 +6,20 @@
                 <span class="menu-text">Hospital Admin</span>
             </a>
         </li>
-        <li class="{{ request()->is('wilayah*') ? 'active current-page' : '' }}">
-            <a href="{{ route('wilayah.index') }}">
-                <i class="ri-map-pin-2-fill"></i>
-                <span class="menu-text">Master Wilayah</span>
+        <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">
+            <a href="#">
+                <i class="ri-archive-drawer-line"></i>
+                <span class="menu-text">Master Data</span>
             </a>
+            <ul class="treeview-menu">
+                <li>
+                    <a class="{{ request()->is('masterdata/wilayah*') ? 'active-sub' : '' }}" href="{{ route('wilayah.index') }}">Data Wilayah</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/jenisjaminan*') ? 'active-sub' : '' }}" href="{{ route('jenisjaminan.index') }}">Jenis Jaminan</a>
+                </li>
+
+            </ul>
         </li>
         <li class="treeview {{ request()->is('setting*') ? 'active current-page' : '' }}">
             <a href="#">

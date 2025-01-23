@@ -2,27 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\PendidikanRepository;
+use App\Repositories\PekerjaanRepository;
 use Illuminate\Http\Request;
 use RealRashid\SweetAlert\Facades\Alert;
 
-class PendidikanController extends Controller
+class PekerjaanController extends Controller
 {
-    public $pendidikanRepository;
-    public function __construct(PendidikanRepository $pendidikanRepository)
+    public $pekerjaanRepository;
+    public function __construct(PekerjaanRepository $pekerjaanRepository)
     {
-        $this->pendidikanRepository = $pendidikanRepository;
+        $this->pekerjaanRepository = $pekerjaanRepository;
     }
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $pendidikans = $this->pendidikanRepository->index();
+        $pekerjaan = $this->pekerjaanRepository->index();
         $title = 'Delete Data!';
-        $text = "Apakah yakin hapus data Pendidikan ?";
+        $text = "Apakah yakin hapus data Pekerjaan ?";
         confirmDelete($title, $text);
-        return view('pages.pendidikan.index', compact('pendidikans'));
+        return view('pages.pekerjaan.index', compact('pekerjaan'));
     }
 
     /**
@@ -39,11 +39,11 @@ class PendidikanController extends Controller
     public function store(Request $request)
     {
         $request->validate(['name' => 'required|string'],['name.required' => 'kolom masih kosong']);
-        $pendidikan = $this->pendidikanRepository->store($request);
-        if ($pendidikan) {
-            Alert::success('Berhasil', 'Data Pendidikan Tersimpan!');
+        $pekerjaan = $this->pekerjaanRepository->store($request);
+        if ($pekerjaan) {
+            Alert::success('Berhasil', 'Data Pekerjaan Tersimpan!');
         }else {
-            Alert::error('Error', 'Data Pendidikan Gagal Tersimpan, silahkan coba secara berkala atau hubungi Developer');
+            Alert::error('Error', 'Data Pekerjaan Gagal Tersimpan, silahkan coba secara berkala atau hubungi Developer');
         }
         return back();
     }
@@ -77,8 +77,8 @@ class PendidikanController extends Controller
      */
     public function destroy(string $id)
     {
-        $this->pendidikanRepository->destroy($id);
-        Alert::info('Berhasil', 'Data Pendidikan dihapus!');
+        $this->pekerjaanRepository->destroy($id);
+        Alert::info('Berhasil', 'Data Pekerjaan dihapus!');
         return back();
     }
 }

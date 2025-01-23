@@ -24,6 +24,12 @@
                 <li>
                     <a class="{{ request()->is('masterdata/pendidikan*') ? 'active-sub' : '' }}" href="{{ route('pendidikan.index') }}">Data Pendidikan</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/agama*') ? 'active-sub' : '' }}" href="{{ route('agama.index') }}">Data Agama</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/pekerjaan*') ? 'active-sub' : '' }}" href="{{ route('pekerjaan.index') }}">Data Pekerjaan</a>
+                </li>
 
             </ul>
         </li>

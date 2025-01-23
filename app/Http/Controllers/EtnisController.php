@@ -38,7 +38,7 @@ class EtnisController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(['name' => 'required|string']);
+        $request->validate(['name' => 'required|string'],['name.required' => 'kolom masih kosong']);
         $etnis = $this->etnisRepository->store($request);
         if ($etnis) {
             Alert::success('Berhasil', 'Data Etnis Tersimpan!');

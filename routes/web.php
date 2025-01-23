@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
+use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendidikanController;
 use App\Http\Controllers\SatusehatController;
 use App\Http\Controllers\StorageController;
@@ -63,6 +65,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store','edit', 'destroy']);
         Route::resource('etnis', EtnisController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pendidikan', PendidikanController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
     });
 
 });

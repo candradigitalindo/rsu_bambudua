@@ -18,6 +18,9 @@
                 <li>
                     <a class="{{ request()->is('masterdata/jenisjaminan*') ? 'active-sub' : '' }}" href="{{ route('jenisjaminan.index') }}">Jenis Jaminan</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/etnis*') ? 'active-sub' : '' }}" href="{{ route('etnis.index') }}">Data Etnis</a>
+                </li>
 
             </ul>
         </li>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
 use App\Http\Controllers\SatusehatController;
@@ -59,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
 
         Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store','edit', 'destroy']);
+        Route::resource('etnis', EtnisController::class)->only(['index', 'store', 'destroy']);
     });
 
 });

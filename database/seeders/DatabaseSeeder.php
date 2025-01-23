@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Etnis;
+use App\Models\Profile;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,12 +18,14 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::truncate();
-        User::create([
-            'name'      => 'Owner',
+        $user = User::create([
+            'name'      => 'dr. Owner',
             'username'  => 'owner',
             'password'  => Hash::make('12345678'),
             'role'      => 1
         ]);
+
+        Profile::create(['user_id'  => $user->id]);
+
     }
 }

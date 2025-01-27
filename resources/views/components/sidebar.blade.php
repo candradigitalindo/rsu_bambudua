@@ -6,6 +6,13 @@
                 <span class="menu-text">Hospital Admin</span>
             </a>
         </li>
+        <li class="{{ request()->is('pendaftaran*') ? 'active current-page' : '' }}">
+            <a href="{{ route('pendaftaran.index') }}">
+                <i class="ri-draft-line"></i>
+                <span class="menu-text">Pendaftaran</span>
+            </a>
+        </li>
+
         <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">
             <a href="#">
                 <i class="ri-archive-drawer-line"></i>
@@ -30,6 +37,9 @@
                 <li>
                     <a class="{{ request()->is('masterdata/pekerjaan*') ? 'active-sub' : '' }}" href="{{ route('pekerjaan.index') }}">Data Pekerjaan</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}" href="{{ route('spesialis.index') }}">Spesialis</a>
+                </li>
 
             </ul>
         </li>
@@ -44,6 +54,13 @@
                 </li>
 
             </ul>
+        </li>
+
+        <li class="{{ request()->is('pengguna*') ? 'active current-page' : '' }}">
+            <a href="{{ route('home') }}">
+                <i class="ri-team-line"></i>
+                <span class="menu-text">Pengguna</span>
+            </a>
         </li>
 
     </ul>

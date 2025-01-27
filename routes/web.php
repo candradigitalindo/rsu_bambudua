@@ -5,13 +5,12 @@ use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
 use App\Http\Controllers\PekerjaanController;
+use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PendidikanController;
 use App\Http\Controllers\SatusehatController;
+use App\Http\Controllers\SpesialisController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\WilayahController;
-use App\Models\City;
-use App\Models\District;
-use App\Models\Province;
 use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -67,6 +66,12 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('pendidikan', PendidikanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
+    });
+
+    Route::prefix('pendaftaran')->group(function () {
+        Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
+        Route::get('/caripasien', [PendaftaranController::class, 'cariPasien'])->name('pendaftaran.caripasien');
     });
 
 });

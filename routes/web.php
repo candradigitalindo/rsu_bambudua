@@ -7,6 +7,7 @@ use App\Http\Controllers\JaminanController;
 use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PendidikanController;
+use App\Http\Controllers\PenggunaController;
 use App\Http\Controllers\SatusehatController;
 use App\Http\Controllers\SpesialisController;
 use App\Http\Controllers\StorageController;
@@ -73,5 +74,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
         Route::get('/caripasien', [PendaftaranController::class, 'cariPasien'])->name('pendaftaran.caripasien');
     });
+
+    Route::resource('pengguna', PenggunaController::class)->only(['index','create','store','edit', 'update', 'destroy']);
 
 });

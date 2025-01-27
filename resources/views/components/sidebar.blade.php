@@ -38,10 +38,16 @@
                     <a class="{{ request()->is('masterdata/pekerjaan*') ? 'active-sub' : '' }}" href="{{ route('pekerjaan.index') }}">Data Pekerjaan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}" href="{{ route('spesialis.index') }}">Spesialis</a>
+                    <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}" href="{{ route('spesialis.index') }}">Data Spesialis</a>
                 </li>
 
             </ul>
+        </li>
+        <li class="{{ request()->is('pengguna*') ? 'active current-page' : '' }}">
+            <a href="{{ route('pengguna.index') }}">
+                <i class="ri-team-line"></i>
+                <span class="menu-text">Pengguna</span>
+            </a>
         </li>
         <li class="treeview {{ request()->is('setting*') ? 'active current-page' : '' }}">
             <a href="#">
@@ -56,12 +62,7 @@
             </ul>
         </li>
 
-        <li class="{{ request()->is('pengguna*') ? 'active current-page' : '' }}">
-            <a href="{{ route('home') }}">
-                <i class="ri-team-line"></i>
-                <span class="menu-text">Pengguna</span>
-            </a>
-        </li>
+
 
     </ul>
 </div>

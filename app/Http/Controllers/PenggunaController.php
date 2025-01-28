@@ -112,7 +112,8 @@ class PenggunaController extends Controller
     public function destroy(string $id)
     {
         $this->penggunaRepository->destroy($id);
-        Alert::info('Berhasil', 'Data Pengguna dihapus!');
+        Alert::info('Berhasil', 'Data Pengguna
+         dihapus!');
         return back();
     }
 }

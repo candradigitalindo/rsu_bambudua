@@ -12,8 +12,9 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('pengguna.store') }}" method="POST" id="submit">
+                    <form action="{{ route('pengguna.update', $data['user']->id) }}" method="POST" id="submit">
                         @csrf
+                        @method('PUT')
                         <!-- Custom tabs starts -->
                         <div class="custom-tabs-container">
 
@@ -72,13 +73,37 @@
                                                     </span>
                                                     <select class="form-select" id="a7" name="role">
                                                         <option value="">Pilih Hak Akses</option>
+                                                        <option value="1" {{ $data['user']->role == "1" ? "selected" : "" }}>Owner</option>
+                                                        <option value="2" {{$data['user']->role == "2" ? "selected" : "" }}>Dokter</option>
+                                                        <option value="3" {{ $data['user']->role == "3" ? "selected" : "" }}>Perawat</option>
+                                                        <option value="4" {{ $data['user']->role == "4" ? "selected" : "" }}>Admin</option>
+                                                        <option value="5" {{ $data['user']->role == "5" ? "selected" : "" }}>Pendaftaran</option>
+                                                        <option value="6" {{ $data['user']->role == "6" ? "selected" : "" }}>Kasir</option>
+                                                        <option value="7" {{ $data['user']->role == "7" ? "selected" : "" }}>Apotek</option>
+                                                        <option value="8" {{ $data['user']->role == "8" ? "selected" : "" }}>Gudang</option>
+                                                        <option value="9" {{ $data['user']->role == "9" ? "selected" : "" }}>Teknisi</option>
+                                                    </select>
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('role') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">Spesialis <span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">
+                                                        <i class="ri-vip-crown-2-line"></i>
+                                                    </span>
+                                                    <select class="form-select" id="a7" name="spesialis">
+                                                        <option value="">Pilih Hak Akses</option>
                                                         @foreach ($data['spesialis'] as $s)
-                                                            <option value="{{ $s->kode }}" {{ $data['user']->role == $s->kode ? "selected" : "" }}>{{ $s->name }}</option>
+                                                            <option value="{{ $s->kode }}" {{ $data['user']->profile->spesialis == $s->kode ? "selected" : "" }}>{{ $s->name }}</option>
                                                         @endforeach
 
                                                     </select>
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('role') }}</p>
+                                                <p class="text-danger">{{ $errors->first('spesialis') }}</p>
                                             </div>
                                         </div>
 

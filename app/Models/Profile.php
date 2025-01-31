@@ -21,6 +21,7 @@ class Profile extends Model
         'kode_kota',
         'kota',
         'foto',
+        'spesialis'
     ];
 
     public function user()

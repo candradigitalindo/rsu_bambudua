@@ -40,6 +40,7 @@
                                         <th>Username</th>
                                         <th>ID Pengenal</th>
                                         <th>Hak Akses</th>
+                                        <th>Spesialis</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -49,8 +50,11 @@
                                             <td>{{ $u->name }}</td>
                                             <td>{{ $u->username }}</td>
                                             <td>{{ $u->id_petugas }}</td>
-                                            <td><span
-                                                    class="badge border border-primary text-primary">{{ $u->role }}</span>
+                                            <td>
+                                                <span class="badge border border-primary text-primary">{{ $u->role }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge border border-primary text-primary">{{ $u->spesialis }}</span>
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('pengguna.edit', $u->id) }}"
@@ -82,6 +86,7 @@
                             </table>
                         </div>
                     </div>
+                    <div class="text-xs-center mt-2">{{ $users->links('pagination::bootstrap-4') }}</div>
                 </div>
             </div>
         </div>

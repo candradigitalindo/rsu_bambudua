@@ -19,12 +19,45 @@ class PenggunaRepository
 
     public function index()
     {
-        $users = User::when(request()->q, function($user) {
-            $user = $user->where('name', 'like', '%'. request()->q . '%');
-        })->orderBy('updated_at', 'DESC')->paginate(20);
+        $users = User::when(request()->q, function ($user) {
+            $user = $user->where('name', 'like', '%' . request()->q . '%');
+        })->with('profile')->orderBy('updated_at', 'DESC')->paginate(20);
         $users->map(function ($user) {
-            $spesialis = Spesialis::where('kode', $user->role)->first();
-            $user['role'] =  $spesialis->name;
+            $spesialis = Spesialis::where('kode', $user->profile->spesialis)->first();
+            $user['spesialis'] =  $spesialis == null ? null : ucwords($spesialis->name) ;
+            switch ($user->role) {
+                case '1':
+                    $user['role'] = "Owner";
+                    break;
+                case '2':
+                    $user['role'] = "Dokter";
+                    break;
+                case '3':
+                    $user['role'] = "Perawat";
+                    break;
+                case '4':
+                    $user['role'] = "Admin";
+                    break;
+                case '5':
+                    $user['role'] = "Pendaftaran";
+                    break;
+                case '6':
+                    $user['role'] = "Kasir";
+                    break;
+                case '7':
+                    $user['role'] = "Apotek";
+                    break;
+                case '8':
+                    $user['role'] = "Gudang";
+                    break;
+                case '9':
+                    $user['role'] = "Teknisi";
+                    break;
+
+                default:
+                    # code...
+                    break;
+            }
         });
         $users->appends(request()->query());
         return $users;
@@ -43,11 +76,11 @@ class PenggunaRepository
             'name'      => ucfirst($request->name),
             'username'  => $request->username,
             'role'      => $request->role,
-            'id_petugas'=> $cek + 1,
-            'password'  => Hash::make($request->password)
+            'id_petugas' => $cek + 1,
+            'password'  => Hash::make($request->password),
         ]);
 
-        Profile::create(['user_id' => $user->id]);
+        Profile::create(['user_id' => $user->id, 'sepesialis' => $request->spesialis]);
         return $user;
     }
 
@@ -56,7 +89,7 @@ class PenggunaRepository
         $user       = User::findOrFail($id);
         $spesialis  = Spesialis::orderBy('kode', 'asc')->get();
 
-        return ['user' => $user,'spesialis' => $spesialis];
+        return ['user' => $user, 'spesialis' => $spesialis];
     }
 
     public function update($request, $id)
@@ -69,13 +102,15 @@ class PenggunaRepository
                 'role'      => $request->role,
                 'password'  => Hash::make($request->password)
             ]);
-        }else {
+        } else {
             $user->update([
                 'name'      => ucfirst($request->name),
                 'username'  => $request->username,
                 'role'      => $request->role,
             ]);
         }
+
+        $user->profile->update(['spesialis' => $request->spesialis]);
 
         return $user;
     }

@@ -43,14 +43,16 @@ class PenggunaController extends Controller
             'name'      => 'required|string',
             'username'  => 'required|string|unique:users',
             'role'      => 'required|string',
-            'password'  => 'required|min:8'
+            'password'  => 'required|min:8',
+            'spesialis' => 'required|string'
         ], [
             'name.required'         => 'Kolom masih kosong',
             'username.required'     => 'Kolom masih kosong',
             'username.unique'       => 'Username ' . $request->username . ' sudah terdaftar',
             'role.required'         => 'Pilih Hak Akses Pengguna',
             'password.required'     => 'Kolom masih kosong',
-            'password.min'          => 'Minimal Password 8 karakter'
+            'password.min'          => 'Minimal Password 8 karakter',
+            'spesialis.required'    => 'Pilih Spesialis'
         ]);
 
         $pengguna = $this->penggunaRepository->store($request);
@@ -88,13 +90,15 @@ class PenggunaController extends Controller
             'name'      => 'required|string',
             'username'  => 'required|string|unique:users,username,' . $id,
             'role'      => 'required|string',
-            'password'  => 'nullable|min:8'
+            'password'  => 'nullable|min:8',
+            'spesialis' => 'required|string'
         ], [
             'name.required'         => 'Kolom masih kosong',
             'username.required'     => 'Kolom masih kosong',
             'username.unique'       => 'Username ' . $request->username . ' sudah terdaftar',
             'role.required'         => 'Pilih Hak Akses Pengguna',
-            'password.min'          => 'Minimal Password 8 karakter'
+            'password.min'          => 'Minimal Password 8 karakter',
+            'spesialis.required'    => 'Pilih Spesialis'
         ]);
 
         $user = $this->penggunaRepository->update($request, $id);

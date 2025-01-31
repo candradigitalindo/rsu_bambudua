@@ -16,8 +16,7 @@ class SpesialisRepository
 
     public function index()
     {
-        $spesialis = Spesialis::latest()->paginate(20);
-        $spesialis->appends(request()->query());
+        $spesialis = Spesialis::latest()->get();
         return $spesialis;
     }
 

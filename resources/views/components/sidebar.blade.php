@@ -40,6 +40,9 @@
                 <li>
                     <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}" href="{{ route('spesialis.index') }}">Data Spesialis</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/loket*') ? 'active-sub' : '' }}" href="{{ route('loket.index') }}">Data Loket</a>
+                </li>
 
             </ul>
         </li>

@@ -4,6 +4,7 @@ use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
+use App\Http\Controllers\LoketController;
 use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PendidikanController;
@@ -68,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('loket', LoketController::class)->only(['index', 'store', 'destroy']);
     });
 
     Route::prefix('pendaftaran')->group(function () {

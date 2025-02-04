@@ -30,6 +30,11 @@
                             <span class="spinner-border spinner-border-sm d-none" id="spiner-create"></span>
                             <i class="ri-download-cloud-line text-primary ms-1"></i>
                         </a>
+                        <a href="{{ route('loket.index') }}" class="btn btn-primary btn-sm" id="loket">
+                            <span class="btn-text" id="text-loket">Tambah Loket</span>
+                            <span class="spinner-border spinner-border-sm d-none" id="spiner-loket"></span>
+                            <i class="ri-download-cloud-line ms-1"></i>
+                        </a>
                     </div>
                     <div class="table-outer">
                         <div class="table-responsive">
@@ -107,6 +112,12 @@
                 $("#spiner-create").removeClass("d-none");
                 $("#create").addClass("disabled", true);
                 $("#text-create").text("Mohon Tunggu ...");
+            });
+
+            $("#loket").click(function() {
+                $("#spiner-loket").removeClass("d-none");
+                $("#loket").addClass("disabled", true);
+                $("#text-loket").text("Mohon Tunggu ...");
             });
 
             // $("#kecamatan").click(function() {

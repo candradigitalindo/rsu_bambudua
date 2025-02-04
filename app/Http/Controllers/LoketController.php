@@ -18,11 +18,11 @@ class LoketController extends Controller
      */
     public function index()
     {
-        $lokets = $this->loketRepository->index();
+        $data = $this->loketRepository->index();
         $title = 'Delete Data!';
         $text = "Apakah yakin hapus data Loket ?";
         confirmDelete($title, $text);
-        return view('pages.loket.index', compact('lokets'));
+        return view('pages.loket.index', compact('data'));
     }
 
     /**
@@ -38,14 +38,23 @@ class LoketController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate(['kode_loket' => 'required|string|unique:lokets', 'keterangan' => 'nullable|string'],['kode_loket.required' => 'kolom masih kosong', 'loket.unique' => 'Kode loket '.$request->kode_loket. ' sudah terdaftar']);
+        $request->validate([
+            'lokasi'      => 'required|string',
+            'kode_loket' => 'required|string|unique:lokets',
+            'user'       => 'required|string'
+        ],[
+            'kode_loket.required' => 'kolom masih kosong',
+            'kode_loket.unique' => 'Kode loket '.$request->kode_loket. ' sudah terdaftar',
+            'lokasi.required'    => 'Pilih Lokasi Loket',
+            'user.required'     => 'Pilih Petugas'
+        ]);
         $loket = $this->loketRepository->store($request);
         if ($loket) {
             Alert::success('Berhasil', 'Data Loket Tersimpan!');
         }else {
             Alert::error('Error', 'Data Loket Gagal Tersimpan, silahkan coba secara berkala atau hubungi Developer');
         }
-        return back();
+        return redirect()->route('loket.index');
     }
 
     /**

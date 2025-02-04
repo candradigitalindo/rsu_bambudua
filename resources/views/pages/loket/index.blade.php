@@ -20,6 +20,24 @@
                         <div class="row gx-3">
                             <div class="col-md-12">
                                 <div class="mb-3">
+                                    <label class="form-label" for="a7">Lokasi Loket Antrian <span
+                                            class="text-danger">*</span></label>
+                                    <div class="input-group">
+
+                                        <select class="form-select" id="a7" name="lokasi">
+                                            <option value="">Pilih Lokasi Loket</option>
+                                            @foreach ($data['lokasis'] as $l)
+                                                <option value="{{ $l->id }}"
+                                                    {{ old('lokasi') == $l->id ? 'selected' : '' }}>{{ $l->lokasi_loket }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <p class="text-danger">{{ $errors->first('lokasi') }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="mb-3">
                                     <label class="form-label" for="a5">Kode Loket <span
                                             class="text-danger">*</span></label>
                                     <div class="input-group">
@@ -31,18 +49,29 @@
                             </div>
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label class="form-label" for="a5">Keterangan </label>
+                                    <label class="form-label" for="a7">Petugas Loket<span
+                                            class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <input name="keterangan" type="text" class="form-control" id="a5"
-                                            value="{{ old('keterangan') }}">
+
+                                        <select class="form-select" id="a7" name="user">
+                                            <option value="">Pilih Petugas</option>
+                                            @foreach ($data['users'] as $u)
+                                                <option value="{{ $u->id }}"
+                                                    {{ old('user') == $u->id ? 'selected' : '' }}>{{ $u->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                    <p class="text-danger">{{ $errors->first('keterangan') }}</p>
+                                    <p class="text-danger">{{ $errors->first('user') }}</p>
                                 </div>
                             </div>
                         </div>
                         <!-- Row ends -->
                         <!-- Card acrions starts -->
                         <div class="d-flex gap-2 justify-content-end mt-2">
+                            <a href="{{ route('lokasiloket.index') }}" class="btn btn-outline-secondary">
+                                Kembali
+                            </a>
                             <button type="submit" class="btn btn-primary" id="btn-update">
                                 <span class="btn-txt">SIMPAN</span>
                                 <span class="spinner-border spinner-border-sm d-none"></span>
@@ -63,21 +92,26 @@
                                 <thead>
                                     <tr>
                                         <th>Kode Loket</th>
-                                        <th>Keterangan</th>
+                                        <th>Lokasi</th>
+                                        <th>Petugas</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($lokets as $p)
+                                    @forelse ($data['lokets'] as $p)
                                         <tr>
                                             <td>
                                                 {{ $p->kode_loket }}
                                             </td>
                                             <td>
-                                                {{ $p->keterangan }}
+                                                {{ $p->lokasi }}
+                                            </td>
+                                            <td>
+                                                {{ $p->user }}
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('loket.destroy', $p->id) }}" class="btn btn-danger btn-sm" data-confirm-delete="true">Hapus</a>
+                                                <a href="{{ route('loket.destroy', $p->id) }}"
+                                                    class="btn btn-danger btn-sm" data-confirm-delete="true">Hapus</a>
                                             </td>
                                         </tr>
                                     @empty

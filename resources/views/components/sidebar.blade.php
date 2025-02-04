@@ -40,9 +40,6 @@
                 <li>
                     <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}" href="{{ route('spesialis.index') }}">Data Spesialis</a>
                 </li>
-                <li>
-                    <a class="{{ request()->is('masterdata/loket*') ? 'active-sub' : '' }}" href="{{ route('loket.index') }}">Data Loket</a>
-                </li>
 
             </ul>
         </li>
@@ -62,7 +59,7 @@
                     <a class="{{ request()->is('setting/satusehat*') ? 'active-sub' : '' }}" href="{{ route('satusehat.index') }}">Satusehat</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('setting/lokasiloket*') ? 'active-sub' : '' }}" href="{{ route('lokasiloket.index') }}">Loket Antrian</a>
+                    <a class="{{ request()->is('setting/lokasiloket*') || request()->is('setting/loket*') ? 'active-sub' : '' }}" href="{{ route('lokasiloket.index') }}">Loket Antrian</a>
                 </li>
 
             </ul>

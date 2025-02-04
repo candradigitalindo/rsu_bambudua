@@ -2,7 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Models\LokasiLoket;
 use App\Models\Loket;
+use App\Models\User;
 
 class LoketRepository
 {
@@ -16,13 +18,20 @@ class LoketRepository
 
     public function index()
     {
-        $lokets = Loket::orderBy('created_at', 'ASC')->get();
-        return $lokets;
+        $lokets     = Loket::orderBy('created_at', 'DESC')->get();
+        $lokasis    = LokasiLoket::latest()->get();
+        $users      = User::where('role', 5)->latest()->get();
+        $lokets->map( function ($loket) {
+            $loket['lokasi'] = $loket->lokasiloket->lokasi_loket;
+            $user   = User::where('id', $loket->user_id)->first();
+            $loket['user']   = $user == null ? null : $user->name;
+        });
+        return ['lokets' => $lokets, 'lokasis' => $lokasis, 'users' => $users];
     }
 
     public function store($request)
     {
-        $loket = Loket::create(['kode_loket' => ucfirst($request->kode_loket), 'keterangan' => $request->keterangan]);
+        $loket = Loket::create(['lokasiloket_id' => $request->lokasi, 'kode_loket' => strtoupper($request->kode_loket), 'user_id' => $request->user]);
         return $loket;
     }
 

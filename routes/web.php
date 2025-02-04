@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/satusehat', [SatusehatController::class, 'getSatusehat'])->name('satusehat.index');
         Route::post('/satusehat', [SatusehatController::class, 'saveSatusehat'])->name('satusehat.store');
         Route::resource('lokasiloket', LokasiloketController::class)->only(['index','create','store','edit', 'update', 'destroy']);
+        Route::resource('loket', LoketController::class)->only(['index', 'store', 'destroy']);
     });
 
     Route::prefix('masterdata')->group(function () {
@@ -63,14 +64,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/wilayah/kota/save/{code}', [WilayahController::class, 'saveCity'])->name('wilayah.saveCity');
         Route::get('/wilayah/kecamatan/save/{code}', [WilayahController::class, 'saveDistrict'])->name('wilayah.saveDistrict');
         Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
-
         Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store','edit', 'destroy']);
         Route::resource('etnis', EtnisController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pendidikan', PendidikanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
-        Route::resource('loket', LoketController::class)->only(['index', 'store', 'destroy']);
     });
 
     Route::prefix('pendaftaran')->group(function () {

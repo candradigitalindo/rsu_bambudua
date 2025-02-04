@@ -4,6 +4,7 @@ use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
+use App\Http\Controllers\LokasiloketController;
 use App\Http\Controllers\LoketController;
 use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendaftaranController;
@@ -49,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
         // SATUSEHAT
         Route::get('/satusehat', [SatusehatController::class, 'getSatusehat'])->name('satusehat.index');
         Route::post('/satusehat', [SatusehatController::class, 'saveSatusehat'])->name('satusehat.store');
-
+        Route::resource('lokasiloket', LokasiloketController::class)->only(['index','create','store','edit', 'update', 'destroy']);
     });
 
     Route::prefix('masterdata')->group(function () {

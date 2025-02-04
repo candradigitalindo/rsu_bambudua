@@ -59,7 +59,10 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('setting*') ? 'active-sub' : '' }}" href="{{ route('satusehat.index') }}">Satusehat</a>
+                    <a class="{{ request()->is('setting/satusehat*') ? 'active-sub' : '' }}" href="{{ route('satusehat.index') }}">Satusehat</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('setting/lokasiloket*') ? 'active-sub' : '' }}" href="{{ route('lokasiloket.index') }}">Loket Antrian</a>
                 </li>
 
             </ul>

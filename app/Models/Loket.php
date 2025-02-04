@@ -2,9 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class Loket extends Model
 {
-    protected $fillable = ['kode_loket', 'keterangan'];
+    use HasUuids;
+    protected $table = 'lokets';
+    protected $fillable = ['lokasiloket_id', 'user_id', 'kode_loket'];
+
+    public function lokasiloket()
+    {
+        return $this->belongsTo(LokasiLoket::class);
+    }
 }

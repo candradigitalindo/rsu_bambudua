@@ -80,6 +80,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pendaftaran')->group(function () {
         Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
         Route::get('/caripasien', [PendaftaranController::class, 'cariPasien'])->name('pendaftaran.caripasien');
+        Route::post('/antrian', [PendaftaranController::class, 'update_antrian'])->name('pendaftaran.update_antrian');
     });
 
     Route::resource('pengguna', PenggunaController::class)->only(['index','create','store','edit', 'update', 'destroy']);

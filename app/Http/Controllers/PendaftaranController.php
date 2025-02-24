@@ -14,7 +14,18 @@ class PendaftaranController extends Controller
     }
     public function index()
     {
-        return view('pages.pendaftaran.rawatJalan');
+        $antrian = $this->pendaftaranRepository->index();
+        return view('pages.pendaftaran.index', compact('antrian'));
+    }
+
+    public function update_antrian()
+    {
+        $antrian = $this->pendaftaranRepository->update_antrian();
+        if ($antrian) {
+            return response()->json(['status' => true, 'antrian' => $antrian['antrian'], 'loket' => $antrian['loket'], 'jumlah' => $antrian['jumlah']], 200);
+        }else {
+            return response()->json(['status' => false], 404);
+        }
     }
 
     public function cariPasien(Request $request)
@@ -53,7 +64,7 @@ class PendaftaranController extends Controller
             }
         } else {
             $output = '
-                <div class="card mb-3">
+                <div class="card border mb-3">
                     <div class="card-body">
                         <div class="d-flex align-items-center text-center">
                         <strong>Data Pasien tidak ditemukan...</strong>

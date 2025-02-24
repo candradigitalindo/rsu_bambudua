@@ -14384,7 +14384,7 @@ input[type="file"]::file-selector-button {
     justify-content: center;
     flex-direction: column;
     text-align: center;
-    max-width: 540px;
+    max-width: 1040px;
     margin: 5rem auto;
     background: rgba(0, 0, 0, 0.02);
     backdrop-filter: blur(15px);

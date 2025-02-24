@@ -56,7 +56,7 @@ class PendaftaranController extends Controller
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="d-flex align-items-center text-center">
-                        <strong>Data tidak ditemukan...</strong>
+                        <strong>Data Pasien tidak ditemukan...</strong>
                     </div>
                     </div>
                 </div>

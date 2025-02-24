@@ -16,5 +16,10 @@ class LokasiLoket extends Model
     {
         return $this->hasMany(Loket::class, 'lokasiloket_id');
     }
+
+    public function antrian()
+    {
+        return $this->hasMany(Antrian::class, 'lokasiloket_id');
+    }
 }
 

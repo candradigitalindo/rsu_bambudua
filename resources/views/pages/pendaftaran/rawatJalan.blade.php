@@ -37,6 +37,7 @@
                     </div>
                     <!-- Row ends -->
                     <!-- Card acrions starts -->
+
                     <!-- Card acrions ends -->
 
                 </div>
@@ -55,7 +56,13 @@
                 </div>
             </div>
         </div>
+        <div class="col-sm-4">
+            <div class="card mb-3">
+                <div class="card-body">
 
+                </div>
+            </div>
+        </div>
     </div>
     <!-- Row ends -->
 @endsection

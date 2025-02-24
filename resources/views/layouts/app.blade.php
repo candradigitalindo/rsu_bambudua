@@ -69,16 +69,7 @@
                     <h6 class="mb-1 profile-name text-nowrap text-truncate text-primary"><span
                             class="badge bg-primary-subtle text-primary fs-6">{{ auth()->user()->name }}</span></h6>
                     <small class="profile-name text-nowrap text-truncate">
-                        @switch(auth()->user()->role)
-                            @case(1)
-                                <span class="text-primary fs-6">Owner</span>
-                            @break
 
-                            @case(2)
-                            @break
-
-                            @default
-                        @endswitch
                     </small>
                 </div>
                 <!-- Sidebar profile ends -->

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgamaController;
+use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
@@ -21,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+
+Route::get('/antrian', [AntrianController::class, 'index'])->name('antrian.index');
+Route::get('/antrian/{id}', [AntrianController::class, 'show'])->name('antrian.show');
+Route::get('/antrian/{id}/cetak', [AntrianController::class, 'store'])->name('antrian.store');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
@@ -78,5 +83,4 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::resource('pengguna', PenggunaController::class)->only(['index','create','store','edit', 'update', 'destroy']);
-
 });

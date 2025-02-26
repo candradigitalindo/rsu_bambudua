@@ -53,7 +53,8 @@ class AntrianController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $data = $this->antrianRepository->monitor($id);
+        return view('pages.antrian.monitor', compact('data'));
     }
 
     /**

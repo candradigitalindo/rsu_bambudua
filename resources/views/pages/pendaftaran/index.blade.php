@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Data Pekerjaan')
+@section('title', 'Pendaftaran')
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">

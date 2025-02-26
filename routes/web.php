@@ -26,6 +26,7 @@ Route::get('/', function () {
 Route::get('/antrian', [AntrianController::class, 'index'])->name('antrian.index');
 Route::get('/antrian/{id}', [AntrianController::class, 'show'])->name('antrian.show');
 Route::get('/antrian/{id}/cetak', [AntrianController::class, 'store'])->name('antrian.store');
+Route::get('/antrian/{id}/monitor', [AntrianController::class, 'edit'])->name('antrian.monitor');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');

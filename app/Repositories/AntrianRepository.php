@@ -38,4 +38,11 @@ class AntrianRepository
         ]);
         return $antrian;
     }
+
+    public function monitor($id)
+    {
+        $lokasi = LokasiLoket::findOrFail($id);
+        $antrian = Antrian::whereDate('created_at', date('Y-m-d'))->where('lokasiloket_id', $lokasi->id)->where('status', 2)->orderBy('updated_at', 'DESC')->first();
+        return ['id' => $lokasi->id,'lokasi' => $lokasi->lokasi_loket, 'antrian' => $antrian == null ? 0 : $antrian->prefix.' '.$antrian->nomor];
+    }
 }

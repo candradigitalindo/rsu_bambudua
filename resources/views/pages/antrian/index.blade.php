@@ -61,7 +61,7 @@
 
                                 </td>
                                 <td>
-                                    <a href=""
+                                    <a href="{{ route('antrian.monitor', $l->id) }}"
                                        class="btn btn-primary btn-sm" id="monitor-{{ $l->id }}">
                                         <i class="ri-computer-line"></i>
                                         <span class="btn-text" id="monitor-{{ $l->id }}">Buka Halaman </span>

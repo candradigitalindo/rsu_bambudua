@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Events\AntrianEvent;
 use App\Models\Antrian;
 use App\Models\Loket;
 use App\Models\Pasien;
@@ -35,6 +36,8 @@ class PendaftaranRepository
         if ($loket) {
             $antrian = Antrian::whereDate('created_at', date('Y-m-d'))->where('lokasiloket_id', $loket->lokasiloket_id)->where('status', 1)->orderBy('nomor', 'ASC')->first();
             if ($antrian) {
+                $d = AntrianEvent::dispatch($loket->lokasiloket_id);
+                dd($d);
                 $antrian->update(['status' => 2]);
             }
             $jumlah  = Antrian::whereDate('created_at', date('Y-m-d'))->where('lokasiloket_id', $loket->lokasiloket_id)->where('status', 1)->count();

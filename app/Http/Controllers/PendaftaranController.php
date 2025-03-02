@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Repositories\PendaftaranRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PendaftaranController extends Controller
 {
@@ -14,8 +15,10 @@ class PendaftaranController extends Controller
     }
     public function index()
     {
-        $antrian = $this->pendaftaranRepository->index();
-        return view('pages.pendaftaran.index', compact('antrian'));
+        $antrian    = $this->pendaftaranRepository->index();
+        $pekerjaan  = $this->pendaftaranRepository->pekerjaan();
+        $agama      = $this->pendaftaranRepository->agama();
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama'));
     }
 
     public function update_antrian()
@@ -23,7 +26,7 @@ class PendaftaranController extends Controller
         $antrian = $this->pendaftaranRepository->update_antrian();
         if ($antrian) {
             return response()->json(['status' => true, 'antrian' => $antrian['antrian'], 'loket' => $antrian['loket'], 'jumlah' => $antrian['jumlah']], 200);
-        }else {
+        } else {
             return response()->json(['status' => false], 404);
         }
     }
@@ -32,34 +35,110 @@ class PendaftaranController extends Controller
     {
         $data       = $this->pendaftaranRepository->cariPasien($request);
         $total_row  = $data->count();
+
         if ($total_row > 0) {
             foreach ($data as $d) {
-                $output = '
-                    <a href="">
-                        <div class="d-flex flex-wrap gap-3 border-bottom mb-2">
-                            <div class="d-flex flex-column">
-                                <div class="text-primary mb-1">
-                                    ' . $d->rekam_medis . '
+                $output[] = '
+                    <div class="card border mt-3">
+                        <div class="card-body">
+                            <span class="badge bg-primary-subtle rounded-pill text-primary">
+                                <i class="ri-circle-fill me-1"></i>Status : Sedang Rawat jalan</span>
+                            <div class="d-flex align-items-center flex-wrap gap-4">
+                                <div class="d-flex flex-column mw-100">
+                                    <table>
+                                        <tr>
+                                            <td>No.RM</td>
+                                            <td>:</td>
+                                            <td class="fw-semibold">'.$d->rekam_medis.'</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Nama</td>
+                                            <td>:</td>
+                                            <td class="fw-semibold">'.$d->name.'</td>
+                                        </tr>
+                                        <tr>
+                                            <td>'.$d->jenis_identitas.'</td>
+                                            <td>:</td>
+                                            <td class="fw-semibold">'.$d->no_identitas.'</td>
+                                        </tr>
+                                    </table>
                                 </div>
-                                <div class="fw-semibold mb-1">' . $d->name . '</div>
-                                <ul class="list-unstyled d-flex">
-                                    <li class="pe-2 border-end">KTP: ' . $d->no_identitas . '</li>
-                                    <li class="px-2 border-end">Tanggal Lahir : ' . $d->tgl_lahir . '</li>
-                                    <li class="px-2 border-end">' . $d->jenis_kelamin == 1 ? "Pria" : "Wanita" . '</li>
-                                    <li class="px-2">' . $d->golongan_darah . '</li>
-                                </ul>
+                                <div class="d-flex flex-column mw-100">
+                                    <table>
+                                        <tr>
+                                            <td>No Hp</td>
+                                            <td>:</td>
+                                            <td class="fw-semibold">'.$d->no_hp.'</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Alamat</td>
+                                            <td>:</td>
+                                            <td class="fw-semibold">Jl. xxxxx xxxxx xxxxxx <br>
+                                                Kabupaten xxxx xxxx
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="d-flex flex-column mw-100">
+                                    <div class="text-primary fw-semibold">
+                                        Kunjungan Terakhir
+                                    </div>
+                                    <div>
+                                        <table>
+                                            <tr>
+                                                <td>No. Kunjungan</td>
+                                                <td>:</td>
+                                                <td class="fw-semibold">E-12121200000</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Tanggal</td>
+                                                <td>:</td>
+                                                <td class="fw-semibold">25 Maret 2025 16.00 WIB</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column mw-100">
+                                    <div class="text-primary fw-semibold">
+                                        Informasi Kunjungan
+                                    </div>
+                                    <div>
+                                        <table>
+                                            <tr>
+                                                <td>Jenis</td>
+                                                <td>:</td>
+                                                <td class="fw-semibold">Rawat Jalan</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Dokter</td>
+                                                <td>:</td>
+                                                <td class="fw-semibold">dr. xxxxxxx xxxxxxx</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-
-                        <div>
-                            <h6 class="text-primary">Alamat</h6>
-                            <p class="text-truncate mb-2">
-                            </p>
-                            <p class="text-truncate m-0"><span class="text-primary">No HP :</span> ' . $d->no_hp . '</p>
-                            <p class="text-truncate m-0"><span class="text-primary">Kunjungan Terakhir :</span> 18/02/2024 at
-                                6:30PM</p>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-primary btn-sm" id='.$d->id.'>
+                                <i class="ri-stethoscope-line"></i>
+                                Daftar Rawat Jalan
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id='.$d->id.'>
+                                <i class="ri-hotel-bed-fill"></i>
+                                Daftar Rawat Inap
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id='.$d->id.'>
+                                <i class="ri-dossier-fill"></i>
+                                Daftar IGD
+                            </button>
+                            <button type="button" class="btn btn-outline-warning btn-sm" id='.$d->id.'>
+                                <i class="ri-edit-2-fill"></i>
+                                Edit Data Pasien
+                            </button>
                         </div>
-                    </a>
+                    </div>
                 ';
             }
         } else {
@@ -75,5 +154,37 @@ class PendaftaranController extends Controller
         }
 
         return json_encode($output);
+    }
+
+    public function store_pasien(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'jenis_identitas'   => 'nullable|string',
+            'no_identitas'      => 'nullable|string',
+            'name_pasien'       => 'required|string',
+            'jenis_kelamin'     => 'required|string',
+            'tgl_lahir'         => 'required|string',
+            'golongan_darah'    => 'nullable|string',
+            'kewarganegaraan'   => 'nullable|string',
+            'pekerjaan'         => 'nullable|string',
+            'status_menikah'    => 'nullable|string',
+            'agama'             => 'nullable|string',
+            'no_hp'             => 'required|string',
+            'no_telepon'        => 'nullable|string',
+            'mr_lama'           => 'nullable|string'
+
+        ], [
+            'name_pasien.required'   => 'Kolom Nama Pasien masih kosong',
+            'jenis_kelamin.required' => 'Kolom Jenis Kelamin masih kosong',
+            'tgl_lahir.required'     => 'Kolom Tanggal Lahir masih kosong',
+            'no_hp.required'         => 'Kolom No Handphone masih kosong'
+        ]);
+
+        if ($validator->passes()) {
+            $pasien = $this->pendaftaranRepository->store_pasien($request);
+            return response()->json(['status' => true, 'text' => 'Data Pasien Baru ' . $pasien->name . ' berhasil ditambahkan']);
+        }
+
+        return response()->json(['error' => $validator->errors()->all()]);
     }
 }

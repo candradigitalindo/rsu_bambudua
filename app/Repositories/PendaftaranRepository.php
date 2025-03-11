@@ -8,6 +8,7 @@ use App\Models\Antrian;
 use App\Models\Loket;
 use App\Models\Pasien;
 use App\Models\Pekerjaan;
+use App\Models\Province;
 use Illuminate\Support\Facades\Auth;
 
 class PendaftaranRepository
@@ -83,6 +84,12 @@ class PendaftaranRepository
         return $agama;
     }
 
+    public function provinsi()
+    {
+        $provinsi = Province::orderBy('code', 'ASC')->get();
+        return $provinsi;
+    }
+
     public function store_pasien($request)
     {
         $count = Pasien::whereDate('created_at', date('Y-m-d'))->count();
@@ -100,9 +107,18 @@ class PendaftaranRepository
             'agama'             => $request->agama,
             'no_hp'             => $request->no_hp,
             'no_telepon'        => $request->no_telepon,
-            'mr_lama'           => $request->mr_lama
+            'mr_lama'           => $request->mr_lama,
+            'alamat'            => $request->alamat,
+            'province_code'     => $request->province,
+            'city_code'         => $request->city
         ]);
 
+        return $pasien;
+    }
+
+    public function editPasien($id)
+    {
+        $pasien = Pasien::findOrFail($id);
         return $pasien;
     }
 }

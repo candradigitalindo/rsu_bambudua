@@ -83,10 +83,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal fade" id="form-pasien" tabindex="-1"
-                        aria-labelledby="exampleModalScrollableTitle" aria-hidden="true" data-bs-backdrop="static"
-                        data-bs-keyboard="false">
-                        <div class="modal-dialog modal-dialog-scrollable">
+                    <div class="modal fade" id="form-pasien" tabindex="-1" aria-labelledby="exampleModalScrollableTitle"
+                        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title" id="exampleModalScrollableTitle">
@@ -100,7 +99,7 @@
                                     </div>
                                     <form id="formpasien">
                                         <div class="row gx-3">
-                                            <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-2 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a7">Jenis Identitas</label>
                                                     <div class="input-group">
@@ -120,7 +119,7 @@
 
                                                 </div>
                                             </div>
-                                            <div class="col-xxl-9 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-5 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a1">Nomor Identitas</label>
                                                     <div class="input-group">
@@ -130,9 +129,7 @@
 
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-12 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-5 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a1">Nama Pasien
                                                         <span class="text-danger">*</span>
@@ -144,8 +141,8 @@
 
                                                 </div>
                                             </div>
-
                                         </div>
+
                                         <div class="row gx-3">
                                             <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
@@ -198,7 +195,7 @@
 
                                         </div>
                                         <div class="row gx-3">
-                                            <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a7">Kewarganegaraan
 
@@ -220,7 +217,7 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a7">Pekerjaan</label>
                                                     <div class="input-group">
@@ -235,11 +232,7 @@
 
                                                 </div>
                                             </div>
-
-
-                                        </div>
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a7">Status Menikah
 
@@ -263,7 +256,10 @@
                                                 </div>
                                             </div>
 
-                                            <div class="col-xxl-6 col-lg-4 col-sm-6">
+
+                                        </div>
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a7">Agama</label>
                                                     <div class="input-group">
@@ -278,11 +274,7 @@
 
                                                 </div>
                                             </div>
-
-
-                                        </div>
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a1">No Handphone
                                                         <span class="text-danger">*</span>
@@ -294,7 +286,7 @@
 
                                                 </div>
                                             </div>
-                                            <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a1">No Telp
 
@@ -308,22 +300,52 @@
                                             </div>
 
                                         </div>
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-12 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">MR Lama
 
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Alamat
+                                                        <span class="text-danger">*</span>
                                                     </label>
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" id="mr_lama"
-                                                            name="mr_lama">
+                                                        <input type="text" class="form-control" id="alamat"
+                                                            name="alamat">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Provinsi</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="province" id="province">
+                                                            <option value="">-- Pilih Provinsi --</option>
+                                                            @foreach ($provinsi as $p)
+                                                                <option value="{{ $p->code }}">{{ $p->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
                                                     </div>
 
                                                 </div>
                                             </div>
 
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Kota / Kabupaten
 
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="city" id="city">
+                                                            <option value="">-- Pilih Provinsi dulu --</option>
+
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
                                         </div>
+
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-secondary" data-bs-target="#modal-pasien"
@@ -623,7 +645,7 @@
                         },
                         dataType: 'json',
                         success: function(data) {
-                        
+
                             $('#data').hide();
                             setTimeout(function() {
                                 $('#loading').hide();
@@ -665,6 +687,22 @@
 
             $("#btn-buatPasienBaru").click(function() {
                 $("#error").css("display", "none");
+                $("#jenis_identitas").val("");
+                $("#no_identitas").val(null);
+                $("#name_pasien").val(null);
+                $("#jenis_kelamin").val("");
+                $("#tgl_lahir").val(null);
+                $("#golongan_darah").val("");
+                $("#kewarganegaraan").val(1);
+                $("#pekerjaan").val("");
+                $("#status_menikah").val("");
+                $("#agama").val("");
+                $("#no_hp").val(null);
+                $("#no_telepon").val(null);
+                $("#mr_lama").val(null);
+                $("#alamat").val(null);
+                $("#province").val("");
+                $("city").val(null);
             });
 
             $("#btn-simpan").click(function() {
@@ -685,7 +723,10 @@
                         agama: $("#agama").val(),
                         no_hp: $("#no_hp").val(),
                         no_telepon: $("#no_telepon").val(),
-                        mr_lama: $("#mr_lama").val()
+                        mr_lama: $("#mr_lama").val(),
+                        alamat: $("#alamat").val(),
+                        province: $("#province").val(),
+                        city: $("#city").val()
                     },
 
                     success: function(res) {
@@ -712,6 +753,9 @@
                                 $("#no_hp").val(null);
                                 $("#no_telepon").val(null);
                                 $("#mr_lama").val(null);
+                                $("#alamat").val(null);
+                                $("#province").val("");
+                                $("city").val(null);
                                 $("#btn-kembali").click();
 
                             }
@@ -729,6 +773,88 @@
                     $(".print-error-msg").find("ul").append('<li>' + value + '</li>');
                 });
             }
+        });
+        document.getElementById('province').addEventListener('change', function() {
+            var provinceId = this.value;
+            let url = "{{ route('wilayah.city', ':code') }}";
+            url = url.replace(':code', provinceId)
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var cityDropdown = document.getElementById('city');
+                    cityDropdown.innerHTML = '';
+                    data.forEach(function(city) {
+                        var option = document.createElement('option');
+                        option.value = city.code;
+                        option.textContent = city.name;
+                        cityDropdown.appendChild(option);
+                    });
+                });
+        });
+        $(document).on('click', '.edit', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.editPasien', ':id') }}"
+            url = url.replace(':id', id);
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    $("#btn-buatPasienBaru").click();
+                    $("#jenis_identitas").val(res.data.jenis_identitas);
+                    $("#no_identitas").val(res.data.no_identitas);
+                    $("#name_pasien").val(res.data.name);
+                    $("#jenis_kelamin").val(res.data.jenis_kelamin);
+                    $("#tgl_lahir").val(res.data.tgl_lahir);
+                    $("#golongan_darah").val(res.data.golongan_darah);
+                    $("#kewarganegaraan").val(res.data.kewarganegaraan);
+                    $("#pekerjaan").val(res.data.pekerjaan);
+                    $("#status_menikah").val(res.data.status_menikah);
+                    $("#agama").val(res.data.agama);
+                    $("#no_hp").val(res.data.no_hp);
+                    $("#no_telepon").val(res.data.no_telepon);
+                    $("#mr_lama").val(res.data.mr_lama);
+                    $("#alamat").val(res.data.alamat);
+                    $("#province").val(res.data.province_code);
+                    let url = "{{ route('wilayah.city', ':code') }}";
+                    url = url.replace(':code', res.data.province_code);
+                    let city_code = res.data.city_code;
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(response) {
+                            $.each(response, function(id, item) {
+                                if (city_code == item.code) {
+                                    $("#city").append("<option value=" + item.code +
+                                        " selected>" + item.name +
+                                        "</option>");
+                                } else {
+                                    $("#city").append("<option value=" + item.code +
+                                        ">" + item.name +
+                                        "</option>");
+                                }
+                            })
+                        }
+                    })
+                }
+            })
+        });
+        $(document).on('click', '.rawatJalan', function() {
+            let id = $(this).attr('id');
+            console.log(id);
+        });
+        $(document).on('click', '.rawatInap', function() {
+            let id = $(this).attr('id');
+            console.log(id);
+        });
+        $(document).on('click', '.igd', function() {
+            let id = $(this).attr('id');
+            console.log(id);
         });
     </script>
 @endpush

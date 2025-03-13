@@ -121,4 +121,29 @@ class PendaftaranRepository
         $pasien = Pasien::findOrFail($id);
         return $pasien;
     }
+
+    public function updatePasien($request, $id)
+    {
+        $pasien = Pasien::findOrFail($id);
+        $pasien->update([
+            'name'              => strtoupper($request->name_pasien),
+            'jenis_identitas'   => $request->jenis_identitas,
+            'no_identitas'      => $request->no_identitas,
+            'tgl_lahir'         => $request->tgl_lahir,
+            'jenis_kelamin'     => $request->jenis_kelamin,
+            'golongan_darah'    => $request->golongan_darah,
+            'kewarganegaraan'   => $request->kewarganegaraan,
+            'pekerjaan'         => $request->pekerjaan,
+            'status_menikah'    => $request->status_menikah,
+            'agama'             => $request->agama,
+            'no_hp'             => $request->no_hp,
+            'no_telepon'        => $request->no_telepon,
+            'mr_lama'           => $request->mr_lama,
+            'alamat'            => $request->alamat,
+            'province_code'     => $request->province,
+            'city_code'         => $request->city
+        ]);
+
+        return $pasien;
+    }
 }

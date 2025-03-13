@@ -83,8 +83,288 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal fade" id="form-pasien" tabindex="-1" aria-labelledby="exampleModalScrollableTitle"
-                        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                    <div class="modal fade" id="form-edit-pasien" tabindex="-1"
+                        aria-labelledby="exampleModalScrollableTitle" aria-hidden="true" data-bs-backdrop="static"
+                        data-bs-keyboard="false">
+                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalScrollableTitle">
+                                        Form Edit Data Pasien
+                                    </h5>
+
+                                </div>
+                                <div class="modal-body">
+                                    <div class="alert alert-danger print-error-msg" style="display:none" id="error-edit">
+                                        <ul></ul>
+                                    </div>
+                                    <form id="formpasien">
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-2 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Jenis Identitas</label>
+                                                    <div class="input-group">
+
+                                                        <select class="form-select" name="jenis_identitas"
+                                                            id="jenis_identitas_edit">
+                                                            <option value="">Pilih Jenis Identitas</option>
+                                                            <option value="1">
+                                                                KTP</option>
+                                                            <option value="2">
+                                                                SIM</option>
+                                                            <option value="3">
+                                                                Paspor</option>
+
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-5 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Nomor Identitas</label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="no_identitas_edit"
+                                                            name="no_identitas">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-5 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Nama Pasien
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="name_pasien_edit"
+                                                            name="name_pasien">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Jenis Kelamin
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+
+                                                        <select class="form-select" name="jenis_kelamin"
+                                                            id="jenis_kelamin_edit">
+                                                            <option value="">Pilih Jenis Kelamin</option>
+                                                            <option value="1">
+                                                                Pria</option>
+                                                            <option value="2">
+                                                                Wanita</option>
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Tanggal Lahir
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="date" class="form-control" id="tgl_lahir_edit"
+                                                            name="tgl_lahir">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Gol Darah</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="golongan_darah"
+                                                            id="golongan_darah_edit">
+                                                            <option value="">-- Pilih Gol Darah --</option>
+                                                            <option value="A">A</option>
+                                                            <option value="B">B</option>
+                                                            <option value="AB">AB</option>
+                                                            <option value="O">O</option>
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Kewarganegaraan
+
+                                                    </label>
+                                                    <div class="input-group">
+
+                                                        <select class="form-select" name="kewarganegaraan"
+                                                            id="kewarganegaraan_edit">
+
+                                                            <option value="1">
+                                                                WNI</option>
+                                                            <option value="2">
+                                                                WNA</option>
+
+
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Pekerjaan</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="pekerjaan" id="pekerjaan_edit">
+                                                            <option value="">-- Pilih Pekerjaan --</option>
+                                                            @foreach ($pekerjaan as $p)
+                                                                <option value="{{ $p->name }}">{{ $p->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Status Menikah
+
+                                                    </label>
+                                                    <div class="input-group">
+
+                                                        <select class="form-select" name="status_menikah"
+                                                            id="status_menikah_edit">
+                                                            <option value="">-- Pilih Status --</option>
+                                                            <option value="1">
+                                                                Belum Menikah</option>
+                                                            <option value="2">
+                                                                Menikah</option>
+                                                            <option value="3">
+                                                                Cerai Hidup</option>
+                                                            <option value="4">
+                                                                Cerai Mati</option>
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+
+                                        </div>
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Agama</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="agama" id="agama_edit">
+                                                            <option value="">-- Pilih Agama --</option>
+                                                            @foreach ($agama as $a)
+                                                                <option value="{{ $a->name }}">{{ $a->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">No Handphone
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="no_hp_edit"
+                                                            name="no_hp">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">No Telp
+
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="no_telepon_edit"
+                                                            name="no_telepon">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="row gx-3">
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Alamat
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="alamat_edit"
+                                                            name="alamat">
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a7">Provinsi</label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="province" id="province_edit">
+                                                            <option value="">-- Pilih Provinsi --</option>
+                                                            @foreach ($provinsi as $p)
+                                                                <option value="{{ $p->code }}">{{ $p->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+
+                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a1">Kota / Kabupaten
+
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <select class="form-select" name="city" id="city_edit">
+                                                            <option value="">-- Pilih Provinsi dulu --</option>
+
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="text" style="visibility: hidden" id="id">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-target="#modal-pasien"
+                                        data-bs-toggle="modal" id="btn-edit-kembali">
+                                        Kembali
+                                    </button>
+                                    <button type="button" class="btn btn-primary" id="btn-edit">
+                                        Simpan
+                                    </button>
+
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="form-pasien" tabindex="-1"
+                        aria-labelledby="exampleModalScrollableTitle" aria-hidden="true" data-bs-backdrop="static"
+                        data-bs-keyboard="false">
                         <div class="modal-dialog modal-xl modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -355,6 +635,7 @@
                                     <button type="button" class="btn btn-primary" id="btn-simpan">
                                         Simpan
                                     </button>
+
                                 </div>
                                 </form>
                             </div>
@@ -702,7 +983,8 @@
                 $("#mr_lama").val(null);
                 $("#alamat").val(null);
                 $("#province").val("");
-                $("city").val(null);
+                $("#city").val(null);
+
             });
 
             $("#btn-simpan").click(function() {
@@ -760,19 +1042,22 @@
 
                             }
                         } else {
-                            printErrorMsg(res.error)
+                            error(res.error)
                         }
                     }
                 });
+
             });
 
-            function printErrorMsg(msg) {
-                $(".print-error-msg").find("ul").html('');
-                $(".print-error-msg").css('display', 'block');
+            function error(msg) {
+                $("#error").find("ul").html('');
+                $("#error").css('display', 'block');
                 $.each(msg, function(key, value) {
-                    $(".print-error-msg").find("ul").append('<li>' + value + '</li>');
+                    $("#error").find("ul").append('<li>' + value + '</li>');
                 });
             }
+
+
         });
         document.getElementById('province').addEventListener('change', function() {
             var provinceId = this.value;
@@ -791,10 +1076,29 @@
                     });
                 });
         });
+
+        document.getElementById('province_edit').addEventListener('change', function() {
+            var provinceId = this.value;
+            let url = "{{ route('wilayah.city', ':code') }}";
+            url = url.replace(':code', provinceId)
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    var cityDropdown = document.getElementById('city_edit');
+                    cityDropdown.innerHTML = '';
+                    data.forEach(function(city) {
+                        var option = document.createElement('option');
+                        option.value = city.code;
+                        option.textContent = city.name;
+                        cityDropdown.appendChild(option);
+                    });
+                });
+        });
         $(document).on('click', '.edit', function() {
             let id = $(this).attr('id');
             let url = "{{ route('pendaftaran.editPasien', ':id') }}"
             url = url.replace(':id', id);
+            $("#error-edit").css("display", "none");
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -802,22 +1106,22 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(res) {
-                    $("#btn-buatPasienBaru").click();
-                    $("#jenis_identitas").val(res.data.jenis_identitas);
-                    $("#no_identitas").val(res.data.no_identitas);
-                    $("#name_pasien").val(res.data.name);
-                    $("#jenis_kelamin").val(res.data.jenis_kelamin);
-                    $("#tgl_lahir").val(res.data.tgl_lahir);
-                    $("#golongan_darah").val(res.data.golongan_darah);
-                    $("#kewarganegaraan").val(res.data.kewarganegaraan);
-                    $("#pekerjaan").val(res.data.pekerjaan);
-                    $("#status_menikah").val(res.data.status_menikah);
-                    $("#agama").val(res.data.agama);
-                    $("#no_hp").val(res.data.no_hp);
-                    $("#no_telepon").val(res.data.no_telepon);
-                    $("#mr_lama").val(res.data.mr_lama);
-                    $("#alamat").val(res.data.alamat);
-                    $("#province").val(res.data.province_code);
+                    $("#jenis_identitas_edit").val(res.data.jenis_identitas);
+                    $("#no_identitas_edit").val(res.data.no_identitas);
+                    $("#name_pasien_edit").val(res.data.name);
+                    $("#jenis_kelamin_edit").val(res.data.jenis_kelamin);
+                    $("#tgl_lahir_edit").val(res.data.tgl_lahir);
+                    $("#golongan_darah_edit").val(res.data.golongan_darah);
+                    $("#kewarganegaraan_edit").val(res.data.kewarganegaraan);
+                    $("#pekerjaan_edit").val(res.data.pekerjaan);
+                    $("#status_menikah_edit").val(res.data.status_menikah);
+                    $("#agama_edit").val(res.data.agama);
+                    $("#no_hp_edit").val(res.data.no_hp);
+                    $("#no_telepon_edit").val(res.data.no_telepon);
+                    $("#mr_lama_edit").val(res.data.mr_lama);
+                    $("#alamat_edit").val(res.data.alamat);
+                    $("#province_edit").val(res.data.province_code);
+                    $("#id").val(res.data.id);
                     let url = "{{ route('wilayah.city', ':code') }}";
                     url = url.replace(':code', res.data.province_code);
                     let city_code = res.data.city_code;
@@ -830,11 +1134,13 @@
                         success: function(response) {
                             $.each(response, function(id, item) {
                                 if (city_code == item.code) {
-                                    $("#city").append("<option value=" + item.code +
+                                    $("#city_edit").append("<option value=" + item
+                                        .code +
                                         " selected>" + item.name +
                                         "</option>");
                                 } else {
-                                    $("#city").append("<option value=" + item.code +
+                                    $("#city_edit").append("<option value=" + item
+                                        .code +
                                         ">" + item.name +
                                         "</option>");
                                 }
@@ -844,17 +1150,73 @@
                 }
             })
         });
+
+        $("#btn-edit").click(function() {
+            let url = "{{ route('pendaftaran.updatePasien', ':id') }}"
+            url = url.replace(':id', $("#id").val());
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    jenis_identitas: $("#jenis_identitas_edit").val(),
+                    no_identitas: $("#no_identitas_edit").val(),
+                    name_pasien: $("#name_pasien_edit").val(),
+                    jenis_kelamin: $("#jenis_kelamin_edit").val(),
+                    tgl_lahir: $("#tgl_lahir_edit").val(),
+                    golongan_darah: $("#golongan_darah_edit").val(),
+                    kewarganegaraan: $("#kewarganegaraan_edit").val(),
+                    pekerjaan: $("#pekerjaan_edit").val(),
+                    status_menikah: $("#status_menikah_edit").val(),
+                    agama: $("#agama_edit").val(),
+                    no_hp: $("#no_hp_edit").val(),
+                    no_telepon: $("#no_telepon_edit").val(),
+                    mr_lama: $("#mr_lama_edit").val(),
+                    alamat: $("#alamat_edit").val(),
+                    province: $("#province_edit").val(),
+                    city: $("#city_edit").val()
+                },
+
+                success: function(res) {
+                    if ($.isEmptyObject(res.error)) {
+                        $("#error-edit").css("display", "none");
+                        if (res.status == false) {
+                            swal(res.text, {
+                                icon: "error",
+                            });
+                        } else {
+                            $("#btn-edit-kembali").click();
+                            swal(res.text, {
+                                icon: "success",
+                            });
+
+                        }
+                    } else {
+                        error_edit(res.error)
+                    }
+                }
+            });
+        });
+
+        function error_edit(msg) {
+            $("#error-edit").find("ul").html('');
+            $("#error-edit").css('display', 'block');
+            $.each(msg, function(key, value) {
+                $("#error-edit").find("ul").append('<li>' + value + '</li>');
+            });
+        }
+
         $(document).on('click', '.rawatJalan', function() {
             let id = $(this).attr('id');
-            console.log(id);
+            alert(id);
         });
         $(document).on('click', '.rawatInap', function() {
             let id = $(this).attr('id');
-            console.log(id);
+            alert(id);
         });
         $(document).on('click', '.igd', function() {
             let id = $(this).attr('id');
-            console.log(id);
+            alert(id);
         });
     </script>
 @endpush

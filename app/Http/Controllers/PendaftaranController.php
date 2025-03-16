@@ -33,6 +33,75 @@ class PendaftaranController extends Controller
         }
     }
 
+    public function showRawatJalan()
+    {
+        $data = $this->pendaftaranRepository->showRawatJalan();
+        $total_row  = $data->count();
+        if ($total_row > 0) {
+            foreach ($data as $d) {
+                $output[] = '
+
+                     <tr>
+                        <td>
+
+                            <table>
+                                <tr>
+                                    <td>No. Kunjungan</td>
+                                    <td>:</td>
+                                    <td>'.$d->no_encounter.'</td>
+                                </tr>
+                                <tr>
+                                    <td>Rekam Medis</td>
+                                    <td>:</td>
+                                    <td>'.$d->rekam_medis.'</td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary-subtle rounded-pill text-primary">
+                                <i class="ri-circle-fill me-1"></i>Status : ' . $d->status . '</span></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+
+                            <table>
+                                <tr>
+                                    <td>Nama Pasien</td>
+                                    <td>:</td>
+                                    <td>'.$d->name_pasien.'</td>
+                                </tr>
+                                <tr>
+                                    <td>Nama Dokter</td>
+                                    <td>:</td>
+                                    <td>'.$d->dokter.'</td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>Jenis Jaminan</td>
+                                    <td>:</td>
+                                    <td>'.$d->jenis_jaminan.'</td>
+                                </tr>
+                                <tr>
+                                    <td>Tujuan Kunjungan</td>
+                                    <td>:</td>
+                                    <td>'.$d->tujuan_kunjungan.'</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                ';
+            }
+        } else {
+            $output = '<tr>
+                        <td colspan="6" class="text-center">Data tidak ada</td>
+                    </tr>';
+        }
+
+        return json_encode($output);
+    }
+
     public function cariPasien(Request $request)
     {
         $data       = $this->pendaftaranRepository->cariPasien($request);
@@ -44,7 +113,7 @@ class PendaftaranController extends Controller
                     <div class="card border mt-3">
                         <div class="card-body">
                             <span class="badge bg-primary-subtle rounded-pill text-primary">
-                                <i class="ri-circle-fill me-1"></i>Status : '.$d->status.'</span>
+                                <i class="ri-circle-fill me-1"></i>Status : ' . $d->status . '</span>
                             <hr>
 
                                 <div class="row justify-content-between">
@@ -58,17 +127,17 @@ class PendaftaranController extends Controller
                                                     <tr>
                                                         <td>No.RM</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->rekam_medis.'</td>
+                                                        <td class="fw-semibold">' . $d->rekam_medis . '</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Nama</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->name.'</td>
+                                                        <td class="fw-semibold">' . $d->name . '</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>'.$d->jenis_identitas.'</td>
+                                                        <td>' . $d->jenis_identitas . '</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->no_identitas.'</td>
+                                                        <td class="fw-semibold">' . $d->no_identitas . '</td>
                                                     </tr>
                                                 </table>
                                             </div>
@@ -84,12 +153,12 @@ class PendaftaranController extends Controller
                                                     <tr>
                                                         <td>No Hp</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->no_hp.'</td>
+                                                        <td class="fw-semibold">' . $d->no_hp . '</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Alamat</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->alamat.'
+                                                        <td class="fw-semibold">' . $d->alamat . '
                                                         </td>
                                                     </tr>
                                                 </table>
@@ -106,17 +175,17 @@ class PendaftaranController extends Controller
                                                     <tr>
                                                         <td>No. Kunjungan</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->no_encounter.'</td>
+                                                        <td class="fw-semibold">' . $d->no_encounter . '</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Tanggal</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->tgl_encounter.'</td>
+                                                        <td class="fw-semibold">' . $d->tgl_encounter . '</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Jenis</td>
                                                         <td>:</td>
-                                                        <td class="fw-semibold">'.$d->type.'</td>
+                                                        <td class="fw-semibold">' . $d->type . '</td>
                                                     </tr>
                                                 </table>
                                             </div>
@@ -128,20 +197,20 @@ class PendaftaranController extends Controller
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn rawatJalan btn-outline-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modal-rawatJalan" id='.$d->id.'>
+                                data-bs-target="#modal-rawatJalan" id=' . $d->id . '>
                                 <i class="ri-stethoscope-line"></i>
                                 Daftar Rawat Jalan
                             </button>
-                            <button type="button" class="btn rawatInap btn-outline-primary btn-sm" id='.$d->id.'>
+                            <button type="button" class="btn rawatInap btn-outline-primary btn-sm" id=' . $d->id . '>
                                 <i class="ri-hotel-bed-fill"></i>
                                 Daftar Rawat Inap
                             </button>
-                            <button type="button" class="btn igd btn-outline-primary btn-sm" id='.$d->id.'>
+                            <button type="button" class="btn igd btn-outline-primary btn-sm" id=' . $d->id . '>
                                 <i class="ri-dossier-fill"></i>
                                 Daftar IGD
                             </button>
                             <button type="button" class="btn edit btn-outline-warning btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#form-edit-pasien" id='.$d->id.'>
+                                data-bs-target="#form-edit-pasien" id=' . $d->id . '>
                                 <i class="ri-edit-2-fill"></i>
                                 Edit Data Pasien
                             </button>
@@ -263,7 +332,7 @@ class PendaftaranController extends Controller
 
         if ($validator->passes()) {
             $encounter = $this->pendaftaranRepository->postRawatJalan($request, $id);
-            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Jalan Pasien '.$encounter->name_pasien.' berhasil'], 200);
+            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Jalan Pasien ' . $encounter->name_pasien . ' berhasil'], 200);
         }
 
         return response()->json(['error' => $validator->errors()->all()]);

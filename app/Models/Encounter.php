@@ -14,7 +14,9 @@ class Encounter extends Model
         'name_pasien',
         'pasien_satusehat_id',
         'status',
-        'type'
+        'type',
+        'jenis_jaminan',
+        'tujuan_kunjungan'
     ];
 
     public function practitioner()

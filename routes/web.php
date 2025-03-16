@@ -62,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('pendaftaran')->group(function () {
         Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
+        Route::get('/rawatJalan', [PendaftaranController::class, 'showRawatJalan'])->name('pendaftaran.showRawatJalan');
         Route::get('/caripasien', [PendaftaranController::class, 'cariPasien'])->name('pendaftaran.caripasien');
         Route::post('/antrian', [PendaftaranController::class, 'update_antrian'])->name('pendaftaran.update_antrian');
         Route::post('/pasien', [PendaftaranController::class, 'store_pasien'])->name('pendaftaran.store_pasien');

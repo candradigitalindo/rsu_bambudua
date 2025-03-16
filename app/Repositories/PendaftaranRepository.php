@@ -39,6 +39,63 @@ class PendaftaranRepository
         }
     }
 
+    public function showRawatJalan()
+    {
+        $encounter = Encounter::where('type', 1)->where('status', 1)->orderBy('created_at', 'desc')->get();
+        $encounter->map(function ($e) {
+            $e['status'] = $e->status == 1 ? "Progress" : "Finish";
+            switch ($e->type) {
+                case '0':
+                    $type = "-";
+                    break;
+                case '1':
+                    $type = "Rawat Jalan";
+                    break;
+                case '2':
+                    $type = "Rawat Inap";
+                    break;
+                case '3':
+                    $type = "IGD";
+                    break;
+                default:
+                    $type = "-";
+                    break;
+            }
+            $e['type'] = $type;
+            $dokter = Practitioner::where('encounter_id', $e->id)->first();
+            $e['dokter'] = $dokter->name;
+            $e['jenis_jaminan'] = $e->jenis_jaminan == 1 ? "Umum" : "Lainnya";
+            switch ($e->tujuan_kunjungan) {
+                case '1':
+                    $kujungan = "Kunjungan Sehat (Promotif/Preventif)";
+                    break;
+                case '2':
+                    $kujungan = "Rehabilitatif";
+                    break;
+                case '3':
+                    $kujungan = "Kunjungan Sakit";
+                    break;
+                case '4':
+                    $kujungan = "Darurat";
+                    break;
+                case '5':
+                    $kujungan = "Kontrol / Tindak Lanjut";
+                    break;
+                case '6':
+                    $kujungan = "Treatment";
+                    break;
+                case '7':
+                    $kujungan = "Konsultasi";
+                    break;
+                default:
+                    $kujungan = "-";
+                    break;
+            }
+            $e['tujuan_kunjungan'] = $kujungan;
+        });
+        return $encounter;
+    }
+
     public function update_antrian()
     {
         $loket   = Loket::where('user_id', Auth::user()->id)->first();
@@ -119,8 +176,6 @@ class PendaftaranRepository
                 $pasien['tgl_encounter']    = "-";
                 $pasien['type']             = "-";
             }
-
-
         });
         return $pasiens;
     }
@@ -223,32 +278,32 @@ class PendaftaranRepository
         }
         $pasien['status'] = $status;
         $encounter = Encounter::where('rekam_medis', $pasien->rekam_medis)->orderBy('created_at', 'DESC')->first();
-            if ($encounter) {
-                $pasien['no_encounter']     = $encounter->no_encounter;
-                $pasien['tgl_encounter']    = date('d M Y H:i', strtotime($encounter->created_at));
-                switch ($encounter->type) {
-                    case '0':
-                        $type = "-";
-                        break;
-                    case '1':
-                        $type = "Rawat Jalan";
-                        break;
-                    case '2':
-                        $type = "Rawat Inap";
-                        break;
-                    case '3':
-                        $type = "IGD";
-                        break;
-                    default:
-                        $type = "-";
-                        break;
-                }
-                $pasien['type']     = $type;
-            } else {
-                $pasien['no_encounter']     = "-";
-                $pasien['tgl_encounter']    = "-";
-                $pasien['type']             = "-";
+        if ($encounter) {
+            $pasien['no_encounter']     = $encounter->no_encounter;
+            $pasien['tgl_encounter']    = date('d M Y H:i', strtotime($encounter->created_at));
+            switch ($encounter->type) {
+                case '0':
+                    $type = "-";
+                    break;
+                case '1':
+                    $type = "Rawat Jalan";
+                    break;
+                case '2':
+                    $type = "Rawat Inap";
+                    break;
+                case '3':
+                    $type = "IGD";
+                    break;
+                default:
+                    $type = "-";
+                    break;
             }
+            $pasien['type']     = $type;
+        } else {
+            $pasien['no_encounter']     = "-";
+            $pasien['tgl_encounter']    = "-";
+            $pasien['type']             = "-";
+        }
         return $pasien;
     }
 
@@ -269,11 +324,13 @@ class PendaftaranRepository
         $pasien     = Pasien::findOrFail($id);
         $count      = Encounter::whereDate('created_at', date('Y-m-d'))->count();
         $encounter  = Encounter::create([
-            'no_encounter'      => 'E-'.date('ymd') . ($count == 0 ? 0 : $count + 1),
+            'no_encounter'      => 'E-' . date('ymd') . ($count == 0 ? 0 : $count + 1),
             'rekam_medis'       => $pasien->rekam_medis,
             'name_pasien'       => $pasien->name,
-            'pasien_satusehat_id'=> $pasien->satusehat_id,
+            'pasien_satusehat_id' => $pasien->satusehat_id,
             'type'              => 1,
+            'jenis_jaminan'     => $request->jenis_jaminan,
+            'tujuan_kunjungan'  => $request->tujuan_kunjungan
         ]);
 
         $dokter = User::find($request->dokter);

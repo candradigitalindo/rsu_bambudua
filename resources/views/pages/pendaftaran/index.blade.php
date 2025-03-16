@@ -657,7 +657,8 @@
                                     <div class="card border mt-3">
                                         <div class="card-body">
                                             <span class="badge bg-primary-subtle rounded-pill text-primary">
-                                                <i class="ri-circle-fill me-1"></i>Status : <a id="status-pasien"></a></span>
+                                                <i class="ri-circle-fill me-1"></i>Status : <a
+                                                    id="status-pasien"></a></span>
                                             <hr>
                                             <div class="row justify-content-between">
                                                 <div class="col-4">
@@ -771,13 +772,13 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary"
-                                        id="btn-submit-rawatJalan">
+                                    <button type="button" class="btn btn-primary" id="btn-submit-rawatJalan">
                                         <i class="ri-user-add-fill"></i>
                                         Simpan
                                     </button>
 
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-tutup-rawatJalan">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                                        id="btn-tutup-rawatJalan">
                                         Tutup
                                     </button>
                                 </div>
@@ -813,6 +814,30 @@
                         <div class="tab-content h-350">
                             <div class="tab-pane fade show active" id="rawatJalan" role="tabpanel">
                                 {{-- Tabel Rawat Jalan --}}
+                                <div class="col-sm-12">
+                                    <div class="table-outer">
+                                        <div class="table-responsive">
+                                            <table class="table truncate m-0">
+                                                <thead>
+                                                    {{-- <tr>
+                                                        <th>No Kunjungan</th>
+                                                        <th>Nama Pasien</th>
+                                                        <th>Dokter</th>
+                                                        <th>Jenis Jaminan</th>
+                                                        <th>Tujuan Kunjungan</th>
+                                                        <th>Status</th>
+
+                                                    </tr> --}}
+                                                </thead>
+                                                <tbody id="showRawatJalan">
+
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                </div>
 
                             </div>
                             <div class="tab-pane fade" id="twoA" role="tabpanel">
@@ -928,8 +953,9 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
         $(document).ready(function() {
+            rawatJalan();
             $("#tab-rawatJalan").on("click", function() {
-                alert("Rawat Jalan");
+                rawatJalan();
             });
             $("#tab-igd").on("click", function() {
                 alert("IGD");
@@ -943,6 +969,20 @@
                 $("#btn-update").attr("disabled", true);
                 $(".btn-txt").text("Mohon Tunggu ...");
             });
+
+            function rawatJalan() {
+                $.ajax({
+                    url: "{{ route('pendaftaran.showRawatJalan') }}",
+                    type: 'GET',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                    },
+                    dataType: 'json',
+                    success: function(rawatJalan) {
+                        $('#showRawatJalan').html(rawatJalan);
+                    }
+                })
+            }
 
             $(document).on('keyup', '#search', function() {
                 var query = $(this).val();
@@ -1284,11 +1324,11 @@
                                 icon: "error",
                             });
                         } else {
+                            $("#tab-rawatJalan").click();
                             $("#btn-tutup-rawatJalan").click();
                             swal(res.text, {
                                 icon: "success",
                             });
-
                         }
                     } else {
                         error_rawatJalan(res.error)

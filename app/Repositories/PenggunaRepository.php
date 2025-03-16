@@ -80,7 +80,7 @@ class PenggunaRepository
             'password'  => Hash::make($request->password),
         ]);
 
-        Profile::create(['user_id' => $user->id, 'sepesialis' => $request->spesialis]);
+        Profile::create(['user_id' => $user->id, 'spesialis' => $request->spesialis]);
         return $user;
     }
 

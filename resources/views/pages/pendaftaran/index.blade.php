@@ -25,7 +25,7 @@
                     <!-- Modal XL -->
                     <div class="modal fade" id="modal-pasien" data-bs-backdrop="static" data-bs-keyboard="false"
                         tabindex="-1" aria-labelledby="exampleModalXlLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
+                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
                             <div class="modal-content">
                                 <div class="modal-header">
                                     <h5 class="modal-title" id="exampleModalXlLabel">
@@ -641,6 +641,149 @@
                             </div>
                         </div>
                     </div>
+                    <div class="modal fade" id="modal-rawatJalan" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="exampleModalXlLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalXlLabel">
+                                        Pedaftaran Rawat Jalan
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="card border mt-3">
+                                        <div class="card-body">
+                                            <span class="badge bg-primary-subtle rounded-pill text-primary">
+                                                <i class="ri-circle-fill me-1"></i>Status : <a id="status-pasien"></a></span>
+                                            <hr>
+                                            <div class="row justify-content-between">
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Identitas Pasien
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>No. RM</td>
+                                                            <td>:</td>
+                                                            <td id="no_rm_rawatJalan">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Nama Pasien</td>
+                                                            <td>:</td>
+                                                            <td id="name_rawatJalan">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Umur</td>
+                                                            <td>:</td>
+                                                            <td id="tgl_lahir_rawatJalan">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Kunjungan Terakhir
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>No. Kunjungan</td>
+                                                            <td>:</td>
+                                                            <td id="no_encounter_rawatJalan">XXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tanggal Kujungan</td>
+                                                            <td>:</td>
+                                                            <td id="created_rawatJalan">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tipe</td>
+                                                            <td>:</td>
+                                                            <td id="type_rawatJalan">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-danger print-error-msg mt-2 mb-2" style="display:none"
+                                        id="error-rawatJalan">
+                                        <ul></ul>
+                                    </div>
+                                    <hr>
+                                    <div class="row gx-3 mt-3">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">Jenis Jaminan</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="jenis_jaminan" id="jenis_jaminan">
+                                                        <option value="">-- Pilih Jaminan --</option>
+                                                        <option value="1">Umum</option>
+                                                        {{-- <option value="1">BPJS</option>
+                                                        <option value="1">Asuransi</option> --}}
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Dokter
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="dokter" id="dokter">
+                                                        <option value="">-- Pilih Dokter --</option>
+                                                        @foreach ($dokter as $do)
+                                                            <option value="{{ $do->user->id }}">{{ $do->user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Tujuan Kunjungan
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="tujuan_kunjungan"
+                                                        id="tujuan_kunjungan">
+                                                        <option value="">-- Pilih Tujuan --</option>
+                                                        <option value="1">Kunjungan Sehat (Promotif/Preventif)
+                                                        </option>
+                                                        <option value="2">Rehabilitatif</option>
+                                                        <option value="3">Kunjungan Sakit</option>
+                                                        <option value="4">Darurat</option>
+                                                        <option value="5">Kontrol / Tindak Lanjut</option>
+                                                        <option value="6">Treatment</option>
+                                                        <option value="7">Konsultasi</option>
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <input type="text" style="visibility: hidden" id="id-rawatJalan">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                        id="btn-submit-rawatJalan">
+                                        <i class="ri-user-add-fill"></i>
+                                        Simpan
+                                    </button>
+
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="btn-tutup-rawatJalan">
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Custom tabs starts -->
                     <div class="custom-tabs-container mt-5">
 
@@ -722,120 +865,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d2">Monday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d2">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d2X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d3">Tuesday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d3">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d3X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d4">Wednesday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d4">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d4X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d5">Thursday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d5">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d5X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d6">Friday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d6">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d6X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d7">Saturday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d7">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d7X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
+
                                 </div>
                                 <!-- Row ends -->
 
@@ -1208,8 +1238,73 @@
 
         $(document).on('click', '.rawatJalan', function() {
             let id = $(this).attr('id');
-            alert(id);
+            let url = "{{ route('pendaftaran.showPasien', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatJalan").css("display", "none");
+            $("#jenis_jaminan").val("");
+            $("#dokter").val("");
+            $("#tujuan_kunjungan").val("");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    $("#no_rm_rawatJalan").text(res.data.rekam_medis);
+                    $("#name_rawatJalan").text(res.data.name);
+                    $("#tgl_lahir_rawatJalan").text(res.data.umur);
+                    $("#id-rawatJalan").val(id);
+                    $("#status-pasien").text(res.data.status);
+                    $("#no_encounter_rawatJalan").text(res.data.no_encounter);
+                    $("#created_rawatJalan").text(res.data.tgl_encounter);
+                    $("#type_rawatJalan").text(res.data.type);
+                }
+            })
         });
+
+        $("#btn-submit-rawatJalan").click(function() {
+            let url = "{{ route('pendaftaran.postRawatJalan', ':id') }}"
+            url = url.replace(':id', $("#id-rawatJalan").val());
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    jenis_jaminan: $("#jenis_jaminan").val(),
+                    dokter: $("#dokter").val(),
+                    tujuan_kunjungan: $("#tujuan_kunjungan").val(),
+                },
+
+                success: function(res) {
+                    if ($.isEmptyObject(res.error)) {
+                        $("#error-rawatJalan").css("display", "none");
+                        if (res.status == false) {
+                            swal(res.text, {
+                                icon: "error",
+                            });
+                        } else {
+                            $("#btn-tutup-rawatJalan").click();
+                            swal(res.text, {
+                                icon: "success",
+                            });
+
+                        }
+                    } else {
+                        error_rawatJalan(res.error)
+                    }
+                }
+            });
+        });
+
+        function error_rawatJalan(msg) {
+            $("#error-rawatJalan").find("ul").html('');
+            $("#error-rawatJalan").css('display', 'block');
+            $.each(msg, function(key, value) {
+                $("#error-rawatJalan").find("ul").append('<li>' + value + '</li>');
+            });
+        }
+
         $(document).on('click', '.rawatInap', function() {
             let id = $(this).attr('id');
             alert(id);

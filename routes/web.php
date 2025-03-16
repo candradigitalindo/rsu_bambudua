@@ -33,24 +33,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home/{id}/profile', [HomeController::class, 'getProfile'])->name('home.profile');
     Route::post('/home/{id}/profile', [HomeController::class, 'updateProfile'])->name('home.profile.update');
     Route::get('/public/profile/{filename}', [StorageController::class, 'profile'])->name('home.profile.filename');
-    Route::get('/provinsi', function () {
-        // $request = Http::withHeaders([
-        //     'Authorization'     => 'Bearer Ok0HbRti60BoG1uqvV3OZTc54He7'
-        // ])->get('https://api-satusehat-stg.dto.kemkes.go.id/masterdata/v1/sub-districts?district_codes',[
-        //     'district_codes'    => '127505'
-        // ]);
-
-        // $response = json_decode($request, true)['data'];
-        // return $response;
-        // $time = date("Y-m-d H:i:s", time() + 14399);
-        // return $time;
-        $desa = Subdistrict::where('parent_code', '120506')->get();
-        // Province::truncate();
-        // City::truncate();
-        // District::truncate();
-        // Subdistrict::truncate();
-        return $desa;
-    });
 
     Route::prefix('setting')->group(function () {
         // SATUSEHAT
@@ -85,6 +67,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pasien', [PendaftaranController::class, 'store_pasien'])->name('pendaftaran.store_pasien');
         Route::get('/pasien/{id}/edit', [PendaftaranController::class, 'editPasien'])->name('pendaftaran.editPasien');
         Route::post('/pasien/{id}/update', [PendaftaranController::class, 'updatePasien'])->name('pendaftaran.updatePasien');
+        Route::get('/pasien/{id}/show', [PendaftaranController::class, 'showPasien'])->name('pendaftaran.showPasien');
+        Route::post('/pasien/{id}/rawatJalan', [PendaftaranController::class, 'postRawatJalan'])->name('pendaftaran.postRawatJalan');
     });
 
     Route::prefix('pasien')->group(function () {

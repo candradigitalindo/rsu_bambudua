@@ -19,7 +19,8 @@ class PendaftaranController extends Controller
         $pekerjaan  = $this->pendaftaranRepository->pekerjaan();
         $agama      = $this->pendaftaranRepository->agama();
         $provinsi   = $this->pendaftaranRepository->provinsi();
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi'));
+        $dokter     = $this->pendaftaranRepository->showDokter();
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'dokter'));
     }
 
     public function update_antrian()
@@ -43,85 +44,91 @@ class PendaftaranController extends Controller
                     <div class="card border mt-3">
                         <div class="card-body">
                             <span class="badge bg-primary-subtle rounded-pill text-primary">
-                                <i class="ri-circle-fill me-1"></i>Status : Sedang Rawat jalan</span>
-                            <div class="d-flex align-items-center flex-wrap gap-4">
-                                <div class="d-flex flex-column mw-100">
-                                    <table>
-                                        <tr>
-                                            <td>No.RM</td>
-                                            <td>:</td>
-                                            <td class="fw-semibold">'.$d->rekam_medis.'</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Nama</td>
-                                            <td>:</td>
-                                            <td class="fw-semibold">'.$d->name.'</td>
-                                        </tr>
-                                        <tr>
-                                            <td>'.$d->jenis_identitas.'</td>
-                                            <td>:</td>
-                                            <td class="fw-semibold">'.$d->no_identitas.'</td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div class="d-flex flex-column mw-100">
-                                    <table>
-                                        <tr>
-                                            <td>No Hp</td>
-                                            <td>:</td>
-                                            <td class="fw-semibold">'.$d->no_hp.'</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Alamat</td>
-                                            <td>:</td>
-                                            <td class="fw-semibold">'.$d->alamat.'
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div class="d-flex flex-column mw-100">
-                                    <div class="text-primary fw-semibold">
-                                        Kunjungan Terakhir
+                                <i class="ri-circle-fill me-1"></i>Status : '.$d->status.'</span>
+                            <hr>
+
+                                <div class="row justify-content-between">
+                                    <div class="col-4">
+                                        <div class="d-flex flex-column mw-100">
+                                            <div class="text-primary fw-semibold">
+                                                    Identitas Pasien
+                                            </div>
+                                            <div>
+                                                <table>
+                                                    <tr>
+                                                        <td>No.RM</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->rekam_medis.'</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Nama</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->name.'</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>'.$d->jenis_identitas.'</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->no_identitas.'</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <table>
-                                            <tr>
-                                                <td>No. Kunjungan</td>
-                                                <td>:</td>
-                                                <td class="fw-semibold">E-12121200000</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Tanggal</td>
-                                                <td>:</td>
-                                                <td class="fw-semibold">25 Maret 2025 16.00 WIB</td>
-                                            </tr>
-                                        </table>
+                                    <div class="col-4">
+                                        <div class="d-flex flex-column mw-100">
+                                            <div class="text-primary fw-semibold">
+                                                Kontak Pasien
+                                            </div>
+                                            <div>
+                                                <table>
+                                                    <tr>
+                                                        <td>No Hp</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->no_hp.'</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Alamat</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->alamat.'
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="d-flex flex-column mw-100">
-                                    <div class="text-primary fw-semibold">
-                                        Informasi Kunjungan
+                                    <div class="col-4">
+                                        <div class="d-flex flex-column mw-100">
+                                            <div class="text-primary fw-semibold">
+                                                Kunjungan Terakhir
+                                            </div>
+                                            <div>
+                                                <table>
+                                                    <tr>
+                                                        <td>No. Kunjungan</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->no_encounter.'</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Tanggal</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->tgl_encounter.'</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Jenis</td>
+                                                        <td>:</td>
+                                                        <td class="fw-semibold">'.$d->type.'</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <table>
-                                            <tr>
-                                                <td>Jenis</td>
-                                                <td>:</td>
-                                                <td class="fw-semibold">Rawat Jalan</td>
-                                            </tr>
-                                            <tr>
-                                                <td>Dokter</td>
-                                                <td>:</td>
-                                                <td class="fw-semibold">dr. xxxxxxx xxxxxxx</td>
-                                            </tr>
-                                        </table>
-                                    </div>
+
                                 </div>
 
-                            </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn rawatJalan btn-outline-primary btn-sm" id='.$d->id.'>
+                            <button type="button" class="btn rawatJalan btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modal-rawatJalan" id='.$d->id.'>
                                 <i class="ri-stethoscope-line"></i>
                                 Daftar Rawat Jalan
                             </button>
@@ -230,6 +237,33 @@ class PendaftaranController extends Controller
         if ($validator->passes()) {
             $pasien = $this->pendaftaranRepository->updatePasien($request, $id);
             return response()->json(['status' => true, 'text' => 'Data Pasien ' . $pasien->name . ' berhasil diubah.']);
+        }
+
+        return response()->json(['error' => $validator->errors()->all()]);
+    }
+
+    public function showPasien($id)
+    {
+        $pasien = $this->pendaftaranRepository->showPasien($id);
+        return response()->json(['status' => true, 'data' => $pasien]);
+    }
+
+    public function postRawatJalan(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'jenis_jaminan'     => 'required|string',
+            'dokter'            => 'required|string',
+            'tujuan_kunjungan'  => 'required|string',
+
+        ], [
+            'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
+            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
+        ]);
+
+        if ($validator->passes()) {
+            $encounter = $this->pendaftaranRepository->postRawatJalan($request, $id);
+            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Jalan Pasien '.$encounter->name_pasien.' berhasil'], 200);
         }
 
         return response()->json(['error' => $validator->errors()->all()]);

@@ -96,6 +96,54 @@ class PendaftaranRepository
         return $encounter;
     }
 
+    public function editEncounterRajal($id)
+    {
+        $encounter  = Encounter::findOrFail($id);
+        $pasien     = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+        $encounter['umur'] = Carbon::parse($pasien->tgl_lahir)->diff(Carbon::now())->format('%y tahun, %m bulan, %d hari');
+        switch ($pasien->status) {
+            case '0':
+                $status = "-";
+                break;
+            case '1':
+                $status = "Rawat Jalan";
+                break;
+            case '2':
+                $status = "Rawat Inap";
+                break;
+            case '3':
+                $status = "IGD";
+                break;
+            default:
+                $status = "-";
+                break;
+        }
+
+        $encounter['status'] = $status;
+        $encounter['tgl_encounter']    = date('d M Y H:i', strtotime($encounter->created_at));
+        switch ($encounter->type) {
+            case '0':
+                $type = "-";
+                break;
+            case '1':
+                $type = "Rawat Jalan";
+                break;
+            case '2':
+                $type = "Rawat Inap";
+                break;
+            case '3':
+                $type = "IGD";
+                break;
+            default:
+                $type = "-";
+                break;
+        }
+        $encounter['type']     = $type;
+        $dokter       = Practitioner::where('encounter_id', $encounter->id)->orderBy('created_at', 'DESC')->first();
+        $encounter['dokter']     = $dokter->name;
+        return $encounter;
+    }
+
     public function update_antrian()
     {
         $loket   = Loket::where('user_id', Auth::user()->id)->first();
@@ -333,7 +381,7 @@ class PendaftaranRepository
             'tujuan_kunjungan'  => $request->tujuan_kunjungan
         ]);
 
-        $dokter = User::find($request->dokter);
+        $dokter = User::where('name', $request->dokter)->first();
 
         if ($dokter) {
             Practitioner::create([

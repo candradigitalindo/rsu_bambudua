@@ -738,7 +738,7 @@
                                                     <select class="form-select" name="dokter" id="dokter">
                                                         <option value="">-- Pilih Dokter --</option>
                                                         @foreach ($dokter as $do)
-                                                            <option value="{{ $do->user->id }}">{{ $do->user->name }}
+                                                            <option value="{{ $do->user->name }}">{{ $do->user->name }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -819,15 +819,12 @@
                                         <div class="table-responsive">
                                             <table class="table truncate m-0">
                                                 <thead>
-                                                    {{-- <tr>
-                                                        <th>No Kunjungan</th>
-                                                        <th>Nama Pasien</th>
-                                                        <th>Dokter</th>
-                                                        <th>Jenis Jaminan</th>
-                                                        <th>Tujuan Kunjungan</th>
-                                                        <th>Status</th>
+                                                    <tr>
+                                                        <th>Kunjungan</th>
+                                                        <th>Pasien / Dokter</th>
+                                                        <th>Jaminan / Tujuan</th>
 
-                                                    </tr> --}}
+                                                    </tr>
                                                 </thead>
                                                 <tbody id="showRawatJalan">
 
@@ -983,6 +980,7 @@
                     }
                 })
             }
+
 
             $(document).on('keyup', '#search', function() {
                 var query = $(this).val();
@@ -1335,6 +1333,36 @@
                     }
                 }
             });
+        });
+
+        $(document).on('click', '.editrawatJalan', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.editEncounterRajal', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatJalan").css("display", "none");
+            $("#jenis_jaminan").val("");
+            $("#dokter").val("");
+            $("#tujuan_kunjungan").val("");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    $("#no_rm_rawatJalan").text(res.data.rekam_medis);
+                    $("#name_rawatJalan").text(res.data.name_pasien);
+                    $("#tgl_lahir_rawatJalan").text(res.data.umur);
+                    $("#id-rawatJalan").val(id);
+                    $("#status-pasien").text(res.data.status);
+                    $("#no_encounter_rawatJalan").text(res.data.no_encounter);
+                    $("#created_rawatJalan").text(res.data.tgl_encounter);
+                    $("#type_rawatJalan").text(res.data.type);
+                    $("#jenis_jaminan").val(res.data.jenis_jaminan);
+                    $("#dokter").val(res.data.dokter);
+                    $("#tujuan_kunjungan").val(res.data.tujuan_kunjungan);
+                }
+            })
         });
 
         function error_rawatJalan(msg) {

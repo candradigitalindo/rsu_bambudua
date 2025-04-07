@@ -11,7 +11,7 @@
     <div class="row gx-3">
         <!-- Row starts -->
 
-        <div class="col-sm-8 col-12">
+        <div class="col-sm-9 col-12">
             <div class="card border mb-3">
                 <div class="card-body">
                     <div class="card-info rounded-1 small lh-1">
@@ -823,6 +823,7 @@
                                                         <th>Kunjungan</th>
                                                         <th>Pasien / Dokter</th>
                                                         <th>Jaminan / Tujuan</th>
+                                                        <th class="text-center">Aksi</th>
 
                                                     </tr>
                                                 </thead>
@@ -901,7 +902,7 @@
             </div>
 
         </div>
-        <div class="col-sm-4">
+        <div class="col-sm-3">
             <div class="card border mb-3">
                 <div class="card-body">
                     @if (auth()->user()->role == 5)
@@ -1282,6 +1283,7 @@
             $("#jenis_jaminan").val("");
             $("#dokter").val("");
             $("#tujuan_kunjungan").val("");
+            $("#btn-submit-rawatJalan").text("Simpan");
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -1300,10 +1302,17 @@
                 }
             })
         });
-
-        $("#btn-submit-rawatJalan").click(function() {
+        $("#btn-submit-rawatJalan").on('click', function() {
+            if ($(this).text() === 'Update Rawat Jalan') {
+                update_rawatJalan();
+            } else {
+                submit_rawatJalan();
+            }
+        })
+        function submit_rawatJalan() {
             let url = "{{ route('pendaftaran.postRawatJalan', ':id') }}"
             url = url.replace(':id', $("#id-rawatJalan").val());
+
             $.ajax({
                 url: url,
                 type: 'POST',
@@ -1333,7 +1342,43 @@
                     }
                 }
             });
-        });
+        }
+
+        function update_rawatJalan()
+        {
+            let url = "{{ route('pendaftaran.updateRawatJalan', ':id') }}"
+            url = url.replace(':id', $("#id-rawatJalan").val());
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    jenis_jaminan: $("#jenis_jaminan").val(),
+                    dokter: $("#dokter").val(),
+                    tujuan_kunjungan: $("#tujuan_kunjungan").val(),
+                },
+
+                success: function(res) {
+                    if ($.isEmptyObject(res.error)) {
+                        $("#error-rawatJalan").css("display", "none");
+                        if (res.status == false) {
+                            swal(res.text, {
+                                icon: "error",
+                            });
+                        } else {
+                            $("#tab-rawatJalan").click();
+                            $("#btn-tutup-rawatJalan").click();
+                            swal(res.text, {
+                                icon: "success",
+                            });
+                        }
+                    } else {
+                        error_rawatJalan(res.error)
+                    }
+                }
+            });
+        }
 
         $(document).on('click', '.editrawatJalan', function() {
             let id = $(this).attr('id');
@@ -1361,6 +1406,8 @@
                     $("#jenis_jaminan").val(res.data.jenis_jaminan);
                     $("#dokter").val(res.data.dokter);
                     $("#tujuan_kunjungan").val(res.data.tujuan_kunjungan);
+                    $("#btn-submit-rawatJalan").text("Update Rawat Jalan");
+                    $("#error-rawatJalan").css("display", "none");
                 }
             })
         });
@@ -1372,6 +1419,41 @@
                 $("#error-rawatJalan").find("ul").append('<li>' + value + '</li>');
             });
         }
+
+        $(document).on('click', '.destoryRawatJalan', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.destroyEncounterRajal', ':id') }}"
+            url = url.replace(':id', id);
+            swal({
+                title: "Apakah Anda Yakin?",
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                        },
+                        success: function(res) {
+                            if (res.status == true) {
+                                $("#tab-rawatJalan").click();
+                                swal(res.text, {
+                                    icon: "success",
+                                });
+                            } else {
+                                swal(res.text, {
+                                    icon: "error",
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
 
         $(document).on('click', '.rawatInap', function() {
             let id = $(this).attr('id');

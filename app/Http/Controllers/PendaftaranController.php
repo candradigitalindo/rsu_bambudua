@@ -78,11 +78,7 @@ class PendaftaranController extends Controller
                                 </tr>
                                 <tr>
                                     <td>
-                                    <button type="button" class="btn editrawatJalan btn-outline-primary btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modal-rawatJalan" id=' . $d->id . '>
-                                        <i class="ri-edit-2-fill"></i>
-                                        Edit
-                                    </button>
+
                                     </td>
                                 </tr>
                             </table>
@@ -97,14 +93,21 @@ class PendaftaranController extends Controller
                                 </tr>
                                 <tr>
                                     <td>
-                                    <button type="button" class="btn rawatJalan btn-outline-danger btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#modal-rawatJalan" id=' . $d->id . '>
-                                        <i class="ri-delete-bin-5-fill"></i>
-                                        Hapus
-                                    </button>
+
                                     </td>
                                 </tr>
                             </table>
+                        </td>
+                        <td>
+                            <button type="button" class="btn editrawatJalan btn-outline-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modal-rawatJalan" id=' . $d->id . '>
+                                <i class="ri-edit-2-fill"></i>
+                                Edit
+                            </button>
+                            <button type="button" class="btn destoryRawatJalan btn-outline-danger btn-sm" id=' . $d->id . '>
+                                <i class="ri-delete-bin-5-fill"></i>
+                                Hapus
+                            </button>
                         </td>
                     </tr>
                 ';
@@ -358,5 +361,30 @@ class PendaftaranController extends Controller
         }
 
         return response()->json(['error' => $validator->errors()->all()]);
+    }
+    public function updateRawatJalan(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'jenis_jaminan'     => 'required|string',
+            'dokter'            => 'required|string',
+            'tujuan_kunjungan'  => 'required|string',
+
+        ], [
+            'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
+            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
+        ]);
+
+        if ($validator->passes()) {
+            $encounter = $this->pendaftaranRepository->updateRawatJalan($request, $id);
+            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Jalan Pasien ' . $encounter->name_pasien . ' berhasil diubah'], 200);
+        }
+
+        return response()->json(['error' => $validator->errors()->all()]);
+    }
+    public function destroyEncounterRajal($id)
+    {
+        $result = $this->pendaftaranRepository->destroyEncounterRajal($id);
+        return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }
 }

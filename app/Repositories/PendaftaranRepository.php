@@ -395,4 +395,29 @@ class PendaftaranRepository
 
         return $encounter;
     }
+    public function updateRawatJalan($request, $id)
+    {
+        $encounter = Encounter::findOrFail($id);
+        $encounter->update([
+            'jenis_jaminan'     => $request->jenis_jaminan,
+            'tujuan_kunjungan'  => $request->tujuan_kunjungan
+        ]);
+
+        $dokter = User::where('name', $request->dokter)->first();
+
+        if ($dokter) {
+            Practitioner::where('encounter_id', $encounter->id)->update([
+                'name'          => $dokter->name,
+                'satusehat_id'  => $dokter->satusehat_id
+            ]);
+        }
+
+        return $encounter;
+    }
+    public function destroyEncounterRajal($id)
+    {
+        $encounter = Encounter::findOrFail($id);
+        $encounter->delete();
+        return $encounter;
+    }
 }

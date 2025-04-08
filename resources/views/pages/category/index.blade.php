@@ -96,7 +96,7 @@
                             </table>
                         </div>
                     </div>
-                    <div class="text-xs-center mt-2">{{ $categories->links('pagination::bootstrap-4') }}</div>
+                    
                 </div>
             </div>
         </div>

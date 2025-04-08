@@ -23,7 +23,6 @@
                                     <label class="form-label" for="a7">Lokasi Loket Antrian <span
                                             class="text-danger">*</span></label>
                                     <div class="input-group">
-
                                         <select class="form-select" id="a7" name="lokasi">
                                             <option value="">Pilih Lokasi Loket</option>
                                             @foreach ($data['lokasis'] as $l)

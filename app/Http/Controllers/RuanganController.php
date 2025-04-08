@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 class RuanganController extends Controller
 {
     public $ruanganRepository;
-    public function __construct(RuanganRepository $ruanganRepository) {
+    public function __construct(RuanganRepository $ruanganRepository)
+    {
         $this->ruanganRepository = $ruanganRepository;
     }
     /**
@@ -25,7 +26,8 @@ class RuanganController extends Controller
      */
     public function create()
     {
-        //
+        $categories = $this->ruanganRepository->AllCategory(); // Fetch all categories
+        return view('pages.ruangan.create', compact('categories')); // Pass categories to the view for creating a new ruangan
     }
 
     /**
@@ -33,7 +35,32 @@ class RuanganController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate(
+            [
+                'no_kamar' => 'required|unique:ruangans',
+                'harga' => 'required|string',
+                'category' => 'required|string',
+                'description' => 'nullable|string',
+            ],
+            [
+                'no_kamar.required' => 'No Kamar tidak boleh kosong.',
+                'no_kamar.unique' => 'No Kamar harus unik.',
+                'harga.required' => 'Harga harus diisi.',
+                'harga.string' => 'Harga harus berupa string.',
+                'category.required' => 'Kategori harus diisi.',
+                'description.string' => 'Deskripsi harus berupa string.',
+            ]
+        );
+
+        $data = [
+            'no_kamar' => $request->no_kamar,
+            'category_id' => $request->category,
+            'description' => $request->description,
+            'harga' => str_replace(".", "", $request->harga),
+        ];
+
+        $this->ruanganRepository->create($data); // Create new ruangan
+        return redirect()->route('ruangan.index')->with('success', 'Ruangan created successfully.'); // Redirect with success message
     }
 
     /**
@@ -49,7 +76,9 @@ class RuanganController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $ruangan = $this->ruanganRepository->show($id); // Fetch ruangan by ID
+        $categories = $this->ruanganRepository->AllCategory(); // Fetch all categories
+        return view('pages.ruangan.edit', compact('ruangan', 'categories')); // Pass data to the view for editing
     }
 
     /**
@@ -57,7 +86,32 @@ class RuanganController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate(
+            [
+                'no_kamar' => 'required|unique:ruangans,no_kamar,' . $id,
+                'harga' => 'required|string',
+                'category' => 'required|string',
+                'description' => 'nullable|string',
+            ],
+            [
+                'no_kamar.required' => 'No Kamar tidak boleh kosong.',
+                'no_kamar.unique' => 'No Kamar harus unik.',
+                'harga.required' => 'Harga harus diisi.',
+                'harga.string' => 'Harga harus berupa string.',
+                'category.required' => 'Kategori harus diisi.',
+                'description.string' => 'Deskripsi harus berupa string.',
+            ]
+        );
+
+        $data = [
+            'no_kamar' => $request->no_kamar,
+            'category_id' => $request->category,
+            'description' => $request->description,
+            'harga' => str_replace(".", "", $request->harga),
+        ];
+
+        $this->ruanganRepository->update($id, $data); // Update ruangan by ID
+        return redirect()->route('ruangan.index')->with('success', 'Ruangan berhasil diperbarui.'); // Redirect with success message
     }
 
     /**
@@ -65,6 +119,7 @@ class RuanganController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $this->ruanganRepository->destroy($id); // Delete ruangan by ID
+        return redirect()->route('ruangan.index')->with('success', 'Ruangan berhasil dihapus.'); // Redirect with success message
     }
 }

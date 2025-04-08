@@ -60,7 +60,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
-        Route::resource('ruangan', RuanganController::class)->only(['index', 'create', 'store', 'destroy']);
+        Route::resource('ruangan', RuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
         Route::resource('category', CategoryRuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
     });
 

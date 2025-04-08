@@ -16,7 +16,7 @@ class RuanganRepository
     }
     public function index()
     {
-        $ruangans = Ruangan::with('category')->orderBy('no_ruangan', 'asc')->paginate(10);
+        $ruangans = Ruangan::with('category')->orderBy('no_kamar', 'asc')->paginate(10);
         return $ruangans;
     }
     public function show($id)
@@ -40,9 +40,10 @@ class RuanganRepository
         $ruangan->delete();
         return $ruangan;
     }
+
     public function AllCategory()
     {
-        return CategoryRuangan::orderBy('created_at', 'desc')->paginate(10);
+        return CategoryRuangan::orderBy('created_at', 'desc')->get();
     }
     public function showCategory($id)
     {

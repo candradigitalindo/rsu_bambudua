@@ -37,6 +37,11 @@ class CategoryRuanganController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:category_ruangans',
             'description' => 'nullable|string|max:255',
+        ],
+        [
+            'name.required' => 'Nama kategori ruangan tidak boleh kosong.',
+            'name.unique' => 'Nama kategori ruangan sudah ada.',
+            'description.max' => 'Deskripsi tidak boleh lebih dari 255 karakter.',
         ]);
 
         $data = [
@@ -74,6 +79,11 @@ class CategoryRuanganController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:category_ruangans,name,' . $id,
             'description' => 'nullable|string|max:255',
+        ],
+        [
+            'name.required' => 'Nama kategori ruangan tidak boleh kosong.',
+            'name.unique' => 'Nama kategori ruangan sudah ada.',
+            'description.max' => 'Deskripsi tidak boleh lebih dari 255 karakter.',
         ]);
 
         $data = [

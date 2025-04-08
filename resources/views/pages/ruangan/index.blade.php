@@ -52,8 +52,8 @@
                                     @forelse ($ruangans as $ruangan)
                                         <tr>
                                             <td>{{ $ruangan->category->name }}</td>
-                                            <td>{{ $ruangan->no_ruangan }}</td>
-                                            <td>{{ $ruangan->harga }}</td>
+                                            <td>{{ $ruangan->no_kamar }}</td>
+                                            <td>{{ $ruangan->getHargaFormattedAttribute() }}</td>
                                             <td>{{ $ruangan->description }}</td>
                                             <td class="text-center">
                                                 <a href="{{ route('ruangan.edit', $ruangan->id) }}"
@@ -64,6 +64,7 @@
                                                         id="spiner-{{ $ruangan->id }}"></span>
                                                 </a>
                                                 <script src="{{ asset('js/jquery.min.js') }}"></script>
+                                                <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
                                                 <script>
                                                     $(document).ready(function() {
                                                         $("#edit-{{ $ruangan->id }}").click(function() {
@@ -73,8 +74,17 @@
                                                         });
                                                     });
                                                 </script>
-                                                <a href="{{ route('pengguna.destroy', $ruangan->id) }}"
-                                                    class="btn btn-danger btn-sm" data-confirm-delete="true">Hapus</a>
+                                                <form action="{{ route('ruangan.destroy', $ruangan->id) }}"
+                                                    method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                        onclick="return confirm('Apakah anda yakin ingin menghapus ruangan {{ $ruangan->no_kamar }} ?')">
+                                                        <i class="ri-delete-bin-5-line"></i>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+
 
                                             </td>
                                         </tr>

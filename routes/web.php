@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\AntrianController;
+use App\Http\Controllers\CategoryRuanganController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PendidikanController;
 use App\Http\Controllers\PenggunaController;
+use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SatusehatController;
 use App\Http\Controllers\SpesialisController;
 use App\Http\Controllers\StorageController;
@@ -58,6 +60,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('ruangan', RuanganController::class)->only(['index', 'create', 'store', 'destroy']);
+        Route::resource('category', CategoryRuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
     });
 
     Route::prefix('pendaftaran')->group(function () {

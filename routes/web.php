@@ -16,6 +16,7 @@ use App\Http\Controllers\RuanganController;
 use App\Http\Controllers\SatusehatController;
 use App\Http\Controllers\SpesialisController;
 use App\Http\Controllers\StorageController;
+use App\Http\Controllers\TindakanController;
 use App\Http\Controllers\WilayahController;
 use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Http;
@@ -62,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
         Route::resource('ruangan', RuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
         Route::resource('category', CategoryRuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
+        Route::resource('tindakan', TindakanController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
     });
 
     Route::prefix('pendaftaran')->group(function () {

@@ -43,6 +43,10 @@
                 <li>
                     <a class="{{ request()->is('masterdata/ruangan*') || request()->is('masterdata/category*') ? 'active-sub' : '' }}" href="{{ route('ruangan.index') }}">Data Ruangan</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/tindakan*') ? 'active-sub' : '' }}" href="{{ route('tindakan.index') }}">Data Tindakan</a>
+                </li>
+
             </ul>
         </li>
         <li class="{{ request()->is('pengguna*') ? 'active current-page' : '' }}">

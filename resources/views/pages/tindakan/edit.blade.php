@@ -23,7 +23,7 @@
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" id="tab-oneA" data-bs-toggle="tab" href="#oneA"
                                         role="tab" aria-controls="oneA" aria-selected="true"><i
-                                            class="ri-hotel-bed-fill"></i>
+                                            class="ri-stethoscope-line"></i>
                                         Form Tindakan Edit</a>
                                 </li>
                             </ul>

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Buat Ruangan Baru')
+@section('title', 'Buat Stok Perlengkapan Baru')
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
@@ -12,7 +12,7 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('ruangan.store') }}" method="POST" id="submit">
+                    <form action="{{ route('bahans.store') }}" method="POST" id="submit">
                         @csrf
                         <!-- Custom tabs starts -->
                         <div class="custom-tabs-container">
@@ -23,7 +23,7 @@
                                     <a class="nav-link active" id="tab-oneA" data-bs-toggle="tab" href="#oneA"
                                         role="tab" aria-controls="oneA" aria-selected="true"><i
                                             class="ri-hotel-bed-fill"></i>
-                                        Form Ruangan Baru</a>
+                                        Form Stok Perlengkapan Baru</a>
                                 </li>
                             </ul>
                             <!-- Nav tabs ends -->
@@ -36,44 +36,42 @@
                                     <div class="row gx-3">
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Kategori Ruangan<span
-                                                        class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <select class="form-select" id="a7" name="category">
-                                                        <option value="">Pilih Kategori</option>
-                                                        @foreach ($categories as $category)
-                                                            <option value="{{ $category->id }}"
-                                                                {{ old('category') == $category->id ? 'selected' : '' }}>
-                                                                {{ $category->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <p class="text-danger">{{ $errors->first('category') }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="a1">Nomor Ruangan <span
+                                                <label class="form-label" for="a1">Nama Stok Perlengkapan <span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
 
                                                     <input type="text" class="form-control" id="a1"
-                                                        name="no_kamar" value="{{ old('no_kamar') }}">
+                                                        name="name" value="{{ old('name') }}">
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('no_kamar') }}</p>
+                                                <p class="text-danger">{{ $errors->first('name') }}</p>
                                             </div>
                                         </div>
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="harga">Harga <span
+                                                <label class="form-label" for="a1">Memiliki Expired<span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
-
-                                                    <input type="text" class="form-control" id="harga" name="harga"
-                                                        value="{{ old('harga') }}">
+                                                    <select class="form-select" id="a7" name="is_expired">
+                                                        <option value="">Pilih Status</option>
+                                                        <option value="1" {{ old('is_expired') == 1 ? 'selected' : '' }}>YA</option>
+                                                        <option value="2" {{ old('is_expired') == 2 ? 'selected' : '' }}>TIDAK </option>
+                                                    </select>
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('harga') }}</p>
+                                                <p class="text-danger">{{ $errors->first('is_expired') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Status<span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <select class="form-select" id="a7" name="is_active">
+                                                        <option value="">Pilih Status</option>
+                                                        <option value="1" {{ old('is_active') == 1 ? 'selected' : '' }}>Aktif</option>
+                                                        <option value="2" {{ old('is_active') == 2 ? 'selected' : '' }}>Tidak Aktif</option>
+                                                    </select>
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('is_active') }}</p>
                                             </div>
                                         </div>
 
@@ -102,7 +100,7 @@
 
                         <!-- Card acrions starts -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('ruangan.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('bahans.index') }}" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                             <button type="submit" class="btn btn-primary" id="btn-update">
@@ -135,27 +133,6 @@
                 $("#btn-update").attr("disabled", true);
                 $(".btn-txt").text("Mohon Tunggu ...");
             });
-
-            var tanpa_rupiah = document.getElementById('harga');
-            tanpa_rupiah.addEventListener('keyup', function(e) {
-                tanpa_rupiah.value = formatRupiah(this.value);
-            });
-
-            function formatRupiah(angka, prefix) {
-                var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                    split = number_string.split(','),
-                    sisa = split[0].length % 3,
-                    rupiah = split[0].substr(0, sisa),
-                    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
-
-                if (ribuan) {
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
-                }
-
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
-            }
 
         });
     </script>

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Buat Ruangan Baru')
+@section('title', 'Edit Stok Perlengkapan')
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
@@ -12,8 +12,9 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('ruangan.store') }}" method="POST" id="submit">
+                    <form action="{{ route('bahans.update', $bahan->id) }}" method="POST" id="submit">
                         @csrf
+                        @method('PUT')
                         <!-- Custom tabs starts -->
                         <div class="custom-tabs-container">
 
@@ -23,7 +24,7 @@
                                     <a class="nav-link active" id="tab-oneA" data-bs-toggle="tab" href="#oneA"
                                         role="tab" aria-controls="oneA" aria-selected="true"><i
                                             class="ri-hotel-bed-fill"></i>
-                                        Form Ruangan Baru</a>
+                                        Form Stok Perlengkapan Edit</a>
                                 </li>
                             </ul>
                             <!-- Nav tabs ends -->
@@ -36,44 +37,42 @@
                                     <div class="row gx-3">
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Kategori Ruangan<span
-                                                        class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <select class="form-select" id="a7" name="category">
-                                                        <option value="">Pilih Kategori</option>
-                                                        @foreach ($categories as $category)
-                                                            <option value="{{ $category->id }}"
-                                                                {{ old('category') == $category->id ? 'selected' : '' }}>
-                                                                {{ $category->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <p class="text-danger">{{ $errors->first('category') }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="a1">Nomor Ruangan <span
+                                                <label class="form-label" for="a1">Nama Stok Perlengkapan <span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
 
                                                     <input type="text" class="form-control" id="a1"
-                                                        name="no_kamar" value="{{ old('no_kamar') }}">
+                                                        name="name" value="{{ ucwords($bahan->name) }}">
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('no_kamar') }}</p>
+                                                <p class="text-danger">{{ $errors->first('name') }}</p>
                                             </div>
                                         </div>
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="harga">Harga <span
+                                                <label class="form-label" for="a1">Memiliki Expired<span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
-
-                                                    <input type="text" class="form-control" id="harga" name="harga"
-                                                        value="{{ old('harga') }}">
+                                                    <select class="form-select" id="a7" name="is_expired">
+                                                        <option value="">Pilih Status</option>
+                                                        <option value="1" {{ $bahan->is_expired == 1 ? 'selected' : '' }}>YA</option>
+                                                        <option value="2" {{ $bahan->is_expired == 2 ? 'selected' : '' }}>TIDAK </option>
+                                                    </select>
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('harga') }}</p>
+                                                <p class="text-danger">{{ $errors->first('is_expired') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Status<span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <select class="form-select" id="a7" name="is_active">
+                                                        <option value="">Pilih Status</option>
+                                                        <option value="1" {{ $bahan->is_active == 1 ? 'selected' : '' }}>Aktif</option>
+                                                        <option value="2" {{ $bahan->is_active == 2 ? 'selected' : '' }}>Tidak Aktif</option>
+                                                    </select>
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('is_active') }}</p>
                                             </div>
                                         </div>
 
@@ -82,7 +81,7 @@
                                                 <label class="form-label" for="a2">Keterangan</label>
                                                 <div class="input-group">
 
-                                                    <textarea name="description" class="form-control" id="description" cols="10" rows="5">{{ old('description') }}</textarea>
+                                                    <textarea name="description" class="form-control" id="description" cols="10" rows="5">{{ $bahan->description }}</textarea>
                                                 </div>
                                                 <p class="text-danger">{{ $errors->first('description') }}</p>
                                             </div>
@@ -102,7 +101,7 @@
 
                         <!-- Card acrions starts -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('ruangan.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('bahans.index') }}" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                             <button type="submit" class="btn btn-primary" id="btn-update">

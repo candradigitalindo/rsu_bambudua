@@ -22,7 +22,7 @@
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" id="tab-oneA" data-bs-toggle="tab" href="#oneA"
                                         role="tab" aria-controls="oneA" aria-selected="true"><i
-                                            class="ri-hotel-bed-fill"></i>
+                                            class="ri-stethoscope-line"></i>
                                         Form Tindakan Baru</a>
                                 </li>
                             </ul>
@@ -98,7 +98,7 @@
 
                         <!-- Card acrions starts -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('category.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('tindakan.index') }}" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                             <button type="submit" class="btn btn-primary" id="btn-update">

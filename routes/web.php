@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\AntrianController;
+use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CategoryRuanganController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
@@ -84,6 +85,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pasien')->group(function () {
 
     });
+    Route::resource('bahans', BahanController::class)->only(['index','create','store','edit', 'update', 'destroy']);
 
     Route::resource('pengguna', PenggunaController::class)->only(['index','create','store','edit', 'update', 'destroy']);
 });

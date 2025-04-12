@@ -103,7 +103,7 @@
 
                         <!-- Card acrions starts -->
                         <div class="d-flex gap-2 justify-content-end mt-4">
-                            <a href="{{ route('category.index') }}" class="btn btn-outline-secondary">
+                            <a href="{{ route('ruangan.index') }}" class="btn btn-outline-secondary">
                                 Cancel
                             </a>
                             <button type="submit" class="btn btn-primary" id="btn-update">

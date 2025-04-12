@@ -49,6 +49,12 @@
 
             </ul>
         </li>
+        <li class="{{ request()->is('bahans*') ? 'active current-page' : '' }}">
+            <a href="{{ route('bahans.index') }}">
+                <i class="ri-team-line"></i>
+                <span class="menu-text">Data Stok Perlengkapan</span>
+            </a>
+        </li>
         <li class="{{ request()->is('pengguna*') ? 'active current-page' : '' }}">
             <a href="{{ route('pengguna.index') }}">
                 <i class="ri-team-line"></i>

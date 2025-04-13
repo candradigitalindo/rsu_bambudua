@@ -2,7 +2,9 @@
 
 namespace App\Repositories;
 
+use App\Models\Bahan;
 use App\Models\Tindakan;
+use App\Models\TindakanBahan;
 
 class TindakanRepository
 {
@@ -42,5 +44,25 @@ class TindakanRepository
     public function getTindakan()
     {
         return Tindakan::where('status', true)->orderBy('name', 'ASC')->get();
+    }
+    public function getBahan()
+    {
+        return Bahan::orderBy('name', 'ASC')->get();
+    }
+    public function storeBahan($id, array $data)
+    {
+        $tindakan = Tindakan::findOrFail($id);
+        TindakanBahan::create([
+            'tindakan_id' => $tindakan->id,
+            'bahan_id' => $data['bahan_id'],
+            'quantity' => $data['quantity'],
+        ]);
+        return $tindakan;
+    }
+    public function destoryBahan($id)
+    {
+        $tindakanbahan = TindakanBahan::findOrFail($id);
+        $tindakanbahan->delete();
+        return $tindakanbahan;
     }
 }

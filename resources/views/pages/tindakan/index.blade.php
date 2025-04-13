@@ -80,6 +80,13 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
+                                                <a href="{{ route('tindakan.getBahan', $tindakan->id) }}"
+                                                    class="btn btn-outline-primary btn-sm" id="bahan-{{ $tindakan->id }}">
+                                                    <i class="ri-archive-line"></i>
+                                                    <span class="btn-text" id="bahantext-{{ $tindakan->id }}">{{ $tindakan->bahan->count() }} Bahan Tindakan </span>
+                                                    <span class="spinner-border spinner-border-sm d-none"
+                                                        id="bahanspiner-{{ $tindakan->id }}"></span>
+                                                </a>
                                                 <a href="{{ route('tindakan.edit', $tindakan->id) }}"
                                                     class="btn btn-primary btn-sm" id="edit-{{ $tindakan->id }}">
                                                     <i class="ri-edit-2-line"></i>
@@ -106,6 +113,11 @@
                                                             $("#spiner-{{ $tindakan->id }}").removeClass("d-none");
                                                             $("#edit-{{ $tindakan->id }}").addClass("disabled", true);
                                                             $("#text-{{ $tindakan->id }}").text("Mohon Tunggu ...");
+                                                        });
+                                                        $("#bahan-{{ $tindakan->id }}").click(function() {
+                                                            $("#bahanspiner-{{ $tindakan->id }}").removeClass("d-none");
+                                                            $("#bahan-{{ $tindakan->id }}").addClass("disabled", true);
+                                                            $("#bahantext-{{ $tindakan->id }}").text("Mohon Tunggu ...");
                                                         });
                                                     });
                                                 </script>

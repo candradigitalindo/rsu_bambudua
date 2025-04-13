@@ -18,4 +18,8 @@ class Tindakan extends Model
     {
         return number_format($this->harga, 0, ',', '.');
     }
+    public function bahan()
+    {
+        return $this->belongsToMany(Bahan::class, 'tindakan_bahan')->withPivot('quantity', 'id')->withTimestamps();
+    }
 }

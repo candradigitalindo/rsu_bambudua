@@ -38,4 +38,8 @@ class Bahan extends Model
     {
         return number_format($this->stokbahan()->where('is_available', 1)->where('expired_at', '>', Carbon::now())->where('expired_at', '<=', Carbon::now()->subDays($this->warning))->count(), 0, ',', '.');
     }
+    public function tindakan()
+    {
+        return $this->belongsToMany(Tindakan::class, 'tindakan_bahan')->withPivot('quantity', 'id')->withTimestamps();
+    }
 }

@@ -118,4 +118,33 @@ class TindakanController extends Controller
         $tindakan = $this->tindakanRepository->destroy($id);
         return redirect()->route('tindakan.index')->with('success', 'Tindakan '.$tindakan->name.' berhasil dihapus.');
     }
+    public function getBahan($id)
+    {
+        $tindakan = $this->tindakanRepository->show($id);
+        $bahans = $this->tindakanRepository->getBahan();
+        return view('pages.tindakan.bahan', compact('bahans', 'tindakan'));
+    }
+    public function storeBahan(Request $request, $id)
+    {
+        $request->validate([
+            'bahan' => 'required|string',
+            'quantity' => 'required|numeric',
+
+        ], [
+            'bahan.required' => 'Bahan tidak boleh kosong.',
+            'quantity.required' => 'Jumlah tidak boleh kosong.',
+            'quantity.numeric' => 'Jumlah harus berupa angka.',
+        ]);
+        $data = [
+            'bahan_id' => $request->bahan,
+            'quantity' => $request->quantity,
+        ];
+        $tindakan = $this->tindakanRepository->storeBahan($id, $data);
+        return redirect()->route('tindakan.getBahan', $id)->with('success', 'Bahan tindakan '.$tindakan->name.' berhasil diperbarui.');
+    }
+    public function destroyBahan($id)
+    {
+        $tindakanbahan = $this->tindakanRepository->destoryBahan($id);
+        return redirect()->route('tindakan.getBahan', $tindakanbahan->tindakan_id)->with('success', 'Bahan tindakan  berhasil dihapus.');
+    }
 }

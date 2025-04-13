@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Buat Stok Perlengkapan Baru')
+@section('title', 'Buat Stok Keluar')
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
@@ -12,7 +12,7 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('bahans.store') }}" method="POST" id="submit">
+                    <form action="{{ route('bahan.stokKeluar', $bahan->id) }}" method="POST" id="submit">
                         @csrf
                         <!-- Custom tabs starts -->
                         <div class="custom-tabs-container">
@@ -22,8 +22,8 @@
                                 <li class="nav-item" role="presentation">
                                     <a class="nav-link active" id="tab-oneA" data-bs-toggle="tab" href="#oneA"
                                         role="tab" aria-controls="oneA" aria-selected="true"><i
-                                            class="ri-hotel-bed-fill"></i>
-                                        Form Stok Perlengkapan Baru</a>
+                                            class="ri-archive-line"></i>
+                                        Form Stok Keluar</a>
                                 </li>
                             </ul>
                             <!-- Nav tabs ends -->
@@ -31,59 +31,60 @@
                             <!-- Tab content starts -->
                             <div class="tab-content">
                                 <div class="tab-pane fade show active" id="oneA" role="tabpanel">
+                                    <div class="card border mt-3">
+                                        <div class="card-body">
+                                            <span class="badge bg-primary-subtle rounded-pill text-primary">
+                                                <i class="ri-circle-fill me-1"></i>Status : {{ $bahan->is_active == 1 ? 'Aktif' : 'Tidak Aktif' }}<a
+                                                    id="status-item"></a></span>
+                                            <hr>
+                                            <div class="row justify-content-between">
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Identitas Item
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>Nama Item</td>
+                                                            <td>:</td>
+                                                            <td id="no_rm_rawatJalan">{{ ucwords($bahan->name) }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Memiliki Expired</td>
+                                                            <td>:</td>
+                                                            <td id="is_expired_rawatJalan">{{ $bahan->is_expired == 1 ? 'YA' : 'TIDAK' }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Jumlah Stok</td>
+                                                            <td>:</td>
+                                                            <td id="jumlah_stok_rawatJalan">{{ $bahan->getStockQuantityAttribute() }}</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
 
+                                            </div>
+                                        </div>
+                                    </div>
                                     <!-- Row starts -->
-                                    <div class="row gx-3">
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                    <div class="row gx-3 mt-3">
+                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Nama Stok Perlengkapan <span
+                                                <label class="form-label" for="a1">Jumlah <span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
 
                                                     <input type="text" class="form-control" id="a1"
-                                                        name="name" value="{{ old('name') }}">
+                                                        name="quantity" value="{{ old('quantity') }}">
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('name') }}</p>
+                                                <p class="text-danger">{{ $errors->first('quantity') }}</p>
                                             </div>
                                         </div>
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Memiliki Expired<span
-                                                        class="text-danger">*</span></label>
+                                                <label class="form-label" for="expired_at">Tanggal Pengimputan Barang</label>
                                                 <div class="input-group">
-                                                    <select class="form-select" id="is_expired" name="is_expired">
-                                                        <option value="">Pilih Status</option>
-                                                        <option value="1" {{ old('is_expired') == 1 ? 'selected' : '' }}>YA</option>
-                                                        <option value="2" {{ old('is_expired') == 2 ? 'selected' : '' }}>TIDAK </option>
-                                                    </select>
+                                                    <input type="date" class="form-control" name="created_at" id="created_at" value="{{ old('created_at') }}">
                                                 </div>
-                                                <p class="text-danger">{{ $errors->first('is_expired') }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6 d-none" id="expired">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="a1">Pengingat Expired (Hari) <span
-                                                        class="text-danger">*</span></label>
-                                                <div class="input-group">
-
-                                                    <input type="text" class="form-control " id="a1"
-                                                        name="reminder" value="{{ old('reminder') }}">
-                                                </div>
-                                                <p class="text-danger">{{ $errors->first('reminder') }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="a1">Status<span
-                                                        class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <select class="form-select" id="a7" name="is_active">
-                                                        <option value="">Pilih Status</option>
-                                                        <option value="1" {{ old('is_active') == 1 ? 'selected' : '' }}>Aktif</option>
-                                                        <option value="2" {{ old('is_active') == 2 ? 'selected' : '' }}>Tidak Aktif</option>
-                                                    </select>
-                                                </div>
-                                                <p class="text-danger">{{ $errors->first('is_active') }}</p>
+                                                <p class="text-danger">{{ $errors->first('created_at') }}</p>
                                             </div>
                                         </div>
 
@@ -144,13 +145,6 @@
                 $(".spinner-border").removeClass("d-none");
                 $("#btn-update").attr("disabled", true);
                 $(".btn-txt").text("Mohon Tunggu ...");
-            });
-            $("#is_expired").change(function() {
-                if ($(this).val() == 1) {
-                    $("#expired").removeClass("d-none");
-                } else {
-                    $("#expired").addClass("d-none");
-                }
             });
 
         });

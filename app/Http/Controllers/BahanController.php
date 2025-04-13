@@ -35,28 +35,57 @@ class BahanController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_expired' => 'string|required',
-            'is_active' => 'string|required',
-        ],
-        [
-            'name.required' => 'Kolom Nama tidak boleh kosong',
-            'name.string' => 'Kolom Nama Bahan harus berupa string',
-            'name.max' => 'Kolom Nama Bahan tidak boleh lebih dari 255 karakter',
-            'description.string' => 'Kolom Deskripsi harus berupa string',
-            'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
-            'is_expired.boolean' => 'Kolom Expired harus berupa boolean',
-            'is_active.boolean' => 'Kolom Status harus berupa boolean',
-            'is_expired.required' => 'Kolom Expired tidak boleh kosong',
-            'is_active.required' => 'Kolom Status tidak boleh kosong',
-        ]);
+        if ($request->is_expired == 1) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'is_expired' => 'string|required',
+                'is_active' => 'string|required',
+                'reminder' => 'required|integer|min:1',
+            ],
+            [
+                'name.required' => 'Kolom Nama tidak boleh kosong',
+                'name.string' => 'Kolom Nama Bahan harus berupa string',
+                'name.max' => 'Kolom Nama Bahan tidak boleh lebih dari 255 karakter',
+                'description.string' => 'Kolom Deskripsi harus berupa string',
+                'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+                'is_expired.boolean' => 'Kolom Expired harus berupa boolean',
+                'is_active.boolean' => 'Kolom Status harus berupa boolean',
+                'is_expired.required' => 'Kolom Expired tidak boleh kosong',
+                'is_active.required' => 'Kolom Status tidak boleh kosong',
+                'reminder.required' => 'Kolom Pengingat tidak boleh kosong',
+                'reminder.integer' => 'Kolom Pengingat harus berupa angka',
+                'reminder.min' => 'Kolom Pengingat harus lebih dari 0',
+            ]);
+        }else {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'is_expired' => 'string|required',
+                'is_active' => 'string|required',
+                'reminder' => 'nullable|integer|min:1',
+            ],
+            [
+                'name.required' => 'Kolom Nama tidak boleh kosong',
+                'name.string' => 'Kolom Nama Bahan harus berupa string',
+                'name.max' => 'Kolom Nama Bahan tidak boleh lebih dari 255 karakter',
+                'description.string' => 'Kolom Deskripsi harus berupa string',
+                'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+                'is_expired.boolean' => 'Kolom Expired harus berupa boolean',
+                'is_active.boolean' => 'Kolom Status harus berupa boolean',
+                'is_expired.required' => 'Kolom Expired tidak boleh kosong',
+                'is_active.required' => 'Kolom Status tidak boleh kosong',
+                'reminder.required' => 'Kolom Pengingat tidak boleh kosong',
+                'reminder.integer' => 'Kolom Pengingat harus berupa angka',
+                'reminder.min' => 'Kolom Pengingat harus lebih dari 0',
+            ]);
+        }
         $data = [
             'name' => $request->name,
             'is_expired' => (int) $request->is_expired,
             'description' => $request->description,
             'is_active' => (int) $request->is_active,
+            'warning' => $request->is_expired == 1 ? (int) $request->reminder : 0,
         ];
 
         $bahan = $this->bahanRepository->create($data); // Use $data instead of $request->all()
@@ -85,28 +114,57 @@ class BahanController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'is_expired' => 'string|required',
-            'is_active' => 'string|required',
-        ],
-        [
-            'name.required' => 'Kolom Nama Bahan tidak boleh kosong',
-            'name.string' => 'Kolom Nama Bahan harus berupa string',
-            'name.max' => 'Kolom Nama Bahan tidak boleh lebih dari 255 karakter',
-            'description.string' => 'Kolom Deskripsi harus berupa string',
-            'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
-            'is_expired.string' => 'Kolom Expired harus berupa string',
-            'is_active.string' => 'Kolom Status harus berupa string',
-            'is_expired.required' => 'Kolom Expired tidak boleh kosong',
-            'is_active.required' => 'Kolom Status tidak boleh kosong',
-        ]);
+        if ($request->is_expired == 1) {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'is_expired' => 'string|required',
+                'is_active' => 'string|required',
+                'reminder' => 'required|integer|min:1',
+            ],
+            [
+                'name.required' => 'Kolom Nama tidak boleh kosong',
+                'name.string' => 'Kolom Nama Bahan harus berupa string',
+                'name.max' => 'Kolom Nama Bahan tidak boleh lebih dari 255 karakter',
+                'description.string' => 'Kolom Deskripsi harus berupa string',
+                'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+                'is_expired.boolean' => 'Kolom Expired harus berupa boolean',
+                'is_active.boolean' => 'Kolom Status harus berupa boolean',
+                'is_expired.required' => 'Kolom Expired tidak boleh kosong',
+                'is_active.required' => 'Kolom Status tidak boleh kosong',
+                'reminder.required' => 'Kolom Pengingat tidak boleh kosong',
+                'reminder.integer' => 'Kolom Pengingat harus berupa angka',
+                'reminder.min' => 'Kolom Pengingat harus lebih dari 0',
+            ]);
+        }else {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'is_expired' => 'string|required',
+                'is_active' => 'string|required',
+                'reminder' => 'nullable|integer|min:1',
+            ],
+            [
+                'name.required' => 'Kolom Nama tidak boleh kosong',
+                'name.string' => 'Kolom Nama Bahan harus berupa string',
+                'name.max' => 'Kolom Nama Bahan tidak boleh lebih dari 255 karakter',
+                'description.string' => 'Kolom Deskripsi harus berupa string',
+                'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+                'is_expired.boolean' => 'Kolom Expired harus berupa boolean',
+                'is_active.boolean' => 'Kolom Status harus berupa boolean',
+                'is_expired.required' => 'Kolom Expired tidak boleh kosong',
+                'is_active.required' => 'Kolom Status tidak boleh kosong',
+                'reminder.required' => 'Kolom Pengingat tidak boleh kosong',
+                'reminder.integer' => 'Kolom Pengingat harus berupa angka',
+                'reminder.min' => 'Kolom Pengingat harus lebih dari 0',
+            ]);
+        }
         $data = [
             'name' => $request->name,
             'is_expired' => (int) $request->is_expired,
             'description' => $request->description,
             'is_active' => (int) $request->is_active,
+            'warning' => $request->is_expired == 1 ? (int) $request->reminder : 0,
         ];
 
         $bahan = $this->bahanRepository->update($id, $data);
@@ -121,4 +179,87 @@ class BahanController extends Controller
         $bahan = $this->bahanRepository->destroy($id);
         return redirect()->route('bahans.index')->with('success', 'Bahan '.$bahan->name.' berhasil dihapus.');
     }
+    public function getBahan($id)
+    {
+        $bahan = $this->bahanRepository->getBahan($id);
+        return view('pages.bahan.stokMasuk', compact('bahan'));
+    }
+    public function stokBahan(Request $request, $id)
+    {
+        $bahan = $this->bahanRepository->getBahan($id);
+        if ($bahan->is_expired == 1) {
+            $request->validate([
+                'quantity' => 'required|integer|min:1',
+                'expired_at' => 'required|date',
+                'description' => 'nullable|string|max:255',
+            ],
+            [
+                'quantity.required' => 'Kolom Jumlah tidak boleh kosong',
+                'quantity.integer' => 'Kolom Jumlah harus berupa angka',
+                'quantity.min' => 'Kolom Jumlah harus lebih dari 0',
+                'expired_at.required' => 'Kolom Expired tidak boleh kosong',
+                'expired_at.date' => 'Kolom Expired harus berupa tanggal yang valid',
+                'description.string' => 'Kolom Deskripsi harus berupa string',
+                'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+            ]);
+        }else {
+            $request->validate([
+                'quantity' => 'required|integer|min:1',
+                'expired_at' => 'nullable|date',
+                'description' => 'nullable|string|max:255',
+            ],
+            [
+                'quantity.required' => 'Kolom Jumlah tidak boleh kosong',
+                'quantity.integer' => 'Kolom Jumlah harus berupa angka',
+                'quantity.min' => 'Kolom Jumlah harus lebih dari 0',
+                'expired_at.date' => 'Kolom Expired harus berupa tanggal yang valid',
+                'description.string' => 'Kolom Deskripsi harus berupa string',
+                'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+            ]);
+        }
+        $data = [
+            'quantity' => $request->quantity,
+            'expired_at' => $bahan->is_expired == 1 ? $request->expired_at : null,
+            'description' => $request->description,
+        ];
+
+        $bahan = $this->bahanRepository->stokBahan($data, $id);
+        return redirect()->route('bahans.index')->with('success', 'Stok Bahan '.$bahan->name.' berhasil ditambahkan.');
+    }
+    public function getBahanKeluar($id)
+    {
+        $bahan = $this->bahanRepository->getBahan($id);
+        return view('pages.bahan.stokKeluar', compact('bahan'));
+    }
+    public function stokKeluar(Request $request, $id)
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+            'created_at' => 'nullable|date',
+            'description' => 'nullable|string|max:255',
+        ],
+        [
+            'quantity.required' => 'Kolom Jumlah tidak boleh kosong',
+            'quantity.integer' => 'Kolom Jumlah harus berupa angka',
+            'quantity.min' => 'Kolom Jumlah harus lebih dari 0',
+            'created_at.date' => 'Kolom Tanggal harus berupa tanggal yang valid',
+            'description.string' => 'Kolom Deskripsi harus berupa string',
+            'description.max' => 'Kolom Deskripsi tidak boleh lebih dari 255 karakter',
+        ]);
+        $data = [
+            'quantity' => $request->quantity,
+            'created_at' => $request->created_at == null ? null : $request->created_at,
+            'description' => $request->description,
+            'status' => 'keluar',
+        ];
+
+        $bahan = $this->bahanRepository->stokKeluar($id, $data);
+        return redirect()->route('bahans.index')->with('success', 'Stok Bahan '.$bahan->name.' berhasil dikurangi.');
+    }
+    public function getAllHistori()
+    {
+        $bahan = $this->bahanRepository->getAllHistori();
+        return view('pages.bahan.histori', compact('bahan'));
+    }
+
 }

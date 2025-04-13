@@ -35,7 +35,7 @@
 
                                     <!-- Row starts -->
                                     <div class="row gx-3">
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Nama Stok Perlengkapan <span
                                                         class="text-danger">*</span></label>
@@ -47,12 +47,12 @@
                                                 <p class="text-danger">{{ $errors->first('name') }}</p>
                                             </div>
                                         </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Memiliki Expired<span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
-                                                    <select class="form-select" id="a7" name="is_expired">
+                                                    <select class="form-select" id="is_expired" name="is_expired">
                                                         <option value="">Pilih Status</option>
                                                         <option value="1" {{ $bahan->is_expired == 1 ? 'selected' : '' }}>YA</option>
                                                         <option value="2" {{ $bahan->is_expired == 2 ? 'selected' : '' }}>TIDAK </option>
@@ -61,7 +61,19 @@
                                                 <p class="text-danger">{{ $errors->first('is_expired') }}</p>
                                             </div>
                                         </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6 d-none" id="expired">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Pengingat Expired (Hari) <span
+                                                        class="text-danger">*</span></label>
+                                                <div class="input-group">
+
+                                                    <input type="text" class="form-control " id="a1"
+                                                        name="reminder" value="{{ $bahan->warning }}">
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('reminder') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Status<span
                                                         class="text-danger">*</span></label>
@@ -133,6 +145,18 @@
                 $(".spinner-border").removeClass("d-none");
                 $("#btn-update").attr("disabled", true);
                 $(".btn-txt").text("Mohon Tunggu ...");
+            });
+            if ('{{ $bahan->is_expired }}' == 1) {
+                $("#expired").removeClass('d-none');
+            } else {
+                $("#expired").addClass('d-none');
+            }
+            $("#is_expired").change(function() {
+                if ($(this).val() == 1) {
+                    $("#expired").removeClass('d-none');
+                } else {
+                    $("#expired").addClass('d-none');
+                }
             });
 
             var tanpa_rupiah = document.getElementById('harga');

@@ -5,16 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
-class Stokbahan extends Model
+class Historibahan extends Model
 {
     use HasUuids;
-    protected $fillable = [
-        'bahan_id',
-        'is_available',
-        'expired_at',
-        'date_used',
-        'description'
-    ];
+    protected $fillable = ['quantity', 'expired_at', 'description', 'bahan_id', 'status'];
+
+
     public function bahan()
     {
         return $this->belongsTo(Bahan::class);

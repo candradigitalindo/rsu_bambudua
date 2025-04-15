@@ -9,7 +9,7 @@ class Practitioner extends Model
 {
     use HasUuids;
     protected $fillable = [
-        'encounter_id', 'name', 'satusehat_id'
+        'encounter_id', 'name', 'satusehat_id', 'id_petugas'
     ];
 
     public function encounter()

@@ -49,6 +49,24 @@
 
             </ul>
         </li>
+        <li class="treeview {{ request()->is('kunjungan*') ? 'active current-page' : '' }}">
+            <a href="#">
+                <i class="ri-dossier-line"></i>
+                <span class="menu-text">Data Kunjungan</span>
+            </a>
+            <ul class="treeview-menu">
+                <li>
+                    <a class="{{ request()->is('kunjungan/rawatJalan*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('kunjungan/rawatInap*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatInap') }}">Rawat Inap</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('kunjungan/rawatDarurat*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatDarurat') }}">IGD</a>
+                </li>
+
+            </ul>
+        </li>
         <li class="{{ request()->is('bahans*') ? 'active current-page' : '' }}">
             <a href="{{ route('bahans.index') }}">
                 <i class="ri-archive-line"></i>

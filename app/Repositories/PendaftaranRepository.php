@@ -387,6 +387,7 @@ class PendaftaranRepository
             Practitioner::create([
                 'encounter_id'  => $encounter->id,
                 'name'          => $dokter->name,
+                'id_petugas'    => $dokter->id_petugas,
                 'satusehat_id'  => $dokter->satusehat_id
             ]);
         }
@@ -408,6 +409,7 @@ class PendaftaranRepository
         if ($dokter) {
             Practitioner::where('encounter_id', $encounter->id)->update([
                 'name'          => $dokter->name,
+                'id_petugas'    => $dokter->id_petugas,
                 'satusehat_id'  => $dokter->satusehat_id
             ]);
         }

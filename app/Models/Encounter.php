@@ -23,4 +23,12 @@ class Encounter extends Model
     {
         return $this->hasMany(Practitioner::class);
     }
+    public function anamnesis()
+    {
+        return $this->hasOne(Anamnesis::class);
+    }
+    public function tandaVital()
+    {
+        return $this->hasOne(TandaVital::class);
+    }
 }

@@ -70,8 +70,25 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
+                                                <a href="{{ route('observasi.index', $encounter->id) }}"
+                                                    class="btn btn-outline-primary btn-sm" id="periksa-{{ $encounter->id }}">
+                                                    <i class="ri-stethoscope-line"></i>
+                                                    <span class="btn-text" id="textPeriksa-{{ $encounter->id }}">Pemeriksaan</span>
+                                                    <span class="spinner-border spinner-border-sm d-none"
+                                                        id="spinerPeriksa-{{ $encounter->id }}"></span>
+                                                </a>
+                                                <script src="{{ asset('js/jquery.min.js') }}"></script>
+                                                <script>
 
 
+                                                    $(document).ready(function() {
+                                                        $("#periksa-{{ $encounter->id }}").click(function() {
+                                                            $("#spinerPeriksa-{{ $encounter->id }}").removeClass("d-none");
+                                                            $("#periksa-{{ $encounter->id }}").addClass("disabled", true);
+                                                            $("#textPeriksa-{{ $encounter->id }}").text("Mohon Tunggu ...");
+                                                        });
+                                                    });
+                                                </script>
                                             </td>
                                         </tr>
                                     @empty

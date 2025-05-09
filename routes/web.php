@@ -10,6 +10,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JaminanController;
 use App\Http\Controllers\LokasiloketController;
 use App\Http\Controllers\LoketController;
+use App\Http\Controllers\ObservasiController;
 use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PendidikanController;
@@ -98,5 +99,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/rawatJalan', [EncounterController::class, 'getAllRawatJalan'])->name('kunjungan.rawatJalan');
         Route::get('/rawatInap', [EncounterController::class, 'getAllRawatInap'])->name('kunjungan.rawatInap');
         Route::get('/rawatDarurat', [EncounterController::class, 'getAllRawatDarurat'])->name('kunjungan.rawatDarurat');
+        Route::get('/observasi/{id}', [ObservasiController::class, 'index'])->name('observasi.index');
+        Route::get('/observasi/{id}/riwayatPenyakit', [ObservasiController::class, 'riwayatPenyakit'])->name('observasi.riwayatPenyakit');
+        Route::post('/observasi/{id}/postAnemnesis', [ObservasiController::class, 'postAnemnesis'])->name('observasi.postAnemnesis');
+        Route::get('/observasi/{id}/tandaVital', [ObservasiController::class, 'tandaVital'])->name('observasi.tandaVital');
+        Route::post('/observasi/{id}/postTandaVital', [ObservasiController::class, 'postTandaVital'])->name('observasi.postTandaVital');
     });
 });

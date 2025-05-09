@@ -56,7 +56,7 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('kunjungan/rawatJalan*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
+                    <a class="{{ request()->is('kunjungan/rawatJalan*') || request()->is('kunjungan/observasi*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
                 </li>
                 <li>
                     <a class="{{ request()->is('kunjungan/rawatInap*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatInap') }}">Rawat Inap</a>

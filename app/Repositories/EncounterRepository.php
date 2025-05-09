@@ -19,9 +19,9 @@ class EncounterRepository
         if (auth()->user()->role == 2) {
             $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 1)->where('status', 1)->whereHas('practitioner', function ($query) {
                 $query->where('id_petugas', auth()->user()->id_petugas);
-            })->orderBy('updated_at', 'DESC')->get();
+            })->orderBy('updated_at', 'ASC')->get();
         }else {
-            $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 1)->where('status', 1)->orderBy('updated_at', 'DESC')->get();
+            $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 1)->where('status', 1)->orderBy('updated_at', 'ASC')->get();
         }
         $encounters->map(function ($encounter) {
             $encounter['status'] = $encounter->status == 1 ? "Progress" : "Finish";

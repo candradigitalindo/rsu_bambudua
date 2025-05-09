@@ -35,4 +35,8 @@ class Pasien extends Model
         'satusehat_id',
         'status'
     ];
+    public function riwayatPenyakits()
+    {
+        return $this->hasOne(RiwayatPenyakit::class);
+    }
 }

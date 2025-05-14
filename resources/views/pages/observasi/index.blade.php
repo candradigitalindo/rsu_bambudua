@@ -5,6 +5,8 @@
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
+    <!-- Quill Editor -->
+    <link rel="stylesheet" href="{{ asset('vendor/quill/quill.core.css') }}">
     <style>
         a.disabled {
             /* Make the disabled links grayish*/
@@ -102,9 +104,11 @@
                                         <span class="spinner-border spinner-border-sm d-none"
                                             id="spinner-anamnesis"></span>
                                     </button>
-                                    <a href="{{ route('kunjungan.rawatJalan') }}" class="btn btn-secondary" id="btn-kembali-anamnesis">
+                                    <a href="{{ route('kunjungan.rawatJalan') }}" class="btn btn-secondary"
+                                        id="btn-kembali-anamnesis">
                                         <span class="btn-txt" id="text-kembali-anamnesis">Kembali</span>
-                                        <span class="spinner-border spinner-border-sm d-none" id="spinner-kembali-anamnesis"></span>
+                                        <span class="spinner-border spinner-border-sm d-none"
+                                            id="spinner-kembali-anamnesis"></span>
                                     </a>
                                 </div>
                                 <!-- Row ends -->
@@ -210,16 +214,127 @@
                                             <span class="btn-txt" id="text-ttv">Simpan</span>
                                             <span class="spinner-border spinner-border-sm d-none" id="spinner-ttv"></span>
                                         </button>
-                                        <a href="{{ route('kunjungan.rawatJalan') }}" class="btn btn-secondary" id="btn-kembali-ttv">
+                                        <a href="{{ route('kunjungan.rawatJalan') }}" class="btn btn-secondary"
+                                            id="btn-kembali-ttv">
                                             <span class="btn-txt" id="text-kembali-ttv">Kembali</span>
-                                            <span class="spinner-border spinner-border-sm d-none" id="spinner-kembali-ttv"></span>
+                                            <span class="spinner-border spinner-border-sm d-none"
+                                                id="spinner-kembali-ttv"></span>
                                         </a>
 
                                     </div>
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="pemeriksaan-penunjang" role="tabpanel">
-                                <h3 class="text-primary">Some Description</h3>
+                                <!-- Row startss -->
+                                <div class="row gx-3">
+                                    <div class="col-xxl-6 col-sm-6">
+                                        <div class="card mb-1">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Pemeriksaan Penunjang</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Jenis Pemeriksaan</label>
+                                                    <div class="input-group">
+                                                        <select name="jenis_pemeriksaan" id="jenis_pemeriksaan"
+                                                            class="form-control">
+                                                            <option value="">Pilih Jenis Pemeriksaan</option>
+                                                            <option value="EKG"
+                                                                {{ old('jenis_pemeriksaan') == 'EKG' ? 'selected' : '' }}>
+                                                                EKG</option>
+                                                            <option value="Ekokardiografi"
+                                                                {{ old('jenis_pemeriksaan') == 'Ekokardiografi' ? 'selected' : '' }}>
+                                                                Ekokardiografi</option>
+                                                            <option value="Rontgen Dada"
+                                                                {{ old('jenis_pemeriksaan') == 'Rontgen Dada' ? 'selected' : '' }}>
+                                                                Rontgen Dada</option>
+                                                            <option value="Tes Treadmill"
+                                                                {{ old('jenis_pemeriksaan') == 'Tes Treadmill' ? 'selected' : '' }}>
+                                                                Tes Treadmill</option>
+                                                            <option value="Holter Monitoring"
+                                                                {{ old('jenis_pemeriksaan') == 'Holter Monitoring' ? 'selected' : '' }}>
+                                                                Holter Monitoring</option>
+                                                            <option value="CT Koroner"
+                                                                {{ old('jenis_pemeriksaan') == 'CT Koroner' ? 'selected' : '' }}>
+                                                                CT Koroner</option>
+                                                            <option value="MRI Jantung"
+                                                                {{ old('jenis_pemeriksaan') == 'MRI Jantung' ? 'selected' : '' }}>
+                                                                MRI Jantung</option>
+                                                            <option value="Kateterisasi Jantung"
+                                                                {{ old('jenis_pemeriksaan') == 'Kateterisasi Jantung' ? 'selected' : '' }}>
+                                                                Kateterisasi Jantung</option>
+                                                            <option value="USG Jantung"
+                                                                {{ old('jenis_pemeriksaan') == 'USG Jantung' ? 'selected' : '' }}>
+                                                                USG Jantung</option>
+                                                            <option value="CT Scan"
+                                                                {{ old('jenis_pemeriksaan') == 'CT Scan' ? 'selected' : '' }}>
+                                                                CT Scan</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Hasil Pemeriksaan</label>
+                                                    <div class="col-sm-12">
+                                                        <div id="fullEditor">
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Dokumen Pemeriksaan (Jika
+                                                        ada)</label>
+                                                    <div class="input-group">
+                                                        <input type="file" class="form-control"
+                                                            id="dokumen_pemeriksaan" name="dokumen_pemeriksaan">
+                                                        <input type="hidden" name="dokumen_pemeriksaan"
+                                                            id="dokumen_pemeriksaan"
+                                                            value="{{ old('dokumen_pemeriksaan') }}">
+                                                        <p class="text-danger">
+                                                            {{ $errors->first('dokumen_pemeriksaan') }}</p>
+
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex gap-2 justify-content-end mt-4">
+                                                    <button type="submit" class="btn btn-primary" id="btn-pemeriksaan">
+                                                        <span class="btn-txt" id="text-pemeriksaan">Simpan</span>
+                                                        <span class="spinner-border spinner-border-sm d-none"
+                                                            id="spinner-pemeriksaan"></span>
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-6 col-sm-12">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Data Pemeriksaan Penunjang</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-outer">
+                                                    <div class="table-responsive">
+                                                        <table class="table truncate m-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Jenis Pemeriksaan</th>
+                                                                    <th>Hasil</th>
+                                                                    <th class="text-center">Aksi</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody-pendukung">
+
+
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Row ends -->
                             </div>
                             <div class="tab-pane fade" id="tindakan-medis" role="tabpanel">
                                 <h3 class="text-primary">Some Description</h3>
@@ -245,6 +360,9 @@
         <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
         <!-- Sweet Alert JS -->
         <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+        <!-- Quill Editor JS -->
+        <script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
+        <script src="{{ asset('vendor/quill/custom.js') }}"></script>
         <!-- Custom JS files -->
         <script src="{{ asset('js/custom.js') }}"></script>
         <script>
@@ -341,13 +459,17 @@
                         type: "GET",
                         success: function(data) {
                             $("#nadi").val(data.nadi);
-                            $("#pernapasan").val(data.pernapasan); // Updated to match the new data structure
+                            $("#pernapasan").val(data
+                                .pernapasan); // Updated to match the new data structure
                             $("#sistolik").val(data.sistolik);
                             $("#diastolik").val(data.diastolik);
                             $("#suhu").val(data.suhu);
-                            $("#kesadaran").val(data.kesadaran); // Updated to match the new data structure
-                            $("#tinggi_badan").val(data.tinggi_badan); // Updated to match the new data structure
-                            $("#berat_badan").val(data.berat_badan); // Updated to match the new data structure
+                            $("#kesadaran").val(data
+                                .kesadaran); // Updated to match the new data structure
+                            $("#tinggi_badan").val(data
+                                .tinggi_badan); // Updated to match the new data structure
+                            $("#berat_badan").val(data
+                                .berat_badan); // Updated to match the new data structure
                         }
                     });
                 });
@@ -409,7 +531,130 @@
                 });
                 // tab-pemeriksaan-penunjang click
                 $("#tab-pemeriksaan-penunjang").click(function() {
-                    alert("tab-pemeriksaan-penunjang clicked");
+                    // ajax pemeriksaan penunjang
+                    let url = "{{ route('observasi.pemeriksaanPenunjang', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        success: function(data) {
+                            console.log(data);
+                            // Populate the table with data
+                            let tbody = $("#tbody-pendukung");
+                            tbody.empty(); // Clear existing rows
+                            $.each(data, function(index, item) {
+                                tbody.append(
+                                    `<tr>
+                                        <td>${item.jenis_pemeriksaan}</td>
+                                        <td>${item.hasil_pemeriksaan}</td>
+                                        <td class="text-center">
+                                            <button class="btn btn-danger btn-sm btn-hapus-pemeriksaan" data-id="${item.id}">
+                                                <i class="bi bi-trash"></i> Hapus
+                                            </button>
+                                        </td>
+                                    </tr>`
+                                );
+                            });
+                            // kosongkan kolom dokumen pemeriksaan
+                            $("#jenis_pemeriksaan").val(null);
+                            // kembalikan editor ke default
+                            quill.setContents(0);
+
+                        }
+                    });
+                });
+
+                // Event delegation untuk tombol hapus
+                $('#tbody-pendukung').on('click', '.btn-hapus-pemeriksaan', function() {
+                    let id = $(this).data('id');
+                    // Konfirmasi hapus
+                    swal({
+                        title: "Apakah Anda yakin?",
+                        text: "Data ini akan dihapus!",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    }).then((willDelete) => {
+                        if (willDelete) {
+                            let url = "{{ route('observasi.deletePemeriksaanPenunjang', ':id') }}".replace(':id', id);
+                            $.ajax({
+                                url: url,
+                                type: "DELETE",
+                                data: { _token: "{{ csrf_token() }}" },
+                                success: function(data) {
+                                    swal(data.message, { icon: "success" });
+                                    $("#tab-pemeriksaan-penunjang").click(); // Refresh tabel
+                                },
+                                error: function() {
+                                    swal('Terjadi kesalahan saat menghapus data.', { icon: "error" });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // btn-pemeriksaan click
+                $("#btn-pemeriksaan").click(function() {
+                    // URL untuk AJAX
+                    let url = "{{ route('observasi.postPemeriksaanPenunjang', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+
+                    // Ambil data dari form
+                    let jenis_pemeriksaan = $("#jenis_pemeriksaan").val();
+                    let hasil_pemeriksaan = quill.root.innerHTML; // Ambil isi editor
+                    let dokumen_pemeriksaan = $("#dokumen_pemeriksaan")[0].files[0]; // Ambil file
+
+                    // Validasi input
+                    if (jenis_pemeriksaan == '') {
+                        alert("Jenis Pemeriksaan tidak boleh kosong");
+                        return;
+                    }
+                    if (hasil_pemeriksaan == '') {
+                        alert("Hasil Pemeriksaan tidak boleh kosong");
+                        return;
+                    }
+
+                    // Buat objek FormData
+                    let formData = new FormData();
+                    formData.append("jenis_pemeriksaan", jenis_pemeriksaan);
+                    formData.append("hasil_pemeriksaan", hasil_pemeriksaan);
+                    formData.append("dokumen_pemeriksaan", dokumen_pemeriksaan); // Tambahkan file
+                    formData.append("_token", "{{ csrf_token() }}"); // Tambahkan CSRF token
+
+                    // Kirim data melalui AJAX
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: formData,
+                        processData: false, // Jangan proses data
+                        contentType: false, // Jangan tetapkan header Content-Type
+                        beforeSend: function() {
+                            $("#spinner-pemeriksaan").removeClass("d-none");
+                            $("#text-pemeriksaan").addClass("d-none");
+                        },
+                        success: function(data) {
+                            if (data.status == 200) {
+                                swal(data.message, {
+                                    icon: "success",
+                                });
+                                // Refresh the table after successful submission
+                                $("#tab-pemeriksaan-penunjang").click();
+                            } else {
+                                swal('Terjadi kesalahan saat menyimpan data.', {
+                                    icon: "error",
+                                });
+                            }
+                            $("#spinner-pemeriksaan").addClass("d-none");
+                            $("#text-pemeriksaan").removeClass("d-none");
+                        },
+                        error: function(xhr) {
+                            swal('Terjadi kesalahan saat mengirim data.', {
+                                icon: "error",
+                            });
+                            $("#spinner-pemeriksaan").addClass("d-none");
+                            $("#text-pemeriksaan").removeClass("d-none");
+                        }
+                    });
                 });
                 // tab-tindakan-medis click
                 $("#tab-tindakan-medis").click(function() {

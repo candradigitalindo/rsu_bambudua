@@ -72,4 +72,44 @@ class ObservasiController extends Controller
             'data' => $result
         ]);
     }
+    public function pemeriksaanPenunjang($id)
+    {
+        $pemeriksaanPenunjang = $this->observasiRepository->pemeriksaanPenunjang($id);
+        if ($pemeriksaanPenunjang) {
+            return response()->json($pemeriksaanPenunjang);
+        } else {
+            return response()->json($pemeriksaanPenunjang);
+        }
+    }
+    public function postPemeriksaanPenunjang(Request $request, $id)
+    {
+        // cek jika dokumen undifined
+        if ($request->hasFile('dokumen_pemeriksaan')) {
+            $request->validate([
+                'jenis_pemeriksaan' => 'required|string',
+                'hasil_pemeriksaan' => 'required|string',
+                'dokumen_pemeriksaan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
+            ]);
+        } else {
+            $request->validate([
+                'jenis_pemeriksaan' => 'required|string',
+                'hasil_pemeriksaan' => 'required|string',
+            ]);
+        }
+        $result = $this->observasiRepository->postPemeriksaanPenunjang($request, $id);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Pemeriksaan Penunjang berhasil disimpan.',
+            'data' => $result
+        ]);
+    }
+    public function deletePemeriksaanPenunjang($id)
+    {
+        $result = $this->observasiRepository->deletePemeriksaanPenunjang($id);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Pemeriksaan Penunjang berhasil dihapus.',
+            'data' => $result
+        ]);
+    }
 }

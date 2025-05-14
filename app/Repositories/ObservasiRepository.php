@@ -26,10 +26,9 @@ class ObservasiRepository
                     $anamnesis = \App\Models\Anamnesis::where('encounter_id', $id)->first();
                     if ($anamnesis) {
                         return ['anamnesis' => $anamnesis, 'riwayatPenyakit' => $riwayatPenyakit];
-                    }else {
+                    } else {
                         return ['anamnesis' => null, 'riwayatPenyakit' => $riwayatPenyakit]; // Anamnesis tidak ditemukan
                     }
-
                 } else {
                     return null; // Riwayat penyakit tidak ditemukan
                 }
@@ -40,7 +39,7 @@ class ObservasiRepository
             return null; // Encounter tidak ditemukan
         }
     }
-    public function postAnemnesis($request,$id)
+    public function postAnemnesis($request, $id)
     {
         // Cek apakah anamnesis sudah ada
         $anamnesis = \App\Models\Anamnesis::where('encounter_id', $id)->first();
@@ -113,5 +112,52 @@ class ObservasiRepository
             $tandaVital->save();
         }
         return $tandaVital;
+    }
+    public function pemeriksaanPenunjang($id)
+    {
+        $pemeriksaanPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $id)->get();
+        if ($pemeriksaanPenunjang->isEmpty()) {
+            return null; // Jika tidak ada data pemeriksaan penunjang
+        }
+        // Jika ada dokumen pemeriksaan, ambil nama file
+        foreach ($pemeriksaanPenunjang as $item) {
+            if ($item->dokumen_pemeriksaan) {
+                $item->dokumen_pemeriksaan = url('uploads/' . $item->dokumen_pemeriksaan);
+            }
+        }
+        return $pemeriksaanPenunjang;
+    }
+    public function postPemeriksaanPenunjang($request, $id)
+    {
+        // Jika belum ada, buat data baru
+        $pemeriksaanPenunjang = new \App\Models\PemeriksaanPenunjang();
+        $pemeriksaanPenunjang->encounter_id = $id;
+        $pemeriksaanPenunjang->jenis_pemeriksaan = $request->jenis_pemeriksaan;
+        $pemeriksaanPenunjang->hasil_pemeriksaan = $request->hasil_pemeriksaan;
+        if ($request->hasFile('dokumen_pemeriksaan')) {
+            $file = $request->file('dokumen_pemeriksaan');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads'), $filename);
+            $pemeriksaanPenunjang->dokumen_pemeriksaan = $filename;
+        }
+        $pemeriksaanPenunjang->save();
+
+        return $pemeriksaanPenunjang;
+    }
+    public function deletePemeriksaanPenunjang($id)
+    {
+        $pemeriksaanPenunjang = \App\Models\PemeriksaanPenunjang::find($id);
+        if ($pemeriksaanPenunjang) {
+            // Hapus file dokumen jika ada
+            if ($pemeriksaanPenunjang->dokumen_pemeriksaan) {
+                $filePath = public_path('uploads/' . $pemeriksaanPenunjang->dokumen_pemeriksaan);
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            $pemeriksaanPenunjang->delete();
+            return true;
+        }
+        return false;
     }
 }

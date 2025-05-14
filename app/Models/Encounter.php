@@ -31,4 +31,8 @@ class Encounter extends Model
     {
         return $this->hasOne(TandaVital::class);
     }
+    public function pemeriksaanPenunjang()
+    {
+        return $this->hasMany(PemeriksaanPenunjang::class);
+    }
 }

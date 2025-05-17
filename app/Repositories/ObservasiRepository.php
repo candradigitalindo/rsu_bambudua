@@ -160,4 +160,152 @@ class ObservasiRepository
         }
         return false;
     }
+    // Ambil data tindakan
+    public function getTindakan($id)
+    {
+        $tindakan = \App\Models\Tindakan::all();
+        if ($tindakan->isEmpty()) {
+            return null; // Jika tidak ada data tindakan
+        }
+        return $tindakan;
+    }
+    // Ambil data tindakan_ecounter berdasarkan encounter_id
+    public function getTindakanEncounter($id)
+    {
+        $tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->get();
+        if ($tindakan->isEmpty()) {
+            return null; // Jika tidak ada data tindakan
+        }
+        // Tambahkan grand total_harga
+        $grandTotal = 0;
+        foreach ($tindakan as $item) {
+            $grandTotal += $item->total_harga;
+        }
+
+        return $tindakan;
+    }
+    // Post tindakan encounter
+    public function postTindakanEncounter($request, $id)
+    {
+        // Cek apakah tindakan sudah ada
+        $tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->where('tindakan_id', $request->jenis_tindakan)->first();
+        if ($tindakan) {
+            // Jika ada jumlahkan qty
+            $tindakan->qty += $request->qty;
+            $tindakan->total_harga = $tindakan->qty * $tindakan->tindakan_harga;
+            $tindakan->save();
+            // Ambil tindakan bahan
+            $tindakanBahan = \App\Models\TindakanBahan::where('tindakan_id', $request->jenis_tindakan)->with('bahan')->get();
+            if ($tindakanBahan->isEmpty()) {
+                return null; // Jika tidak ada data tindakan bahan
+            }else {
+                foreach ($tindakanBahan as $item) {
+                    // Cek apakah sudah ada request bahan
+                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)->where('bahan_id', $item->bahan_id)->where('status', 0)->first();
+                    if ($requestBahan) {
+                        // Jika ada, jumlahkan qty
+                        $requestBahan->qty += $item->quantity;
+                        $requestBahan->save();
+                    } else {
+                        // Jika belum ada, buat data baru
+                        $requestBahan = new \App\Models\RequestBahan();
+                        $requestBahan->encounter_id = $id;
+                        $requestBahan->bahan_id = $item->bahan_id;
+                        $requestBahan->qty = $item->quantity;
+                        $requestBahan->nama_bahan = $item->bahan->name;
+                        $requestBahan->status = 0;
+                        $requestBahan->keterangan = 'Request Bahan Tindakan';
+                        $requestBahan->save();
+                    }
+                }
+            }
+            return $tindakan; // Kembalikan data tindakan yang sudah ada
+        } else {
+            // ambil data tindakan
+            $tindakan = \App\Models\Tindakan::find($request->jenis_tindakan);
+            // Jika tidak ada data tindakan
+            if (!$tindakan) {
+                return null; // Jika tidak ada data tindakan
+            }
+            // Jika belum ada, buat data baru
+            $tindakanEncounter = new \App\Models\TindakanEncounter();
+            $tindakanEncounter->encounter_id = $id;
+            $tindakanEncounter->tindakan_id = $request->jenis_tindakan;
+            $tindakanEncounter->tindakan_name = $tindakan->name;
+            $tindakanEncounter->tindakan_harga = $tindakan->harga;
+            $tindakanEncounter->qty = $request->qty;
+            $tindakanEncounter->total_harga = $request->qty * $tindakan->harga;
+            $tindakanEncounter->save();
+
+            // Ambil tindakan bahan
+            $tindakanBahan = \App\Models\TindakanBahan::where('tindakan_id', $request->jenis_tindakan)->with('bahan')->get();
+
+            if ($tindakanBahan->isEmpty()) {
+                return null; // Jika tidak ada data tindakan bahan
+            } else {
+                foreach ($tindakanBahan as $item) {
+                    // Cek apakah sudah ada request bahan
+                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)->where('bahan_id', $item->bahan_id)->where('status', 0)->first();
+                    if ($requestBahan) {
+                        // Jika ada, jumlahkan qty
+                        $requestBahan->qty += $item->quantity;
+                        $requestBahan->save();
+                    } else {
+                        // Jika belum ada, buat data baru
+                        $requestBahan = new \App\Models\RequestBahan();
+                        $requestBahan->encounter_id = $id;
+                        $requestBahan->bahan_id = $item->bahan_id;
+                        $requestBahan->qty = $item->quantity;
+                        $requestBahan->nama_bahan = $item->bahan->name;
+                        $requestBahan->status = 0;
+                        $requestBahan->keterangan = 'Request Bahan Tindakan';
+                        $requestBahan->save();
+                    }
+                }
+            }
+            return $tindakanEncounter; // Kembalikan data tindakan yang sudah ada
+        }
+    }
+    public function deleteTindakanEncounter($id)
+    {
+        $tindakan = \App\Models\TindakanEncounter::find($id);
+        if ($tindakan) {
+            // Ambil semua bahan terkait tindakan ini
+            $tindakanBahans = \App\Models\TindakanBahan::where('tindakan_id', $tindakan->tindakan_id)->get();
+
+            // Cek jika ada RequestBahan status = 1
+            foreach ($tindakanBahans as $bahan) {
+                $adaRequestBahanStatus1 = \App\Models\RequestBahan::where('encounter_id', $tindakan->encounter_id)
+                    ->where('bahan_id', $bahan->bahan_id)
+                    ->where('status', 1)
+                    ->exists();
+                if ($adaRequestBahanStatus1) {
+                    // Tidak boleh hapus, return false atau pesan error
+                    return [
+                        'success' => false,
+                        'message' => 'Tidak bisa menghapus tindakan karena ada bahan yang sudah diproses.'
+                    ];
+                }
+            }
+
+            // Jika aman, hapus semua request bahan status 0
+            foreach ($tindakanBahans as $bahan) {
+                \App\Models\RequestBahan::where('encounter_id', $tindakan->encounter_id)
+                    ->where('bahan_id', $bahan->bahan_id)
+                    ->where('status', 0)
+                    ->delete();
+            }
+            // Hapus data tindakan
+            $tindakan->delete();
+
+            return [
+                'success' => true,
+                'message' => 'Tindakan berhasil dihapus.'
+            ];
+        }
+        return [
+            'success' => false,
+            'message' => 'Tindakan tidak ditemukan.'
+        ];
+    }
 }

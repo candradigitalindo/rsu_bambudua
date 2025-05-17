@@ -112,4 +112,50 @@ class ObservasiController extends Controller
             'data' => $result
         ]);
     }
+
+    // ambil data tindakan
+    public function getTindakan($id)
+    {
+        $tindakan = $this->observasiRepository->getTindakan($id);
+        if ($tindakan) {
+            return response()->json($tindakan);
+        } else {
+            return response()->json(['message' => 'Tindakan tidak ditemukan'], 404);
+        }
+    }
+    // ambil data tindakan berdasarkan encounter_id
+    public function getTindakanEncounter($id)
+    {
+        $tindakan = $this->observasiRepository->getTindakanEncounter($id);
+        if ($tindakan) {
+            return response()->json($tindakan);
+        } else {
+            return response()->json($tindakan);
+        }
+    }
+    // post tindakan encounter
+    public function postTindakanEncounter(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'jenis_tindakan' => 'required|string|max:255',
+            'qty' => 'required|integer|max:255',
+        ]);
+        $result = $this->observasiRepository->postTindakanEncounter($request, $id);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Tindakan berhasil disimpan.',
+            'data' => $result
+        ]);
+    }
+    // hapus tindakan
+    public function deleteTindakanEncounter($id)
+    {
+        $result = $this->observasiRepository->deleteTindakanEncounter($id);
+        return response()->json([
+            'status' => $result['success'],
+            'message' => $result['message']
+        ]);
+    }
+
 }

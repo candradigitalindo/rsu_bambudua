@@ -7,7 +7,20 @@
     <!-- Uploader CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
 
+        .input-group .select2-container--default .select2-selection--single {
+            height: 100%;
+            line-height: 2.4rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #ced4da;
+        }
+    </style>
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -25,8 +38,7 @@
                                     <label class="form-label" for="a5">Nama Bahan Tindakan <span
                                             class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <select class="form-control" name="bahan" id="exampleDataList"
-                                            >
+                                        <select class="form-control" name="bahan" id="exampleDataList">
                                             <option value="">Pilih Bahan Tindakan</option>
                                             @foreach ($bahans as $item)
                                                 <option value="{{ $item->id }}">{{ $item->name }}</option>
@@ -137,7 +149,7 @@
             $('#exampleDataList').select2({
                 placeholder: 'Pilih Bahan Tindakan',
                 allowClear: true,
-                widhth: '300%',
+                width: '100%',
 
             });
         });

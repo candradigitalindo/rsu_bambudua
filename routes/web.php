@@ -108,5 +108,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postPemeriksaanPenunjang', [ObservasiController::class, 'postPemeriksaanPenunjang'])->name('observasi.postPemeriksaanPenunjang');
         // delete pemeriksaan penunjang
         Route::delete('/observasi/{id}/destroyPemeriksaanPenunjang', [ObservasiController::class, 'deletePemeriksaanPenunjang'])->name('observasi.deletePemeriksaanPenunjang');
+
+        // route untuk tindakan counter
+        Route::get('/observasi/getTindakan/{id}', [ObservasiController::class, 'getTindakan'])->name('observasi.getTindakan');
+        Route::get('/observasi/TindakanEncounter/{id}', [ObservasiController::class, 'getTindakanEncounter'])->name('observasi.getTindakanEncounter');
+        Route::post('/observasi/{id}/postTindakanEncounter', [ObservasiController::class, 'postTindakanEncounter'])->name('observasi.postTindakanEncounter');
+        // delete tindakan encounter
+        Route::delete('/observasi/{id}/deleteTindakanEncounter', [ObservasiController::class, 'deleteTindakanEncounter'])->name('observasi.deleteTindakanEncounter');
     });
 });

@@ -177,6 +177,9 @@ class BahanController extends Controller
     public function destroy(string $id)
     {
         $bahan = $this->bahanRepository->destroy($id);
+        if (!$bahan) {
+            return redirect()->route('bahans.index')->with('error', 'Bahan tidak dapat dihapus karena digunakan oleh Tindakan.');
+        }
         return redirect()->route('bahans.index')->with('success', 'Bahan '.$bahan->name.' berhasil dihapus.');
     }
     public function getBahan($id)

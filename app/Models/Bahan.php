@@ -36,7 +36,8 @@ class Bahan extends Model
 
     public function getWarningStockQuantityAttribute()
     {
-        return number_format($this->stokbahan()->where('is_available', 1)->where('expired_at', '>', Carbon::now())->where('expired_at', '<=', Carbon::now()->subDays($this->warning))->count(), 0, ',', '.');
+        // Menghitung jumlah stok yang mendekati tanggal kadaluarsa berdasarkan hari warning
+        return number_format($this->stokbahan()->where('is_available', 1)->where('expired_at', '>=', now())->where('expired_at', '<=', now()->addDays($this->warning))->count(), 0, ',', '.');
     }
     public function tindakan()
     {

@@ -15,6 +15,21 @@
             pointer-events: none;
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Custom CSS -->
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .input-group .select2-container--default .select2-selection--single {
+            height: 100%;
+            line-height: 2.4rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            border: 1px solid #ced4da;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -337,7 +352,85 @@
                                 <!-- Row ends -->
                             </div>
                             <div class="tab-pane fade" id="tindakan-medis" role="tabpanel">
-                                <h3 class="text-primary">Some Description</h3>
+                                <!-- Row startss -->
+                                <div class="row gx-3">
+                                    <div class="col-xxl-6 col-sm-6">
+                                        <div class="card mb-1">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Tindakan Medis</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Jenis Tindakan</label>
+                                                    <div class="input-group">
+                                                        <select name="jenis_tindakan" id="jenis_tindakan"
+                                                            class="form-control">
+                                                            <option value="">Pilih Jenis Tindakan</option>
+
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Jumlah</label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" id="qty"
+                                                            name="qty" value="{{ old('qty', 1) }}">
+                                                        <p class="text-danger">{{ $errors->first('qty') }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex gap-2 justify-content-end mt-4">
+                                                    <button type="submit" class="btn btn-primary"
+                                                        id="btn-tindakan-medis">
+                                                        <span class="btn-txt" id="text-tindakan-medis">Simpan</span>
+                                                        <span class="spinner-border spinner-border-sm d-none"
+                                                            id="spinner-tindakan-medis"></span>
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-6 col-sm-12">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Data Tindakan Medis</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-outer">
+                                                    <div class="table-responsive">
+                                                        <table class="table truncate m-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="text-center">Aksi</th>
+                                                                    <th>Nama Tindakan</th>
+                                                                    <th>Qty</th>
+                                                                    <th>Harga</th>
+                                                                    <th>Sub Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody-tindakan">
+
+
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr>
+                                                                    <td colspan="4" class="text-end fw-bold">Total</td>
+                                                                    <td class="text-end">
+                                                                        <span id="total-harga" class="fw-bold">0</span>
+                                                                    </td>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Row ends -->
                             </div>
                             <div class="tab-pane fade" id="diagnosis" role="tabpanel">
                                 <h3 class="text-primary">Some Description</h3>
@@ -365,6 +458,8 @@
         <script src="{{ asset('vendor/quill/custom.js') }}"></script>
         <!-- Custom JS files -->
         <script src="{{ asset('js/custom.js') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
         <script>
             $(document).ready(function() {
                 // tab-anamnesis auto click
@@ -576,17 +671,25 @@
                         dangerMode: true,
                     }).then((willDelete) => {
                         if (willDelete) {
-                            let url = "{{ route('observasi.deletePemeriksaanPenunjang', ':id') }}".replace(':id', id);
+                            let url = "{{ route('observasi.deletePemeriksaanPenunjang', ':id') }}"
+                                .replace(':id', id);
                             $.ajax({
                                 url: url,
                                 type: "DELETE",
-                                data: { _token: "{{ csrf_token() }}" },
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
                                 success: function(data) {
-                                    swal(data.message, { icon: "success" });
-                                    $("#tab-pemeriksaan-penunjang").click(); // Refresh tabel
+                                    swal(data.message, {
+                                        icon: "success"
+                                    });
+                                    $("#tab-pemeriksaan-penunjang")
+                                        .click(); // Refresh tabel
                                 },
                                 error: function() {
-                                    swal('Terjadi kesalahan saat menghapus data.', { icon: "error" });
+                                    swal('Terjadi kesalahan saat menghapus data.', {
+                                        icon: "error"
+                                    });
                                 }
                             });
                         }
@@ -656,9 +759,171 @@
                         }
                     });
                 });
+
+                $('#jenis_tindakan').select2({
+                    placeholder: 'Pilih Bahan Tindakan',
+                    allowClear: true,
+                    width: '100%',
+
+                });
+
                 // tab-tindakan-medis click
                 $("#tab-tindakan-medis").click(function() {
-                    alert("tab-tindakan-medis clicked");
+                    // ajax getTindakan jenis_tindakan
+                    let url = "{{ route('observasi.getTindakan', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(data) {
+                            let select = $("#jenis_tindakan");
+                            select.empty(); // Clear existing options
+                            select.append('<option value="">Pilih Jenis Tindakan</option>');
+                            $.each(data, function(index, item) {
+                                select.append(
+                                    `<option value="${item.id}">${item.name}</option>`
+                                );
+                            });
+                        }
+                    });
+                    // ajax getTindakanEncounter
+                    let url2 = "{{ route('observasi.getTindakanEncounter', ':id') }}";
+                    url2 = url2.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url2,
+                        type: "GET",
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(data) {
+                            // Populate the table with data
+                            let tbody = $("#tbody-tindakan");
+                            tbody.empty(); // Clear existing rows
+                            let total_harga = 0;
+                            $.each(data, function(index, item) {
+                                tbody.append(
+                                    `<tr>
+                                        <td class="text-center">
+                                            <button class="btn btn-danger btn-sm btn-hapus-tindakan" data-id="${item.id}">
+                                                <i class="bi bi-trash"></i> Hapus
+                                            </button>
+                                        </td>
+                                        <td>${item.tindakan_name}</td>
+                                        <td>${item.qty}</td>
+                                        <td class="text-end">${formatRupiah(item.tindakan_harga)}</td>
+                                        <td class="text-end">${formatRupiah(item.total_harga)}</td>
+                                    </tr>`
+                                );
+                                total_harga += item.tindakan_harga * item.qty;
+                            });
+                            $("#total-harga").text(formatRupiah(total_harga));
+                        }
+                    });
+                });
+                // format rupiah
+                function formatRupiah(angka, prefix) {
+                    angka = angka ? angka.toString() : '0'; // Pastikan angka adalah string
+                    let number_string = angka.replace(/[^,\d]/g, ''),
+                        split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
+                    }
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+                }
+                $("#btn-tindakan-medis").click(function() {
+                    // ajax post tindakan medis
+                    let url = "{{ route('observasi.postTindakanEncounter', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    let jenis_tindakan = $("#jenis_tindakan").val();
+                    let qty = $("#qty").val();
+                    if (jenis_tindakan == '') {
+                        alert("Jenis Tindakan tidak boleh kosong");
+                        return;
+                    }
+                    if (qty == '') {
+                        alert("Jumlah tidak boleh kosong");
+                        return;
+                    }
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            jenis_tindakan: jenis_tindakan,
+                            qty: qty,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        beforeSend: function() {
+                            $("#spinner-tindakan-medis").removeClass("d-none");
+                            $("#text-tindakan-medis").addClass("d-none");
+                        },
+                        success: function(data) {
+                            if (data.status == 200) {
+                                swal(data.message, {
+                                    icon: "success",
+                                });
+                                // Refresh the table after successful submission
+                                $("#tab-tindakan-medis").click();
+                            } else {
+                                swal('Terjadi kesalahan saat menyimpan data.', {
+                                    icon: "error",
+                                });
+                            }
+                            $("#spinner-tindakan-medis").addClass("d-none");
+                            $("#text-tindakan-medis").removeClass("d-none");
+                        }
+                    });
+                });
+                // Event delegation untuk tombol hapus
+                $('#tbody-tindakan').on('click', '.btn-hapus-tindakan', function() {
+                    let id = $(this).data('id');
+                    // Konfirmasi hapus
+                    swal({
+                        title: "Apakah Anda yakin?",
+                        text: "Data ini akan dihapus!",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    }).then((willDelete) => {
+                        if (willDelete) {
+                            let url = "{{ route('observasi.deleteTindakanEncounter', ':id') }}"
+                                .replace(':id', id);
+                            $.ajax({
+                                url: url,
+                                type: "DELETE",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function(data) {
+                                    console.log(data);
+                                    if (data.status == true) {
+                                        swal(data.message, {
+                                            icon: "success"
+                                        });
+                                    } else {
+                                        swal(data.message, {
+                                            icon: "error"
+                                        });
+
+                                    }
+                                    $("#tab-tindakan-medis")
+                                        .click(); // Refresh tabel
+                                },
+                                error: function() {
+                                    swal('Terjadi kesalahan saat menghapus data.', {
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
                 });
                 // tab-diagnosis click
                 $("#tab-diagnosis").click(function() {

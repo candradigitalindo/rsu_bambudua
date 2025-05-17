@@ -24,6 +24,20 @@
                     <h5 class="card-title">Data Bahan</h5>
                 </div>
                 <div class="card-body">
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Close"></button>
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Close"></button>
+                        </div>
+                    @endif
                     <div class="card-info rounded-1 small lh-1">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="ms-auto d-flex gap-2">
@@ -45,11 +59,11 @@
                                     </a>
                                 </div>
                                 <div class="ms-2">
-                                    <a href="{{ route('bahan.getAllHistori') }}" class="btn btn-outline-primary" id="histori">
+                                    <a href="{{ route('bahan.getAllHistori') }}" class="btn btn-outline-primary"
+                                        id="histori">
                                         <i class="ri-calendar-todo-fill"></i>
                                         <span class="btn-text" id="textHistori">Histori</span>
-                                        <span class="spinner-border spinner-border-sm d-none"
-                                            id="spinerHistori"></span>
+                                        <span class="spinner-border spinner-border-sm d-none" id="spinerHistori"></span>
                                     </a>
                                 </div>
                                 <!-- Button Group Starts -->
@@ -77,6 +91,7 @@
                                         <th class="text-center">Jumlah Stok</th>
                                         <th class="text-center">Warning Expired</th>
                                         <th class="text-center">Jumlah Expired</th>
+                                        <th class="text-center">Dipakai Tindakan</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center" style="width: 20%;">Aksi</th>
                                     </tr>
@@ -86,12 +101,15 @@
                                         <tr>
                                             <td>{{ ucwords($bahan->name) }}</td>
                                             <td class="text-center">{{ $bahan->is_expired == 1 ? 'YA' : 'TIDAK' }}</td>
-                                            <td class="text-center">{{ $bahan->getStockQuantityAttribute() }}</td>
+                                            <td class="text-center"><span
+                                                    class="text-primary fw-bold">{{ $bahan->getStockQuantityAttribute() }}</span>
+                                            </td>
                                             <td class="text-center">
+
                                                 @if ($bahan->is_expired == 1)
                                                     @if ($bahan->getWarningStockQuantityAttribute() > 0)
                                                         <span
-                                                            class="text-warning fw-bold fw-light">{{ $bahan->getWarningStockQuantityAttribute() }}</span>
+                                                            class="text-info fw-bold">{{ $bahan->getWarningStockQuantityAttribute() }}</span>
                                                     @else
                                                         <span class="text-success">Tidak ada</span>
                                                     @endif
@@ -112,6 +130,56 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
+
+                                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                                     data-bs-toggle="modal"
+                                                    data-bs-target="#modalDetailTindakan-{{ $bahan->id }}">
+                                                    <i class="ri-archive-line"></i>
+                                                    <span class="btn-text"
+                                                        id="textHistori-{{ $bahan->id }}">Detail Tindakan</span>
+                                                    <span class="spinner-border spinner-border-sm d-none"
+                                                        id="spinerHistori-{{ $bahan->id }}"></span>
+                                                </button>
+                                                <div class="modal fade" id="modalDetailTindakan-{{ $bahan->id }}"
+                                                    tabindex="-1" role="dialog"
+                                                    aria-labelledby="modalDetailTindakanLabel-{{ $bahan->id }}"
+                                                    aria-hidden="true">
+                                                    <div class="modal-dialog modal-lg" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title"
+                                                                    id="modalDetailTindakanLabel-{{ $bahan->id }}">
+                                                                    Tindakan yang menggunakan {{ $bahan->name }}</h5>
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <table class="table table-bordered">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Nama Tindakan</th>
+                                                                            <th>Harga</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach ($bahan->tindakan as $tindakan)
+                                                                            <tr>
+                                                                                <td>{{ $tindakan->name }}</td>
+                                                                                <td>{{ $tindakan->getHargaFormattedAttribute() }}</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-bs-dismiss="modal">Close</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
                                                 @if ($bahan->is_active == 1)
                                                     <span class="badge bg-success">Aktif</span>
                                                 @else
@@ -119,18 +187,22 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                
+
                                                 <a href="{{ route('bahan.getBahan', $bahan->id) }}"
-                                                    class="btn btn-outline-primary btn-sm" id="stokMasuk-{{ $bahan->id }}">
+                                                    class="btn btn-outline-primary btn-sm"
+                                                    id="stokMasuk-{{ $bahan->id }}">
                                                     <i class="ri-calendar-todo-fill"></i>
-                                                    <span class="btn-text" id="textStokMasuk-{{ $bahan->id }}">Stok Masuk</span>
+                                                    <span class="btn-text" id="textStokMasuk-{{ $bahan->id }}">Stok
+                                                        Masuk</span>
                                                     <span class="spinner-border spinner-border-sm d-none"
                                                         id="spinerStokMasuk-{{ $bahan->id }}"></span>
                                                 </a>
                                                 <a href="{{ route('bahan.getBahanKeluar', $bahan->id) }}"
-                                                    class="btn btn-outline-danger btn-sm" id="stokKeluar-{{ $bahan->id }}">
+                                                    class="btn btn-outline-danger btn-sm"
+                                                    id="stokKeluar-{{ $bahan->id }}">
                                                     <i class="ri-calendar-todo-fill"></i>
-                                                    <span class="btn-text" id="textStokKeluar-{{ $bahan->id }}">Stok Keluar</span>
+                                                    <span class="btn-text" id="textStokKeluar-{{ $bahan->id }}">Stok
+                                                        Keluar</span>
                                                     <span class="spinner-border spinner-border-sm d-none"
                                                         id="spinerStokKeluar-{{ $bahan->id }}"></span>
                                                 </a>

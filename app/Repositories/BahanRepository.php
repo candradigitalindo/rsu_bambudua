@@ -17,6 +17,11 @@ class BahanRepository
     public function index()
     {
         $bahan = Bahan::where('name', 'like', '%' . request('name') . '%')->orderBy('updated_at', 'DESC')->paginate(50);
+        // Cek bahan dipakai tindakan apa saja
+        $bahan->map(function ($item) {
+            $item->tindakan = $item->tindakan()->get();
+            return $item;
+        });
         return $bahan;
     }
     public function show($id)
@@ -36,8 +41,13 @@ class BahanRepository
     public function destroy($id)
     {
         $bahan = Bahan::findOrFail($id);
-        $bahan->delete();
-        return $bahan;
+        // Cek apakah bahan sudah dipakai tindakan
+        if ($bahan->tindakan->isNotEmpty()) {
+            return false;
+        } else {
+            $bahan->delete();
+            return $bahan;
+        }
     }
     public function getBahan($id)
     {
@@ -67,8 +77,8 @@ class BahanRepository
     public function getAllHistori()
     {
         return Historibahan::when(request('created_at'), function ($query) {
-                return $query->where('created_at', request('created_at'));
-            })
+            return $query->where('created_at', request('created_at'));
+        })
             ->whereMonth('created_at', date('m'))
             ->whereYear('created_at', date('Y'))
             ->with('bahan')

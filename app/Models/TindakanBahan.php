@@ -14,4 +14,8 @@ class TindakanBahan extends Model
         'bahan_id',
         'quantity',
     ];
+    public function bahan()
+    {
+        return $this->belongsTo(Bahan::class, 'bahan_id');
+    }
 }

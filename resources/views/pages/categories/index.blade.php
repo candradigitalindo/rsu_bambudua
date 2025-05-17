@@ -59,7 +59,10 @@
                                         <td>{{ $category->products_count }}</td>
                                         <td>
                                             <a href="{{ route('categories.edit', $category->id) }}"
-                                                class="btn btn-warning btn-sm">Edit</a>
+                                                class="btn btn-warning btn-sm btn-edit-kategori" id="btnEditKategori{{ $category->id }}">
+                                                <span class="spinner-border spinner-border-sm d-none" id="spinnerEditKategori{{ $category->id }}" role="status" aria-hidden="true"></span>
+                                                <span id="textEditKategori{{ $category->id }}">Edit</span>
+                                            </a>
                                             <form action="{{ route('categories.destroy', $category->id) }}" method="POST"
                                                 class="d-inline" onsubmit="return confirm('Yakin hapus kategori ini?')">
                                                 @csrf
@@ -92,6 +95,7 @@
     <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Tombol Tambah Kategori
             const btn = document.getElementById('btnTambahKategori');
             const spinner = document.getElementById('spinnerTambahKategori');
             const text = document.getElementById('textTambahKategori');
@@ -101,6 +105,19 @@
                     text.textContent = 'Loading...';
                 });
             }
+
+            // Tombol Edit Kategori
+            document.querySelectorAll('.btn-edit-kategori').forEach(function(editBtn) {
+                editBtn.addEventListener('click', function() {
+                    const id = this.id.replace('btnEditKategori', '');
+                    const spinnerEdit = document.getElementById('spinnerEditKategori' + id);
+                    const textEdit = document.getElementById('textEditKategori' + id);
+                    if (spinnerEdit && textEdit) {
+                        spinnerEdit.classList.remove('d-none');
+                        textEdit.textContent = 'Loading...';
+                    }
+                });
+            });
         });
     </script>
 @endpush

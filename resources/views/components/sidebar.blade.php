@@ -72,7 +72,7 @@
         </li>
         <li class="treeview {{ request()->is('apotek*') ? 'active current-page' : '' }}">
             <a href="#">
-                <i class="ri-settings-5-line"></i>
+                <i class="ri-medicine-bottle-line"></i>
                 <span class="menu-text">Apotek</span>
             </a>
             <ul class="treeview-menu">
@@ -81,6 +81,9 @@
                 </li>
                 <li>
                     <a class="{{ request()->is('apotek/categories*') ? 'active-sub' : '' }}" href="{{ route('categories.index') }}">Kategori</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('apotek/products*') ? 'active-sub' : '' }}" href="{{ route('products.index') }}">Produk</a>
                 </li>
             </ul>
         </li>

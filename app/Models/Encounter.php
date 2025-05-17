@@ -43,4 +43,8 @@ class Encounter extends Model
     {
         return $this->hasMany(RequestBahan::class);
     }
+    public function diagnosis()
+    {
+        return $this->hasMany(Diagnosis::class);
+    }
 }

@@ -44,7 +44,7 @@ Route::middleware(['auth'])->group(function () {
         // SATUSEHAT
         Route::get('/satusehat', [SatusehatController::class, 'getSatusehat'])->name('satusehat.index');
         Route::post('/satusehat', [SatusehatController::class, 'saveSatusehat'])->name('satusehat.store');
-        Route::resource('lokasiloket', LokasiloketController::class)->only(['index','create','store','edit', 'update', 'destroy']);
+        Route::resource('lokasiloket', LokasiloketController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::resource('loket', LoketController::class)->only(['index', 'store', 'destroy']);
     });
 
@@ -58,7 +58,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/wilayah/kota/save/{code}', [WilayahController::class, 'saveCity'])->name('wilayah.saveCity');
         Route::get('/wilayah/kecamatan/save/{code}', [WilayahController::class, 'saveDistrict'])->name('wilayah.saveDistrict');
         Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
-        Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store','edit', 'destroy']);
+        Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store', 'edit', 'destroy']);
         Route::resource('etnis', EtnisController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pendidikan', PendidikanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
@@ -70,7 +70,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tindakan/getBahan/{id}', [TindakanController::class, 'getBahan'])->name('tindakan.getBahan');
         Route::post('/tindakan/storeBahan/{id}', [TindakanController::class, 'storeBahan'])->name('tindakan.storeBahan');
         Route::delete('/tindakan/destroyBahan/{id}', [TindakanController::class, 'destroyBahan'])->name('tindakan.destroyBahan');
-
+        Route::resource('icd10', \App\Http\Controllers\Icd10Controller::class);
+        Route::post('icd10/import', [\App\Http\Controllers\Icd10Controller::class, 'import'])->name('icd10.import');
     });
 
     Route::prefix('pendaftaran')->group(function () {
@@ -87,13 +88,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pasien/{id}/updateRawatJalan', [PendaftaranController::class, 'updateRawatJalan'])->name('pendaftaran.updateRawatJalan');
         Route::delete('/pasien/{id}/destroyEncounter', [PendaftaranController::class, 'destroyEncounterRajal'])->name('pendaftaran.destroyEncounterRajal');
     });
-    Route::resource('bahans', BahanController::class)->only(['index','create','store','edit', 'update', 'destroy']);
+    Route::resource('bahans', BahanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::get('/bahans/{id}/input', [BahanController::class, 'getBahan'])->name('bahan.getBahan');
     Route::post('/bahans/{id}/stok', [BahanController::class, 'stokBahan'])->name('bahan.stokBahan');
     Route::get('/bahans/{id}/getBahanKeluar', [BahanController::class, 'getBahanKeluar'])->name('bahan.getBahanKeluar');
     Route::post('/bahans/{id}/stokKeluar', [BahanController::class, 'stokKeluar'])->name('bahan.stokKeluar');
     Route::get('/bahans/getAllHistori', [BahanController::class, 'getAllHistori'])->name('bahan.getAllHistori');
-    Route::resource('pengguna', PenggunaController::class)->only(['index','create','store','edit', 'update', 'destroy']);
+    Route::resource('pengguna', PenggunaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     // route frefix kunjungan
     Route::prefix('kunjungan')->group(function () {
         Route::get('/rawatJalan', [EncounterController::class, 'getAllRawatJalan'])->name('kunjungan.rawatJalan');

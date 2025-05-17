@@ -198,7 +198,7 @@ class ObservasiRepository
             $tindakanBahan = \App\Models\TindakanBahan::where('tindakan_id', $request->jenis_tindakan)->with('bahan')->get();
             if ($tindakanBahan->isEmpty()) {
                 return null; // Jika tidak ada data tindakan bahan
-            }else {
+            } else {
                 foreach ($tindakanBahan as $item) {
                     // Cek apakah sudah ada request bahan
                     $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)->where('bahan_id', $item->bahan_id)->where('status', 0)->first();
@@ -306,6 +306,58 @@ class ObservasiRepository
         return [
             'success' => false,
             'message' => 'Tindakan tidak ditemukan.'
+        ];
+    }
+    // Ambil data icd10
+    public function getIcd10($id)
+    {
+        $icd10 = \App\Models\Icd10::all();
+        return $icd10;
+    }
+    // Ambil semua data diagosis sesuai encounter_id
+    public function getDiagnosis($id)
+    {
+        $diagnosis = \App\Models\Diagnosis::where('encounter_id', $id)->get();
+        if ($diagnosis->isEmpty()) {
+            return null; // Jika tidak ada data diagnosis
+        }
+        return $diagnosis;
+    }
+    // Post diagnosis
+    public function postDiagnosis($request, $id)
+    {
+        // Cek apakah diagnosis sudah ada
+        $diagnosis = \App\Models\Diagnosis::where('encounter_id', $id)->where('diagnosis_code', $request->icd10_id)->first();
+        if (!$diagnosis) {
+            // Cari data icd10
+            $icd10 = \App\Models\Icd10::where('code', $request->icd10_id)->first();
+            // Jika belum ada, buat data baru
+            $diagnosis = new \App\Models\Diagnosis();
+            $diagnosis->encounter_id = $id;
+            $diagnosis->diagnosis_code = $icd10->code;
+            $diagnosis->diagnosis_description = $icd10->description;
+            $diagnosis->diagnosis_type = $request->diagnosis_type;
+            // Petugas harus mempunyai role dokter
+            $diagnosis->id_petugas = auth()->user()->id_petugas;
+            $diagnosis->petugas_name = auth()->user()->name;
+            $diagnosis->save();
+        }
+        return $diagnosis;
+    }
+    // Hapus diagnosis
+    public function deleteDiagnosis($id)
+    {
+        $diagnosis = \App\Models\Diagnosis::find($id);
+        if ($diagnosis) {
+            $diagnosis->delete();
+            return [
+                'success' => true,
+                'message' => 'Diagnosis berhasil dihapus.'
+            ];
+        }
+        return [
+            'success' => false,
+            'message' => 'Diagnosis tidak ditemukan.'
         ];
     }
 }

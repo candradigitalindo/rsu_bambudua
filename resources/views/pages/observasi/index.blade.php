@@ -433,7 +433,84 @@
                                 <!-- Row ends -->
                             </div>
                             <div class="tab-pane fade" id="diagnosis" role="tabpanel">
-                                <h3 class="text-primary">Some Description</h3>
+                                <!-- Row startss -->
+                                <div class="row gx-3">
+                                    <div class="col-xxl-6 col-sm-6">
+                                        <div class="card mb-1">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Diagnosis Medis</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Diagnosis (ICD10)</label>
+                                                    <div class="input-group">
+                                                        <select name="icd10_id" id="icd10_id" class="form-control">
+                                                            <option value="">Pilih Jenis Diagnosis</option>
+
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Tipe Diagnosis</label>
+                                                    <div class="input-group">
+                                                        <select name="diagnosis_type" id="diagnosis_type"
+                                                            class="form-control">
+                                                            <option value="">Pilih Tipe Diagnosis</option>
+                                                            <option value="Primer"
+                                                                {{ old('diagnosis_type') == 'Primer' ? 'selected' : '' }}>
+                                                                Primer</option>
+                                                            <option value="Sekunder"
+                                                                {{ old('diagnosis_type') == 'Sekunder' ? 'selected' : '' }}>
+                                                                Sekunder</option>
+                                                        </select>
+
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex gap-2 justify-content-end mt-4">
+                                                    <button type="submit" class="btn btn-primary"
+                                                        id="btn-diagnosis-medis">
+                                                        <span class="btn-txt" id="text-diagnosis-medis">Simpan</span>
+                                                        <span class="spinner-border spinner-border-sm d-none"
+                                                            id="spinner-diagnosis-medis"></span>
+                                                    </button>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-6 col-sm-12">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Data Diagnosis</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-outer">
+                                                    <div class="table-responsive">
+                                                        <table class="table truncate m-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="text-center">Aksi</th>
+                                                                    <th>Kode Diagnosis</th>
+                                                                    <th>Nama Diagnosis</th>
+                                                                    <th>Type Diagnosis</th>
+
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody-diagnosis">
+
+
+                                                            </tbody>
+
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="tab-pane fade" id="tatalaksana" role="tabpanel">
                                 <h3 class="text-success">Some Description</h3>
@@ -927,9 +1004,156 @@
                 });
                 // tab-diagnosis click
                 $("#tab-diagnosis").click(function() {
-                    alert("tab-diagnosis clicked");
+                    // Kosongkan kolom ICD10 dan Diagnosis Type
+                    $("#icd10_id").val(null).trigger('change'); // untuk select2
+                    $("#diagnosis_type").val(''); // untuk select biasa
+
+                    // ajax getDiagnosis
+                    let url = "{{ route('observasi.getDiagnosis', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(data) {
+                            console.log(data);
+                            // Populate the table with data
+                            let tbody = $("#tbody-diagnosis");
+                            tbody.empty(); // Clear existing rows
+                            $.each(data, function(index, item) {
+                                tbody.append(
+                                    `<tr>
+                                        <td class="text-center">
+                                            <button class="btn btn-danger btn-sm btn-hapus-diagnosis" data-id="${item.id}">
+                                                <i class="bi bi-trash"></i> Hapus
+                                            </button>
+                                        </td>
+                                        <td>${item.diagnosis_code}</td>
+                                        <td>${item.diagnosis_description}</td>
+                                        <td>${item.diagnosis_type}</td>
+                                    </tr>`
+                                );
+                            });
+                        }
+                    });
+                });
+                // btn-diagnosis-medis click
+                $("#btn-diagnosis-medis").click(function() {
+                    // ajax post diagnosis medis
+                    let url = "{{ route('observasi.postDiagnosis', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    let icd10_id = $("#icd10_id").val();
+                    let diagnosis_type = $("#diagnosis_type").val();
+                    if (icd10_id == '') {
+                        alert("Jenis Diagnosis tidak boleh kosong");
+                        return;
+                    }
+                    if (diagnosis_type == '') {
+                        alert("Tipe Diagnosis tidak boleh kosong");
+                        return;
+                    }
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            icd10_id: icd10_id,
+                            diagnosis_type: diagnosis_type,
+                            _token: "{{ csrf_token() }}"
+                        },
+                        beforeSend: function() {
+                            $("#spinner-diagnosis-medis").removeClass("d-none");
+                            $("#text-diagnosis-medis").addClass("d-none");
+                        },
+                        success: function(data) {
+                            if (data.status == 200) {
+                                swal(data.message, {
+                                    icon: "success",
+                                });
+                                // Refresh the table after successful submission
+                                $("#tab-diagnosis").click();
+                            } else {
+                                swal('Terjadi kesalahan saat menyimpan data.', {
+                                    icon: "error",
+                                });
+                            }
+                            $("#spinner-diagnosis-medis").addClass("d-none");
+                            $("#text-diagnosis-medis").removeClass("d-none");
+                        }
+                    });
                 });
                 // tab-tatalaksana click
+                $('#icd10_id').select2({
+                    placeholder: 'Cari kode atau nama diagnosis...',
+                    allowClear: true,
+                    width: '100%',
+                    ajax: {
+                        url: "{{ route('observasi.getIcd10', $observasi) }}", // sesuaikan dengan route Anda
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                search: params.term // kata kunci pencarian
+                            };
+                        },
+                        processResults: function(data) {
+                            return {
+                                results: data.map(function(item) {
+                                    return {
+                                        id: item.code,
+                                        text: item.code + ' - ' + item.description
+                                    }
+                                })
+                            };
+                        },
+                        cache: true
+                    }
+                });
+                // Event delegation untuk tombol hapus
+                $('#tbody-diagnosis').on('click', '.btn-hapus-diagnosis', function() {
+                    let id = $(this).data('id');
+                    // Konfirmasi hapus
+                    swal({
+                        title: "Apakah Anda yakin?",
+                        text: "Data ini akan dihapus!",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    }).then((willDelete) => {
+                        if (willDelete) {
+                            let url = "{{ route('observasi.deleteDiagnosis', ':id') }}"
+                                .replace(':id', id);
+                            $.ajax({
+                                url: url,
+                                type: "DELETE",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function(data) {
+                                    console.log(data);
+                                    if (data.status == true) {
+                                        swal(data.message, {
+                                            icon: "success"
+                                        });
+                                    } else {
+                                        swal(data.message, {
+                                            icon: "error"
+                                        });
+
+                                    }
+                                    $("#tab-diagnosis")
+                                        .click(); // Refresh tabel
+                                },
+                                error: function() {
+                                    swal('Terjadi kesalahan saat menghapus data.', {
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
                 $("#tab-tatalaksana").click(function() {
                     alert("tab-tatalaksana clicked");
                 });

@@ -157,5 +157,54 @@ class ObservasiController extends Controller
             'message' => $result['message']
         ]);
     }
+    // Ambil data icd10
+    public function getIcd10($id)
+    {
+        $query = \App\Models\Icd10::query();
 
+        $search = request('search');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', '%' . $search . '%')
+                    ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Untuk kebutuhan Select2 AJAX, biasanya tidak perlu paginate
+        return $query->limit(20)->get(['id', 'code', 'description']);
+    }
+    // Ambil semua data diagosis sesuai encounter_id
+    public function getDiagnosis($id)
+    {
+        $diagnosis = $this->observasiRepository->getDiagnosis($id);
+        if ($diagnosis) {
+            return response()->json($diagnosis);
+        } else {
+            return response()->json($diagnosis);
+        }
+    }
+    // post diagnosis
+    public function postDiagnosis(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'icd10_id' => 'required|string|max:255',
+            'diagnosis_type' => 'required|string|max:255',
+        ]);
+        $result = $this->observasiRepository->postDiagnosis($request, $id);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Diagnosis berhasil disimpan.',
+            'data' => $result
+        ]);
+    }
+    // hapus diagnosis
+    public function deleteDiagnosis($id)
+    {
+        $result = $this->observasiRepository->deleteDiagnosis($id);
+        return response()->json([
+            'status' => $result['success'],
+            'message' => $result['message']
+        ]);
+    }
 }

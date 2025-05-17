@@ -116,5 +116,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postTindakanEncounter', [ObservasiController::class, 'postTindakanEncounter'])->name('observasi.postTindakanEncounter');
         // delete tindakan encounter
         Route::delete('/observasi/{id}/deleteTindakanEncounter', [ObservasiController::class, 'deleteTindakanEncounter'])->name('observasi.deleteTindakanEncounter');
+
+        // route untuk icd10
+        Route::get('/observasi/getIcd10/{id}', [ObservasiController::class, 'getIcd10'])->name('observasi.getIcd10');
+        Route::get('/observasi/getDiagnosis/{id}', [ObservasiController::class, 'getDiagnosis'])->name('observasi.getDiagnosis');
+        Route::post('/observasi/{id}/postDiagnosis', [ObservasiController::class, 'postDiagnosis'])->name('observasi.postDiagnosis');
+        // delete diagnosis
+        Route::delete('/observasi/{id}/deleteDiagnosis', [ObservasiController::class, 'deleteDiagnosis'])->name('observasi.deleteDiagnosis');
     });
 });

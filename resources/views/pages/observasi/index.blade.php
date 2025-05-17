@@ -30,6 +30,15 @@
             border: 1px solid #ced4da;
         }
     </style>
+    <style>
+        /* Membuat diagnosis_description wrap dan tidak overflow */
+        .table td,
+        .table th {
+            white-space: normal !important;
+            word-break: break-word;
+            vertical-align: top;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -493,9 +502,10 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th class="text-center">Aksi</th>
-                                                                    <th>Kode Diagnosis</th>
-                                                                    <th>Nama Diagnosis</th>
-                                                                    <th>Type Diagnosis</th>
+                                                                    <th>Kode</th>
+                                                                    <th>Diagnosa</th>
+                                                                    <th>Type</th>
+                                                                    <th>Dokter</th>
 
                                                                 </tr>
                                                             </thead>
@@ -1033,6 +1043,7 @@
                                         <td>${item.diagnosis_code}</td>
                                         <td>${item.diagnosis_description}</td>
                                         <td>${item.diagnosis_type}</td>
+                                        <td>${item.petugas_name}</td>
                                     </tr>`
                                 );
                             });

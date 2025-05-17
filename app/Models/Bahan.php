@@ -18,7 +18,7 @@ class Bahan extends Model
     ];
     public function stokbahan()
     {
-        return $this->hasMany(Stokbahan::class);
+        return $this->hasMany(Stokbahan::class, 'bahan_id');
     }
     public function historibahan()
     {

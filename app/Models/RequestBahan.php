@@ -14,7 +14,8 @@ class RequestBahan extends Model
         'qty',
         'nama_bahan',
         'status',
-        'keterangan'
+        'keterangan',
+        'expired_at',
     ];
     public function encounter()
     {

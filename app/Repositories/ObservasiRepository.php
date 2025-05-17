@@ -201,10 +201,27 @@ class ObservasiRepository
             } else {
                 foreach ($tindakanBahan as $item) {
                     // Cek apakah sudah ada request bahan
-                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)->where('bahan_id', $item->bahan_id)->where('status', 0)->first();
+                    // Ambil stokbahan dengan expired terdekat dan is_available = 1
+                    $stokBahanTerdekat = \App\Models\StokBahan::where('bahan_id', $item->bahan_id)
+                        ->where('is_available', true)
+                        ->orderBy('expired_at', 'asc')
+                        ->first();
+
+                    // Jika stok ditemukan, gunakan expired_at dari stok tersebut
+                    $expiredAt = $stokBahanTerdekat ? $stokBahanTerdekat->expired_at : null;
+
+                    // Cek apakah sudah ada request bahan
+                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)
+                        ->where('bahan_id', $item->bahan_id)
+                        ->where('status', 0)
+                        ->first();
+
                     if ($requestBahan) {
                         // Jika ada, jumlahkan qty
                         $requestBahan->qty += $item->quantity;
+                        if ($expiredAt) {
+                            $requestBahan->expired_at = $expiredAt;
+                        }
                         $requestBahan->save();
                     } else {
                         // Jika belum ada, buat data baru
@@ -215,6 +232,9 @@ class ObservasiRepository
                         $requestBahan->nama_bahan = $item->bahan->name;
                         $requestBahan->status = 0;
                         $requestBahan->keterangan = 'Request Bahan Tindakan';
+                        if ($expiredAt) {
+                            $requestBahan->expired_at = $expiredAt;
+                        }
                         $requestBahan->save();
                     }
                 }
@@ -244,8 +264,20 @@ class ObservasiRepository
                 return null; // Jika tidak ada data tindakan bahan
             } else {
                 foreach ($tindakanBahan as $item) {
+                    // Ambil stokbahan dengan expired terdekat dan is_available = 1
+                    $stokBahanTerdekat = \App\Models\StokBahan::where('bahan_id', $item->bahan_id)
+                        ->where('is_available', true)
+                        ->orderBy('expired_at', 'asc')
+                        ->first();
+
+                    $expiredAt = $stokBahanTerdekat ? $stokBahanTerdekat->expired_at : null;
+
                     // Cek apakah sudah ada request bahan
-                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)->where('bahan_id', $item->bahan_id)->where('status', 0)->first();
+                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)
+                        ->where('bahan_id', $item->bahan_id)
+                        ->where('status', 0)
+                        ->first();
+
                     if ($requestBahan) {
                         // Jika ada, jumlahkan qty
                         $requestBahan->qty += $item->quantity;
@@ -259,11 +291,14 @@ class ObservasiRepository
                         $requestBahan->nama_bahan = $item->bahan->name;
                         $requestBahan->status = 0;
                         $requestBahan->keterangan = 'Request Bahan Tindakan';
+                        if ($expiredAt) {
+                            $requestBahan->expired_at = $expiredAt;
+                        }
                         $requestBahan->save();
                     }
                 }
             }
-            return $tindakanEncounter; // Kembalikan data tindakan yang sudah ada
+            return $tindakanEncounter; // Kembalikan data tindakan encounter yang baru
         }
     }
     public function deleteTindakanEncounter($id)

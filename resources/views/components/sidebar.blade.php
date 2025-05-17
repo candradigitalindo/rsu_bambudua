@@ -70,6 +70,21 @@
 
             </ul>
         </li>
+        <li class="treeview {{ request()->is('setting*') ? 'active current-page' : '' }}">
+            <a href="#">
+                <i class="ri-settings-5-line"></i>
+                <span class="menu-text">Apotek</span>
+            </a>
+            <ul class="treeview-menu">
+                <li>
+                    <a class="{{ request()->is('setting/satusehat*') ? 'active-sub' : '' }}" href="{{ route('satusehat.index') }}">Satusehat</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('setting/lokasiloket*') || request()->is('setting/loket*') ? 'active-sub' : '' }}" href="{{ route('lokasiloket.index') }}">Loket Antrian</a>
+                </li>
+
+            </ul>
+        </li>
         <li class="{{ request()->is('bahans*') ? 'active current-page' : '' }}">
             <a href="{{ route('bahans.index') }}">
                 <i class="ri-archive-line"></i>

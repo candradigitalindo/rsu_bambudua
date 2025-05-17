@@ -79,13 +79,13 @@
                                                             <span class="badge bg-success">Sudah Diserahkan</span>
                                                         @else
                                                             <button type="button"
-                                                                class="btn btn-success btn-sm btn-serahkan"
+                                                                class="btn btn-warning btn-sm btn-serahkan"
                                                                 data-bahan-id="{{ $bahan->id }}"
                                                                 data-nama-bahan="{{ $bahan->nama_bahan }}"
                                                                 data-max-qty="{{ $bahan->qty }}">
                                                                 Diserahkan
                                                             </button>
-                                                            
+
                                                         @endif
                                                     </td>
                                                 </tr>

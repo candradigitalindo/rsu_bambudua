@@ -127,4 +127,8 @@ Route::middleware(['auth'])->group(function () {
         // delete diagnosis
         Route::delete('/observasi/{id}/deleteDiagnosis', [ObservasiController::class, 'deleteDiagnosis'])->name('observasi.deleteDiagnosis');
     });
+
+    Route::prefix('apotek')->group(function () {
+        Route::resource('categories', \App\Http\Controllers\CategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    });
 });

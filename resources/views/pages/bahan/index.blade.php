@@ -51,7 +51,7 @@
                                 </div>
                                 <!-- Search Patient Ends -->
                                 <div class="ms-2">
-                                    <a href="" class="btn btn-outline-primary" id="permintaanTindakan">
+                                    <a href="{{ route('bahan.getRequestBahan') }}" class="btn btn-outline-primary" id="permintaanTindakan">
                                         <i class="ri-calendar-todo-fill"></i>
                                         <span class="btn-text" id="textPermintaanTindakan">Permintaan Tindakan</span>
                                         <span class="spinner-border spinner-border-sm d-none"

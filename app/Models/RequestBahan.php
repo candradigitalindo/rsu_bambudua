@@ -16,6 +16,7 @@ class RequestBahan extends Model
         'status',
         'keterangan',
         'expired_at',
+        'diserahkan',
     ];
     public function encounter()
     {

@@ -85,4 +85,43 @@ class BahanRepository
             ->orderBy('created_at', 'DESC')
             ->paginate(50);
     }
+    // get RequestBahan
+    public function getRequestBahan()
+    {
+        // Ambil data encounter yang hanya mempunyai request_bahan, urut encounter dan request_bahan desc
+        return \App\Models\Encounter::where('status', 1)
+            ->whereHas('requestBahan')
+            ->with(['requestBahan' => function($q) {
+                $q->orderBy('created_at', 'DESC');
+            }])
+            ->orderBy('updated_at', 'DESC')
+            ->paginate(50);
+    }
+    // bahan diserahkan
+    public function bahanDiserahkan($id, array $data)
+    {
+        $requestBahan = \App\Models\RequestBahan::findOrFail($id);
+        $requestBahan->update($data);
+
+        // Update stokbahan expired terdekat sebanyak qty yang diminta
+        \App\Models\StokBahan::where('bahan_id', $requestBahan->bahan_id)
+            ->where('is_available', 1)
+            ->orderBy('expired_at', 'asc')
+            ->limit($requestBahan->qty)
+            ->update([
+                'is_available' => 0,
+                'description' => $requestBahan->keterangan,
+                'date_used' => now(),
+            ]);
+
+        // Catat histori keluar
+        \App\Models\Historibahan::create([
+            'bahan_id'    => $requestBahan->bahan_id,
+            'quantity'         => $requestBahan->qty,
+            'description' => $requestBahan->keterangan,
+            'status'      => 'keluar',
+        ]);
+
+        return $requestBahan;
+    }
 }

@@ -265,4 +265,35 @@ class BahanController extends Controller
         return view('pages.bahan.histori', compact('bahan'));
     }
 
+    // get RequestBahan
+    public function getRequestBahan()
+    {
+        $requestBahans = $this->bahanRepository->getRequestBahan();
+        return view('pages.bahan.permintaan', compact('requestBahans'));
+    }
+    // bahan diserahkan
+    public function bahanDiserahkan(Request $request, $id)
+    {
+        $request->validate([
+            'kepada' => 'required|string',
+            'jumlah' => 'required|string|max:255',
+
+        ],
+        [
+            'kepada.required' => 'Kolom Diserahkan tidak boleh kosong',
+            'kepada.string' => 'Kolom Diserahkan harus berupa string',
+            'jumlah.required' => 'Kolom Jumlah tidak boleh kosong',
+            'jumlah.string' => 'Kolom Jumlah harus berupa string',
+            'jumlah.max' => 'Kolom Jumlah tidak boleh lebih dari 255 karakter',
+        ]);
+        $data = [
+            'diserahkan' => $request->kepada,
+            'qty' => $request->jumlah,
+            'status' => 1,
+        ];
+
+        $bahan = $this->bahanRepository->bahanDiserahkan($id, $data);
+        return redirect()->route('bahan.getRequestBahan')->with('success', 'Permintaan Bahan '.$bahan->nama_bahan.' berhasil diserahkan.');
+    }
+
 }

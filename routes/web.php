@@ -133,5 +133,6 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('products', \App\Http\Controllers\ProductController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::get('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'addStock'])->name('product.addStock');
         Route::post('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'storeStock'])->name('product.storeStock');
+        Route::get('/products/getAllHistori', [\App\Http\Controllers\ProductController::class, 'getHistori'])->name('product.getAllHistori');
     });
 });

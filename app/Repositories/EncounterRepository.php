@@ -15,45 +15,40 @@ class EncounterRepository
     }
     public function getAllRawatJalan()
     {
-        // query if auth user is doctor in practitioner table
-        if (auth()->user()->role == 2) {
-            $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 1)->where('status', 1)->whereHas('practitioner', function ($query) {
-                $query->where('id_petugas', auth()->user()->id_petugas);
-            })->orderBy('updated_at', 'ASC')->get();
-        }else {
-            $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 1)->where('status', 1)->orderBy('updated_at', 'ASC')->get();
+        $query = Encounter::query()
+            ->where('type', 1)
+            ->where('status', 1);
+
+        if (request('name')) {
+            $query->where('name_pasien', 'like', '%' . request('name') . '%');
         }
-        $encounters->map(function ($encounter) {
-            $encounter['status'] = $encounter->status == 1 ? "Progress" : "Finish";
-            $encounter['jenis_jaminan'] = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
-            switch ($encounter->tujuan_kunjungan) {
-                case '1':
-                    $kujungan = "Kunjungan Sehat (Promotif/Preventif)";
-                    break;
-                case '2':
-                    $kujungan = "Rehabilitatif";
-                    break;
-                case '3':
-                    $kujungan = "Kunjungan Sakit";
-                    break;
-                case '4':
-                    $kujungan = "Darurat";
-                    break;
-                case '5':
-                    $kujungan = "Kontrol / Tindak Lanjut";
-                    break;
-                case '6':
-                    $kujungan = "Treatment";
-                    break;
-                case '7':
-                    $kujungan = "Konsultasi";
-                    break;
-                default:
-                    $kujungan = "-";
-                    break;
-            }
-            $encounter['tujuan_kunjungan'] = $kujungan;
+
+        // Jika user dokter, filter by practitioner
+        if (auth()->user()->role == 2) {
+            $query->whereHas('practitioner', function ($q) {
+                $q->where('id_petugas', auth()->user()->id_petugas);
+            });
+        }
+
+        $encounters = $query->orderBy('updated_at', 'asc')->get();
+
+        // Mapping data
+        $encounters->transform(function ($encounter) {
+            $encounter->status = $encounter->status == 1 ? "Progress" : "Finish";
+            $encounter->jenis_jaminan = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
+            $encounter->tujuan_kunjungan = match ($encounter->tujuan_kunjungan) {
+                1 => "Kunjungan Sehat (Promotif/Preventif)",
+                2 => "Rehabilitatif",
+                3 => "Kunjungan Sakit",
+                4 => "Darurat",
+                5 => "Kontrol / Tindak Lanjut",
+                6 => "Treatment",
+                7 => "Konsultasi",
+                default => "-",
+            };
+            return $encounter;
         });
+
         return $encounters;
     }
     public function getAllRawatInap()

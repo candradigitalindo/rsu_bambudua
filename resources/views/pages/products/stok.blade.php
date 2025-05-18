@@ -16,6 +16,7 @@
                             <option value="" disabled selected>Pilih Tipe</option>
                             <option value="0" {{ (old('type') == '0') ? 'selected' : '' }}>Stok Masuk</option>
                             <option value="1" {{ (old('type') == '1') ? 'selected' : '' }}>Stok Keluar</option>
+                            <option value="2" {{ (old('type') == '2') ? 'selected' : '' }}>Stok Keluar Expired</option>
                         </select>
                         @error('type')
                             <div class="invalid-feedback">{{ $message }}</div>

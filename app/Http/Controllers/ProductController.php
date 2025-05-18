@@ -131,4 +131,11 @@ class ProductController extends Controller
         $this->productRepo->addPostStock($id, $data);
         return redirect()->route('products.index')->with('success', 'Stok berhasil ditambahkan.');
     }
+    // get Histori
+    public function getHistori()
+    {
+        $historis = $this->productRepo->getHistori();
+        return view('pages.products.histori', compact('historis'));
+    }
+
 }

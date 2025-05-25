@@ -207,4 +207,64 @@ class ObservasiController extends Controller
             'message' => $result['message']
         ]);
     }
+    // ambil data resep
+    public function getResep($id)
+    {
+        $resep = $this->observasiRepository->getResep($id);
+        if ($resep) {
+            return response()->json($resep);
+        } else {
+            return response()->json($resep);
+        }
+    }
+    // post resep
+    public function postResep(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'masa_pemakaian_hari' => 'required|string|max:255',
+        ],[
+            'masa_pemakaian_hari.required' => 'Masa pemakaian hari harus diisi.',
+        ]);
+        $result = $this->observasiRepository->postResep($request, $id);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Resep berhasil disimpan.',
+            'data' => $result
+        ]);
+    }
+    // getProduk apotek
+    public function getProdukApotek($id)
+    {
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Produk Apotek berhasil diambil.',
+            'data' => $this->observasiRepository->getProdukApotek($id)
+        ]);
+    }
+    // postResepDetail
+    public function postResepDetail(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'product_apotek_id' => 'required|string|max:255',
+            'qty' => 'required|integer|max:255',
+            'aturan_pakai' => 'required|string|max:255',
+        ]);
+        $result = $this->observasiRepository->postResepDetail($request, $id);
+        return response()->json([
+            'status' => 200,
+            'message' => 'Data Resep Detail berhasil disimpan.',
+            'data' => $result
+        ]);
+    }
+    // hapus resep detail
+    public function deleteResepDetail($id)
+    {
+        $result = $this->observasiRepository->deleteResepDetail($id);
+        return response()->json([
+            'status' => $result['success'],
+            'message' => $result['message']
+        ]);
+    }
 }

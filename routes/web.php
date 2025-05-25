@@ -126,6 +126,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postDiagnosis', [ObservasiController::class, 'postDiagnosis'])->name('observasi.postDiagnosis');
         // delete diagnosis
         Route::delete('/observasi/{id}/deleteDiagnosis', [ObservasiController::class, 'deleteDiagnosis'])->name('observasi.deleteDiagnosis');
+
+        // route untuk resep
+        Route::get('/observasi/getResep/{id}', [ObservasiController::class, 'getResep'])->name('observasi.getResep');
+        Route::post('/observasi/{id}/postResep', [ObservasiController::class, 'postResep'])->name('observasi.postResep');
+
+        // getProduk
+        Route::get('/observasi/getProdukApotek/{id}', [ObservasiController::class, 'getProdukApotek'])->name('observasi.getProdukApotek');
+        Route::post('/observasi/{id}/postResepDetail', [ObservasiController::class, 'postResepDetail'])->name('observasi.postResepDetail');
+        // delete resep detail
+        Route::delete('/observasi/{id}/deleteResepDetail', [ObservasiController::class, 'deleteResepDetail'])->name('observasi.deleteResepDetail');
     });
 
     Route::prefix('apotek')->group(function () {
@@ -134,5 +144,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'addStock'])->name('product.addStock');
         Route::post('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'storeStock'])->name('product.storeStock');
         Route::get('/products/getAllHistori', [\App\Http\Controllers\ProductController::class, 'getHistori'])->name('product.getAllHistori');
+
     });
 });

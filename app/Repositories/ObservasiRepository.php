@@ -395,4 +395,127 @@ class ObservasiRepository
             'message' => 'Diagnosis tidak ditemukan.'
         ];
     }
+
+    // Ambil data resep
+    public function getResep($id)
+    {
+        $resep = \App\Models\Resep::where('encounter_id', $id)->with('details')->first();
+        if (!$resep) {
+            return null; // Jika tidak ada data resep
+        }
+        return $resep;
+    }
+    // Post resep
+    public function postResep($request, $id)
+    {
+        // Cek apakah resep sudah ada
+        $resep = \App\Models\Resep::where('encounter_id', $id)->first();
+        if ($resep) {
+            // Jika sudah ada, update data
+            $resep->masa_pemakaian_hari = $request->masa_pemakaian_hari;
+            $resep->save();
+        } else {
+            // Ambil kode resep terbesar dari seluruh tabel
+            $lastKodeResep = \App\Models\Resep::max('kode_resep');
+            if ($lastKodeResep) {
+                $lastNumber = (int) substr($lastKodeResep, 3);
+                $kodeResep = 'RSP' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+            } else {
+                $kodeResep = 'RSP00001';
+            }
+            // Jika belum ada, buat data baru
+            $resep = new \App\Models\Resep();
+            $resep->encounter_id = $id;
+            $resep->kode_resep = $kodeResep;
+            $resep->masa_pemakaian_hari = $request->masa_pemakaian_hari;
+            $resep->dokter = auth()->user()->name;
+            $resep->save();
+        }
+        return $resep;
+    }
+    // get peoduk apotek
+    public function getProdukApotek($id)
+    {
+        $query = \App\Models\ProductApotek::query();
+
+        $search = request('search');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('code', 'like', '%' . $search . '%');
+            });
+        }
+        $query->where('type', 0);
+
+
+        // Untuk kebutuhan Select2 AJAX, biasanya tidak perlu paginate
+        return $query->limit(20)->get(['id', 'code', 'name', 'satuan', 'harga', 'stok']);
+    }
+    // Post resep detail ambil  dari encounter_id
+    public function postResepDetail($request, $id)
+    {
+        // Cek apakah resep sudah ada
+        $resep = \App\Models\Resep::where('encounter_id', $id)->first();
+        if ($resep) {
+            // Cek stok apotek: ambil stok dengan expired terdekat, status=0, dan expired_at >= hari ini
+            $stokTerdekat = \App\Models\ApotekStok::where('product_apotek_id', $request->product_apotek_id)
+                ->where('status', 0)
+                ->where(function($q) {
+                    $q->whereNull('expired_at')
+                      ->orWhere('expired_at', '>=', now()->toDateString());
+                })
+                ->orderBy('expired_at', 'asc')
+                ->first();
+
+            // Tidak ada stok yang valid
+            if (!$stokTerdekat) {
+                return [
+                    'success' => false,
+                    'message' => 'Stok tidak tersedia atau sudah expired.'
+                ];
+            }
+            // Cek apakah sudah ada resep detail
+            $resepDetail = \App\Models\ResepDetail::where('resep_id', $resep->id)
+                ->where('product_apotek_id', $request->product_apotek_id)
+                ->first();
+            if ($resepDetail) {
+                // Jika ada, jumlahkan qty
+                $resepDetail->qty += $request->qty;
+                $resepDetail->total_harga = $stokTerdekat->productApotek->harga * $resepDetail->qty; // simpan total harga
+                $resepDetail->save();
+                return $resepDetail; // Kembalikan data resep detail yang sudah ada
+            }
+            // Jika belum ada, buat data baru
+            // Buat data resep detail
+            $resepDetail = new \App\Models\ResepDetail();
+            $resepDetail->resep_id = $resep->id;
+            $resepDetail->product_apotek_id = $request->product_apotek_id;
+            $resepDetail->nama_obat = $stokTerdekat->productApotek->name;
+            $resepDetail->qty = $request->qty;
+            $resepDetail->aturan_pakai = $request->aturan_pakai;
+            $resepDetail->expired_at = $stokTerdekat->expired_at; // simpan expired yang diambil
+            $resepDetail->harga = $stokTerdekat->productApotek->harga; // simpan harga
+            $resepDetail->total_harga = $stokTerdekat->productApotek->harga * $request->qty; // simpan total harga
+            $resepDetail->save();
+
+            return $resepDetail;
+        }
+        return null;
+    }
+    // Hapus resep detail
+    public function deleteResepDetail($id)
+    {
+        $resepDetail = \App\Models\ResepDetail::find($id);
+        if ($resepDetail) {
+            $resepDetail->delete();
+            return [
+                'success' => true,
+                'message' => 'Resep detail berhasil dihapus.'
+            ];
+        }
+        return [
+            'success' => false,
+            'message' => 'Resep detail tidak ditemukan.'
+        ];
+    }
 }

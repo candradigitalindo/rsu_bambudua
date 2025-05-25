@@ -69,7 +69,7 @@
                                         <td>{{ $product->code }}</td>
                                         <td>{{ $product->category->name }}</td>
                                         <td>{{ $product->name }}</td>
-                                        <td>{{ number_format($product->price, 0, ',', '.') }}</td>
+                                        <td>{{ number_format($product->harga, 0, ',', '.') }}</td>
                                         {{-- Format harga dengan titik sebagai pemisah ribuan --}}
                                         <td>{{ $product->stok }}</td>
                                         <td>

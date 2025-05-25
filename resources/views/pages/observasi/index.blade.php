@@ -523,7 +523,109 @@
                                 </div>
                             </div>
                             <div class="tab-pane fade" id="tatalaksana" role="tabpanel">
-                                <h3 class="text-success">Some Description</h3>
+                                <!-- Row startss -->
+                                <div class="row gx-3">
+                                    <div class="col-xxl-6 col-sm-6">
+                                        <div class="card mb-1">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Resep Obat</h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="a2">Masa Resep (Hari)</label>
+
+                                                    <form method="GET" class="mb-3">
+                                                        <div class="input-group">
+                                                            <input type="text" name="masa_pemakaian_hari"
+                                                                class="form-control" placeholder="Jumlah Hari Resep"
+                                                                id="masa_pemakaian_hari">
+                                                            <button class="btn btn-primary" type="submit"
+                                                                id="btn-buat-resep">
+                                                                <span id="text-buat-resep">Buat Resep</span>
+                                                                <span class="spinner-border spinner-border-sm d-none"
+                                                                    id="spinner-buat-resep" role="status"
+                                                                    aria-hidden="true"></span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+
+                                                </div>
+                                                <hr>
+                                                <div class="mb-3 d-none" id="resep">
+                                                    <label class="form-label" for="a2">Obat</label>
+                                                    <div class="input-group">
+                                                        <select name="product_apotek_id" id="product_apotek_id" class="form-control">
+                                                            <option value="">Pilih Obat</option>
+
+                                                        </select>
+                                                        <input type="hidden" name="product_apotek_id" id="product_apotek_id"
+                                                            value="{{ old('product_apotek_id') }}">
+
+                                                    </div>
+                                                    <label class="form-label mt-3" for="a2">Jumlah</label>
+                                                    <div class="input-group">
+                                                        <input type="number" class="form-control" id="qty"
+                                                            name="qty" value="{{ old('qty', 1) }}">
+                                                        <p class="text-danger">{{ $errors->first('qty') }}</p>
+                                                    </div>
+                                                    <label class="form-label mt-3" for="a2">Aturan Pakai</label>
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control" id="aturan_pakai"
+                                                            name="aturan_pakai" value="{{ old('aturan_pakai') }}">
+                                                        <p class="text-danger">{{ $errors->first('aturan_pakai') }}</p>
+                                                    </div>
+                                                    <div class="d-flex gap-2 justify-content-end mt-4">
+                                                        <button type="submit" class="btn btn-primary"
+                                                            id="btn-tambah-obat">
+                                                            <span class="btn-txt" id="text-tambah-obat">Tambah
+                                                                Obat</span>
+                                                            <span class="spinner-border spinner-border-sm d-none"
+                                                                id="spinner-tambah-obat"></span>
+                                                        </button>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-6 col-sm-12">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h5 class="card-title">List Obat Resep <span id="kode_resep"></span></h5>
+                                                <hr class="mb-2">
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="table-outer">
+                                                    <div class="table-responsive">
+                                                        <table class="table truncate m-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="text-center">Aksi</th>
+                                                                    <th>Nama Obat</th>
+                                                                    <th>Jumlah</th>
+                                                                    <th>Aturan Pakai</th>
+                                                                    <th>Harga</th>
+                                                                    <th>Subtotal</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody-resep">
+                                                                <!-- Data resep diisi via JS -->
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr>
+                                                                    <td colspan="5" class="text-end fw-bold">Total</td>
+                                                                    <td class="text-end fw-bold" id="total-resep">Rp. 0</td>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -720,7 +822,6 @@
                         url: url,
                         type: "GET",
                         success: function(data) {
-                            console.log(data);
                             // Populate the table with data
                             let tbody = $("#tbody-pendukung");
                             tbody.empty(); // Clear existing rows
@@ -1028,7 +1129,6 @@
                             _token: "{{ csrf_token() }}"
                         },
                         success: function(data) {
-                            console.log(data);
                             // Populate the table with data
                             let tbody = $("#tbody-diagnosis");
                             tbody.empty(); // Clear existing rows
@@ -1109,13 +1209,31 @@
                             };
                         },
                         processResults: function(data) {
+                            // Jika response adalah array langsung:
+                            if (Array.isArray(data)) {
+                                return {
+                                    results: data.map(function(item) {
+                                        return {
+                                            id: item.id,
+                                            text: item.name
+                                        }
+                                    })
+                                };
+                            }
+                            // Jika response adalah object dengan key 'data'
+                            if (data.data && Array.isArray(data.data)) {
+                                return {
+                                    results: data.data.map(function(item) {
+                                        return {
+                                            id: item.id,
+                                            text: item.name
+                                        }
+                                    })
+                                };
+                            }
+                            // Jika response tidak sesuai, kembalikan array kosong
                             return {
-                                results: data.map(function(item) {
-                                    return {
-                                        id: item.code,
-                                        text: item.code + ' - ' + item.description
-                                    }
-                                })
+                                results: []
                             };
                         },
                         cache: true
@@ -1142,7 +1260,7 @@
                                     _token: "{{ csrf_token() }}"
                                 },
                                 success: function(data) {
-                                    console.log(data);
+
                                     if (data.status == true) {
                                         swal(data.message, {
                                             icon: "success"
@@ -1166,7 +1284,284 @@
                     });
                 });
                 $("#tab-tatalaksana").click(function() {
-                    alert("tab-tatalaksana clicked");
+                    // ajax getResep
+                    let url = "{{ route('observasi.getResep', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url,
+                        type: "GET",
+                        data: {
+                            _token: "{{ csrf_token() }}"
+                        },
+                        success: function(data) {
+                            // Jika data resep ada, tampilkan form resep
+                            if (data.id) {
+                                $("#resep").removeClass("d-none");
+                                $("#kode_resep").text("[" + data.kode_resep + "] " + data.masa_pemakaian_hari + " hari");
+                            } else {
+                                $("#resep").addClass("d-none");
+                            }
+
+                            // Populate the table with data
+                            let tbody = $("#tbody-resep");
+                            tbody.empty();
+                            let total = 0;
+                            if (data && data.details) {
+                                $.each(data.details, function(index, item) {
+                                    tbody.append(
+                                        `<tr>
+                                            <td class="text-center">
+                                                <button class="btn btn-danger btn-sm btn-hapus-resep" data-id="${item.id}">
+                                                    <i class="bi bi-trash"></i> Hapus
+                                                </button>
+                                            </td>
+                                            <td>${item.nama_obat}</td>
+                                            <td>${item.qty}</td>
+                                            <td>${item.aturan_pakai}</td>
+                                            <td class="text-end">${formatRupiah(item.harga, 'Rp. ')}</td>
+                                            <td class="text-end">${formatRupiah(item.total_harga, 'Rp. ')}</td>
+                                        </tr>`
+                                    );
+                                    total += parseInt(item.total_harga || 0);
+                                });
+                            }
+                            $("#total-resep").text(formatRupiah(total, 'Rp. '));
+                        }
+                    });
+                });
+                $('#product_apotek_id').select2({
+                    placeholder: 'Pilih Obat',
+                    allowClear: true,
+                    width: '100%',
+                    ajax: {
+                        url: "{{ route('observasi.getProdukApotek', $observasi) }}", // sesuaikan dengan route Anda
+                        dataType: 'json',
+                        delay: 250,
+                        data: function(params) {
+                            return {
+                                search: params.term // kata kunci pencarian
+                            };
+                        },
+                        processResults: function(data) {
+                            // Jika response adalah array langsung:
+                            if (Array.isArray(data)) {
+                                return {
+                                    results: data.map(function(item) {
+                                        return {
+                                            id: item.id,
+                                            text: item.name + (item.harga ? ' - [' + formatRupiah(
+                                                item.harga, 'Rp. ') + ']' : '')
+                                        }
+                                    })
+                                };
+                            }
+                            // Jika response adalah object dengan key 'data'
+                            if (data.data && Array.isArray(data.data)) {
+                                return {
+                                    results: data.data.map(function(item) {
+                                        return {
+                                            id: item.id,
+                                            text: item.name + (item.harga ? ' - [' + formatRupiah(
+                                                item.harga, 'Rp. ') + ']' : '')
+                                        }
+                                    })
+                                };
+                            }
+                            // Jika response tidak sesuai, kembalikan array kosong
+                            return {
+                                results: []
+                            };
+                        },
+                        cache: true
+                    }
+
+                });
+                // btn-resep click
+                $("#btn-buat-resep").click(function(e) {
+                    e.preventDefault();
+                    // validasi input masa_pemakaian_hari
+                    let masa_pemakaian_hari = $("#masa_pemakaian_hari").val();
+                    if (masa_pemakaian_hari == '') {
+                        alert("Jumlah hari tidak boleh kosong");
+                        return;
+                    }
+                    // Tampilkan spinner dan disable tombol
+                    $("#spinner-buat-resep").removeClass("d-none");
+                    $("#text-buat-resep").addClass("d-none");
+                    $("#btn-buat-resep").prop("disabled", true);
+
+                    // ajax post resep
+                    let url = "{{ route('observasi.postResep', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            masa_pemakaian_hari: masa_pemakaian_hari
+                        },
+                        success: function(data) {
+                            $("#spinner-buat-resep").addClass("d-none");
+                            $("#text-buat-resep").removeClass("d-none");
+                            $("#btn-buat-resep").prop("disabled", false);
+
+                            if (data.status == 200) {
+                                swal(data.message, {
+                                    icon: "success"
+                                });
+                                // Tampilkan kolom resep
+                                $("#resep").removeClass("d-none");
+                                $("#kode_resep").text(data.kode_resep);
+                            } else {
+                                swal(data.message, {
+                                    icon: "error"
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            $("#spinner-buat-resep").addClass("d-none");
+                            $("#text-buat-resep").removeClass("d-none");
+                            $("#btn-buat-resep").prop("disabled", false);
+
+                            // Tampilkan error validasi dari server jika ada
+                            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                                let errors = xhr.responseJSON.errors;
+                                let errorMsg = Object.values(errors).map(function(msgArr) {
+                                    return msgArr.join('<br>');
+                                }).join('<br>');
+                                swal({
+                                    title: "Validasi Gagal",
+                                    html: true,
+                                    text: errorMsg,
+                                    icon: "error"
+                                });
+                            } else {
+                                swal('Terjadi kesalahan saat menyimpan data.', {
+                                    icon: "error"
+                                });
+                            }
+                        }
+                    });
+                });
+                // btn-tambah-obat click
+                $("#btn-tambah-obat").click(function(e) {
+                    e.preventDefault();
+                    // validasi input
+                    let product_apotek_id = $("#product_apotek_id").val();
+                    let qty = $("#qty").val();
+                    let aturan_pakai = $("#aturan_pakai").val();
+                    if (product_apotek_id == '') {
+                        alert("Obat tidak boleh kosong");
+                        return;
+                    }
+                    if (qty == '') {
+                        alert("Jumlah tidak boleh kosong");
+                        return;
+                    }
+                    if (aturan_pakai == '') {
+                        alert("Aturan pakai tidak boleh kosong");
+                        return;
+                    }
+                    // Tampilkan spinner dan disable tombol
+                    $("#spinner-tambah-obat").removeClass("d-none");
+                    $("#text-tambah-obat").addClass("d-none");
+                    $("#btn-tambah-obat").prop("disabled", true);
+                    // ajax post resep detail
+                    let url = "{{ route('observasi.postResepDetail', ':id') }}";
+                    url = url.replace(':id', "{{ $observasi }}");
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            product_apotek_id: product_apotek_id,
+                            qty: qty,
+                            aturan_pakai: aturan_pakai
+                        },
+                        success: function(data) {
+                            $("#spinner-tambah-obat").addClass("d-none");
+                            $("#text-tambah-obat").removeClass("d-none");
+                            $("#btn-tambah-obat").prop("disabled", false);
+
+                            if (data.status == 200) {
+                                swal(data.message, {
+                                    icon: "success"
+                                });
+                                // Refresh the table after successful submission
+                                $("#tab-tatalaksana").click();
+                            } else {
+                                swal('Terjadi kesalahan saat menyimpan data.', {
+                                    icon: "error"
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            $("#spinner-tambah-obat").addClass("d-none");
+                            $("#text-tambah-obat").removeClass("d-none");
+                            $("#btn-tambah-obat").prop("disabled", false);
+
+                            // Tampilkan error validasi dari server jika ada
+                            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                                let errors = xhr.responseJSON.errors;
+                                let errorMsg = Object.values(errors).map(function(msgArr) {
+                                    return msgArr.join('<br>');
+                                }).join('<br>');
+                                swal({
+                                    title: "Validasi Gagal",
+                                    html: true,
+                                    text: errorMsg,
+                                    icon: "error"
+                                });
+                            } else {
+                                swal('Terjadi kesalahan saat menyimpan data.', {
+                                    icon: "error"
+                                });
+                            }
+                        }
+                    });
+                });
+                // Hapus obat
+                $('#tbody-resep').on('click', '.btn-hapus-resep', function() {
+                    let id = $(this).data('id');
+                    // Konfirmasi hapus
+                    swal({
+                        title: "Apakah Anda yakin?",
+                        text: "Data ini akan dihapus!",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    }).then((willDelete) => {
+                        if (willDelete) {
+                            let url = "{{ route('observasi.deleteResepDetail', ':id') }}"
+                                .replace(':id', id);
+                            $.ajax({
+                                url: url,
+                                type: "DELETE",
+                                data: {
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                success: function(data) {
+                                    if (data.status == true) {
+                                        swal(data.message, {
+                                            icon: "success"
+                                        });
+                                    } else {
+                                        swal(data.message, {
+                                            icon: "error"
+                                        });
+
+                                    }
+                                    $("#tab-tatalaksana")
+                                        .click(); // Refresh tabel
+                                },
+                                error: function() {
+                                    swal('Terjadi kesalahan saat menghapus data.', {
+                                        icon: "error"
+                                    });
+                                }
+                            });
+                        }
+                    });
                 });
             });
         </script>

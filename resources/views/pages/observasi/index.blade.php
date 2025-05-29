@@ -82,6 +82,11 @@
                                     role="tab" aria-controls="tatalaksana" aria-selected="false"><i
                                         class="ri-capsule-fill"></i>Tatalaksana</a>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <a class="nav-link" id="tab-catatan" data-bs-toggle="tab" href="#catatan"
+                                    role="tab" aria-controls="catatan" aria-selected="false"><i
+                                        class="ri-draft-line"></i>Catatan</a>
+                            </li>
                         </ul>
                         <div class="tab-content" id="customTabContent3">
                             <div class="tab-pane fade show active" id="anamnesis" role="tabpanel">
@@ -617,6 +622,123 @@
                                                                 <tr>
                                                                     <td colspan="5" class="text-end fw-bold">Total</td>
                                                                     <td class="text-end fw-bold" id="total-resep">Rp. 0</td>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="catatan" role="tabpanel">
+                                <!-- Row startss -->
+                                <div class="row gx-3">
+                                    <div class="col-xxl-6 col-sm-6">
+                                        <div class="card mb-1">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Tindakan</h5>
+                                                <hr class="mb-1">
+                                            </div>
+                                            <div class="card-body">
+
+                                                <div class="mb-1">
+                                                    <label class="form-label" for="a2">Diskon Tindakan</label>
+
+                                                    <form method="GET" class="mb-3">
+                                                        <div class="input-group">
+                                                            <input type="text" name="diskon_tindakan"
+                                                                class="form-control" placeholder="Diskon Tindakan"
+                                                                id="diskon_tindakan">
+                                                            <button class="btn btn-primary" type="submit"
+                                                                id="btn-buat-diskon-tindakan">
+                                                                <span id="text-buat-diskon-tindakan">Buat Diskon</span>
+                                                                <span class="spinner-border spinner-border-sm d-none"
+                                                                    id="spinner-buat-diskon-tindakan" role="status"
+                                                                    aria-hidden="true"></span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+
+                                                </div>
+                                                <div class="table-outer">
+                                                    <div class="table-responsive">
+                                                        <table class="table truncate m-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="text-center">Aksi</th>
+                                                                    <th>Nama Tindakan</th>
+                                                                    <th>Qty</th>
+                                                                    <th>Harga</th>
+                                                                    <th>Sub Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody-catatan-tindakan">
+
+
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr>
+                                                                    <td colspan="4" class="text-end fw-bold">Total</td>
+                                                                    <td class="text-end">
+                                                                        <span id="catatan-total-harga" class="fw-bold">0</span>
+                                                                    </td>
+                                                                </tr>
+                                                            </tfoot>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-xxl-6 col-sm-12">
+                                        <div class="card mb-3">
+                                            <div class="card-header">
+                                                <h5 class="card-title">Resep</h5>
+                                                <hr class="mb-1">
+                                            </div>
+                                            <div class="card-body">
+                                                 <div class="mb-1">
+                                                    <label class="form-label" for="a2">Diskon Resep</label>
+
+                                                    <form method="GET" class="mb-3">
+                                                        <div class="input-group">
+                                                            <input type="text" name="diskon_resep"
+                                                                class="form-control" placeholder="Diskon Resep"
+                                                                id="diskon_resep">
+                                                            <button class="btn btn-primary" type="submit"
+                                                                id="btn-buat-diskon-resep">
+                                                                <span id="text-buat-diskon-resep">Buat Diskon</span>
+                                                                <span class="spinner-border spinner-border-sm d-none"
+                                                                    id="spinner-buat-diskon-resep" role="status"
+                                                                    aria-hidden="true"></span>
+                                                            </button>
+                                                        </div>
+                                                    </form>
+
+                                                </div>
+                                                <div class="table-outer">
+                                                    <div class="table-responsive">
+                                                        <table class="table truncate m-0">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="text-center">Aksi</th>
+                                                                    <th>Nama Obat</th>
+                                                                    <th>Jumlah</th>
+                                                                    <th>Aturan Pakai</th>
+                                                                    <th>Harga</th>
+                                                                    <th>Subtotal</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="tbody-catatan-resep">
+                                                                <!-- Data resep diisi via JS -->
+                                                            </tbody>
+                                                            <tfoot>
+                                                                <tr>
+                                                                    <td colspan="5" class="text-end fw-bold">Total</td>
+                                                                    <td class="text-end fw-bold" id="catatan-total-resep">Rp. 0</td>
                                                                 </tr>
                                                             </tfoot>
                                                         </table>
@@ -1214,8 +1336,8 @@
                                 return {
                                     results: data.map(function(item) {
                                         return {
-                                            id: item.id,
-                                            text: item.name
+                                            id: item.code,
+                                            text: item.code + ' - ' + item.description
                                         }
                                     })
                                 };
@@ -1225,8 +1347,8 @@
                                 return {
                                     results: data.data.map(function(item) {
                                         return {
-                                            id: item.id,
-                                            text: item.name
+                                            id: item.code,
+                                            text: item.description + (item.code ? ' - [' + item.code + ']' : '')
                                         }
                                     })
                                 };

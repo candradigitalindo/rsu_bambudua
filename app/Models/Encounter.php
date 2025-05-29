@@ -16,7 +16,15 @@ class Encounter extends Model
         'status',
         'type',
         'jenis_jaminan',
-        'tujuan_kunjungan'
+        'tujuan_kunjungan',
+        'diskon_tindakan',
+        'diskon_persen_tindakan',
+        'total_tindakan',
+        'total_bayar_tindakan',
+        'diskon_resep',
+        'diskon_persen_resep',
+        'total_resep',
+        'total_bayar_resep',
     ];
 
     public function practitioner()

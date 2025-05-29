@@ -187,160 +187,113 @@ class ObservasiRepository
     // Post tindakan encounter
     public function postTindakanEncounter($request, $id)
     {
-        // Cek apakah tindakan sudah ada
-        $tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->where('tindakan_id', $request->jenis_tindakan)->first();
-        if ($tindakan) {
-            // Jika ada jumlahkan qty
-            $tindakan->qty += $request->qty;
-            $tindakan->total_harga = $tindakan->qty * $tindakan->tindakan_harga;
-            $tindakan->save();
-            // Ambil tindakan bahan
-            $tindakanBahan = \App\Models\TindakanBahan::where('tindakan_id', $request->jenis_tindakan)->with('bahan')->get();
-            if ($tindakanBahan->isEmpty()) {
-                return null; // Jika tidak ada data tindakan bahan
-            } else {
-                foreach ($tindakanBahan as $item) {
-                    // Cek apakah sudah ada request bahan
-                    // Ambil stokbahan dengan expired terdekat dan is_available = 1
-                    $stokBahanTerdekat = \App\Models\StokBahan::where('bahan_id', $item->bahan_id)
-                        ->where('is_available', true)
-                        ->orderBy('expired_at', 'asc')
-                        ->first();
+        // Ambil encounter
+        $encounter = \App\Models\Encounter::find($id);
+        if (!$encounter) {
+            return null;
+        }
 
-                    // Jika stok ditemukan, gunakan expired_at dari stok tersebut
-                    $expiredAt = $stokBahanTerdekat ? $stokBahanTerdekat->expired_at : null;
+        // Ambil data tindakan
+        $tindakan = \App\Models\Tindakan::find($request->jenis_tindakan);
+        if (!$tindakan) {
+            return null;
+        }
 
-                    // Cek apakah sudah ada request bahan
-                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)
-                        ->where('bahan_id', $item->bahan_id)
-                        ->where('status', 0)
-                        ->first();
+        // Cek apakah sudah ada TindakanEncounter
+        $tindakanEncounter = \App\Models\TindakanEncounter::where('encounter_id', $id)
+            ->where('tindakan_id', $tindakan->id)
+            ->first();
 
-                    if ($requestBahan) {
-                        // Jika ada, jumlahkan qty
-                        $requestBahan->qty += $item->quantity;
-                        if ($expiredAt) {
-                            $requestBahan->expired_at = $expiredAt;
-                        }
-                        $requestBahan->save();
-                    } else {
-                        // Jika belum ada, buat data baru
-                        $requestBahan = new \App\Models\RequestBahan();
-                        $requestBahan->encounter_id = $id;
-                        $requestBahan->bahan_id = $item->bahan_id;
-                        $requestBahan->qty = $item->quantity;
-                        $requestBahan->nama_bahan = $item->bahan->name;
-                        $requestBahan->status = 0;
-                        $requestBahan->keterangan = 'Request Bahan Tindakan';
-                        if ($expiredAt) {
-                            $requestBahan->expired_at = $expiredAt;
-                        }
-                        $requestBahan->save();
-                    }
-                }
-            }
-            return $tindakan; // Kembalikan data tindakan yang sudah ada
+        $qty = (int) $request->qty;
+        $diskon = isset($request->diskon) ? floatval($request->diskon) : 0;
+
+        if ($tindakanEncounter) {
+            $tindakanEncounter->qty += $qty;
         } else {
-            // ambil data tindakan
-            $tindakan = \App\Models\Tindakan::find($request->jenis_tindakan);
-            // Jika tidak ada data tindakan
-            if (!$tindakan) {
-                return null; // Jika tidak ada data tindakan
-            }
-            // Jika belum ada, buat data baru
             $tindakanEncounter = new \App\Models\TindakanEncounter();
             $tindakanEncounter->encounter_id = $id;
-            $tindakanEncounter->tindakan_id = $request->jenis_tindakan;
+            $tindakanEncounter->tindakan_id = $tindakan->id;
             $tindakanEncounter->tindakan_name = $tindakan->name;
             $tindakanEncounter->tindakan_harga = $tindakan->harga;
-            $tindakanEncounter->qty = $request->qty;
-            $tindakanEncounter->total_harga = $request->qty * $tindakan->harga;
-            $tindakanEncounter->save();
-
-            // Ambil tindakan bahan
-            $tindakanBahan = \App\Models\TindakanBahan::where('tindakan_id', $request->jenis_tindakan)->with('bahan')->get();
-
-            if ($tindakanBahan->isEmpty()) {
-                return null; // Jika tidak ada data tindakan bahan
-            } else {
-                foreach ($tindakanBahan as $item) {
-                    // Ambil stokbahan dengan expired terdekat dan is_available = 1
-                    $stokBahanTerdekat = \App\Models\StokBahan::where('bahan_id', $item->bahan_id)
-                        ->where('is_available', true)
-                        ->orderBy('expired_at', 'asc')
-                        ->first();
-
-                    $expiredAt = $stokBahanTerdekat ? $stokBahanTerdekat->expired_at : null;
-
-                    // Cek apakah sudah ada request bahan
-                    $requestBahan = \App\Models\RequestBahan::where('encounter_id', $id)
-                        ->where('bahan_id', $item->bahan_id)
-                        ->where('status', 0)
-                        ->first();
-
-                    if ($requestBahan) {
-                        // Jika ada, jumlahkan qty
-                        $requestBahan->qty += $item->quantity;
-                        $requestBahan->save();
-                    } else {
-                        // Jika belum ada, buat data baru
-                        $requestBahan = new \App\Models\RequestBahan();
-                        $requestBahan->encounter_id = $id;
-                        $requestBahan->bahan_id = $item->bahan_id;
-                        $requestBahan->qty = $item->quantity;
-                        $requestBahan->nama_bahan = $item->bahan->name;
-                        $requestBahan->status = 0;
-                        $requestBahan->keterangan = 'Request Bahan Tindakan';
-                        if ($expiredAt) {
-                            $requestBahan->expired_at = $expiredAt;
-                        }
-                        $requestBahan->save();
-                    }
-                }
-            }
-            return $tindakanEncounter; // Kembalikan data tindakan encounter yang baru
+            $tindakanEncounter->qty = $qty;
         }
+
+        $subtotal = $tindakanEncounter->qty * $tindakan->harga;
+        $tindakanEncounter->total_harga = max(0, $subtotal - $diskon);
+        $tindakanEncounter->save();
+
+        // Update total_tindakan encounter (langsung sum di DB)
+        $encounter->total_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
+        $encounter->save();
+
+        // Proses bahan (jika ada)
+        $tindakanBahans = \App\Models\TindakanBahan::where('tindakan_id', $tindakan->id)->with('bahan')->get();
+        foreach ($tindakanBahans as $item) {
+            $requestBahan = \App\Models\RequestBahan::firstOrNew([
+                'encounter_id' => $id,
+                'bahan_id' => $item->bahan_id,
+                'status' => 0
+            ]);
+            $requestBahan->qty = ($requestBahan->exists ? $requestBahan->qty : 0) + $item->quantity;
+            $requestBahan->nama_bahan = $item->bahan->name;
+            $requestBahan->keterangan = 'Request Bahan Tindakan';
+            // Ambil stok bahan expired terdekat
+            $stokBahanTerdekat = \App\Models\StokBahan::where('bahan_id', $item->bahan_id)
+                ->where('is_available', true)
+                ->orderBy('expired_at', 'asc')
+                ->first();
+            if ($stokBahanTerdekat) {
+                $requestBahan->expired_at = $stokBahanTerdekat->expired_at;
+            }
+            $requestBahan->save();
+        }
+
+        return $tindakanEncounter;
     }
     public function deleteTindakanEncounter($id)
     {
         $tindakan = \App\Models\TindakanEncounter::find($id);
-        if ($tindakan) {
-            // Ambil semua bahan terkait tindakan ini
-            $tindakanBahans = \App\Models\TindakanBahan::where('tindakan_id', $tindakan->tindakan_id)->get();
-
-            // Cek jika ada RequestBahan status = 1
-            foreach ($tindakanBahans as $bahan) {
-                $adaRequestBahanStatus1 = \App\Models\RequestBahan::where('encounter_id', $tindakan->encounter_id)
-                    ->where('bahan_id', $bahan->bahan_id)
-                    ->where('status', 1)
-                    ->exists();
-                if ($adaRequestBahanStatus1) {
-                    // Tidak boleh hapus, return false atau pesan error
-                    return [
-                        'success' => false,
-                        'message' => 'Tidak bisa menghapus tindakan karena ada bahan yang sudah diproses.'
-                    ];
-                }
-            }
-
-            // Jika aman, hapus semua request bahan status 0
-            foreach ($tindakanBahans as $bahan) {
-                \App\Models\RequestBahan::where('encounter_id', $tindakan->encounter_id)
-                    ->where('bahan_id', $bahan->bahan_id)
-                    ->where('status', 0)
-                    ->delete();
-            }
-            // Hapus data tindakan
-            $tindakan->delete();
-
+        if (!$tindakan) {
             return [
-                'success' => true,
-                'message' => 'Tindakan berhasil dihapus.'
+                'success' => false,
+                'message' => 'Tindakan tidak ditemukan.'
             ];
         }
+
+        // Cek jika ada RequestBahan status=1 untuk encounter & bahan terkait tindakan ini
+        $bahanIds = \App\Models\TindakanBahan::where('tindakan_id', $tindakan->tindakan_id)
+            ->pluck('bahan_id');
+        $adaRequestBahanStatus1 = \App\Models\RequestBahan::where('encounter_id', $tindakan->encounter_id)
+            ->whereIn('bahan_id', $bahanIds)
+            ->where('status', 1)
+            ->exists();
+
+        if ($adaRequestBahanStatus1) {
+            return [
+                'success' => false,
+                'message' => 'Tidak bisa menghapus tindakan karena ada bahan yang sudah diproses.'
+            ];
+        }
+
+        // Hapus semua request bahan status 0 sekaligus
+        \App\Models\RequestBahan::where('encounter_id', $tindakan->encounter_id)
+            ->whereIn('bahan_id', $bahanIds)
+            ->where('status', 0)
+            ->delete();
+
+        // Hapus tindakan
+        $tindakan->delete();
+
+        // Update total_tindakan di encounter
+        $encounter = \App\Models\Encounter::find($tindakan->encounter_id);
+        if ($encounter) {
+            $encounter->total_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $tindakan->encounter_id)->sum('total_harga');
+            $encounter->save();
+        }
+
         return [
-            'success' => false,
-            'message' => 'Tindakan tidak ditemukan.'
+            'success' => true,
+            'message' => 'Tindakan berhasil dihapus.'
         ];
     }
     // Ambil data icd10
@@ -454,53 +407,51 @@ class ObservasiRepository
     // Post resep detail ambil  dari encounter_id
     public function postResepDetail($request, $id)
     {
-        // Cek apakah resep sudah ada
+        // Ambil resep berdasarkan encounter_id
         $resep = \App\Models\Resep::where('encounter_id', $id)->first();
-        if ($resep) {
-            // Cek stok apotek: ambil stok dengan expired terdekat, status=0, dan expired_at >= hari ini
-            $stokTerdekat = \App\Models\ApotekStok::where('product_apotek_id', $request->product_apotek_id)
-                ->where('status', 0)
-                ->where(function($q) {
-                    $q->whereNull('expired_at')
-                      ->orWhere('expired_at', '>=', now()->toDateString());
-                })
-                ->orderBy('expired_at', 'asc')
-                ->first();
-
-            // Tidak ada stok yang valid
-            if (!$stokTerdekat) {
-                return [
-                    'success' => false,
-                    'message' => 'Stok tidak tersedia atau sudah expired.'
-                ];
-            }
-            // Cek apakah sudah ada resep detail
-            $resepDetail = \App\Models\ResepDetail::where('resep_id', $resep->id)
-                ->where('product_apotek_id', $request->product_apotek_id)
-                ->first();
-            if ($resepDetail) {
-                // Jika ada, jumlahkan qty
-                $resepDetail->qty += $request->qty;
-                $resepDetail->total_harga = $stokTerdekat->productApotek->harga * $resepDetail->qty; // simpan total harga
-                $resepDetail->save();
-                return $resepDetail; // Kembalikan data resep detail yang sudah ada
-            }
-            // Jika belum ada, buat data baru
-            // Buat data resep detail
-            $resepDetail = new \App\Models\ResepDetail();
-            $resepDetail->resep_id = $resep->id;
-            $resepDetail->product_apotek_id = $request->product_apotek_id;
-            $resepDetail->nama_obat = $stokTerdekat->productApotek->name;
-            $resepDetail->qty = $request->qty;
-            $resepDetail->aturan_pakai = $request->aturan_pakai;
-            $resepDetail->expired_at = $stokTerdekat->expired_at; // simpan expired yang diambil
-            $resepDetail->harga = $stokTerdekat->productApotek->harga; // simpan harga
-            $resepDetail->total_harga = $stokTerdekat->productApotek->harga * $request->qty; // simpan total harga
-            $resepDetail->save();
-
-            return $resepDetail;
+        if (!$resep) {
+            return null;
         }
-        return null;
+
+        // Ambil stok terdekat yang belum expired dan status=0
+        $stokTerdekat = \App\Models\ApotekStok::where('product_apotek_id', $request->product_apotek_id)
+            ->where('status', 0)
+            ->where(function ($q) {
+                $q->whereNull('expired_at')
+                    ->orWhere('expired_at', '>=', now()->toDateString());
+            })
+            ->orderBy('expired_at', 'asc')
+            ->first();
+
+        if (!$stokTerdekat) {
+            return [
+                'success' => false,
+                'message' => 'Stok tidak tersedia atau sudah expired.'
+            ];
+        }
+
+        // Ambil atau buat resep detail
+        $resepDetail = \App\Models\ResepDetail::firstOrNew([
+            'resep_id' => $resep->id,
+            'product_apotek_id' => $request->product_apotek_id
+        ]);
+
+        // Jika sudah ada, tambahkan qty, jika belum set qty baru
+        $resepDetail->qty = ($resepDetail->exists ? $resepDetail->qty : 0) + $request->qty;
+        $resepDetail->nama_obat = $stokTerdekat->productApotek->name;
+        $resepDetail->aturan_pakai = $request->aturan_pakai;
+        $resepDetail->expired_at = $stokTerdekat->expired_at;
+        $resepDetail->harga = $stokTerdekat->productApotek->harga;
+        $resepDetail->total_harga = $resepDetail->harga * $resepDetail->qty;
+        $resepDetail->save();
+
+        // Update total_resep encounter hanya sekali
+        \App\Models\Encounter::where('id', $id)
+            ->update([
+                'total_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga')
+            ]);
+
+        return $resepDetail;
     }
     // Hapus resep detail
     public function deleteResepDetail($id)
@@ -508,6 +459,11 @@ class ObservasiRepository
         $resepDetail = \App\Models\ResepDetail::find($id);
         if ($resepDetail) {
             $resepDetail->delete();
+            // Update total_resep encounter hanya sekali
+            \App\Models\Encounter::where('id', $resepDetail->resep->encounter_id)
+                ->update([
+                    'total_resep' => \App\Models\ResepDetail::where('resep_id', $resepDetail->resep_id)->sum('total_harga')
+                ]);
             return [
                 'success' => true,
                 'message' => 'Resep detail berhasil dihapus.'

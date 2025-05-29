@@ -49,6 +49,9 @@
                 <li>
                     <a class="{{ request()->is('masterdata/icd10*') ? 'active-sub' : '' }}" href="{{ route('icd10.index') }}">Data ICD10</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('masterdata/discounts*') ? 'active-sub' : '' }}" href="{{ route('discounts.index') }}">Data Diskon</a>
+                </li>
 
             </ul>
         </li>

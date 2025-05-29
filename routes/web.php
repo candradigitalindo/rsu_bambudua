@@ -72,6 +72,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/tindakan/destroyBahan/{id}', [TindakanController::class, 'destroyBahan'])->name('tindakan.destroyBahan');
         Route::resource('icd10', \App\Http\Controllers\Icd10Controller::class);
         Route::post('icd10/import', [\App\Http\Controllers\Icd10Controller::class, 'import'])->name('icd10.import');
+        // route discount
+        Route::get('/discount', [\App\Http\Controllers\DiscountController::class, 'index'])->name('discounts.index');
+        Route::post('/discount', [\App\Http\Controllers\DiscountController::class, 'update'])->name('discounts.update');
     });
 
     Route::prefix('pendaftaran')->group(function () {

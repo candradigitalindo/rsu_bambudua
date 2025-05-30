@@ -267,4 +267,44 @@ class ObservasiController extends Controller
             'message' => $result['message']
         ]);
     }
+    // ambil data encounter
+    public function getEncounterById($id)
+    {
+        $encounter = $this->observasiRepository->getEncounterById($id);
+        if ($encounter) {
+            return response()->json($encounter);
+        } else {
+            return response()->json($encounter);
+        }
+    }
+    // Buat diskon tindakan
+    public function postDiskonTindakan(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'diskon_tindakan' => 'required|numeric|min:0',
+        ],[
+            'diskon_tindakan.required' => 'Diskon tindakan harus diisi.',
+            'diskon_tindakan.numeric' => 'Diskon tindakan harus berupa angka.',
+            'diskon_tindakan.min' => 'Diskon tindakan minimal 0.',
+            'diskon_tindakan.max' => 'Diskon tindakan maksimal 100.',
+        ]);
+        $result = $this->observasiRepository->postDiskonTindakan($request, $id);
+        return response()->json($result);
+    }
+    // Buat diskon resep
+    public function postDiskonResep(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'diskon_resep' => 'required|numeric|min:0',
+        ],[
+            'diskon_resep.required' => 'Diskon resep harus diisi.',
+            'diskon_resep.numeric' => 'Diskon resep harus berupa angka.',
+            'diskon_resep.min' => 'Diskon resep minimal 0.',
+            'diskon_resep.max' => 'Diskon resep maksimal 100.',
+        ]);
+        $result = $this->observasiRepository->postDiskonResep($request, $id);
+        return response()->json($result);
+    }
 }

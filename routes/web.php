@@ -139,6 +139,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postResepDetail', [ObservasiController::class, 'postResepDetail'])->name('observasi.postResepDetail');
         // delete resep detail
         Route::delete('/observasi/{id}/deleteResepDetail', [ObservasiController::class, 'deleteResepDetail'])->name('observasi.deleteResepDetail');
+        // get encounter
+        Route::get('/observasi/getEncounter/{id}', [ObservasiController::class, 'getEncounterById'])->name('observasi.getEncounter');
+        // diskon_tindakan
+        Route::post('/observasi/{id}/postDiskonTindakan', [ObservasiController::class, 'postDiskonTindakan'])->name('observasi.postDiskonTindakan');
+        // diskon_resep
+        Route::post('/observasi/{id}/postDiskonResep', [ObservasiController::class, 'postDiskonResep'])->name('observasi.postDiskonResep');
     });
 
     Route::prefix('apotek')->group(function () {

@@ -1,7 +1,3 @@
-var quill = new Quill("#fullEditor", {
-  theme: "snow",
-});
-
 var toolbarOptions = [
   ["bold", "italic", "underline", "strike"], // toggled buttons
   ["blockquote", "code-block"],
@@ -21,3 +17,30 @@ var toolbarOptions = [
 
   ["clean"], // remove formatting button
 ];
+
+// Inisialisasi untuk #fullEditor
+var quill = new Quill("#fullEditor", {
+  theme: "snow",
+  modules: {
+    toolbar: toolbarOptions,
+  },
+});
+
+// Inisialisasi untuk editor lain, misal #catatanEditor dan #diagnosisEditor
+if (document.querySelector("#catatanEditor")) {
+  var quillCatatan = new Quill("#catatanEditor", {
+    theme: "snow",
+    modules: {
+      toolbar: toolbarOptions,
+    },
+  });
+}
+
+if (document.querySelector("#diagnosisEditor")) {
+  var quillDiagnosis = new Quill("#diagnosisEditor", {
+    theme: "snow",
+    modules: {
+      toolbar: toolbarOptions,
+    },
+  });
+}

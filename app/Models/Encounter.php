@@ -55,4 +55,8 @@ class Encounter extends Model
     {
         return $this->hasMany(Diagnosis::class);
     }
+    public function resep()
+    {
+        return $this->hasOne(Resep::class);
+    }
 }

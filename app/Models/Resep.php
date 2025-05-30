@@ -16,6 +16,11 @@ class Resep extends Model
         'dokter',
         'catatan',
     ];
+    // encounter
+    public function encounter()
+    {
+        return $this->belongsTo(Encounter::class);
+    }
     public function details()
     {
         return $this->hasMany(ResepDetail::class);

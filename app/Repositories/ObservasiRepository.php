@@ -224,6 +224,7 @@ class ObservasiRepository
 
         // Update total_tindakan encounter (langsung sum di DB)
         $encounter->total_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
+        $encounter->total_bayar_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
         $encounter->save();
 
         // Proses bahan (jika ada)
@@ -288,6 +289,7 @@ class ObservasiRepository
         $encounter = \App\Models\Encounter::find($tindakan->encounter_id);
         if ($encounter) {
             $encounter->total_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $tindakan->encounter_id)->sum('total_harga');
+            $encounter->total_bayar_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $tindakan->encounter_id)->sum('total_harga');
             $encounter->save();
         }
 
@@ -448,7 +450,8 @@ class ObservasiRepository
         // Update total_resep encounter hanya sekali
         \App\Models\Encounter::where('id', $id)
             ->update([
-                'total_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga')
+                'total_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga'),
+                'total_bayar_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga')
             ]);
 
         return $resepDetail;
@@ -462,7 +465,8 @@ class ObservasiRepository
             // Update total_resep encounter hanya sekali
             \App\Models\Encounter::where('id', $resepDetail->resep->encounter_id)
                 ->update([
-                    'total_resep' => \App\Models\ResepDetail::where('resep_id', $resepDetail->resep_id)->sum('total_harga')
+                    'total_resep' => \App\Models\ResepDetail::where('resep_id', $resepDetail->resep_id)->sum('total_harga'),
+                    'total_bayar_resep' => \App\Models\ResepDetail::where('resep_id', $resepDetail->resep_id)->sum('total_harga')
                 ]);
             return [
                 'success' => true,
@@ -472,6 +476,101 @@ class ObservasiRepository
         return [
             'success' => false,
             'message' => 'Resep detail tidak ditemukan.'
+        ];
+    }
+    // ambbil data encounter bedasarkan id beserta tindakan dan resep
+    public function getEncounterById($id)
+    {
+        $encounter = \App\Models\Encounter::with(['tindakan', 'resep.details'])
+            ->where('id', $id)
+            ->first();
+        if (!$encounter) {
+            return null; // Jika tidak ada data encounter
+        }
+        return $encounter;
+    }
+    // Buat diskon tindakan
+    public function postDiskonTindakan($request, $id)
+    {
+        $encounter = \App\Models\Encounter::find($id);
+        if (!$encounter) {
+            return [
+                'success' => false,
+                'message' => 'Encounter tidak ditemukan.'
+            ];
+        }
+
+        $diskon = \App\Models\Discount::first();
+        if (!$diskon) {
+            return [
+                'success' => false,
+                'message' => 'Diskon tidak ditemukan.'
+            ];
+        }
+
+        if ($request->diskon_tindakan > $diskon->diskon_tindakan) {
+            return [
+                'success' => false,
+                'message' => 'Diskon tindakan tidak boleh melebihi ' . $diskon->diskon_tindakan . '%'
+            ];
+        }
+
+        // nominal diskon dari request
+        $diskonTindakan = $request->diskon_tindakan;
+        $encounter->diskon_tindakan = $encounter->total_tindakan * ($diskonTindakan / 100);
+        $encounter->diskon_persen_tindakan = $diskonTindakan;
+
+        // Jika ingin return total setelah diskon:
+        $totalSetelahDiskon = $encounter->total_tindakan - ($encounter->total_tindakan * ($encounter->diskon_persen_tindakan / 100));
+        $encounter->total_bayar_tindakan = $totalSetelahDiskon;
+        $encounter->save();
+
+        return [
+            'success' => true,
+            'message' => 'Diskon tindakan berhasil diterapkan.',
+            'total_bayar_tindakan' => $encounter->total_bayar_tindakan
+        ];
+    }
+    // Buat diskon resep
+    public function postDiskonResep($request, $id)
+    {
+        $encounter = \App\Models\Encounter::find($id);
+        if (!$encounter) {
+            return [
+                'success' => false,
+                'message' => 'Encounter tidak ditemukan.'
+            ];
+        }
+
+        $diskon = \App\Models\Discount::first();
+        if (!$diskon) {
+            return [
+                'success' => false,
+                'message' => 'Diskon tidak ditemukan.'
+            ];
+        }
+
+        if ($request->diskon_resep > $diskon->diskon_resep) {
+            return [
+                'success' => false,
+                'message' => 'Diskon resep tidak boleh melebihi ' . $diskon->diskon_resep . '%'
+            ];
+        }
+
+        // nominal diskon dari request
+        $diskonResep = $request->diskon_resep;
+        $encounter->diskon_resep = $encounter->total_resep * ($diskonResep / 100);
+        $encounter->diskon_persen_resep = $diskonResep;
+
+        // Jika ingin return total setelah diskon:
+        $totalSetelahDiskon = $encounter->total_resep - ($encounter->total_resep * ($encounter->diskon_persen_resep / 100));
+        $encounter->total_bayar_resep = $totalSetelahDiskon;
+        $encounter->save();
+
+        return [
+            'success' => true,
+            'message' => 'Diskon resep berhasil diterapkan.',
+            'total_bayar_resep' => $encounter->total_bayar_resep
         ];
     }
 }

@@ -145,6 +145,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postDiskonTindakan', [ObservasiController::class, 'postDiskonTindakan'])->name('observasi.postDiskonTindakan');
         // diskon_resep
         Route::post('/observasi/{id}/postDiskonResep', [ObservasiController::class, 'postDiskonResep'])->name('observasi.postDiskonResep');
+        // post catatan encounter
+        Route::post('/observasi/{id}/postCatatanEncounter', [ObservasiController::class, 'postCatatanEncounter'])->name('observasi.postCatatanEncounter');
+         // Cetak Encounter
+        Route::get('/observasi/{id}/cetak', [EncounterController::class, 'cetakEncounter'])->name('observasi.cetakEncounter');
     });
 
     Route::prefix('apotek')->group(function () {
@@ -153,6 +157,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'addStock'])->name('product.addStock');
         Route::post('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'storeStock'])->name('product.storeStock');
         Route::get('/products/getAllHistori', [\App\Http\Controllers\ProductController::class, 'getHistori'])->name('product.getAllHistori');
-
+        // ambil encounter
+        Route::get('/encounter', [\App\Http\Controllers\ApotekController::class, 'getEncounter'])->name('apotek.getEncounter');
+        Route::get('resep-detail/{id}', [\App\Http\Controllers\ApotekController::class, 'resepDetailAjax']);
+        Route::post('/encounter/{id}/bayar', [\App\Http\Controllers\ApotekController::class, 'bayarResep'])->name('apotek.bayarResep');
+        Route::get('/encounter/{id}/cetak', [\App\Http\Controllers\ApotekController::class, 'cetakResep'])->name('apotek.cetakResep');
     });
 });

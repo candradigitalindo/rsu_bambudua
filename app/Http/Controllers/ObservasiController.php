@@ -307,4 +307,15 @@ class ObservasiController extends Controller
         $result = $this->observasiRepository->postDiskonResep($request, $id);
         return response()->json($result);
     }
+    // post catatan encounter
+    public function postCatatanEncounter(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'catatan' => 'nullable|string|max:255',
+            'status_pulang' => 'required|numeric',
+        ]);
+        $result = $this->observasiRepository->postCatatanEncounter($request, $id);
+        return response()->json($result);
+    }
 }

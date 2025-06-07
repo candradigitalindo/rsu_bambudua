@@ -799,13 +799,13 @@
                                                         <select name="status_pulang" id="status_pulang"
                                                             class="form-control">
                                                             <option value="">Pilih Status Pulang</option>
-                                                            <option value="1" {{ old('condition') == 1 ?: '' }}>
+                                                            <option value="1" {{ old('status_pulang') == 1 ?: '' }}>
                                                                 Kondisi Stabil</option>
-                                                            <option value="2" {{ old('condition') == 2 ?: '' }}>
+                                                            <option value="2" {{ old('status_pulang') == 2 ?: '' }}>
                                                                 Pulang Kontrol Kembali</option>
-                                                            <option value="3" {{ old('condition') == 3 ?: '' }}>
+                                                            <option value="3" {{ old('status_pulang') == 3 ?: '' }}>
                                                                 Rujukan</option>
-                                                            <option value="4" {{ old('condition') == 4 ?: '' }}>
+                                                            <option value="4" {{ old('status_pulang') == 4 ?: '' }}>
                                                                 Meninggal</option>
                                                         </select>
                                                     </div>
@@ -1930,6 +1930,75 @@
                         $("#spinner-buat-diskon-resep").addClass("d-none");
                         $("#text-buat-diskon-resep").removeClass("d-none");
                         $("#btn-buat-diskon-resep").prop("disabled", false);
+
+                        // Tampilkan error validasi dari server jika ada
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                            let errors = xhr.responseJSON.errors;
+                            let errorMsg = Object.values(errors).map(function(msgArr) {
+                                return msgArr.join('<br>');
+                            }).join('<br>');
+                            swal({
+                                title: "Validasi Gagal",
+                                html: true,
+                                text: errorMsg,
+                                icon: "error"
+                            });
+                        } else {
+                            swal('Terjadi kesalahan saat menyimpan data.', {
+                                icon: "error"
+                            });
+                        }
+                    }
+                });
+            });
+            // btn-simpan-catatan
+            $("#btn-simpan-catatan").click(function(e) {
+                e.preventDefault();
+                // validasi input
+                let status_pulang = $("#status_pulang").val();
+                let catatan = quillCatatan.root.innerHTML;
+                if (status_pulang == '') {
+                    alert("Status Pulang tidak boleh kosong");
+                    return;
+                }
+                // Tampilkan spinner dan disable tombol
+                $("#spinner-simpan-catatan").removeClass("d-none");
+                $("#text-simpan-catatan").addClass("d-none");
+                $("#btn-simpan-catatan").prop("disabled", true);
+                // ajax post catatan
+                let url = "{{ route('observasi.postCatatanEncounter', ':id') }}";
+                url = url.replace(':id', "{{ $observasi }}");
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        // ambil isi catatanEditor
+                        catatan: catatan,
+                        status_pulang: status_pulang
+                    },
+                    success: function(data) {
+                        $("#spinner-simpan-catatan").addClass("d-none");
+                        $("#text-simpan-catatan").removeClass("d-none");
+                        $("#btn-simpan-catatan").prop("disabled", false);
+
+                        if (data.success == true) {
+                            swal(data.message, {
+                                icon: "success"
+                            });
+                            // redirect ke halaman observasi
+                            window.location.href = "{{ route('kunjungan.rawatJalan') }}";
+
+                        } else {
+                            swal(data.message, {
+                                icon: "error"
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        $("#spinner-simpan-catatan").addClass("d-none");
+                        $("#text-simpan-catatan").removeClass("d-none");
+                        $("#btn-simpan-catatan").prop("disabled", false);
 
                         // Tampilkan error validasi dari server jika ada
                         if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {

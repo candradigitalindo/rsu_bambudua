@@ -16,4 +16,10 @@ class EncounterController extends Controller
         $encounters = $this->encounterRepository->getAllRawatJalan();
         return view('pages.encounter.rawat-jalan', compact('encounters'));
     }
+    // Cetak Encounter
+    public function cetakEncounter($id)
+    {
+        $encounter = $this->encounterRepository->getEncounterById($id);
+        return view('pages.encounter.cetak-rawat-jalan', compact('encounter'));
+    }
 }

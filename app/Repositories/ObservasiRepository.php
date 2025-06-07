@@ -573,4 +573,26 @@ class ObservasiRepository
             'total_bayar_resep' => $encounter->total_bayar_resep
         ];
     }
+    // Post catatan encounter
+    public function postCatatanEncounter($request, $id)
+    {
+        $encounter = \App\Models\Encounter::find($id);
+        if (!$encounter) {
+            return [
+                'success' => false,
+                'message' => 'Encounter tidak ditemukan.'
+            ];
+        }
+
+        // Update catatan
+        $encounter->catatan = $request->catatan;
+        $encounter->condition = $request->status_pulang; // Update kondisi jika ada
+        $encounter->status = 2; // Set status ke Finish
+        $encounter->save();
+
+        return [
+            'success' => true,
+            'message' => 'Catatan encounter berhasil diperbarui.'
+        ];
+    }
 }

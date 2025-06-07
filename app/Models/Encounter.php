@@ -25,6 +25,12 @@ class Encounter extends Model
         'diskon_persen_resep',
         'total_resep',
         'total_bayar_resep',
+        'condition',
+        'catatan',
+        'status_bayar_resep',
+        'metode_pembayaran_resep',
+        'status_bayar_tindakan',
+        'metode_pembayaran_tindakan',
     ];
 
     public function practitioner()

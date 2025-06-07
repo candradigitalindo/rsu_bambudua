@@ -88,6 +88,9 @@
                 <li>
                     <a class="{{ request()->is('apotek/products*') ? 'active-sub' : '' }}" href="{{ route('products.index') }}">Produk</a>
                 </li>
+                <li>
+                    <a class="{{ request()->is('apotek/encounter*') ? 'active-sub' : '' }}" href="{{ route('apotek.getEncounter') }}">Resep Dokter</a>
+                </li>
             </ul>
         </li>
         <li class="{{ request()->is('bahans*') ? 'active current-page' : '' }}">

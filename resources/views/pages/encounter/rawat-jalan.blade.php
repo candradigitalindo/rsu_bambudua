@@ -31,7 +31,8 @@
                                 <!-- Search Patient Starts -->
                                 <div class="search-container d-xl-block d-none">
                                     <form method="GET" action="{{ route('kunjungan.rawatJalan') }}">
-                                        <input type="text" class="form-control" name="name" id="searchPatient" placeholder="Search">
+                                        <input type="text" class="form-control" name="name" id="searchPatient"
+                                            placeholder="Search">
                                         <i class="ri-search-line"></i>
                                     </form>
                                 </div>
@@ -63,24 +64,37 @@
                                             <td>{{ $encounter->jenis_jaminan }}</td>
                                             <td>{{ $encounter->tujuan_kunjungan }}</td>
                                             <td class="text-center">
-                                                @if ($encounter->status == "Progress")
-                                                    <span class="badge bg-success">Progress</span>
+                                                @if ($encounter->status == 'Progress')
+                                                    <span class="badge bg-warning">Progress</span>
                                                 @else
-                                                    <span class="badge bg-danger">Finish</span>
+                                                    <span class="badge bg-success">Finish</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('observasi.index', $encounter->id) }}"
-                                                    class="btn btn-outline-primary btn-sm" id="periksa-{{ $encounter->id }}">
-                                                    <i class="ri-stethoscope-line"></i>
-                                                    <span class="btn-text" id="textPeriksa-{{ $encounter->id }}">Pemeriksaan</span>
-                                                    <span class="spinner-border spinner-border-sm d-none"
-                                                        id="spinerPeriksa-{{ $encounter->id }}"></span>
-                                                </a>
+                                                @if ($encounter->status == 'Progress')
+                                                    <a href="{{ route('observasi.index', $encounter->id) }}"
+                                                        class="btn btn-outline-primary btn-sm"
+                                                        id="periksa-{{ $encounter->id }}">
+                                                        <i class="ri-stethoscope-line"></i>
+                                                        <span class="btn-text"
+                                                            id="textPeriksa-{{ $encounter->id }}">Pemeriksaan</span>
+                                                        <span class="spinner-border spinner-border-sm d-none"
+                                                            id="spinerPeriksa-{{ $encounter->id }}"></span>
+                                                    </a>
+                                                @else
+                                                    <a href="{{ route('observasi.cetakEncounter', $encounter->id) }}"
+                                                        target="_blank"
+                                                        class="btn btn-outline-info btn-sm"
+                                                        id="cetak-{{ $encounter->id }}">
+                                                        <i class="ri-profile-line"></i>
+                                                        <span class="btn-text"
+                                                            id="textCetak-{{ $encounter->id }}"> Cetak Hasil </span>
+                                                        <span class="spinner-border spinner-border-sm d-none"
+                                                            id="spinerCetak-{{ $encounter->id }}"></span>
+                                                    </a>
+                                                @endif
                                                 <script src="{{ asset('js/jquery.min.js') }}"></script>
                                                 <script>
-
-
                                                     $(document).ready(function() {
                                                         $("#periksa-{{ $encounter->id }}").click(function() {
                                                             $("#spinerPeriksa-{{ $encounter->id }}").removeClass("d-none");

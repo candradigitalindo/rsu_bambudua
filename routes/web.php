@@ -28,6 +28,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('login');
 });
+Route::get('/tes', function () {
+    $apotekStok = \App\Models\ApotekStok::where('status', 1)->delete();
+});
 
 Route::get('/antrian', [AntrianController::class, 'index'])->name('antrian.index');
 Route::get('/antrian/{id}', [AntrianController::class, 'show'])->name('antrian.show');

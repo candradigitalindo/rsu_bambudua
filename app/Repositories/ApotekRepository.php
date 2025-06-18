@@ -2,6 +2,8 @@
 
 namespace App\Repositories;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class ApotekRepository
 {
     /**
@@ -11,6 +13,86 @@ class ApotekRepository
     {
         //
     }
+    public function dashboard()
+    {
+        // Total Obat
+        $totalObat = \App\Models\ProductApotek::count();
+
+        // Obat Tersedia & Habis (gunakan select count dengan case untuk 1x query)
+        $stokSummary = \App\Models\ProductApotek::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN stok > 0 THEN 1 ELSE 0 END) as tersedia,
+            SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END) as habis
+        ")->first();
+
+        // Obat Kadaluarsa (langsung count di ApotekStok)
+        $obatKadaluarsa = \App\Models\ApotekStok::where('expired_at', '<=', now())
+            ->where('status', 0)
+            ->count();
+
+        // Statistik transaksi encounter per bulan (resep sudah terbayar) dalam 1 tahun
+        $year = date('Y');
+        $transaksiPerBulan = \App\Models\Encounter::selectRaw('MONTH(updated_at) as bulan, COUNT(*) as total')
+            ->whereYear('updated_at', $year)
+            ->where('status_bayar_resep', 1)
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->pluck('total', 'bulan')
+            ->toArray();
+
+        $dataBulan = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $dataBulan[$i] = $transaksiPerBulan[$i] ?? 0;
+        }
+
+        // Statistik nominal encounter per bulan (resep sudah terbayar) dalam 1 tahun
+        $nominalPerBulan = \App\Models\Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
+            ->whereYear('updated_at', $year)
+            ->where('status_bayar_resep', 1)
+            ->groupBy('bulan')
+            ->orderBy('bulan')
+            ->pluck('total', 'bulan')
+            ->toArray();
+
+        $dataNominalBulan = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $dataNominalBulan[$i] = $nominalPerBulan[$i] ?? 0;
+        }
+
+        // Encounter resep terbayar (paginate 50, filter tanggal, warning jika > 1 tahun)
+        $query = \App\Models\Encounter::where('status_bayar_resep', 1);
+        $start = request('start_date');
+        $end = request('end_date');
+        $warning = null;
+
+        if ($start && $end) {
+            $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+
+            if ($startDate->diffInDays($endDate) > 366) {
+                $warning = 'Rentang tanggal maksimal 1 tahun!';
+                $endDate = $startDate->copy()->addYear();
+            }
+
+            $query->whereBetween('updated_at', [$startDate, $endDate]);
+        } else {
+            $query->where('updated_at', '>=', now()->subYear());
+        }
+
+        $encounterTerbayar = $query->orderByDesc('updated_at')->paginate(50);
+
+        return [
+            'total_obat' => $stokSummary->total ?? 0,
+            'obat_tersedia' => $stokSummary->tersedia ?? 0,
+            'obat_habis' => $stokSummary->habis ?? 0,
+            'obat_kadaluarsa' => $obatKadaluarsa,
+            'transaksi_per_bulan' => $dataBulan,
+            'nominal_transaksi_per_bulan' => $dataNominalBulan,
+            'encounter_terbayar' => $encounterTerbayar,
+            'warning' => $warning,
+        ];
+    }
+
     // ambil encounter yang status 2 beserta resep dan resep detailnya
     public function getEncounter($status = 2)
     {
@@ -81,5 +163,23 @@ class ApotekRepository
         $encounter = \App\Models\Encounter::with(['resep.details', 'practitioner.user'])
             ->findOrFail($id);
         return $encounter;
+    }
+    // export transaksi resep pdf
+    public function exportPdf($start = null, $end = null)
+    {
+        $query = \App\Models\Encounter::where('status_bayar_resep', 1);
+
+        if ($start && $end) {
+            $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+            $query->whereBetween('updated_at', [$startDate, $endDate]);
+        } else {
+            $query->where('updated_at', '>=', now()->subYear());
+        }
+
+        $data = $query->orderByDesc('updated_at')->get();
+
+        $pdf = Pdf::loadView('pages.apotek.transaksi_resep_pdf', ['data' => $data]);
+        return $pdf->download('transaksi_resep.pdf');
     }
 }

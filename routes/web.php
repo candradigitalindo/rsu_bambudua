@@ -150,11 +150,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postDiskonResep', [ObservasiController::class, 'postDiskonResep'])->name('observasi.postDiskonResep');
         // post catatan encounter
         Route::post('/observasi/{id}/postCatatanEncounter', [ObservasiController::class, 'postCatatanEncounter'])->name('observasi.postCatatanEncounter');
-         // Cetak Encounter
+        // Cetak Encounter
         Route::get('/observasi/{id}/cetak', [EncounterController::class, 'cetakEncounter'])->name('observasi.cetakEncounter');
     });
 
     Route::prefix('apotek')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\ApotekController::class, 'dashboard'])->name('apotek.dashboard');
         Route::resource('categories', \App\Http\Controllers\CategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::resource('products', \App\Http\Controllers\ProductController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::get('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'addStock'])->name('product.addStock');
@@ -165,5 +166,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('resep-detail/{id}', [\App\Http\Controllers\ApotekController::class, 'resepDetailAjax']);
         Route::post('/encounter/{id}/bayar', [\App\Http\Controllers\ApotekController::class, 'bayarResep'])->name('apotek.bayarResep');
         Route::get('/encounter/{id}/cetak', [\App\Http\Controllers\ApotekController::class, 'cetakResep'])->name('apotek.cetakResep');
+
+        Route::get('transaksi-resep/pdf', [\App\Http\Controllers\ApotekController::class, 'exportPdf'])->name('apotek.transaksi-resep.pdf');
+        Route::get('transaksi-resep/excel', [\App\Http\Controllers\ApotekController::class, 'exportExcel'])->name('apotek.transaksi-resep.excel');
     });
 });

@@ -80,7 +80,7 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('apotek/dashboard*') ? 'active-sub' : '' }}" href="{{ route('categories.index') }}">Dashboard</a>
+                    <a class="{{ request()->is('apotek/dashboard*') ? 'active-sub' : '' }}" href="{{ route('apotek.dashboard') }}">Dashboard</a>
                 </li>
                 <li>
                     <a class="{{ request()->is('apotek/categories*') ? 'active-sub' : '' }}" href="{{ route('categories.index') }}">Kategori</a>

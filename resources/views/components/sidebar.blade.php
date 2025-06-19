@@ -6,11 +6,22 @@
                 <span class="menu-text">Hospital Admin</span>
             </a>
         </li>
-        <li class="{{ request()->is('pendaftaran*') ? 'active current-page' : '' }}">
-            <a href="{{ route('pendaftaran.index') }}">
+        <li class="treeview {{ request()->is('pendaftaran*') || request()->is('loket*') ? 'active current-page' : '' }}">
+            <a href="#">
                 <i class="ri-draft-line"></i>
-                <span class="menu-text">Pendaftaran</span>
+                <span class="menu-text">Loket</span>
             </a>
+             <ul class="treeview-menu">
+                 <li>
+                    <a class="{{ request()->is('loket/dashboard*') ? 'active-sub' : '' }}" href="{{ route('loket.dashboard') }}">Dashboard</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('pendaftaran*') ? 'active-sub' : '' }}" href="{{ route('pendaftaran.index') }}">Pendaftaran</a>
+                </li>
+                <li>
+                    <a class="{{ request()->is('loket/encounter*') ? 'active-sub' : '' }}" href="{{ route('loket.getEncounter') }}">Tindakan Dokter</a>
+                </li>
+             </ul>
         </li>
 
         <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">

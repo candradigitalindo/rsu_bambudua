@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Encounter;
 use App\Repositories\LoketRepository;
 use Illuminate\Http\Request;
 use RealRashid\SweetAlert\Facades\Alert;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TransaksiTindakanExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LoketController extends Controller
 {
@@ -89,5 +93,77 @@ class LoketController extends Controller
         $this->loketRepository->destroy($id);
         Alert::info('Berhasil', 'Data Loket dihapus!');
         return back();
+    }
+    public function dashboard()
+    {
+        $data = $this->loketRepository->dashboard();
+        return view('pages.loket.dashboard', compact('data'));
+    }
+    public function getEncounter()
+    {
+        $encounters = $this->loketRepository->getEncounter();
+        return view('pages.loket.encounter', compact('encounters'));
+    }
+    public function tindakanAjax($id)
+    {
+        $encounter = Encounter::with('tindakan')->findOrFail($id);
+        return view('pages.loket._tindakan_detail_table', compact('encounter'))->render();
+    }
+    // Bayar Tindakan
+    public function bayarTindakan(Request $request, $id)
+    {
+        $request->validate([
+            'metode_pembayaran' => 'required|string',
+        ]);
+        $encounter = $this->loketRepository->bayarTindakan($request, $id);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Tindakan berhasil dibayar.',
+            'encounter' => $encounter
+        ]);
+    }
+    // Cetak struk tindakan
+    public function cetakEncounter($id)
+    {
+        $encounter = $this->loketRepository->cetakEncounter($id);
+        return view('pages.loket.cetak_struk_tindakan', compact('encounter'));
+    }
+    public function exportPdf($start = null, $end = null)
+    {
+        $start = request('start_date');
+        $end = request('end_date');
+        $query = \App\Models\Encounter::where('status_bayar_tindakan', 1);
+
+        if ($start && $end) {
+            $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+            $query->whereBetween('updated_at', [$startDate, $endDate]);
+        } else {
+            $query->where('updated_at', '>=', now()->subYear());
+        }
+
+        $data = $query->orderByDesc('updated_at')->get();
+
+        $pdf = Pdf::loadView('pages.loket.transaksi_tindakan_pdf', ['data' => $data]);
+        return $pdf->download('transaksi_tindakan.pdf');
+    }
+    // Excel
+    public function exportExcel($start = null, $end = null)
+    {
+        $start = request('start_date');
+        $end = request('end_date');
+        $query = \App\Models\Encounter::where('status_bayar_tindakan', 1);
+
+        if ($start && $end) {
+            $startDate = \Carbon\Carbon::parse($start)->startOfDay();
+            $endDate = \Carbon\Carbon::parse($end)->endOfDay();
+            $query->whereBetween('updated_at', [$startDate, $endDate]);
+        } else {
+            $query->where('updated_at', '>=', now()->subYear());
+        }
+
+        $data = $query->orderByDesc('updated_at')->get();
+
+        return Excel::download(new TransaksiTindakanExport($data), 'transaksi_tindakan.xlsx');
     }
 }

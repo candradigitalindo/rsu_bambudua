@@ -47,6 +47,8 @@ class ApotekController extends Controller
     // Excel
     public function exportExcel($start = null, $end = null)
     {
+        $start = request('start_date');
+        $end = request('end_date');
         $query = \App\Models\Encounter::where('status_bayar_resep', 1);
 
         if ($start && $end) {

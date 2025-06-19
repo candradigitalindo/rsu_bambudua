@@ -86,7 +86,7 @@
                 <td>{{ $i+1 }}</td>
                 <td>{{ $encounter->resep->kode_resep ?? '-' }}</td>
                 <td>{{ $encounter->name_pasien }}</td>
-                <td>{{ \Carbon\Carbon::parse($encounter->created_at)->format('d-m-Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}</td>
                 <td>{{ $encounter->total_resep ?? 0 }}</td>
                 <td>{{ $encounter->diskon_resep ?? 0 }}</td>
                 <td>{{ $encounter->diskon_persen_resep ?? 0 }}%</td>

@@ -584,11 +584,16 @@ class ObservasiRepository
             ];
         }
 
-        // Update catatan
-        $encounter->catatan = $request->catatan;
-        $encounter->condition = $request->status_pulang; // Update kondisi jika ada
-        $encounter->status = 2; // Set status ke Finish
-        $encounter->save();
+        // Update catatan dan status encounter sekaligus
+        $encounter->update([
+            'catatan'   => $request->catatan,
+            'condition' => $request->status_pulang,
+            'status'    => 2 // Selesai
+        ]);
+
+        // Update status pasien menjadi 0 tanpa relasi langsung
+        \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)
+            ->update(['status' => 0]);
 
         return [
             'success' => true,

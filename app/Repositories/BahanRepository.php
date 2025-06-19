@@ -16,13 +16,22 @@ class BahanRepository
     }
     public function index()
     {
-        $bahan = Bahan::where('name', 'like', '%' . request('name') . '%')->orderBy('updated_at', 'DESC')->paginate(50);
-        // Cek bahan dipakai tindakan apa saja
-        $bahan->map(function ($item) {
-            $item->tindakan = $item->tindakan()->get();
-            return $item;
-        });
-        return $bahan;
+        // Ambil parameter pencarian jika ada
+        $name = request('name');
+
+        // Query dasar
+        $query = Bahan::query();
+
+        // Filter pencarian jika ada
+        if ($name) {
+            $query->where('name', 'like', '%' . $name . '%');
+        }
+
+        // Eager load relasi tindakan (sekali query, hindari N+1)
+        $query->with('tindakan');
+
+        // Urutkan dan paginate
+        return $query->orderBy('updated_at', 'DESC')->paginate(50);
     }
     public function show($id)
     {

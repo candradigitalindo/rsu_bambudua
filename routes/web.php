@@ -170,4 +170,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('transaksi-resep/pdf', [\App\Http\Controllers\ApotekController::class, 'exportPdf'])->name('apotek.transaksi-resep.pdf');
         Route::get('transaksi-resep/excel', [\App\Http\Controllers\ApotekController::class, 'exportExcel'])->name('apotek.transaksi-resep.excel');
     });
+    Route::prefix('loket')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\LoketController::class, 'dashboard'])->name('loket.dashboard');
+        Route::get('/encounter', [\App\Http\Controllers\LoketController::class, 'getEncounter'])->name('loket.getEncounter');
+        Route::get('tindakan-detail/{id}', [\App\Http\Controllers\LoketController::class, 'tindakanAjax']);
+        // bayar tindakan
+        Route::post('/encounter/{id}/bayar', [\App\Http\Controllers\LoketController::class, 'bayarTindakan'])->name('loket.bayarTindakan');
+        Route::get('/encounter/{id}/cetak', [\App\Http\Controllers\LoketController::class, 'cetakEncounter'])->name('loket.cetakEncounter');
+        // PDF
+        Route::get('transaksi-tindakan/pdf', [\App\Http\Controllers\LoketController::class, 'exportPdf'])->name('loket.transaksi-tindakan.pdf');
+        Route::get('transaksi-tindakan/excel', [\App\Http\Controllers\LoketController::class, 'exportExcel'])->name('loket.transaksi-tindakan.excel');
+
+    });
 });

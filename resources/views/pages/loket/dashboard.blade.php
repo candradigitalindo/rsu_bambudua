@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Dashboard Apotek')
+@section('title', 'Dashboard Loket')
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
@@ -18,47 +18,13 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">Dashboard Apotek</h3>
+                        <h3 class="card-title">Dashboard Loket</h3>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Total Obat</h5>
-                                        <p class="card-text">{{ $data['total_obat'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Obat Tersedia</h5>
-                                        <p class="card-text">{{ $data['obat_tersedia'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Obat Habis</h5>
-                                        <p class="card-text">{{ $data['obat_habis'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="card bg-danger text-white">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Obat Kadaluarsa</h5>
-                                        <p class="card-text">{{ $data['obat_kadaluarsa'] }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <hr>
+
                         <div class="row mt-4">
                             <div class="col-12">
-                                <h5 class="card-title">Grafik Transaksi Resep Tahun {{ date('Y') }}</h5>
+                                <h5 class="card-title">Grafik Transaksi Tindakan Tahun {{ date('Y') }}</h5>
                                 <div style="width: 100%; min-width: 300px;">
                                     <canvas id="grafikNominalTransaksi" height="350"></canvas>
                                 </div>
@@ -68,7 +34,7 @@
                         {{-- Filter dan tombol download --}}
                         <div class="row mt-4">
                             <div class="col-12">
-                                <h5 class="card-title">Data Transaksi Resep</h5>
+                                <h5 class="card-title">Data Transaksi Tindakan</h5>
                                 <form method="GET" class="mb-3" id="filterForm">
                                     <div class="d-flex flex-wrap gap-2">
                                         <div>
@@ -89,11 +55,11 @@
                                             </button>
                                         </div>
                                         <div class="align-self-end">
-                                            <a href="{{ route('apotek.transaksi-resep.pdf', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                                            <a href="{{ route('loket.transaksi-tindakan.pdf', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
                                                 class="btn btn-sm btn-danger">
                                                 <i class="ri-file-pdf-line"></i> Download PDF
                                             </a>
-                                            <a href="{{ route('apotek.transaksi-resep.excel', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                                            <a href="{{ route('loket.transaksi-tindakan.excel', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
                                                 class="btn btn-sm btn-success">
                                                 <i class="ri-file-excel-2-line"></i> Download Excel
                                             </a>
@@ -108,7 +74,7 @@
                                             <thead>
                                                 <tr>
                                                     <th>No</th>
-                                                    <th>No. Resep</th>
+                                                    <th>No. Encounter</th>
                                                     <th>Pasien</th>
                                                     <th class="text-center">Tanggal</th>
                                                     <th class="text-end">Nominal</th>
@@ -122,27 +88,27 @@
                                                 @forelse ($data['encounter_terbayar'] as $i => $encounter)
                                                     <tr>
                                                         <td>{{ $i + 1 }}</td>
-                                                        <td>{{ $encounter->resep->kode_resep ?? '-' }}</td>
+                                                        <td>{{ $encounter->no_encounter ?? '-' }}</td>
                                                         <td>{{ $encounter->name_pasien }}</td>
                                                         <td class="text-center">
                                                             {{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}
                                                         </td>
                                                         <td class="text-end">
-                                                            {{ number_format($encounter->total_resep, 0, ',', '.') }}</td>
+                                                            {{ number_format($encounter->total_tindakan, 0, ',', '.') }}</td>
                                                         <td class="text-end">
-                                                            {{ number_format($encounter->diskon_resep ?? 0, 0, ',', '.') }}
+                                                            {{ number_format($encounter->diskon_tindakan ?? 0, 0, ',', '.') }}
                                                         </td>
-                                                        <td class="text-end">{{ $encounter->diskon_persen_resep ?? 0 }}%
+                                                        <td class="text-end">{{ $encounter->diskon_persen_tindakan ?? 0 }}%
                                                         </td>
                                                         <td class="text-end">
-                                                            {{ number_format($encounter->total_bayar_resep, 0, ',', '.') }}
+                                                            {{ number_format($encounter->total_bayar_tindakan, 0, ',', '.') }}
                                                         </td>
                                                         <td class="text-center">
-                                                            {{ $encounter->metode_pembayaran_resep ?? '-' }}</td>
+                                                            {{ $encounter->metode_pembayaran_tindakan ?? '-' }}</td>
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="8" class="text-center">Data tidak ada</td>
+                                                        <td colspan="9" class="text-center">Data tidak ada</td>
                                                     </tr>
                                                 @endforelse
                                             </tbody>

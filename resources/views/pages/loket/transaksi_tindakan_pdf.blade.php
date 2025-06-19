@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Data Transaksi Resep</title>
+    <title>Data Transaksi Tindakan</title>
     <style>
         body {
             font-family: sans-serif;
@@ -57,12 +57,12 @@
         </div>
     </div>
     <hr>
-    <h3 style="text-align:center; margin-bottom:0;">Data Transaksi Resep</h3>
+    <h3 style="text-align:center; margin-bottom:0;">Data Transaksi Tindakan</h3>
     <table>
         <thead>
             <tr>
                 <th>No</th>
-                <th>No. Resep</th>
+                <th>No. Encounter</th>
                 <th>Pasien</th>
                 <th>Tanggal</th>
                 <th>Nominal</th>
@@ -80,18 +80,18 @@
             @endphp
             @foreach($data as $i => $encounter)
             @php
-                $totalBayar += $encounter->total_bayar_resep ?? 0;
+                $totalBayar += $encounter->total_bayar_tindakan ?? 0;
             @endphp
             <tr>
                 <td>{{ $i+1 }}</td>
-                <td>{{ $encounter->resep->kode_resep ?? '-' }}</td>
+                <td>{{ $encounter->no_encounter ?? '-' }}</td>
                 <td>{{ $encounter->name_pasien }}</td>
                 <td>{{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}</td>
-                <td>{{ number_format($encounter->total_resep ?? 0,0,',','.') }}</td>
-                <td>{{ number_format($encounter->diskon_resep ?? 0,0,',','.') }}</td>
-                <td>{{ $encounter->diskon_persen_resep ?? 0 }}%</td>
-                <td>{{ $encounter->metode_pembayaran_resep ?? '-' }}</td>
-                <td>{{ number_format($encounter->total_bayar_resep,0,',','.') }}</td>
+                <td>{{ number_format($encounter->total_tindakan ?? 0,0,',','.') }}</td>
+                <td>{{ number_format($encounter->diskon_tindakan ?? 0,0,',','.') }}</td>
+                <td>{{ $encounter->diskon_persen_tindakan ?? 0 }}%</td>
+                <td>{{ $encounter->metode_pembayaran_tindakan ?? '-' }}</td>
+                <td>{{ number_format($encounter->total_bayar_tindakan,0,',','.') }}</td>
             </tr>
             @endforeach
             <tr>

@@ -6,6 +6,7 @@ use App\Repositories\HomeRepository;
 use App\Repositories\WilayahRepository;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +24,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        View::composer('components.sidebar', function ($view) {
+            $reminderCount = app(\App\Repositories\LoketRepository::class)->getReminderEncounter()->count();
+            $view->with('reminderCount', $reminderCount);
+        });
     }
 }

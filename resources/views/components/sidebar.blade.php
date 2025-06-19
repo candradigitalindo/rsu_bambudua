@@ -11,17 +11,27 @@
                 <i class="ri-draft-line"></i>
                 <span class="menu-text">Loket</span>
             </a>
-             <ul class="treeview-menu">
-                 <li>
-                    <a class="{{ request()->is('loket/dashboard*') ? 'active-sub' : '' }}" href="{{ route('loket.dashboard') }}">Dashboard</a>
+            <ul class="treeview-menu">
+                <li>
+                    <a class="{{ request()->is('loket/dashboard*') ? 'active-sub' : '' }}"
+                        href="{{ route('loket.dashboard') }}">Dashboard</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('pendaftaran*') ? 'active-sub' : '' }}" href="{{ route('pendaftaran.index') }}">Pendaftaran</a>
+                    <a class="{{ request()->is('pendaftaran*') ? 'active-sub' : '' }}"
+                        href="{{ route('pendaftaran.index') }}">Pendaftaran</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('loket/encounter*') ? 'active-sub' : '' }}" href="{{ route('loket.getEncounter') }}">Tindakan Dokter</a>
+                    <a class="{{ request()->is('loket/encounter*') ? 'active-sub' : '' }}"
+                        href="{{ route('loket.getEncounter') }}">Tindakan Dokter</a>
                 </li>
-             </ul>
+                <li>
+                    <a class="{{ request()->is('loket/reminder*') ? 'active-sub' : '' }}"
+                        href="{{ route('loket.getReminderEncounter') }}"><span class="menu-text">Reminder Pasien</span>@if (!empty($reminderCount) && $reminderCount > 0)
+                            <span class="badge bg-primary ms-auto">{{ $reminderCount }}</span>
+                        @endif
+                    </a>
+                </li>
+            </ul>
         </li>
 
         <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">
@@ -31,37 +41,48 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('masterdata/wilayah*') ? 'active-sub' : '' }}" href="{{ route('wilayah.index') }}">Data Wilayah</a>
+                    <a class="{{ request()->is('masterdata/wilayah*') ? 'active-sub' : '' }}"
+                        href="{{ route('wilayah.index') }}">Data Wilayah</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/jenisjaminan*') ? 'active-sub' : '' }}" href="{{ route('jenisjaminan.index') }}">Jenis Jaminan</a>
+                    <a class="{{ request()->is('masterdata/jenisjaminan*') ? 'active-sub' : '' }}"
+                        href="{{ route('jenisjaminan.index') }}">Jenis Jaminan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/etnis*') ? 'active-sub' : '' }}" href="{{ route('etnis.index') }}">Data Etnis</a>
+                    <a class="{{ request()->is('masterdata/etnis*') ? 'active-sub' : '' }}"
+                        href="{{ route('etnis.index') }}">Data Etnis</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/pendidikan*') ? 'active-sub' : '' }}" href="{{ route('pendidikan.index') }}">Data Pendidikan</a>
+                    <a class="{{ request()->is('masterdata/pendidikan*') ? 'active-sub' : '' }}"
+                        href="{{ route('pendidikan.index') }}">Data Pendidikan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/agama*') ? 'active-sub' : '' }}" href="{{ route('agama.index') }}">Data Agama</a>
+                    <a class="{{ request()->is('masterdata/agama*') ? 'active-sub' : '' }}"
+                        href="{{ route('agama.index') }}">Data Agama</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/pekerjaan*') ? 'active-sub' : '' }}" href="{{ route('pekerjaan.index') }}">Data Pekerjaan</a>
+                    <a class="{{ request()->is('masterdata/pekerjaan*') ? 'active-sub' : '' }}"
+                        href="{{ route('pekerjaan.index') }}">Data Pekerjaan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}" href="{{ route('spesialis.index') }}">Data Spesialis</a>
+                    <a class="{{ request()->is('masterdata/spesialis*') ? 'active-sub' : '' }}"
+                        href="{{ route('spesialis.index') }}">Data Spesialis</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/ruangan*') || request()->is('masterdata/category*') ? 'active-sub' : '' }}" href="{{ route('ruangan.index') }}">Data Ruangan</a>
+                    <a class="{{ request()->is('masterdata/ruangan*') || request()->is('masterdata/category*') ? 'active-sub' : '' }}"
+                        href="{{ route('ruangan.index') }}">Data Ruangan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/tindakan*') ? 'active-sub' : '' }}" href="{{ route('tindakan.index') }}">Data Tindakan</a>
+                    <a class="{{ request()->is('masterdata/tindakan*') ? 'active-sub' : '' }}"
+                        href="{{ route('tindakan.index') }}">Data Tindakan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/icd10*') ? 'active-sub' : '' }}" href="{{ route('icd10.index') }}">Data ICD10</a>
+                    <a class="{{ request()->is('masterdata/icd10*') ? 'active-sub' : '' }}"
+                        href="{{ route('icd10.index') }}">Data ICD10</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('masterdata/discounts*') ? 'active-sub' : '' }}" href="{{ route('discounts.index') }}">Data Diskon</a>
+                    <a class="{{ request()->is('masterdata/discounts*') ? 'active-sub' : '' }}"
+                        href="{{ route('discounts.index') }}">Data Diskon</a>
                 </li>
 
             </ul>
@@ -69,17 +90,20 @@
         <li class="treeview {{ request()->is('kunjungan*') ? 'active current-page' : '' }}">
             <a href="#">
                 <i class="ri-dossier-line"></i>
-                <span class="menu-text">Data Kunjungan</span>
+                <span class="menu-text">Dokter</span>
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('kunjungan/rawatJalan*') || request()->is('kunjungan/observasi*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
+                    <a class="{{ request()->is('kunjungan/rawatJalan*') || request()->is('kunjungan/observasi*') ? 'active-sub' : '' }}"
+                        href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('kunjungan/rawatInap*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatInap') }}">Rawat Inap</a>
+                    <a class="{{ request()->is('kunjungan/rawatInap*') ? 'active-sub' : '' }}"
+                        href="{{ route('kunjungan.rawatInap') }}">Rawat Inap</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('kunjungan/rawatDarurat*') ? 'active-sub' : '' }}" href="{{ route('kunjungan.rawatDarurat') }}">IGD</a>
+                    <a class="{{ request()->is('kunjungan/rawatDarurat*') ? 'active-sub' : '' }}"
+                        href="{{ route('kunjungan.rawatDarurat') }}">IGD</a>
                 </li>
 
             </ul>
@@ -91,16 +115,20 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('apotek/dashboard*') ? 'active-sub' : '' }}" href="{{ route('apotek.dashboard') }}">Dashboard</a>
+                    <a class="{{ request()->is('apotek/dashboard*') ? 'active-sub' : '' }}"
+                        href="{{ route('apotek.dashboard') }}">Dashboard</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('apotek/categories*') ? 'active-sub' : '' }}" href="{{ route('categories.index') }}">Kategori</a>
+                    <a class="{{ request()->is('apotek/categories*') ? 'active-sub' : '' }}"
+                        href="{{ route('categories.index') }}">Kategori</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('apotek/products*') ? 'active-sub' : '' }}" href="{{ route('products.index') }}">Produk</a>
+                    <a class="{{ request()->is('apotek/products*') ? 'active-sub' : '' }}"
+                        href="{{ route('products.index') }}">Produk</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('apotek/encounter*') ? 'active-sub' : '' }}" href="{{ route('apotek.getEncounter') }}">Resep Dokter</a>
+                    <a class="{{ request()->is('apotek/encounter*') ? 'active-sub' : '' }}"
+                        href="{{ route('apotek.getEncounter') }}">Resep Dokter</a>
                 </li>
             </ul>
         </li>
@@ -123,10 +151,12 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('setting/satusehat*') ? 'active-sub' : '' }}" href="{{ route('satusehat.index') }}">Satusehat</a>
+                    <a class="{{ request()->is('setting/satusehat*') ? 'active-sub' : '' }}"
+                        href="{{ route('satusehat.index') }}">Satusehat</a>
                 </li>
                 <li>
-                    <a class="{{ request()->is('setting/lokasiloket*') || request()->is('setting/loket*') ? 'active-sub' : '' }}" href="{{ route('lokasiloket.index') }}">Loket Antrian</a>
+                    <a class="{{ request()->is('setting/lokasiloket*') || request()->is('setting/loket*') ? 'active-sub' : '' }}"
+                        href="{{ route('lokasiloket.index') }}">Loket Antrian</a>
                 </li>
 
             </ul>

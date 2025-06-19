@@ -129,5 +129,38 @@ class LoketRepository
             ->findOrFail($id);
         return $encounter;
     }
+    public function getReminderEncounter($condition = 2)
+    {
+        $today = now()->toDateString();
 
+        // Ambil rekam_medis encounter yang memenuhi kriteria H-3 dan H-7
+        $encounters = \App\Models\Encounter::with('resep')
+            ->where('condition', $condition)
+            ->whereHas('resep', function($q) use ($today) {
+                $q->where(function($sub) use ($today) {
+                    $sub->where('masa_pemakaian_hari', '<=', 7)
+                        ->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 3 DAY) = ?", [$today]);
+                })->orWhere(function($sub) use ($today) {
+                    $sub->where('masa_pemakaian_hari', '>=', 14)
+                        ->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 7 DAY) = ?", [$today]);
+                });
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Ambil semua no_hp pasien sekaligus (hindari query di dalam loop)
+        $rekamMedisList = $encounters->pluck('rekam_medis')->unique()->toArray();
+        $pasienHp = \App\Models\Pasien::whereIn('rekam_medis', $rekamMedisList)
+            ->pluck('no_hp', 'rekam_medis');
+
+        // Tambahkan no_hp ke setiap encounter
+        foreach ($encounters as $encounter) {
+            $encounter->no_hp = $pasienHp[$encounter->rekam_medis] ?? null;
+        }
+
+        // Encounter terbaru per rekam_medis
+        $uniqueEncounters = $encounters->unique('rekam_medis')->values();
+
+        return $uniqueEncounters;
+    }
 }

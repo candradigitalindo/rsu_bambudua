@@ -45,4 +45,5 @@ class LokasiloketRepository
         $lokasi->delete();
         return $lokasi;
     }
+    
 }

@@ -181,5 +181,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('transaksi-tindakan/pdf', [\App\Http\Controllers\LoketController::class, 'exportPdf'])->name('loket.transaksi-tindakan.pdf');
         Route::get('transaksi-tindakan/excel', [\App\Http\Controllers\LoketController::class, 'exportExcel'])->name('loket.transaksi-tindakan.excel');
 
+        // getReminderEncounter
+        Route::get('/reminder/getReminderEncounter', [\App\Http\Controllers\LoketController::class, 'getReminderEncounter'])->name('loket.getReminderEncounter');
+
     });
 });

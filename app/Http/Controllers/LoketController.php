@@ -166,4 +166,11 @@ class LoketController extends Controller
 
         return Excel::download(new TransaksiTindakanExport($data), 'transaksi_tindakan.xlsx');
     }
+
+    // getReminderEncounter
+    public function getReminderEncounter()
+    {
+        $encounters = $this->loketRepository->getReminderEncounter();
+        return view('pages.loket.reminder_encounter', compact('encounters'));
+    }
 }

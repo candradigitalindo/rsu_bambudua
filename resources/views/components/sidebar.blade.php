@@ -22,7 +22,7 @@
                 </li>
                 <li>
                     <a class="{{ request()->is('loket/encounter*') ? 'active-sub' : '' }}"
-                        href="{{ route('loket.getEncounter') }}">Tindakan Dokter</a>
+                        href="{{ route('loket.getEncounter') }}">Bayar Rawat Jalan</a>
                 </li>
                 <li>
                     <a class="{{ request()->is('loket/reminder*') ? 'active-sub' : '' }}"
@@ -128,7 +128,7 @@
                 </li>
                 <li>
                     <a class="{{ request()->is('apotek/encounter*') ? 'active-sub' : '' }}"
-                        href="{{ route('apotek.getEncounter') }}">Resep Dokter</a>
+                        href="{{ route('apotek.getEncounter') }}">Bayar Resep Dokter</a>
                 </li>
             </ul>
         </li>

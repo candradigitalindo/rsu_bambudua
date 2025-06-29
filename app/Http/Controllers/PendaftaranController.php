@@ -36,89 +36,59 @@ class PendaftaranController extends Controller
     public function showRawatJalan()
     {
         $data = $this->pendaftaranRepository->showRawatJalan();
-        $total_row  = $data->count();
+        $total_row = $data->count();
+
         if ($total_row > 0) {
+            $output = [];
             foreach ($data as $d) {
-                $output[] = '
-
-                     <tr>
-                        <td>
-
-                            <table>
-                                <tr>
-                                    <td>No. Kunjungan</td>
-                                    <td>:</td>
-                                    <td>' . $d->no_encounter . '</td>
-                                </tr>
-                                <tr>
-                                    <td>No. RM</td>
-                                    <td>:</td>
-                                    <td>' . $d->rekam_medis . '</td>
-                                </tr>
-                                <tr>
-                                    <td><span class="badge bg-primary-subtle rounded-pill text-primary">
-                                        <i class="ri-circle-fill me-1"></i>Status : ' . $d->status . '</span>
-                                    </td>
-
-                                </tr>
-                            </table>
-                        </td>
-                        <td>
-
-                            <table>
-                                <tr>
-                                    <td>Pasien</td>
-                                    <td>:</td>
-                                    <td>' . $d->name_pasien . '</td>
-                                </tr>
-                                <tr>
-                                    <td>Dokter</td>
-                                    <td>:</td>
-                                    <td>' . $d->dokter . '</td>
-                                </tr>
-                                <tr>
-                                    <td>
-
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                        <td>
-                            <table>
-                                <tr>
-                                    <td>' . $d->jenis_jaminan . '</td>
-                                </tr>
-                                <tr>
-                                    <td>' . $d->tujuan_kunjungan . '</td>
-                                </tr>
-                                <tr>
-                                    <td>
-
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                        <td>
-                            <button type="button" class="btn editrawatJalan btn-outline-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modal-rawatJalan" id=' . $d->id . '>
-                                <i class="ri-edit-2-fill"></i>
-                                Edit
-                            </button>
-                            <button type="button" class="btn destoryRawatJalan btn-outline-danger btn-sm" id=' . $d->id . '>
-                                <i class="ri-delete-bin-5-fill"></i>
-                                Hapus
-                            </button>
-                        </td>
-                    </tr>
-                ';
+                $output[] = view('components.pendaftaran.rawat_jalan_row', compact('d'))->render();
             }
+            $output = implode('', $output);
         } else {
             $output = '<tr>
                         <td colspan="6" class="text-center">Data tidak ada</td>
                     </tr>';
         }
 
-        return json_encode($output);
+        return response()->json($output);
+    }
+    // showRawatDarurat
+    public function showRawatDarurat()
+    {
+        $data = $this->pendaftaranRepository->showRawatDarurat();
+        $total_row = $data->count();
+        if ($total_row > 0) {
+            $output = [];
+            foreach ($data as $d) {
+                $output[] = view('components.pendaftaran.rawat_darurat_row', compact('d'))->render();
+            }
+            $output = implode('', $output);
+        } else {
+            $output = '<tr>
+                        <td colspan="6" class="text-center">Data tidak ada</td>
+                    </tr>';
+        }
+        return response()->json($output);
+    }
+    // showRawatDarurat
+    public function showRawatInap()
+    {
+        $data = $this->pendaftaranRepository->showRawatInap();
+        $total_row = $data->count();
+
+        if ($total_row > 0) {
+            $output = [];
+            foreach ($data as $d) {
+                $output[] = view('components.pendaftaran.rawat_inap_row', compact('d'))->render();
+            }
+            $output = implode('', $output);
+        } else {
+            $output = '<tr>
+                        <td colspan="6" class="text-center">Data tidak ada</td>
+                    </tr>';
+        }
+
+        return response()->json($output);
     }
 
     public function editEncounterRajal($id)
@@ -132,130 +102,18 @@ class PendaftaranController extends Controller
         $data       = $this->pendaftaranRepository->cariPasien($request);
         $total_row  = $data->count();
 
+        $output = [];
+
         if ($total_row > 0) {
             foreach ($data as $d) {
-                $output[] = '
-                    <div class="card border mt-3">
-                        <div class="card-body">
-                            <span class="badge bg-primary-subtle rounded-pill text-primary">
-                                <i class="ri-circle-fill me-1"></i>Status : ' . $d->status . '</span>
-                            <hr>
-
-                                <div class="row justify-content-between">
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column mw-100">
-                                            <div class="text-primary fw-semibold">
-                                                    Identitas Pasien
-                                            </div>
-                                            <div>
-                                                <table>
-                                                    <tr>
-                                                        <td>No.RM</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->rekam_medis . '</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Nama</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->name . '</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>' . $d->jenis_identitas . '</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->no_identitas . '</td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column mw-100">
-                                            <div class="text-primary fw-semibold">
-                                                Kontak Pasien
-                                            </div>
-                                            <div>
-                                                <table>
-                                                    <tr>
-                                                        <td>No Hp</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->no_hp . '</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Alamat</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->alamat . '
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="d-flex flex-column mw-100">
-                                            <div class="text-primary fw-semibold">
-                                                Kunjungan Terakhir
-                                            </div>
-                                            <div>
-                                                <table>
-                                                    <tr>
-                                                        <td>No. Kunjungan</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->no_encounter . '</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Tanggal</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->tgl_encounter . '</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Jenis</td>
-                                                        <td>:</td>
-                                                        <td class="fw-semibold">' . $d->type . '</td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn rawatJalan btn-outline-primary btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#modal-rawatJalan" id=' . $d->id . '>
-                                <i class="ri-stethoscope-line"></i>
-                                Daftar Rawat Jalan
-                            </button>
-                            <button type="button" class="btn rawatInap btn-outline-primary btn-sm" id=' . $d->id . '>
-                                <i class="ri-hotel-bed-fill"></i>
-                                Daftar Rawat Inap
-                            </button>
-                            <button type="button" class="btn igd btn-outline-primary btn-sm" id=' . $d->id . '>
-                                <i class="ri-dossier-fill"></i>
-                                Daftar IGD
-                            </button>
-                            <button type="button" class="btn edit btn-outline-warning btn-sm" data-bs-toggle="modal"
-                                data-bs-target="#form-edit-pasien" id=' . $d->id . '>
-                                <i class="ri-edit-2-fill"></i>
-                                Edit Data Pasien
-                            </button>
-                        </div>
-                    </div>
-                ';
+                $output[] = view('components.pendaftaran.cari_pasien_card', compact('d'))->render();
             }
+            $output = implode('', $output);
         } else {
-            $output = '
-                <div class="card border mb-3">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center text-center">
-                        <strong>Data Pasien tidak ditemukan...</strong>
-                    </div>
-                    </div>
-                </div>
-            ';
+            $output = view('components.pendaftaran.cari_pasien_notfound')->render();
         }
 
-        return json_encode($output);
+        return response()->json($output);
     }
 
     public function store_pasien(Request $request)
@@ -385,6 +243,57 @@ class PendaftaranController extends Controller
     public function destroyEncounterRajal($id)
     {
         $result = $this->pendaftaranRepository->destroyEncounterRajal($id);
+        return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
+    }
+    public function postRawatDarurat(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'jenis_jaminan'     => 'required|string',
+            'dokter'            => 'required|string',
+            'tujuan_kunjungan'  => 'required|string',
+
+        ], [
+            'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
+            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
+        ]);
+
+        if ($validator->passes()) {
+            $encounter = $this->pendaftaranRepository->postRawatDarurat($request, $id);
+            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Darurat Pasien ' . $encounter->name_pasien . ' berhasil'], 200);
+        }
+
+        return response()->json(['error' => $validator->errors()->all()]);
+    }
+    // editEncounterRdarurat
+    public function editEncounterRdarurat($id)
+    {
+        $encounter = $this->pendaftaranRepository->editEncounterRdarurat($id);
+        return response()->json(['status' => true, 'data' => $encounter], 200);
+    }
+    public function updateRawatDarurat(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'jenis_jaminan'     => 'required|string',
+            'dokter'            => 'required|string',
+            'tujuan_kunjungan'  => 'required|string',
+
+        ], [
+            'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
+            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
+        ]);
+
+        if ($validator->passes()) {
+            $encounter = $this->pendaftaranRepository->updateRawatDarurat($request, $id);
+            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Darurat Pasien ' . $encounter->name_pasien . ' berhasil diubah'], 200);
+        }
+
+        return response()->json(['error' => $validator->errors()->all()]);
+    }
+    public function destroyEncounterRdarurat($id)
+    {
+        $result = $this->pendaftaranRepository->destroyEncounterRdarurat($id);
         return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }
 }

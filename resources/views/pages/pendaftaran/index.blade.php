@@ -785,6 +785,297 @@
                             </div>
                         </div>
                     </div>
+                    <div class="modal fade" id="modal-rawatInap" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="exampleModalXlLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalXlLabel">
+                                        Pendaftaran Rawat Inap
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="card border mt-3">
+                                        <div class="card-body">
+                                            <span class="badge bg-primary-subtle rounded-pill text-primary">
+                                                <i class="ri-circle-fill me-1"></i>Status : <a
+                                                    id="status-pasien-rawatInap"></a></span>
+                                            <hr>
+                                            <div class="row justify-content-between">
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Identitas Pasien
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>No. RM</td>
+                                                            <td>:</td>
+                                                            <td id="no_rm_rawatInap">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Nama Pasien</td>
+                                                            <td>:</td>
+                                                            <td id="name_rawatInap">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Umur</td>
+                                                            <td>:</td>
+                                                            <td id="tgl_lahir_rawatInap">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Kunjungan Terakhir
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>No. Kunjungan</td>
+                                                            <td>:</td>
+                                                            <td id="no_encounter_rawatInap">XXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tanggal Kujungan</td>
+                                                            <td>:</td>
+                                                            <td id="created_rawatInap">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tipe</td>
+                                                            <td>:</td>
+                                                            <td id="type_rawatInap">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-danger print-error-msg mt-2 mb-2" style="display:none"
+                                        id="error-rawatInap">
+                                        <ul></ul>
+                                    </div>
+                                    <hr>
+                                    <div class="row gx-3 mt-3">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">Jenis Jaminan</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="jenis_jaminan_rawatInap" id="jenis_jaminan_rawatInap">
+                                                        <option value="">-- Pilih Jaminan --</option>
+                                                        <option value="1">Umum</option>
+                                                        {{-- <option value="1">BPJS</option>
+                                                        <option value="1">Asuransi</option> --}}
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Dokter
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="dokter" id="dokter_rawatInap">
+                                                        <option value="">-- Pilih Dokter --</option>
+                                                        @foreach ($dokter as $do)
+                                                            <option value="{{ $do->user->name }}">{{ $do->user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Tujuan Kunjungan
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="tujuan_kunjungan_rawatInap"
+                                                        id="tujuan_kunjungan_rawatInap">
+                                                        <option value="">-- Pilih Tujuan --</option>
+                                                        <option value="1">Kunjungan Sehat (Promotif/Preventif)
+                                                        </option>
+                                                        <option value="2">Rehabilitatif</option>
+                                                        <option value="3">Kunjungan Sakit</option>
+                                                        <option value="4">Darurat</option>
+                                                        <option value="5">Kontrol / Tindak Lanjut</option>
+                                                        <option value="6">Treatment</option>
+                                                        <option value="7">Konsultasi</option>
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <input type="text" style="visibility: hidden" id="id-rawatInap">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" id="btn-submit-rawatInap">
+                                        <i class="ri-user-add-fill"></i>
+                                        Simpan
+                                    </button>
+
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                                        id="btn-tutup-rawatInap">
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal fade" id="modal-rawatDarurat" data-bs-backdrop="static" data-bs-keyboard="false"
+                        tabindex="-1" aria-labelledby="exampleModalXlLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-xl">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalXlLabel">
+                                        Pendaftaran Rawat Darurat
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+
+                                    <div class="card border mt-3">
+                                        <div class="card-body">
+                                            <span class="badge bg-primary-subtle rounded-pill text-primary">
+                                                <i class="ri-circle-fill me-1"></i>Status : <a
+                                                    id="status-pasien-rawatDarurat"></a></span>
+                                            <hr>
+                                            <div class="row justify-content-between">
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Identitas Pasien
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>No. RM</td>
+                                                            <td>:</td>
+                                                            <td id="no_rm_rawatDarurat">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Nama Pasien</td>
+                                                            <td>:</td>
+                                                            <td id="name_rawatDarurat">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Umur</td>
+                                                            <td>:</td>
+                                                            <td id="tgl_lahir_rawatDarurat">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="text-primary fw-semibold">
+                                                        Kunjungan Terakhir
+                                                    </div>
+                                                    <table>
+                                                        <tr>
+                                                            <td>No. Kunjungan</td>
+                                                            <td>:</td>
+                                                            <td id="no_encounter_rawatDarurat">XXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tanggal Kujungan</td>
+                                                            <td>:</td>
+                                                            <td id="created_rawatDarurat">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Tipe</td>
+                                                            <td>:</td>
+                                                            <td id="type_rawatDarurat">XXXXXXXXXXX</td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-danger print-error-msg mt-2 mb-2" style="display:none"
+                                        id="error-rawatDarurat">
+                                        <ul></ul>
+                                    </div>
+                                    <hr>
+                                    <div class="row gx-3 mt-3">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">Jenis Jaminan</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="jenis_jaminan_rawatDarurat"
+                                                        id="jenis_jaminan_rawatDarurat">
+                                                        <option value="">-- Pilih Jaminan --</option>
+                                                        <option value="1">Umum</option>
+                                                        {{-- <option value="1">BPJS</option>
+                                                        <option value="1">Asuransi</option> --}}
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Dokter
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="dokter_rawatDarurat"
+                                                        id="dokter_rawatDarurat">
+                                                        <option value="">-- Pilih Dokter --</option>
+                                                        @foreach ($dokter as $do)
+                                                            <option value="{{ $do->user->name }}">{{ $do->user->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a1">Tujuan Kunjungan
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="tujuan_kunjungan_rawatDarurat"
+                                                        id="tujuan_kunjungan_rawatDarurat">
+                                                        <option value="">-- Pilih Tujuan --</option>
+                                                        <option value="1">Kunjungan Sehat (Promotif/Preventif)
+                                                        </option>
+                                                        <option value="2">Rehabilitatif</option>
+                                                        <option value="3">Kunjungan Sakit</option>
+                                                        <option value="4">Darurat</option>
+                                                        <option value="5">Kontrol / Tindak Lanjut</option>
+                                                        <option value="6">Treatment</option>
+                                                        <option value="7">Konsultasi</option>
+                                                    </select>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                        <input type="text" style="visibility: hidden" id="id-rawatDarurat">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" id="btn-submit-rawatDarurat">
+                                        <i class="ri-user-add-fill"></i>
+                                        Simpan
+                                    </button>
+
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                                        id="btn-tutup-rawatDarurat">
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Custom tabs starts -->
                     <div class="custom-tabs-container mt-5">
 
@@ -796,12 +1087,13 @@
                                         class="ri-stethoscope-line"></i>Rawat Jalan</a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-igd" data-bs-toggle="tab" href="#twoA" role="tab"
-                                    aria-controls="twoA" aria-selected="false"><i class="ri-dossier-fill"></i>
+                                <a class="nav-link" id="tab-igd" data-bs-toggle="tab" href="#rawatDarurat"
+                                    role="tab" aria-controls="twoA" aria-selected="false"><i
+                                        class="ri-dossier-fill"></i>
                                     IGD</a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-rawatInap" data-bs-toggle="tab" href="#threeA"
+                                <a class="nav-link" id="tab-rawatInap" data-bs-toggle="tab" href="#rawatInap"
                                     role="tab" aria-controls="threeA" aria-selected="false"><i
                                         class="ri-hotel-bed-fill"></i>
                                     Rawat Inap</a>
@@ -838,60 +1130,57 @@
                                 </div>
 
                             </div>
-                            <div class="tab-pane fade" id="twoA" role="tabpanel">
+                            <div class="tab-pane fade" id="rawatDarurat" role="tabpanel">
 
-                                <!-- Row starts -->
-                                <div class="row gx-3">
-                                    <div class="col-sm-2">
-                                        <div id="dropzone" class="mb-3">
-                                            <label class="form-label">Upload Profile</label>
-                                            <form action="/upload" class="dropzone dz-clickable" id="demo-upload">
-                                                <div class="dz-message">
-                                                    <button type="button" class="dz-button">
-                                                        Click here to upload your photo.</button>
-                                                </div>
-                                            </form>
+                                {{-- Rawat Darurat --}}
+                                <div class="col-sm-12">
+                                    <div class="table-outer">
+                                        <div class="table-responsive">
+                                            <table class="table truncate m-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Kunjungan</th>
+                                                        <th>Pasien / Dokter</th>
+                                                        <th>Jaminan / Tujuan</th>
+                                                        <th class="text-center">Aksi</th>
+
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="showRawatDarurat">
+
+
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
-                                    <div class="col-sm-12">
-                                        <label class="form-label">Write Bio</label>
-                                        <div id="fullEditor">
-                                            <h1>Hello,</h1>
-                                            <br>
-                                            <p>My name is <strong>Dr. David Kemrin</strong>. Write your bio here.</p>
-                                        </div>
-                                    </div>
+
                                 </div>
-                                <!-- Row ends -->
-
                             </div>
-                            <div class="tab-pane fade" id="threeA" role="tabpanel">
+                            <div class="tab-pane fade" id="rawatInap" role="tabpanel">
 
-                                <!-- Row starts -->
-                                <div class="row gx-3">
-                                    <div class="col-xxl-3 col-lg-4 col-sm-6">
-                                        <div class="mb-3">
-                                            <label class="form-label" for="d1">Sunday</label>
-                                            <div class="input-group">
-                                                <select class="form-select" id="d1">
-                                                    <option value="0">From</option>
-                                                    <option value="1">7AM</option>
-                                                    <option value="2">8AM</option>
-                                                    <option value="3">9AM</option>
-                                                </select>
-                                                <select class="form-select" id="d1X">
-                                                    <option value="0">To</option>
-                                                    <option value="1">3PM</option>
-                                                    <option value="2">4PM</option>
-                                                    <option value="3">5PM</option>
-                                                </select>
-                                            </div>
+                                {{-- Rawat Darurat --}}
+                                <div class="col-sm-12">
+                                    <div class="table-outer">
+                                        <div class="table-responsive">
+                                            <table class="table truncate m-0">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Kunjungan</th>
+                                                        <th>Pasien / Dokter</th>
+                                                        <th>Jaminan / Tujuan</th>
+                                                        <th class="text-center">Aksi</th>
+
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="showRawatInap">
+
+
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
 
                                 </div>
-                                <!-- Row ends -->
-
                             </div>
 
                         </div>
@@ -956,10 +1245,10 @@
                 rawatJalan();
             });
             $("#tab-igd").on("click", function() {
-                alert("IGD");
+                rawatDarurat();
             });
             $("#tab-rawatInap").on("click", function() {
-                alert("Rawat Inap");
+                rawatInap();
             });
             $('#loading').hide();
             $("#submit").submit(function() {
@@ -978,6 +1267,34 @@
                     dataType: 'json',
                     success: function(rawatJalan) {
                         $('#showRawatJalan').html(rawatJalan);
+                    }
+                })
+            }
+
+            function rawatDarurat() {
+                $.ajax({
+                    url: "{{ route('pendaftaran.showRawatDarurat') }}",
+                    type: 'GET',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                    },
+                    dataType: 'json',
+                    success: function(rawatDarurat) {
+                        $('#showRawatDarurat').html(rawatDarurat);
+                    }
+                })
+            }
+
+            function rawatInap() {
+                $.ajax({
+                    url: "{{ route('pendaftaran.showRawatInap') }}",
+                    type: 'GET',
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                    },
+                    dataType: 'json',
+                    success: function(rawatInap) {
+                        $('#showRawatInap').html(rawatInap);
                     }
                 })
             }
@@ -1309,6 +1626,7 @@
                 submit_rawatJalan();
             }
         })
+
         function submit_rawatJalan() {
             let url = "{{ route('pendaftaran.postRawatJalan', ':id') }}"
             url = url.replace(':id', $("#id-rawatJalan").val());
@@ -1344,8 +1662,7 @@
             });
         }
 
-        function update_rawatJalan()
-        {
+        function update_rawatJalan() {
             let url = "{{ route('pendaftaran.updateRawatJalan', ':id') }}"
             url = url.replace(':id', $("#id-rawatJalan").val());
 
@@ -1457,11 +1774,246 @@
 
         $(document).on('click', '.rawatInap', function() {
             let id = $(this).attr('id');
-            alert(id);
+            let url = "{{ route('pendaftaran.showPasien', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatInap").css("display", "none");
+            $("#jenis_jaminan_rawatInap").val("");
+            $("#dokter_rawatInap").val("");
+            $("#tujuan_kunjungan_rawatInap").val("");
+            $("#btn-submit-rawatInap").text("Simpan");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    $("#no_rm_rawatInap").text(res.data.rekam_medis);
+                    $("#name_rawatInap").text(res.data.name);
+                    $("#tgl_lahir_rawatInap").text(res.data.umur);
+                    $("#id-rawatInap").val(id);
+                    $("#status-pasien-rawatInap").text(res.data.status);
+                    $("#no_encounter_rawatInap").text(res.data.no_encounter);
+                    $("#created_rawatInap").text(res.data.tgl_encounter);
+                    $("#type_rawatInap").text(res.data.type);
+                }
+            });
+        });
+        $("#btn-submit-rawatInap").on('click', function() {
+            if ($(this).text() === 'Update Rawat Inap') {
+                update_rawatInap();
+            } else {
+                submit_rawatInap();
+            }
         });
         $(document).on('click', '.igd', function() {
             let id = $(this).attr('id');
-            alert(id);
+            let url = "{{ route('pendaftaran.showPasien', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatDarurat").css("display", "none");
+            $("#jenis_jaminan_rawatDarurat").val("");
+            $("#dokter_rawatDarurat").val("");
+            $("#tujuan_kunjungan_rawatDarurat").val("");
+            $("#btn-submit-rawatDarurat").text("Simpan");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    $("#no_rm_rawatDarurat").text(res.data.rekam_medis);
+                    $("#name_rawatDarurat").text(res.data.name);
+                    $("#tgl_lahir_rawatDarurat").text(res.data.umur);
+                    $("#id-rawatDarurat").val(id);
+                    $("#status-pasien-rawatDarurat").text(res.data.status);
+                    $("#no_encounter_rawatDarurat").text(res.data.no_encounter);
+                    $("#created_rawatDarurat").text(res.data.tgl_encounter);
+                    $("#type_rawatDarurat").text(res.data.type);
+                }
+            });
         });
+        $("#btn-submit-rawatDarurat").on('click', function() {
+            if ($(this).text() === 'Update Rawat Darurat') {
+                update_rawatDarurat();
+            } else {
+                submit_rawatDarurat();
+            }
+        });
+
+        function submit_rawatDarurat() {
+            let url = "{{ route('pendaftaran.postRawatDarurat', ':id') }}"
+            url = url.replace(':id', $("#id-rawatDarurat").val());
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    jenis_jaminan: $("#jenis_jaminan_rawatDarurat").val(),
+                    dokter: $("#dokter_rawatDarurat").val(),
+                    tujuan_kunjungan: $("#tujuan_kunjungan_rawatDarurat").val(),
+                },
+
+                success: function(res) {
+                    if ($.isEmptyObject(res.error)) {
+                        $("#error-rawatDarurat").css("display", "none");
+                        if (res.status == false) {
+                            swal(res.text, {
+                                icon: "error",
+                            });
+                        } else {
+                            $("#tab-igd").click();
+                            $("#btn-tutup-rawatDarurat").click();
+                            swal(res.text, {
+                                icon: "success",
+                            });
+                        }
+                    } else {
+                        error_rawatDarurat(res.error)
+                    }
+                }
+            });
+        }
+
+        function update_rawatDarurat() {
+            let url = "{{ route('pendaftaran.updateRawatDarurat', ':id') }}"
+            url = url.replace(':id', $("#id-rawatDarurat").val());
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    jenis_jaminan: $("#jenis_jaminan_rawatDarurat").val(),
+                    dokter: $("#dokter_rawatDarurat").val(),
+                    tujuan_kunjungan: $("#tujuan_kunjungan_rawatDarurat").val(),
+                },
+
+                success: function(res) {
+                    if ($.isEmptyObject(res.error)) {
+                        $("#error-rawatDarurat").css("display", "none");
+                        if (res.status == false) {
+                            swal(res.text, {
+                                icon: "error",
+                            });
+                        } else {
+                            $("#tab-igd").click();
+                            $("#btn-tutup-rawatDarurat").click();
+                            swal(res.text, {
+                                icon: "success",
+                            });
+                        }
+                    } else {
+                        error_rawatDarurat(res.error)
+                    }
+                }
+            });
+        }
+        $(document).on('click', '.editrawatDarurat', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.editEncounterRdarurat', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatDarurat").css("display", "none");
+            $("#jenis_jaminan_rawatDarurat").val("");
+            $("#dokter_rawatDarurat").val("");
+            $("#tujuan_kunjungan_rawatDarurat").val("");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    console.log(res);
+                    $("#no_rm_rawatDarurat").text(res.data.rekam_medis);
+                    $("#name_rawatDarurat").text(res.data.name_pasien);
+                    $("#tgl_lahir_rawatDarurat").text(res.data.umur);
+                    $("#id-rawatDarurat").val(id);
+                    $("#status-pasien-rawatDarurat").text(res.data.status);
+                    $("#no_encounter_rawatDarurat").text(res.data.no_encounter);
+                    $("#created_rawatDarurat").text(res.data.tgl_encounter);
+                    $("#type_rawatDarurat").text(res.data.type);
+                    $("#jenis_jaminan_rawatDarurat").val(res.data.jenis_jaminan);
+                    $("#dokter_rawatDarurat").val(res.data.dokter);
+                    $("#tujuan_kunjungan_rawatDarurat").val(res.data.tujuan_kunjungan);
+                    $("#btn-submit-rawatDarurat").text("Update Rawat Darurat");
+                    $("#error-rawatDarurat").css("display", "none");
+                }
+            })
+        });
+        $(document).on('click', '.destroyRawatDarurat', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.destroyEncounterRdarurat', ':id') }}"
+            url = url.replace(':id', id);
+            swal({
+                title: "Apakah Anda Yakin?",
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                        },
+                        success: function(res) {
+                            if (res.status == true) {
+                                $("#tab-igd").click();
+                                swal(res.text, {
+                                    icon: "success",
+                                });
+                            } else {
+                                swal(res.text, {
+                                    icon: "error",
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        $(document).on('click', '.editRawatDarurat', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.editEncounterRdarurat', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatDarurat").css("display", "none");
+            $("#jenis_jaminan_rawatDarurat").val("");
+            $("#dokter_rawatDarurat").val("");
+            $("#tujuan_kunjungan_rawatDarurat").val("");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    $("#no_rm_rawatDarurat").text(res.data.rekam_medis);
+                    $("#name_rawatDarurat").text(res.data.name_pasien);
+                    $("#tgl_lahir_rawatDarurat").text(res.data.umur);
+                    $("#id-rawatDarurat").val(id);
+                    $("#status-pasien-rawatDarurat").text(res.data.status);
+                    $("#no_encounter_rawatDarurat").text(res.data.no_encounter);
+                    $("#created_rawatDarurat").text(res.data.tgl_encounter);
+                    $("#type_rawatDarurat").text(res.data.type);
+                    $("#jenis_jaminan_rawatDarurat").val(res.data.jenis_jaminan);
+                    $("#dokter_rawatDarurat").val(res.data.dokter);
+                    $("#tujuan_kunjungan_rawatDarurat").val(res.data.tujuan_kunjungan);
+                    $("#btn-submit-rawatDarurat").text("Update Rawat Darurat");
+                    $("#error-rawatDarurat").css("display", "none");
+                }
+            })
+        });
+
+        function error_rawatDarurat(msg) {
+            $("#error-rawatDarurat").find("ul").html('');
+            $("#error-rawatDarurat").css('display', 'block');
+            $.each(msg, function(key, value) {
+                $("#error-rawatDarurat").find("ul").append('<li>' + value + '</li>');
+            });
+        }
     </script>
 @endpush

@@ -804,8 +804,10 @@
                                                             <option value="2" {{ old('status_pulang') == 2 ?: '' }}>
                                                                 Pulang Kontrol Kembali</option>
                                                             <option value="3" {{ old('status_pulang') == 3 ?: '' }}>
-                                                                Rujukan</option>
+                                                                Rujukan Rawat Inap</option>
                                                             <option value="4" {{ old('status_pulang') == 4 ?: '' }}>
+                                                                Rujukan RSU Lain</option>
+                                                            <option value="5" {{ old('status_pulang') == 5 ?: '' }}>
                                                                 Meninggal</option>
                                                         </select>
                                                     </div>
@@ -1818,7 +1820,8 @@
                         }
                         $("#total-resep-catatan").text(formatRupiah(data.total_resep));
                         $("#total-resep-diskon").text(formatRupiah(data.diskon_resep) +
-                            (data.diskon_resep ? ' (' + data.diskon_persen_resep + '%)' : ''));
+                            (data.diskon_resep ? ' (' + data.diskon_persen_resep + '%)' :
+                                ''));
                         $("#total-resep-harga").text(formatRupiah(data.total_bayar_resep));
                     }
                 });

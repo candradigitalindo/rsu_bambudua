@@ -22,4 +22,10 @@ class EncounterController extends Controller
         $encounter = $this->encounterRepository->getEncounterById($id);
         return view('pages.encounter.cetak-rawat-jalan', compact('encounter'));
     }
+    // rawat darurat
+    public function getAllRawatDarurat()
+    {
+        $encounters = $this->encounterRepository->getAllRawatDarurat();
+        return view('pages.encounter.rawat-darurat', compact('encounters'));
+    }
 }

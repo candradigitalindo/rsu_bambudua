@@ -103,15 +103,29 @@ class LoketRepository
     }
     public function getEncounter($status = 2)
     {
-        return \App\Models\Encounter::with(['tindakan', 'practitioner.user'])
+        $typeList = [
+            1 => 'Rawat Jalan',
+            2 => 'Rawat Inap',
+            3 => 'IGD'
+        ];
+
+        $encounters = \App\Models\Encounter::with(['tindakan', 'practitioner.user'])
             ->where('status', $status)
             ->whereYear('created_at', date('Y'))
             ->when(request('search'), function ($query, $search) {
                 $query->where('name_pasien', 'like', '%' . $search . '%');
             })
-            ->orderBy('status_bayar_tindakan', 'asc')      // status_bayar 0 di atas
-            ->orderByDesc('updated_at')           // lalu urut terbaru
+            ->orderBy('status_bayar_tindakan', 'asc')
+            ->orderByDesc('updated_at')
             ->paginate(50);
+
+        // Tambahkan label type pada setiap encounter
+        $encounters->getCollection()->transform(function ($item) use ($typeList) {
+            $item->type_label = $typeList[$item->type] ?? '-';
+            return $item;
+        });
+
+        return $encounters;
     }
     // Bayar tindakan
     public function bayarTindakan($request, $id)

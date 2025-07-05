@@ -96,15 +96,29 @@ class ApotekRepository
     // ambil encounter yang status 2 beserta resep dan resep detailnya
     public function getEncounter($status = 2)
     {
-        return \App\Models\Encounter::with(['resep.details', 'practitioner.user'])
+        $typeList = [
+            1 => 'Rawat Jalan',
+            2 => 'Rawat Inap',
+            3 => 'IGD'
+        ];
+
+        $encounters = \App\Models\Encounter::with(['resep.details', 'practitioner.user'])
             ->where('status', $status)
             ->whereYear('created_at', date('Y'))
             ->when(request('search'), function ($query, $search) {
                 $query->where('name_pasien', 'like', '%' . $search . '%');
             })
-            ->orderBy('status_bayar_resep', 'asc')      // status_bayar 0 di atas
-            ->orderByDesc('updated_at')           // lalu urut terbaru
+            ->orderBy('status_bayar_resep', 'asc')
+            ->orderByDesc('updated_at')
             ->paginate(50);
+
+        // Tambahkan label type pada setiap encounter
+        $encounters->getCollection()->transform(function ($item) use ($typeList) {
+            $item->type_label = $typeList[$item->type] ?? '-';
+            return $item;
+        });
+
+        return $encounters;
     }
     // bayar resep
     public function bayarResep($request, $id)

@@ -47,7 +47,7 @@
         <div class="col-xxl-12 col-sm-12">
             <div class="card mb-3">
                 <div class="card-header">
-                    <h5 class="card-title">Form Pemeriksaan</h5>
+                    <h5 class="card-title">Form Pemeriksaan Pasien : {{ $encounter->name_pasien }}</h5>
                 </div>
                 <div class="card-body">
                     <div class="custom-tabs-container">
@@ -1990,7 +1990,7 @@
                                 icon: "success"
                             });
                             // redirect ke halaman observasi
-                            window.location.href = "{{ route('kunjungan.rawatJalan') }}";
+                            window.location.href = data.url;
 
                         } else {
                             swal(data.message, {

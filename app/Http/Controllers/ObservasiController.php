@@ -15,8 +15,10 @@ class ObservasiController extends Controller
 
     public function index($id)
     {
+        // Cek apakah encounter_id valid
+        $encounter = $this->observasiRepository->getEncounterById($id);
         $observasi = $id;
-        return view('pages.observasi.index', compact('observasi'));
+        return view('pages.observasi.index', compact('observasi', 'encounter'));
     }
     public function riwayatPenyakit($id)
     {

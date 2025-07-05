@@ -584,20 +584,29 @@ class ObservasiRepository
             ];
         }
 
-        // Update catatan dan status encounter sekaligus
+        // Update catatan, condition, dan status encounter sekaligus
         $encounter->update([
             'catatan'   => $request->catatan,
             'condition' => $request->status_pulang,
             'status'    => 2 // Selesai
         ]);
 
-        // Update status pasien menjadi 0 tanpa relasi langsung
+        // Update status pasien menjadi 0 (tanpa relasi langsung)
         \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)
             ->update(['status' => 0]);
 
+        // Tentukan URL redirect sesuai type
+        $routes = [
+            1 => route('kunjungan.rawatJalan'),
+            2 => route('kunjungan.rawatInap'),
+            3 => route('kunjungan.rawatDarurat'),
+        ];
+        $url = $routes[$encounter->type] ?? '';
+
         return [
             'success' => true,
-            'message' => 'Catatan encounter berhasil diperbarui.'
+            'message' => 'Catatan encounter berhasil diperbarui.',
+            'url'     => $url
         ];
     }
 }

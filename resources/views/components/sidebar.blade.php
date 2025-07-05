@@ -22,7 +22,7 @@
                 </li>
                 <li>
                     <a class="{{ request()->is('loket/encounter*') ? 'active-sub' : '' }}"
-                        href="{{ route('loket.getEncounter') }}">Bayar Rawat Jalan</a>
+                        href="{{ route('loket.getEncounter') }}">Bayar Tindakan</a>
                 </li>
                 <li>
                     <a class="{{ request()->is('loket/reminder*') ? 'active-sub' : '' }}"
@@ -94,7 +94,7 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('kunjungan/rawatJalan*') || request()->is('kunjungan/observasi*') ? 'active-sub' : '' }}"
+                    <a class="{{ request()->is('kunjungan/rawatJalan*') }}"
                         href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
                 </li>
                 <li>

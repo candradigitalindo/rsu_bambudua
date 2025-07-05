@@ -57,6 +57,7 @@
                                 <thead>
                                     <tr>
                                         <th>Nama Pasien</th>
+                                        <th class="text-center">Tipe</th>
                                         <th class="text-center">Nama Dokter</th>
                                         <th class="text-center">Nominal</th>
                                         <th class="text-center">Diskon</th>
@@ -69,6 +70,7 @@
                                     @forelse ($encounters as $encounter)
                                         <tr>
                                             <td>{{ ucwords($encounter->name_pasien) }}</td>
+                                            <td class="text-center">{{ $encounter->type_label }}</td>
                                             <td class="text-center">
                                                 @if ($encounter->practitioner)
                                                     @if ($encounter->practitioner instanceof \Illuminate\Support\Collection)

@@ -13,6 +13,24 @@ class EncounterRepository
     {
         //
     }
+
+    protected function mapEncounter($encounter)
+    {
+        $encounter->status = $encounter->status == 1 ? "Progress" : "Finish";
+        $encounter->jenis_jaminan = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
+        $encounter->tujuan_kunjungan = match ($encounter->tujuan_kunjungan) {
+            1 => "Kunjungan Sehat (Promotif/Preventif)",
+            2 => "Rehabilitatif",
+            3 => "Kunjungan Sakit",
+            4 => "Darurat",
+            5 => "Kontrol / Tindak Lanjut",
+            6 => "Treatment",
+            7 => "Konsultasi",
+            default => "-",
+        };
+        return $encounter;
+    }
+
     public function getAllRawatJalan()
     {
         $query = Encounter::query()
@@ -38,36 +56,28 @@ class EncounterRepository
 
         $encounters = $query->orderBy('updated_at', 'asc')->get();
 
-        // Mapping data
-        $encounters->transform(function ($encounter) {
-            $encounter->status = $encounter->status == 1 ? "Progress" : "Finish";
-            $encounter->jenis_jaminan = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
-            $encounter->tujuan_kunjungan = match ($encounter->tujuan_kunjungan) {
-                1 => "Kunjungan Sehat (Promotif/Preventif)",
-                2 => "Rehabilitatif",
-                3 => "Kunjungan Sakit",
-                4 => "Darurat",
-                5 => "Kontrol / Tindak Lanjut",
-                6 => "Treatment",
-                7 => "Konsultasi",
-                default => "-",
-            };
-            return $encounter;
-        });
-
-        return $encounters;
+        return $encounters->map(fn($e) => $this->mapEncounter($e));
     }
     public function getAllRawatInap()
     {
-        // query if auth user is doctor in practitioner table
-        if (auth()->user()->role == 2) {
-            $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 2)->where('status', 1)->whereHas('practitioner', function ($query) {
-                $query->where('id_petugas', auth()->user()->id_petugas);
-            })->orderBy('updated_at', 'DESC')->get();
-        } else {
-            $encounters = Encounter::where('name_pasien', 'like', '%' . request('name') . '%')->where('type', 2)->where('status', 1)->orderBy('updated_at', 'DESC')->get();
+        $query = Encounter::query()
+            ->where('type', 2) // hanya rawat inap
+            ->where('status', 1);
+
+        if (request('name')) {
+            $query->where('name_pasien', 'like', '%' . request('name') . '%');
         }
-        return $encounters;
+
+        // Jika user dokter, filter by practitioner
+        if (auth()->user()->role == 2) {
+            $query->whereHas('practitioner', function ($q) {
+                $q->where('id_petugas', auth()->user()->id_petugas);
+            });
+        }
+
+        $encounters = $query->orderBy('updated_at', 'desc')->get();
+
+        return $encounters->map(fn($e) => $this->mapEncounter($e));
     }
     public function getAllRawatDarurat()
     {
@@ -94,41 +104,12 @@ class EncounterRepository
 
         $encounters = $query->orderBy('updated_at', 'asc')->get();
 
-        // Mapping data
-        $encounters->transform(function ($encounter) {
-            $encounter->status = $encounter->status == 1 ? "Progress" : "Finish";
-            $encounter->jenis_jaminan = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
-            $encounter->tujuan_kunjungan = match ($encounter->tujuan_kunjungan) {
-                1 => "Kunjungan Sehat (Promotif/Preventif)",
-                2 => "Rehabilitatif",
-                3 => "Kunjungan Sakit",
-                4 => "Darurat",
-                5 => "Kontrol / Tindak Lanjut",
-                6 => "Treatment",
-                7 => "Konsultasi",
-                default => "-",
-            };
-            return $encounter;
-        });
-
-        return $encounters;
+        return $encounters->map(fn($e) => $this->mapEncounter($e));
     }
     // Cetak Encounter
     public function getEncounterById($id)
     {
         $encounter = Encounter::findOrFail($id);
-        $encounter->status = $encounter->status == 1 ? "Progress" : "Finish";
-        $encounter->jenis_jaminan = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
-        $encounter->tujuan_kunjungan = match ($encounter->tujuan_kunjungan) {
-            1 => "Kunjungan Sehat (Promotif/Preventif)",
-            2 => "Rehabilitatif",
-            3 => "Kunjungan Sakit",
-            4 => "Darurat",
-            5 => "Kontrol / Tindak Lanjut",
-            6 => "Treatment",
-            7 => "Konsultasi",
-            default => "-",
-        };
-        return $encounter;
+        return $this->mapEncounter($encounter);
     }
 }

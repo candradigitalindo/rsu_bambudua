@@ -43,6 +43,8 @@
                                     <tr>
                                         <th>Kategori</th>
                                         <th>No Ruangan</th>
+                                        <th>Kelas</th>
+                                        <th>Jumlah Tempat Tidur</th>
                                         <th>Harga</th>
                                         <th>Keterangan</th>
                                         <th class="text-center">Aksi</th>
@@ -53,6 +55,8 @@
                                         <tr>
                                             <td>{{ $ruangan->category->name }}</td>
                                             <td>{{ $ruangan->no_kamar }}</td>
+                                            <td>{{ $ruangan->class }}</td>
+                                            <td>{{ $ruangan->capacity }}</td>
                                             <td>{{ $ruangan->getHargaFormattedAttribute() }}</td>
                                             <td>{{ $ruangan->description }}</td>
                                             <td class="text-center">

@@ -41,6 +41,8 @@ class RuanganController extends Controller
                 'harga' => 'required|string',
                 'category' => 'required|string',
                 'description' => 'nullable|string',
+                'class' => 'nullable|string',
+                'capacity' => 'nullable|integer',
             ],
             [
                 'no_kamar.required' => 'No Kamar tidak boleh kosong.',
@@ -57,6 +59,8 @@ class RuanganController extends Controller
             'category_id' => $request->category,
             'description' => $request->description,
             'harga' => str_replace(".", "", $request->harga),
+            'class' => $request->class, // Optional field
+            'capacity' => $request->capacity, // Optional field
         ];
 
         $this->ruanganRepository->create($data); // Create new ruangan
@@ -92,6 +96,8 @@ class RuanganController extends Controller
                 'harga' => 'required|string',
                 'category' => 'required|string',
                 'description' => 'nullable|string',
+                'class' => 'nullable|string',
+                'capacity' => 'nullable|integer',
             ],
             [
                 'no_kamar.required' => 'No Kamar tidak boleh kosong.',
@@ -108,6 +114,8 @@ class RuanganController extends Controller
             'category_id' => $request->category,
             'description' => $request->description,
             'harga' => str_replace(".", "", $request->harga),
+            'class' => $request->class, // Optional field
+            'capacity' => $request->capacity, // Optional field
         ];
 
         $this->ruanganRepository->update($id, $data); // Update ruangan by ID

@@ -77,7 +77,39 @@
                                                 <p class="text-danger">{{ $errors->first('harga') }}</p>
                                             </div>
                                         </div>
-
+                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a2">Kelas Ruangan </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" id="a2" name="class">
+                                                        <option value="">Pilih Kelas</option>
+                                                        <option value="VIP" {{ $ruangan->class == 'VIP' ? 'selected' : '' }}>
+                                                            VIP</option>
+                                                        <option value="Kelas 1" {{ $ruangan->class == 'Kelas 1' ? 'selected' : '' }}>
+                                                            Kelas 1</option>
+                                                        <option value="Kelas 2" {{ $ruangan->class == 'Kelas 2' ? 'selected' : '' }}>
+                                                            Kelas 2</option>
+                                                        <option value="Kelas 3" {{ $ruangan->class == 'Kelas 3' ? 'selected' : '' }}>
+                                                            Kelas 3</option>
+                                                        <option value="Kelas 4" {{ $ruangan->class == 'Kelas 4' ? 'selected' : '' }}>
+                                                            Kelas 4</option>
+                                                        <option value="Kelas 5" {{ $ruangan->class == 'Kelas 5' ? 'selected' : '' }}>
+                                                            Kelas 5</option>
+                                                    </select>
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('class') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a2">Jumlah Tempat Tidur</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control" id="a2" name="capacity"
+                                                        value="{{ $ruangan->capacity }}">
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('capacity') }}</p>
+                                            </div>
+                                        </div>
                                         <div class="col-xxl-12 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a2">Keterangan</label>

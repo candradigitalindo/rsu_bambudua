@@ -9,7 +9,7 @@ class Ruangan extends Model
 {
     use HasUuids;
     protected $table = 'ruangans';
-    protected $fillable = ['no_kamar', 'description', 'category_id', 'harga'];
+    protected $fillable = ['no_kamar', 'description', 'category_id', 'harga', 'class', 'capacity'];
 
     public function category()
     {

@@ -18,9 +18,10 @@ class PendaftaranController extends Controller
         $antrian    = $this->pendaftaranRepository->index();
         $pekerjaan  = $this->pendaftaranRepository->pekerjaan();
         $agama      = $this->pendaftaranRepository->agama();
-        $provinsi   = $this->pendaftaranRepository->provinsi();
+        $provinsi  = $this->pendaftaranRepository->provinsi();
         $dokter     = $this->pendaftaranRepository->showDokter();
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'dokter'));
+        $ruangan   = $this->pendaftaranRepository->ruangan();
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'dokter', 'ruangan'));
     }
 
     public function update_antrian()

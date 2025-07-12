@@ -94,7 +94,7 @@
             </a>
             <ul class="treeview-menu">
                 <li>
-                    <a class="{{ request()->is('kunjungan/rawatJalan*') }}"
+                    <a class="{{ request()->is('kunjungan/rawatJalan*')  ? 'active-sub' : '' }}"
                         href="{{ route('kunjungan.rawatJalan') }}">Rawat Jalan</a>
                 </li>
                 <li>
@@ -128,7 +128,7 @@
                 </li>
                 <li>
                     <a class="{{ request()->is('apotek/encounter*') ? 'active-sub' : '' }}"
-                        href="{{ route('apotek.getEncounter') }}">Bayar Resep Dokter</a>
+                        href="{{ route('apotek.getEncounter') }}">Bayar Resep</a>
                 </li>
             </ul>
         </li>

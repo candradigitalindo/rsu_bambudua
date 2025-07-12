@@ -12,6 +12,7 @@ use App\Models\Pekerjaan;
 use App\Models\Practitioner;
 use App\Models\Profile;
 use App\Models\Province;
+use App\Models\Ruangan;
 use App\Models\Spesialis;
 use App\Models\User;
 use Carbon\Carbon;
@@ -403,6 +404,11 @@ class PendaftaranRepository
         // Ambil profile dokter berdasarkan kode spesialis
         return Profile::whereIn('spesialis', $kodeSpesialis)->get();
     }
+    // Ambil data ruangan
+    public function ruangan()
+    {
+        return Ruangan::all();
+    }
 
     public function postRawatJalan($request, $id)
     {
@@ -598,6 +604,9 @@ class PendaftaranRepository
     public function postRawatInap($request, $id)
     {
         $pasien = Pasien::findOrFail($id);
+        // Hitung encounter hari ini, nomor urut selalu dua digit
+        $count = Encounter::whereDate('created_at', now()->toDateString())->count();
+        $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
 
         $encounter = Encounter::create([
             'no_encounter'        => $noEncounter,
@@ -609,19 +618,11 @@ class PendaftaranRepository
             'tujuan_kunjungan'    => $request->tujuan_kunjungan
         ]);
 
-        // Jika ada dokter, buat practitioner
-        if ($request->filled('dokter')) {
-            $dokter = User::where('name', $request->dokter)->first();
-            if ($dokter) {
-                Practitioner::create([
-                    'encounter_id' => $encounter->id,
-                    'name'         => $dokter->name,
-                    'id_petugas'   => $dokter->id_petugas,
-                    'satusehat_id' => $dokter->satusehat_id
-                ]);
-            }
-        }
-
+        // InpatientAdmission
+        $admission = InpatientAdmission::create([
+            'encounter_id'      => $encounter->id,
+            'pasien_id'         => $pasien->id,
+        ]);
         // Update status pasien menjadi Rawat Inap (2)
         $pasien->update(['status' => 2]);
 

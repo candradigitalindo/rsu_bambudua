@@ -82,11 +82,11 @@
             <i class="ri-stethoscope-line"></i>
             Daftar Rawat Jalan
         </button>
-        <button type="button" class="btn rawatInap btn-outline-primary btn-sm" data-bs-toggle="modal"
+        {{-- <button type="button" class="btn rawatInap btn-outline-primary btn-sm" data-bs-toggle="modal"
             data-bs-target="#modal-rawatInap" id="{{ $d->id }}">
             <i class="ri-hotel-bed-fill"></i>
             Daftar Rawat Inap
-        </button>
+        </button> --}}
         <button type="button" class="btn igd btn-outline-primary btn-sm" data-bs-toggle="modal"
             data-bs-target="#modal-rawatDarurat" id="{{ $d->id }}">
             <i class="ri-dossier-fill"></i>

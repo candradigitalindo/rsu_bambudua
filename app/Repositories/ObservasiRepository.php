@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\InpatientAdmission;
 use App\Models\Pasien;
 
 class ObservasiRepository
@@ -583,17 +584,49 @@ class ObservasiRepository
                 'message' => 'Encounter tidak ditemukan.'
             ];
         }
+        if ($request->status_pulang == 3) {
+            $encounter->update([
+                'catatan'   => $request->catatan,
+                'condition' => $request->status_pulang,
+                'type'      => 2, // Rawat Inap
+            ]);
 
-        // Update catatan, condition, dan status encounter sekaligus
-        $encounter->update([
-            'catatan'   => $request->catatan,
-            'condition' => $request->status_pulang,
-            'status'    => 2 // Selesai
-        ]);
+            // Ambil data pasien berdasarkan rekam_medis
+            $pasien = \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
 
-        // Update status pasien menjadi 0 (tanpa relasi langsung)
-        \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)
-            ->update(['status' => 0]);
+            if (!$pasien) {
+                return [
+                    'success' => false,
+                    'message' => 'Data pasien tidak ditemukan.'
+                ];
+            }else {
+                // Update status pasien menjadi 1 (rawat inap)
+                $pasien->update(['status' => 2]);
+            }
+            // Cek apakah sudah ada record inpatient_admissions untuk encounter ini
+            $inpatientAdmission = InpatientAdmission::where('encounter_id', $id)->first();
+            if (!$inpatientAdmission) {
+                // Jika belum ada, buat record baru
+                $inpatientAdmission = InpatientAdmission::create([
+                    'encounter_id'      => $encounter->id,
+                    'pasien_id'         => $pasien->id,
+                    'bed_number'        =>  0,
+                    'admission_date'    => now(),
+                ]);
+            }
+        } else {
+            // Update catatan, condition, dan status encounter sekaligus
+            $encounter->update([
+                'catatan'   => $request->catatan,
+                'condition' => $request->status_pulang,
+                'status'    => 2 // Selesai
+            ]);
+
+            // Update status pasien menjadi 0 (tanpa relasi langsung)
+            \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)
+                ->update(['status' => 0]);
+        }
+
 
         // Tentukan URL redirect sesuai type
         $routes = [

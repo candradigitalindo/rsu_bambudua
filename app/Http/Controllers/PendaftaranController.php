@@ -297,4 +297,37 @@ class PendaftaranController extends Controller
         $result = $this->pendaftaranRepository->destroyEncounterRdarurat($id);
         return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }
+    // editRawatInap
+    public function editEncounterRinap($id)
+    {
+        $encounter = $this->pendaftaranRepository->editEncounterRinap($id);
+        return response()->json(['status' => true, 'data' => $encounter], 200);
+    }
+    public function postRawatInap(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'jenis_jaminan'     => 'required|string',
+            'dokter'            => 'required|string',
+            'name_companion'   => 'required|string',
+            'nik_companion'     => 'nullable|string',
+            'phone_companion'   => 'required|string',
+            'relation_companion' => 'required|string',
+            'ruangan'           => 'required|string'
+
+        ], [
+            'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
+            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'phone_companion.required'  => 'Kolom Telepon Pendamping masih kosong',
+            'relation_companion.required' => 'Kolom Hubungan Pendamping masih kosong',
+            'name_companion.required'   => 'Kolom Nama Pendamping masih kosong',
+            'ruangan.required'          => 'Kolom Ruangan masih kosong'
+        ]);
+
+        if ($validator->passes()) {
+            $encounter = $this->pendaftaranRepository->postRawatInap($request, $id);
+            return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Inap Pasien ' . $encounter->name_pasien . ' berhasil'], 200);
+        }
+
+        return response()->json(['error' => $validator->errors()->all()]);
+    }
 }

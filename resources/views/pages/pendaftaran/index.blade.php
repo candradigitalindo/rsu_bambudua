@@ -802,7 +802,7 @@
                                         <div class="card-body">
                                             <span class="badge bg-primary-subtle rounded-pill text-primary">
                                                 <i class="ri-circle-fill me-1"></i>Status : <a
-                                                    id="status-pasien-rawatInap"></a></span>
+                                                    id="status-pasien-rawatRinap"></a></span>
                                             <hr>
                                             <div class="row justify-content-between">
                                                 <div class="col-4">
@@ -813,17 +813,17 @@
                                                         <tr>
                                                             <td>No. RM</td>
                                                             <td>:</td>
-                                                            <td id="no_rm_rawatInap">XXXXXXXXXXX</td>
+                                                            <td id="no_rm_rawatRinap">XXXXXXXXXXX</td>
                                                         </tr>
                                                         <tr>
                                                             <td>Nama Pasien</td>
                                                             <td>:</td>
-                                                            <td id="name_rawatInap">XXXXXXXXXXX</td>
+                                                            <td id="name_rawatRinap">XXXXXXXXXXX</td>
                                                         </tr>
                                                         <tr>
                                                             <td>Umur</td>
                                                             <td>:</td>
-                                                            <td id="tgl_lahir_rawatInap">XXXXXXXXXXX</td>
+                                                            <td id="tgl_lahir_rawatRinap">XXXXXXXXXXX</td>
                                                         </tr>
                                                     </table>
                                                 </div>
@@ -835,17 +835,17 @@
                                                         <tr>
                                                             <td>No. Kunjungan</td>
                                                             <td>:</td>
-                                                            <td id="no_encounter_rawatInap">XXXXXXXXXX</td>
+                                                            <td id="no_encounter_rawatRinap">XXXXXXXXXX</td>
                                                         </tr>
                                                         <tr>
                                                             <td>Tanggal Kujungan</td>
                                                             <td>:</td>
-                                                            <td id="created_rawatInap">XXXXXXXXXXX</td>
+                                                            <td id="created_rawatRinap">XXXXXXXXXXX</td>
                                                         </tr>
                                                         <tr>
                                                             <td>Tipe</td>
                                                             <td>:</td>
-                                                            <td id="type_rawatInap">XXXXXXXXXXX</td>
+                                                            <td id="type_rawatRinap">XXXXXXXXXXX</td>
                                                         </tr>
                                                     </table>
                                                 </div>
@@ -853,7 +853,7 @@
                                         </div>
                                     </div>
                                     <div class="alert alert-danger print-error-msg mt-2 mb-2" style="display:none"
-                                        id="error-rawatInap">
+                                        id="error-rawatRinap">
                                         <ul></ul>
                                     </div>
                                     <hr>
@@ -861,8 +861,9 @@
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a7">Jenis Jaminan</label>
+                                                <span class="text-danger">*</span>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="jenis_jaminan_rawatInap" id="jenis_jaminan_rawatInap">
+                                                    <select class="form-select" name="jenis_jaminan_rawatRinap" id="jenis_jaminan_rawatRinap">
                                                         <option value="">-- Pilih Jaminan --</option>
                                                         <option value="1">Umum</option>
                                                         {{-- <option value="1">BPJS</option>
@@ -876,13 +877,13 @@
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Dokter
-
+                                                    <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="dokter" id="dokter_rawatInap">
+                                                    <select class="form-select" name="dokter" id="dokter_rawatRinap">
                                                         <option value="">-- Pilih Dokter --</option>
                                                         @foreach ($dokter as $do)
-                                                            <option value="{{ $do->user->name }}">{{ $do->user->name }}
+                                                            <option value="{{ $do->user->id }}">{{ $do->user->name }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -890,39 +891,85 @@
 
                                             </div>
                                         </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Tujuan Kunjungan
-
+                                                <label class="form-label" for="a1">Ruang Rawat Inap
+                                                    <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="tujuan_kunjungan_rawatInap"
-                                                        id="tujuan_kunjungan_rawatInap">
-                                                        <option value="">-- Pilih Tujuan --</option>
-                                                        <option value="1">Kunjungan Sehat (Promotif/Preventif)
-                                                        </option>
-                                                        <option value="2">Rehabilitatif</option>
-                                                        <option value="3">Kunjungan Sakit</option>
-                                                        <option value="4">Darurat</option>
-                                                        <option value="5">Kontrol / Tindak Lanjut</option>
-                                                        <option value="6">Treatment</option>
-                                                        <option value="7">Konsultasi</option>
+                                                    <select class="form-select" name="ruangan" id="ruangan_rawatRinap">
+                                                        <option value="">-- Pilih Ruangan --</option>
+                                                        @foreach ($ruangan as $ruang)
+                                                            <option value="{{ $ruang->id }}">{{ $ruang->no_kamar }}
+                                                            </option>
+                                                        @endforeach
                                                     </select>
                                                 </div>
 
                                             </div>
                                         </div>
-                                        <input type="text" style="visibility: hidden" id="id-rawatInap">
+                                        <input type="text" style="visibility: hidden" id="id-rawatRinap">
+                                    </div>
+                                    <hr>
+                                    <div class="row gx-3">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">Nama Pendamping
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="name_companion" placeholder="Nama Pendamping">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">NIK Pendamping
+
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="nik_companion" placeholder="NIK Pendamping">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">No Handphone Pendamping
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="phone_companion" placeholder="No Handphone Pendamping">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="a7">Hubungan Pendamping
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="relation_companion" id="relation_companion">
+                                                        <option value="">-- Pilih Hubungan --</option>
+                                                        <option value="1">Ayah</option>
+                                                        <option value="2">Ibu</option>
+                                                        <option value="3">Saudara</option>
+                                                        <option value="4">Suami</option>
+                                                        <option value="5">Istri</option>
+                                                        <option value="6">Lainnya</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary" id="btn-submit-rawatInap">
+                                    <button type="button" class="btn btn-primary" id="btn-submit-rawatRinap">
                                         <i class="ri-user-add-fill"></i>
                                         Simpan
                                     </button>
 
                                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                                        id="btn-tutup-rawatInap">
+                                        id="btn-tutup-rawatRinap">
                                         Tutup
                                     </button>
                                 </div>
@@ -1167,7 +1214,7 @@
                                                     <tr>
                                                         <th>Kunjungan</th>
                                                         <th>Pasien / Dokter</th>
-                                                        <th>Jaminan / Tujuan</th>
+                                                        <th>Keterangan</th>
                                                         <th class="text-center">Aksi</th>
 
                                                     </tr>
@@ -1976,14 +2023,14 @@
                 }
             });
         });
-        $(document).on('click', '.editRawatDarurat', function() {
+        $(document).on('click', '.editrawatJalan', function() {
             let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.editEncounterRdarurat', ':id') }}"
+            let url = "{{ route('pendaftaran.editEncounterRajal', ':id') }}"
             url = url.replace(':id', id);
-            $("#error-rawatDarurat").css("display", "none");
-            $("#jenis_jaminan_rawatDarurat").val("");
-            $("#dokter_rawatDarurat").val("");
-            $("#tujuan_kunjungan_rawatDarurat").val("");
+            $("#error-rawatJalan").css("display", "none");
+            $("#jenis_jaminan_rawatJalan").val("");
+            $("#dokter_rawatJalan").val("");
+            $("#tujuan_kunjungan_rawatJalan").val("");
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -1991,19 +2038,19 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(res) {
-                    $("#no_rm_rawatDarurat").text(res.data.rekam_medis);
-                    $("#name_rawatDarurat").text(res.data.name_pasien);
-                    $("#tgl_lahir_rawatDarurat").text(res.data.umur);
-                    $("#id-rawatDarurat").val(id);
-                    $("#status-pasien-rawatDarurat").text(res.data.status);
-                    $("#no_encounter_rawatDarurat").text(res.data.no_encounter);
-                    $("#created_rawatDarurat").text(res.data.tgl_encounter);
-                    $("#type_rawatDarurat").text(res.data.type);
-                    $("#jenis_jaminan_rawatDarurat").val(res.data.jenis_jaminan);
-                    $("#dokter_rawatDarurat").val(res.data.dokter);
-                    $("#tujuan_kunjungan_rawatDarurat").val(res.data.tujuan_kunjungan);
-                    $("#btn-submit-rawatDarurat").text("Update Rawat Darurat");
-                    $("#error-rawatDarurat").css("display", "none");
+                    $("#no_rm_rawatJalan").text(res.data.rekam_medis);
+                    $("#name_rawatJalan").text(res.data.name_pasien);
+                    $("#tgl_lahir_rawatJalan").text(res.data.umur);
+                    $("#id-rawatJalan").val(id);
+                    $("#status-pasien-rawatJalan").text(res.data.status);
+                    $("#no_encounter_rawatJalan").text(res.data.no_encounter);
+                    $("#created_rawatJalan").text(res.data.tgl_encounter);
+                    $("#type_rawatJalan").text(res.data.type);
+                    $("#jenis_jaminan_rawatJalan").val(res.data.jenis_jaminan);
+                    $("#dokter_rawatJalan").val(res.data.dokter);
+                    $("#tujuan_kunjungan_rawatJalan").val(res.data.tujuan_kunjungan);
+                    $("#btn-submit-rawatJalan").text("Update Rawat Jalan");
+                    $("#error-rawatJalan").css("display", "none");
                 }
             })
         });
@@ -2015,5 +2062,101 @@
                 $("#error-rawatDarurat").find("ul").append('<li>' + value + '</li>');
             });
         }
+        function error_rawatJalan(msg) {
+            $("#error-rawatJalan").find("ul").html('');
+            $("#error-rawatJalan").css('display', 'block');
+            $.each(msg, function(key, value) {
+                $("#error-rawatJalan").find("ul").append('<li>' + value + '</li>');
+            });
+        }
+         $(document).on('click', '.editrawatInap', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.editEncounterRinap', ':id') }}"
+            url = url.replace(':id', id);
+            $("#error-rawatRinap").css("display", "none");
+            $("#jenis_jaminan_rawatRinap").val("");
+            $("#dokter_rawatRinap").val("");
+            $("#tujuan_kunjungan_rawatRinap").val("");
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(res) {
+                    console.log(res);
+                    $("#no_rm_rawatRinap").text(res.data.rekam_medis);
+                    $("#name_rawatRinap").text(res.data.name_pasien);
+                    $("#tgl_lahir_rawatRinap").text(res.data.umur);
+                    $("#id-rawatRinap").val(id);
+                    $("#status-pasien-rawatRinap").text(res.data.status);
+                    $("#no_encounter_rawatRinap").text(res.data.no_encounter);
+                    $("#created_rawatRinap").text(res.data.tgl_encounter);
+                    $("#type_rawatRinap").text(res.data.type);
+                    $("#jenis_jaminan_rawatRinap").val(res.data.jenis_jaminan);
+                    $("#dokter_rawatRinap").val(res.data.dokter);
+                    $("#tujuan_kunjungan_rawatRinap").val(res.data.tujuan_kunjungan);
+                    $("#btn-submit-rawatRinap").text("Update Rawat Inap");
+                    $("#error-rawatRinap").css("display", "none");
+                    $("#ruangan_rawatRinap").val(res.data.admission.ruangan_id);
+                    $("#name_companion").val(res.data.admission.companions.name);
+                    $("#nik_companion").val(res.data.admission.companions.nik);
+                    $("#phone_companion").val(res.data.admission.companions.phone);
+                    $("#relation_companion").val(res.data.admission.companions.relation);
+                }
+            })
+        });
+        $("#btn-submit-rawatRinap").on('click', function() {
+            if ($(this).text() === 'Update Rawat Inap') {
+                update_rawatRinap();
+            }
+        });
+        function update_rawatRinap() {
+            let url = "{{ route('pendaftaran.postRawatInap', ':id') }}"
+            url = url.replace(':id', $("#id-rawatRinap").val());
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    jenis_jaminan: $("#jenis_jaminan_rawatRinap").val(),
+                    dokter: $("#dokter_rawatRinap").val(),
+                    ruangan : $("#ruangan_rawatRinap").val(),
+                    name_companion : $("#name_companion").val(),
+                    nik_companion : $("#nik_companion").val(),
+                    phone_companion : $("#phone_companion").val(),
+                    relation_companion : $("#relation_companion").val(),
+                },
+
+                success: function(res) {
+                    if ($.isEmptyObject(res.error)) {
+                        $("#error-rawatRinap").css("display", "none");
+                        if (res.status == false) {
+                            swal(res.text, {
+                                icon: "error",
+                            });
+                        } else {
+                            $("#tab-rawatInap").click();
+                            $("#btn-tutup-rawatRinap").click();
+                            swal(res.text, {
+                                icon: "success",
+                            });
+                        }
+                    } else {
+                        error_rawatRinap(res.error)
+                    }
+                }
+            });
+        }
+
+        function error_rawatRinap(msg) {
+            $("#error-rawatRinap").find("ul").html('');
+            $("#error-rawatRinap").css('display', 'block');
+            $.each(msg, function(key, value) {
+                $("#error-rawatRinap").find("ul").append('<li>' + value + '</li>');
+            });
+        }
+
     </script>
 @endpush

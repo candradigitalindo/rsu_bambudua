@@ -65,4 +65,9 @@ class Encounter extends Model
     {
         return $this->hasOne(Resep::class);
     }
+    // admission
+    public function admission()
+    {
+        return $this->hasOne(InpatientAdmission::class);
+    }
 }

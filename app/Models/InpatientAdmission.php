@@ -50,6 +50,6 @@ class InpatientAdmission extends Model
     }
     public function companions()
     {
-        return $this->hasMany(PatientCompanion::class, 'admission_id');
+        return $this->hasOne(PatientCompanion::class, 'admission_id');
     }
 }

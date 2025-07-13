@@ -37,10 +37,14 @@
     <td>
         <table>
             <tr>
+                <td>Jenis Jaminan</td>
+                <td>:</td>
                 <td>{{ $d->jenis_jaminan }}</td>
             </tr>
             <tr>
-                <td>{{ $d->tujuan_kunjungan }}</td>
+                <td>No. Kamar</td>
+                <td>:</td>
+                <td>{{ $d->admission->room->no_kamar }}</td>
             </tr>
         </table>
     </td>

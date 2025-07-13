@@ -8,6 +8,7 @@ use App\Models\Antrian;
 use App\Models\Encounter;
 use App\Models\Loket;
 use App\Models\Pasien;
+use App\Models\PatientCompanion;
 use App\Models\Pekerjaan;
 use App\Models\Practitioner;
 use App\Models\Profile;
@@ -129,22 +130,16 @@ class PendaftaranRepository
     public function showRawatInap()
     {
         // Eager load practitioner untuk menghindari N+1 query
-        $encounters = Encounter::with(['practitioner'])
+        $encounters = Encounter::with(['admission'])
             ->where('type', 2)
-            ->where(function ($query) {
-                $query->where('status', 1)
-                    ->orWhere(function ($query) {
-                        $query->where('status', 2)
-                            ->whereDate('updated_at', Carbon::now()->toDateString());
-                    });
-            })
-            ->orderBy('updated_at', 'asc')
+            ->where('status', 1)
+            ->orderBy('updated_at', 'DESC')
             ->get();
         $encounters->transform(function ($e) {
             $e['status'] = $e->status == 1 ? "Progress" : "Finish";
             $e['type'] = "Rawat Inap";
-            // Ambil nama dokter dari relasi practitioner (jika ada)
-            $e['dokter'] = $e->practitioner->first()->name ?? '-';
+            // Ambil nama dokter dari relasi admission (jika ada)
+            $e['dokter'] = $e->admission->nama_dokter ?? '-';
             $e['jenis_jaminan'] = $e->jenis_jaminan == 1 ? "Umum" : "Lainnya";
             $e['tujuan_kunjungan'] = match ($e->tujuan_kunjungan) {
                 1 => "Kunjungan Sehat (Promotif/Preventif)",
@@ -407,7 +402,7 @@ class PendaftaranRepository
     // Ambil data ruangan
     public function ruangan()
     {
-        return Ruangan::all();
+        return Ruangan::orderBy('no_kamar', 'ASC')->get();
     }
 
     public function postRawatJalan($request, $id)
@@ -603,28 +598,69 @@ class PendaftaranRepository
     // postRawatInap
     public function postRawatInap($request, $id)
     {
-        $pasien = Pasien::findOrFail($id);
-        // Hitung encounter hari ini, nomor urut selalu dua digit
-        $count = Encounter::whereDate('created_at', now()->toDateString())->count();
-        $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
-
-        $encounter = Encounter::create([
-            'no_encounter'        => $noEncounter,
-            'rekam_medis'         => $pasien->rekam_medis,
-            'name_pasien'         => $pasien->name,
-            'pasien_satusehat_id' => $pasien->satusehat_id,
-            'type'                => 2,
-            'jenis_jaminan'       => $request->jenis_jaminan,
-            'tujuan_kunjungan'    => $request->tujuan_kunjungan
+        $encounter = Encounter::findOrFail($id);
+        // ambil data dokter dari user
+        $dokter = User::findOrFail($request->dokter);
+        $encounter->admission->update([
+            'ruang_id' => $request->ruang_id,
+            'dokter_id'=> $dokter->id,
+            'nama_dokter' => $dokter->name,
+            'ruangan_id' => $request->ruangan,
         ]);
+        $patient_companions = PatientCompanion::where('admission_id', $encounter->admission->id)->first();
+        if (!$patient_companions) {
+            PatientCompanion::create([
+                'admission_id' => $encounter->admission->id,
+                'name'         => $request->name_companion,
+                'nik'         => $request->nik_companion,
+                'phone'         => $request->phone_companion,
+                'relation'     => $request->relation_companion
+            ]);
+        } else {
+            $patient_companions->update([
+                'name'         => $request->name_companion,
+                'nik'         => $request->nik_companion,
+                'phone'         => $request->phone_companion,
+                'relation'     => $request->relation_companion
+            ]);
+        }
+        return $encounter;
+    }
+    // editEncounterRinap
+    public function editEncounterRinap($id)
+    {
+        // with admission dan companions
+        $encounter = Encounter::with(['admission', 'admission.companions'])->findOrFail($id);
 
-        // InpatientAdmission
-        $admission = InpatientAdmission::create([
-            'encounter_id'      => $encounter->id,
-            'pasien_id'         => $pasien->id,
-        ]);
-        // Update status pasien menjadi Rawat Inap (2)
-        $pasien->update(['status' => 2]);
+        // Eager load pasien dan dokter sekaligus
+        $pasien = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+
+        // Umur pasien
+        $encounter['umur'] = $pasien ? Carbon::parse($pasien->tgl_lahir)->diff(Carbon::now())->format('%y tahun, %m bulan, %d hari') : '-';
+
+        // Status pasien
+        $statusList = [
+            0 => "-",
+            1 => "Rawat Jalan",
+            2 => "Rawat Inap",
+            3 => "IGD"
+        ];
+        $encounter['status'] = $pasien ? ($statusList[$pasien->status] ?? "-") : "-";
+
+        // Tanggal encounter
+        $encounter['tgl_encounter'] = $encounter->created_at ? date('d M Y H:i', strtotime($encounter->created_at)) : "-";
+
+        // Type encounter
+        $typeList = [
+            0 => "-",
+            1 => "Rawat Jalan",
+            2 => "Rawat Inap",
+            3 => "IGD"
+        ];
+        $encounter['type'] = $typeList[$encounter->type] ?? "-";
+
+        // Nama dokter
+        $encounter['dokter'] = $encounter->admission ? $encounter->admission->dokter_id : "-";
 
         return $encounter;
     }

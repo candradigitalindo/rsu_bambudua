@@ -28,4 +28,9 @@ class EncounterController extends Controller
         $encounters = $this->encounterRepository->getAllRawatDarurat();
         return view('pages.encounter.rawat-darurat', compact('encounters'));
     }
+    public function getAllRawatInap()
+    {
+        $encounters = $this->encounterRepository->getAllRawatInap();
+        return view('pages.encounter.rawat-inap', compact('encounters'));
+    }
 }

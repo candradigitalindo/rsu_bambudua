@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\Encounter;
+use App\Models\InpatientAdmission;
 
 class EncounterRepository
 {
@@ -60,24 +61,27 @@ class EncounterRepository
     }
     public function getAllRawatInap()
     {
-        $query = Encounter::query()
-            ->where('type', 2) // hanya rawat inap
-            ->where('status', 1);
+        $query = InpatientAdmission::where('status', 'active')
+            ->with(['encounter', 'patient', 'doctor', 'room', 'companions']);
 
         if (request('name')) {
-            $query->where('name_pasien', 'like', '%' . request('name') . '%');
-        }
-
-        // Jika user dokter, filter by practitioner
-        if (auth()->user()->role == 2) {
-            $query->whereHas('practitioner', function ($q) {
-                $q->where('id_petugas', auth()->user()->id_petugas);
+            $query->whereHas('encounter', function ($q) {
+                $q->where('name_pasien', 'like', '%' . request('name') . '%');
             });
         }
+        switch (auth()->user()->role) {
+            case 1:
+                # code...
+                break;
+            case 2:
+                $query->where('dokter_id', auth()->user()->id);
+                break;
+            default:
+                # code...
+                break;
+        }
 
-        $encounters = $query->orderBy('updated_at', 'desc')->get();
-
-        return $encounters->map(fn($e) => $this->mapEncounter($e));
+        return $query->orderBy('admission_date', 'desc')->get();
     }
     public function getAllRawatDarurat()
     {
@@ -106,6 +110,7 @@ class EncounterRepository
 
         return $encounters->map(fn($e) => $this->mapEncounter($e));
     }
+
     // Cetak Encounter
     public function getEncounterById($id)
     {

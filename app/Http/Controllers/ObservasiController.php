@@ -254,11 +254,19 @@ class ObservasiController extends Controller
             'aturan_pakai' => 'required|string|max:255',
         ]);
         $result = $this->observasiRepository->postResepDetail($request, $id);
-        return response()->json([
-            'status' => 200,
-            'message' => 'Data Resep Detail berhasil disimpan.',
-            'data' => $result
-        ]);
+
+        if ($result['success'] == false) {
+            return response()->json([
+                'status' => 400,
+                'message' => $result['message']
+            ], 400);
+        }else {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Data Resep Detail berhasil disimpan.',
+                'data' => $result
+            ]);
+        }
     }
     // hapus resep detail
     public function deleteResepDetail($id)

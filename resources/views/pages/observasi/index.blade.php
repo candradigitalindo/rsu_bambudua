@@ -1694,9 +1694,10 @@
                             // Refresh the table after successful submission
                             $("#tab-tatalaksana").click();
                         } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
+                            swal(data.message, {
                                 icon: "error"
                             });
+                            $("#tab-tatalaksana").click();
                         }
                     },
                     error: function(xhr) {
@@ -1717,7 +1718,7 @@
                                 icon: "error"
                             });
                         } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
+                            swal(xhr.responseJSON.message, {
                                 icon: "error"
                             });
                         }

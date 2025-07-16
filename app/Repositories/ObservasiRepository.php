@@ -439,6 +439,7 @@ class ObservasiRepository
             'product_apotek_id' => $request->product_apotek_id
         ]);
 
+
         // Jika sudah ada, tambahkan qty, jika belum set qty baru
         $resepDetail->qty = ($resepDetail->exists ? $resepDetail->qty : 0) + $request->qty;
         $resepDetail->nama_obat = $stokTerdekat->productApotek->name;
@@ -455,7 +456,10 @@ class ObservasiRepository
                 'total_bayar_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga')
             ]);
 
-        return $resepDetail;
+        return [
+            'success' => true,
+            'data' => $resepDetail
+        ];
     }
     // Hapus resep detail
     public function deleteResepDetail($id)
@@ -599,7 +603,7 @@ class ObservasiRepository
                     'success' => false,
                     'message' => 'Data pasien tidak ditemukan.'
                 ];
-            }else {
+            } else {
                 // Update status pasien menjadi 1 (rawat inap)
                 $pasien->update(['status' => 2]);
             }

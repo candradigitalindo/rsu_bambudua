@@ -170,6 +170,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postCatatanEncounter', [ObservasiController::class, 'postCatatanEncounter'])->name('observasi.postCatatanEncounter');
         // Cetak Encounter
         Route::get('/observasi/{id}/cetak', [EncounterController::class, 'cetakEncounter'])->name('observasi.cetakEncounter');
+        // getInpatientAdmission
+        Route::get('/observasi/{id}/getInpatientAdmission', [ObservasiController::class, 'getInpatientAdmission'])->name('observasi.getInpatientAdmission');
+        // getInpatientTreatment
+        Route::get('/observasi/{id}/getInpatientTreatment', [ObservasiController::class, 'getInpatientTreatment'])->name('observasi.getInpatientTreatment');
+        // postInpatientTreatment
+        Route::post('/observasi/{id}/postInpatientTreatment', [ObservasiController::class, 'postInpatientTreatment'])->name('observasi.postInpatientTreatment');
+        // deleteInpatientTreatment
+        Route::delete('/observasi/{id}/deleteInpatientTreatment', [ObservasiController::class, 'deleteInpatientTreatment'])->name('observasi.deleteInpatientTreatment');
+        //getInpatientDailyMedications
+        Route::get('/observasi/{id}/getInpatientDailyMedications', [ObservasiController::class, 'getInpatientDailyMedications'])->name('observasi.getInpatientDailyMedications');
+        //postInpatientDailyMedication
+        Route::post('/observasi/{id}/postInpatientDailyMedication', [ObservasiController::class, 'postInpatientDailyMedication'])->name('observasi.postInpatientDailyMedication');
+        // deleteInpatientDailyMedication
+        Route::delete('/observasi/{id}/deleteInpatientDailyMedication', [ObservasiController::class, 'deleteInpatientDailyMedication'])->name('observasi.deleteInpatientDailyMedication');
+        //updateInpatientDailyMedicationStatus
+        Route::post('/observasi/{id}/updateInpatientDailyMedicationStatus', [ObservasiController::class, 'updateInpatientDailyMedicationStatus'])->name('observasi.updateInpatientDailyMedicationStatus');
     });
 
     Route::prefix('apotek')->group(function () {

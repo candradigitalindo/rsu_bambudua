@@ -72,7 +72,7 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($encounter->status == 'active')
-                                                    <a href="{{ route('observasi.index', $encounter->id) }}"
+                                                    <a href="{{ route('observasi.getInpatientAdmission', $encounter->id) }}"
                                                         class="btn btn-outline-primary btn-sm"
                                                         id="periksa-{{ $encounter->id }}">
                                                         <i class="ri-stethoscope-line"></i>

@@ -328,4 +328,123 @@ class ObservasiController extends Controller
         $result = $this->observasiRepository->postCatatanEncounter($request, $id);
         return response()->json($result);
     }
+
+    public function getInpatientAdmission($id)
+    {
+        $getInpatientAdmission = $this->observasiRepository->getInpatientAdmission($id);
+        return view('pages.observasi.rinap', compact('getInpatientAdmission'));
+    }
+    public function postInpatientTreatment(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'type' => 'required|string|max:255',
+            'treatment_date' => 'required|date',
+            'tindakan_id' => 'required|string|max:255',
+            'result' => 'nullable|string|max:255',
+        ]);
+
+        $result = $this->observasiRepository->postInpatientTreatment($request, $id);
+        if ($result['success'] == false) {
+            return response()->json([
+                'status' => 404,
+                'message' => $result['message']
+            ], 404);
+        }else {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Tindakan berhasil disimpan.',
+                'data' => $result
+            ]);
+        }
+    }
+    //getInpatientTreatment
+    public function getInpatientTreatment($id)
+    {
+        $inpatientTreatment = $this->observasiRepository->getInpatientTreatment($id);
+        if ($inpatientTreatment) {
+            return response()->json($inpatientTreatment);
+        } else {
+            return response()->json(['message' => 'Tindakan tidak ditemukan'], 404);
+        }
+    }
+    public function deleteInpatientTreatment($id)
+    {
+        $result = $this->observasiRepository->destroyInpatientTreatment($id);
+        return response()->json([
+            'status' => $result['success'],
+            'message' => $result['message']
+        ]);
+    }
+    //getInpatientDailyMedications
+    public function getInpatientDailyMedications($id)
+    {
+        $inpatientDailyMedications = $this->observasiRepository->getInpatientDailyMedications($id);
+        if ($inpatientDailyMedications) {
+            return response()->json($inpatientDailyMedications);
+        } else {
+            return response()->json(['message' => 'Obat tidak ditemukan'], 404);
+        }
+    }
+    public function updateInpatientDailyMedicationStatus($id)
+    // Update status obat harian
+    {
+        $result = $this->observasiRepository->updateInpatientDailyMedicationStatus($id);
+        if ($result['success'] == false) {
+            return response()->json([
+                'status' => 404,
+                'message' => $result['message']
+            ], 404);
+        }else {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Status obat berhasil diperbarui.',
+                'data' => $result
+            ]);
+        }
+    }
+    //postInpatientDailyMedication
+    public function postInpatientDailyMedication(Request $request, $id)
+    {
+        // Validasi input
+        $request->validate([
+            'product_apotek_id' => 'required|string|max:255',
+            'jumlah' => 'required|integer|min:1',
+            'dosage_instructions' => 'required|string|max:255',
+            'route' => 'required|string|max:50',
+            'frequensi' => 'required|string|max:50',
+            'notes' => 'nullable|string|max:255',
+            'medicine_date' => 'nullable|date',
+        ]);
+
+        $result = $this->observasiRepository->postInpatientDailyMedication($request, $id);
+        if ($result['success'] == false) {
+            return response()->json([
+                'status' => 404,
+                'message' => $result['message']
+            ], 404);
+        }else {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Obat berhasil disimpan.',
+                'data' => $result
+            ]);
+        }
+    }
+    //deleteInpatientDailyMedication
+    public function deleteInpatientDailyMedication($id)
+    {
+        $result = $this->observasiRepository->deleteInpatientDailyMedication($id);
+        if ($result['success'] == false) {
+            return response()->json([
+                'status' => 404,
+                'message' => $result['message']
+            ], 404);
+        }else {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Obat berhasil dihapus.'
+            ]);
+        }
+    }
 }

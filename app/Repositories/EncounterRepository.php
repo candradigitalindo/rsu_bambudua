@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Encounter;
 use App\Models\InpatientAdmission;
+use Illuminate\Support\Facades\Auth;
 
 class EncounterRepository
 {
@@ -49,9 +50,9 @@ class EncounterRepository
         }
 
         // Jika user dokter, filter by practitioner
-        if (auth()->user()->role == 2) {
+        if (Auth::user()->role == 2) {
             $query->whereHas('practitioner', function ($q) {
-                $q->where('id_petugas', auth()->user()->id_petugas);
+                $q->where('id_petugas', Auth::user()->id_petugas);
             });
         }
 
@@ -69,16 +70,10 @@ class EncounterRepository
                 $q->where('name_pasien', 'like', '%' . request('name') . '%');
             });
         }
-        switch (auth()->user()->role) {
-            case 1:
-                # code...
-                break;
-            case 2:
-                $query->where('dokter_id', auth()->user()->id);
-                break;
-            default:
-                # code...
-                break;
+
+        // Filter khusus untuk dokter (role 2)
+        if (Auth::user()->role == 2) {
+            $query->where('dokter_id', Auth::user()->id);
         }
 
         return $query->orderBy('admission_date', 'desc')->get();
@@ -100,9 +95,9 @@ class EncounterRepository
         }
 
         // Jika user dokter, filter by practitioner
-        if (auth()->user()->role == 2) {
+        if (Auth::user()->role == 2) {
             $query->whereHas('practitioner', function ($q) {
-                $q->where('id_petugas', auth()->user()->id_petugas);
+                $q->where('id_petugas', Auth::user()->id_petugas);
             });
         }
 

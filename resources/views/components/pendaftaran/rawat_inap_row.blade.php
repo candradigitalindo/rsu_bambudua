@@ -44,7 +44,7 @@
             <tr>
                 <td>No. Kamar</td>
                 <td>:</td>
-                <td>{{ $d->admission->room->no_kamar }}</td>
+                <td>{{ optional($d->admission->room)->no_kamar ?? '-' }}</td>
             </tr>
         </table>
     </td>
@@ -54,7 +54,7 @@
             <i class="ri-edit-2-fill"></i>
             Edit
         </button>
-        <button type="button" class="btn destoryRawatInap btn-outline-danger btn-sm" id="{{ $d->id }}">
+        <button type="button" class="btn destroyEncounterRinap btn-outline-danger btn-sm" id="{{ $d->id }}">
             <i class="ri-delete-bin-5-fill"></i>
             Hapus
         </button>

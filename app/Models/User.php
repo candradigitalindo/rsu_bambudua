@@ -53,4 +53,12 @@ class User extends Authenticatable
     {
         return $this->hasOne(Profile::class);
     }
+    public function clinics()
+    {
+        return $this->belongsToMany(Clinic::class);
+    }
+    public function nurseEncounters()
+    {
+        return $this->belongsToMany(Encounter::class, 'encounter_nurse', 'user_id', 'encounter_id')->withTimestamps();
+    }
 }

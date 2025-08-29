@@ -714,7 +714,7 @@
                                     </div>
                                     <hr>
                                     <div class="row gx-3 mt-3">
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a7">Jenis Jaminan</label>
                                                 <div class="input-group">
@@ -729,16 +729,14 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Dokter
-
-                                                </label>
+                                                <label class="form-label" for="a1">Poliklinik</label>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="dokter" id="dokter">
-                                                        <option value="">-- Pilih Dokter --</option>
-                                                        @foreach ($dokter as $do)
-                                                            <option value="{{ $do->user->name }}">{{ $do->user->name }}
+                                                    <select class="form-select" name="clinic" id="clinic">
+                                                        <option value="">-- Pilih Poliklinik --</option>
+                                                        @foreach ($clinics as $clinic)
+                                                            <option value="{{ $clinic->id }}">{{ $clinic->nama }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -746,7 +744,18 @@
 
                                             </div>
                                         </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="dokter">Dokter</label>
+                                                <div class="input-group">
+                                                    <select class="form-select" name="dokter" id="dokter">
+                                                        <option value="">-- Pilih Dokter --</option>
+                                                        {{-- Akan diisi via JS --}}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Tujuan Kunjungan
 
@@ -863,7 +872,8 @@
                                                 <label class="form-label" for="a7">Jenis Jaminan</label>
                                                 <span class="text-danger">*</span>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="jenis_jaminan_rawatRinap" id="jenis_jaminan_rawatRinap">
+                                                    <select class="form-select" name="jenis_jaminan_rawatRinap"
+                                                        id="jenis_jaminan_rawatRinap">
                                                         <option value="">-- Pilih Jaminan --</option>
                                                         <option value="1">Umum</option>
                                                         {{-- <option value="1">BPJS</option>
@@ -873,17 +883,16 @@
 
                                             </div>
                                         </div>
-
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a1">Dokter
-                                                    <span class="text-danger">*</span>
-                                                </label>
+                                                <label class="form-label" for="a7">Dokter</label>
+                                                <span class="text-danger">*</span>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="dokter" id="dokter_rawatRinap">
+                                                    <select class="form-select" name="dokter_rawatRinap"
+                                                        id="dokter_rawatRinap">
                                                         <option value="">-- Pilih Dokter --</option>
-                                                        @foreach ($dokter as $do)
-                                                            <option value="{{ $do->user->id }}">{{ $do->user->name }}
+                                                        @foreach ($doctors as $doctor)
+                                                            <option value="{{ $doctor->id }}">{{ $doctor->name }}
                                                             </option>
                                                         @endforeach
                                                     </select>
@@ -891,7 +900,7 @@
 
                                             </div>
                                         </div>
-                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Ruang Rawat Inap
                                                     <span class="text-danger">*</span>
@@ -918,7 +927,8 @@
                                                     <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control" id="name_companion" placeholder="Nama Pendamping">
+                                                    <input type="text" class="form-control" id="name_companion"
+                                                        placeholder="Nama Pendamping">
                                                 </div>
                                             </div>
                                         </div>
@@ -928,7 +938,8 @@
 
                                                 </label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control" id="nik_companion" placeholder="NIK Pendamping">
+                                                    <input type="text" class="form-control" id="nik_companion"
+                                                        placeholder="NIK Pendamping">
                                                 </div>
                                             </div>
                                         </div>
@@ -938,7 +949,8 @@
                                                     <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control" id="phone_companion" placeholder="No Handphone Pendamping">
+                                                    <input type="text" class="form-control" id="phone_companion"
+                                                        placeholder="No Handphone Pendamping">
                                                 </div>
                                             </div>
                                         </div>
@@ -948,7 +960,8 @@
                                                     <span class="text-danger">*</span>
                                                 </label>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="relation_companion" id="relation_companion">
+                                                    <select class="form-select" name="relation_companion"
+                                                        id="relation_companion">
                                                         <option value="">-- Pilih Hubungan --</option>
                                                         <option value="1">Ayah</option>
                                                         <option value="2">Ibu</option>
@@ -1050,7 +1063,7 @@
                                     </div>
                                     <hr>
                                     <div class="row gx-3 mt-3">
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a7">Jenis Jaminan</label>
                                                 <div class="input-group">
@@ -1066,25 +1079,8 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="a1">Dokter
 
-                                                </label>
-                                                <div class="input-group">
-                                                    <select class="form-select" name="dokter_rawatDarurat"
-                                                        id="dokter_rawatDarurat">
-                                                        <option value="">-- Pilih Dokter --</option>
-                                                        @foreach ($dokter as $do)
-                                                            <option value="{{ $do->user->name }}">{{ $do->user->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Tujuan Kunjungan
 
@@ -1685,6 +1681,7 @@
                     _token: "{{ csrf_token() }}",
                     jenis_jaminan: $("#jenis_jaminan").val(),
                     dokter: $("#dokter").val(),
+                    clinic_id: $("#clinic").val(),
                     tujuan_kunjungan: $("#tujuan_kunjungan").val(),
                 },
 
@@ -1721,6 +1718,7 @@
                     jenis_jaminan: $("#jenis_jaminan").val(),
                     dokter: $("#dokter").val(),
                     tujuan_kunjungan: $("#tujuan_kunjungan").val(),
+                    clinic: $("#clinic").val(),
                 },
 
                 success: function(res) {
@@ -1771,6 +1769,9 @@
                     $("#dokter").val(res.data.dokter);
                     $("#tujuan_kunjungan").val(res.data.tujuan_kunjungan);
                     $("#btn-submit-rawatJalan").text("Update Rawat Jalan");
+                    $("#clinic").val(res.data.clinic_id).trigger(
+                        'change'); // trigger agar dokter terupdate
+                    $("#dokter").data('selected', res.data.dokter_id);
                     $("#error-rawatJalan").css("display", "none");
                 }
             })
@@ -1783,41 +1784,6 @@
                 $("#error-rawatJalan").find("ul").append('<li>' + value + '</li>');
             });
         }
-
-        $(document).on('click', '.destoryRawatJalan', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.destroyEncounterRajal', ':id') }}"
-            url = url.replace(':id', id);
-            swal({
-                title: "Apakah Anda Yakin?",
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                        },
-                        success: function(res) {
-                            if (res.status == true) {
-                                $("#tab-rawatJalan").click();
-                                swal(res.text, {
-                                    icon: "success",
-                                });
-                            } else {
-                                swal(res.text, {
-                                    icon: "error",
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-        });
 
         $(document).on('click', '.rawatInap', function() {
             let id = $(this).attr('id');
@@ -2028,9 +1994,9 @@
             let url = "{{ route('pendaftaran.editEncounterRajal', ':id') }}"
             url = url.replace(':id', id);
             $("#error-rawatJalan").css("display", "none");
-            $("#jenis_jaminan_rawatJalan").val("");
-            $("#dokter_rawatJalan").val("");
-            $("#tujuan_kunjungan_rawatJalan").val("");
+            $("#jenis_jaminan").val("");
+            $("#dokter").val("");
+            $("#tujuan_kunjungan").val("");
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -2042,17 +2008,53 @@
                     $("#name_rawatJalan").text(res.data.name_pasien);
                     $("#tgl_lahir_rawatJalan").text(res.data.umur);
                     $("#id-rawatJalan").val(id);
-                    $("#status-pasien-rawatJalan").text(res.data.status);
+                    $("#status-pasien").text(res.data.status);
                     $("#no_encounter_rawatJalan").text(res.data.no_encounter);
                     $("#created_rawatJalan").text(res.data.tgl_encounter);
                     $("#type_rawatJalan").text(res.data.type);
-                    $("#jenis_jaminan_rawatJalan").val(res.data.jenis_jaminan);
-                    $("#dokter_rawatJalan").val(res.data.dokter);
-                    $("#tujuan_kunjungan_rawatJalan").val(res.data.tujuan_kunjungan);
+                    $("#jenis_jaminan").val(res.data.jenis_jaminan);
+                    $("#dokter").val(res.data.dokter);
+                    $("#tujuan_kunjungan").val(res.data.tujuan_kunjungan);
                     $("#btn-submit-rawatJalan").text("Update Rawat Jalan");
+                    $("#clinic").val(res.data.clinic_id).trigger(
+                        'change'); // trigger agar dokter terupdate
+                    $("#dokter").data('selected', res.data.dokter_id);
                     $("#error-rawatJalan").css("display", "none");
                 }
             })
+        });
+        $(document).on('click', '.destroyRawatJalan', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.destroyEncounterRajal', ':id') }}".replace(':id', id);
+            swal({
+                title: "Apakah Anda Yakin?",
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                        },
+                        success: function(res) {
+                            if (res.status == true) {
+                                $("#tab-rawatJalan").click();
+                                swal(res.text, {
+                                    icon: "success",
+                                });
+                            } else {
+                                swal(res.text, {
+                                    icon: "error",
+                                });
+                            }
+                        }
+                    });
+                }
+            });
         });
 
         function error_rawatDarurat(msg) {
@@ -2062,6 +2064,7 @@
                 $("#error-rawatDarurat").find("ul").append('<li>' + value + '</li>');
             });
         }
+
         function error_rawatJalan(msg) {
             $("#error-rawatJalan").find("ul").html('');
             $("#error-rawatJalan").css('display', 'block');
@@ -2069,7 +2072,7 @@
                 $("#error-rawatJalan").find("ul").append('<li>' + value + '</li>');
             });
         }
-         $(document).on('click', '.editrawatInap', function() {
+        $(document).on('click', '.editrawatInap', function() {
             let id = $(this).attr('id');
             let url = "{{ route('pendaftaran.editEncounterRinap', ':id') }}"
             url = url.replace(':id', id);
@@ -2111,6 +2114,7 @@
                 update_rawatRinap();
             }
         });
+
         function update_rawatRinap() {
             let url = "{{ route('pendaftaran.postRawatInap', ':id') }}"
             url = url.replace(':id', $("#id-rawatRinap").val());
@@ -2122,11 +2126,11 @@
                     _token: "{{ csrf_token() }}",
                     jenis_jaminan: $("#jenis_jaminan_rawatRinap").val(),
                     dokter: $("#dokter_rawatRinap").val(),
-                    ruangan : $("#ruangan_rawatRinap").val(),
-                    name_companion : $("#name_companion").val(),
-                    nik_companion : $("#nik_companion").val(),
-                    phone_companion : $("#phone_companion").val(),
-                    relation_companion : $("#relation_companion").val(),
+                    ruangan: $("#ruangan_rawatRinap").val(),
+                    name_companion: $("#name_companion").val(),
+                    nik_companion: $("#nik_companion").val(),
+                    phone_companion: $("#phone_companion").val(),
+                    relation_companion: $("#relation_companion").val(),
                 },
 
                 success: function(res) {
@@ -2157,6 +2161,59 @@
                 $("#error-rawatRinap").find("ul").append('<li>' + value + '</li>');
             });
         }
+        $('#clinic').on('change', function() {
+            var clinicId = $(this).val();
+            $('#dokter').html('<option value="">-- Pilih Dokter --</option>');
+            if (clinicId) {
+                $.get("{{ route('ajax.dokterByClinic', ':id') }}".replace(':id', clinicId), function(data) {
+                    $.each(data, function(i, dokter) {
+                        $('#dokter').append('<option value="' + dokter.id + '">' + dokter.name +
+                            '</option>');
+                    });
+                    // Jika sedang edit, set dokter yang sesuai
+                    if ($("#dokter").data('selected')) {
+                        $("#dokter").val($("#dokter").data('selected'));
+                        $("#dokter").removeData('selected');
+                    }
+                });
+            }
+        });
+        // destroyEncounterRinap
+        $(document).on('click', '.destroyEncounterRinap', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.destroyEncounterRinap', ':id') }}"
+            url = url.replace(':id', id);
+            swal({
+                title: "Apakah Anda Yakin?",
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: url,
+                        type: 'DELETE',
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                        },
+                        success: function(res) {
+                            if (res.status == true) {
+                                // tab rawat inap
+                                $("#tab-rawatInap").click();
+                                swal(res.text, {
+                                    icon: "success",
+                                });
+                            } else {
+                                swal(res.text, {
+                                    icon: "error",
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+        });
 
     </script>
 @endpush

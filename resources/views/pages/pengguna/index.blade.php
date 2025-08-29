@@ -41,6 +41,7 @@
                                         <th>ID Pengenal</th>
                                         <th>Hak Akses</th>
                                         <th>Spesialis</th>
+                                        <th>Poliklinik</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -50,11 +51,19 @@
                                             <td>{{ $u->name }}</td>
                                             <td>{{ $u->username }}</td>
                                             <td>{{ $u->id_petugas }}</td>
+
                                             <td>
-                                                <span class="badge border border-primary text-primary">{{ $u->role }}</span>
+                                                <span
+                                                    class="badge border border-primary text-primary">{{ $u->role }}</span>
                                             </td>
                                             <td>
-                                                <span class="badge border border-primary text-primary">{{ $u->spesialis }}</span>
+                                                <span
+                                                    class="badge border border-primary text-primary">{{ $u->spesialis }}</span>
+                                            </td>
+                                            <td>
+                                                @foreach ($u->clinics as $clinic)
+                                                    <span class="badge border border-primary text-primary">{{ $clinic->nama }}</span>
+                                                @endforeach
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('pengguna.edit', $u->id) }}"

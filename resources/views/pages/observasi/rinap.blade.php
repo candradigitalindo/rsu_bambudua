@@ -226,9 +226,6 @@
                                                     <div class="input-group">
                                                         <input type="file" class="form-control"
                                                             id="dokumen_pemeriksaan" name="dokumen_pemeriksaan">
-                                                        <input type="hidden" name="dokumen_pemeriksaan"
-                                                            id="dokumen_pemeriksaan"
-                                                            value="{{ old('dokumen_pemeriksaan') }}">
                                                         <p class="text-danger">
                                                             {{ $errors->first('dokumen_pemeriksaan') }}</p>
 
@@ -583,7 +580,7 @@
                             <div class="tab-pane fade" id="catatan" role="tabpanel">
                                 <!-- Row startss -->
                                 <div class="row gx-3">
-                                    <div class="col-xxl-6 col-sm-12">
+                                    {{-- <div class="col-xxl-6 col-sm-12">
                                         <div class="card mb-1">
                                             <div class="card-header">
                                                 <h5 class="card-title">Tindakan</h5>
@@ -722,7 +719,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    </div> --}}
                                     <div class="col-xxl-12 col-sm-12">
                                         <div class="card mb-3">
                                             <div class="card-header">
@@ -749,8 +746,7 @@
                                                                 Kondisi Stabil</option>
                                                             <option value="2" {{ old('status_pulang') == 2 ?: '' }}>
                                                                 Pulang Kontrol Kembali</option>
-                                                            <option value="3" {{ old('status_pulang') == 3 ?: '' }}>
-                                                                Rujukan Rawat Inap</option>
+
                                                             <option value="4" {{ old('status_pulang') == 4 ?: '' }}>
                                                                 Rujukan RSU Lain</option>
                                                             <option value="5" {{ old('status_pulang') == 5 ?: '' }}>
@@ -827,6 +823,46 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        // Helper function to manage button state during AJAX calls
+        function setButtonState(buttonId, textId, spinnerHTMLId, isLoading, text) {
+            const button = $(`#${buttonId}`);
+            const textElement = $(`#${textId}`);
+            const spinner = $(`#${spinnerHTMLId}`);
+
+            if (isLoading) {
+                button.prop('disabled', true);
+                textElement.addClass('d-none');
+                spinner.removeClass('d-none');
+            } else {
+                button.prop('disabled', false);
+                textElement.removeClass('d-none').text(text);
+                spinner.addClass('d-none');
+            }
+        }
+
+        // Helper function for consistent Swal notifications
+        function showSwal(message, type = 'success') {
+            swal(message, {
+                icon: type,
+            });
+        }
+
+        // Helper function to handle AJAX errors
+        function handleAjaxError(xhr, defaultMessage = 'Terjadi kesalahan saat memproses permintaan.') {
+            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                let errorMsg = Object.values(xhr.responseJSON.errors).map(msgArr => msgArr.join('<br>')).join('<br>');
+                swal({
+                    title: "Validasi Gagal",
+                    html: true,
+                    text: errorMsg,
+                    icon: "error"
+                });
+            } else {
+                const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : defaultMessage;
+                showSwal(message, 'error');
+            }
+        }
+
         $(document).ready(function() {
             // tab-anamnesis auto click
             autoClickTab(); // Call the function to auto-click the tab
@@ -890,23 +926,20 @@
                         _token: "{{ csrf_token() }}"
                     },
                     beforeSend: function() {
-                        $("#spinner-anamnesis").removeClass("d-none");
-                        $("#text-anamnesis").addClass("d-none");
+                        setButtonState('btn-anamnesis', 'text-anamnesis', 'spinner-anamnesis',
+                            true);
                     },
                     success: function(data) {
                         if (data.status == 200) {
-                            swal(data.message, {
-                                icon: "success",
-                            });
-                            $("#spinner-anamnesis").addClass("d-none");
-                            $("#text-anamnesis").removeClass("d-none");
+                            showSwal(data.message);
                         } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error",
-                            });
-                            $("#spinner-anamnesis").addClass("d-none");
-                            $("#text-anamnesis").removeClass("d-none");
+                            showSwal('Terjadi kesalahan saat menyimpan data.', 'error');
                         }
+                    },
+                    error: (xhr) => handleAjaxError(xhr),
+                    complete: function() {
+                        setButtonState('btn-anamnesis', 'text-anamnesis', 'spinner-anamnesis',
+                            false, 'Simpan');
                     }
                 });
             });
@@ -1085,30 +1118,24 @@
                     processData: false, // Jangan proses data
                     contentType: false, // Jangan tetapkan header Content-Type
                     beforeSend: function() {
-                        $("#spinner-pemeriksaan").removeClass("d-none");
-                        $("#text-pemeriksaan").addClass("d-none");
+                        setButtonState('btn-pemeriksaan', 'text-pemeriksaan',
+                            'spinner-pemeriksaan', true);
                     },
                     success: function(data) {
                         if (data.status == 200) {
-                            swal(data.message, {
-                                icon: "success",
-                            });
+                            showSwal(data.message);
                             // Refresh the table after successful submission
                             $("#tab-treatment").click();
                         } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error",
-                            });
+                            showSwal('Terjadi kesalahan saat menyimpan data.', 'error');
                         }
-                        $("#spinner-pemeriksaan").addClass("d-none");
-                        $("#text-pemeriksaan").removeClass("d-none");
                     },
-                    error: function(xhr) {
-                        swal('Terjadi kesalahan saat mengirim data.', {
-                            icon: "error",
-                        });
-                        $("#spinner-pemeriksaan").addClass("d-none");
-                        $("#text-pemeriksaan").removeClass("d-none");
+                    error: (xhr) => {
+                        handleAjaxError(xhr, 'Terjadi kesalahan saat mengirim data.');
+                    },
+                    complete: function() {
+                        setButtonState('btn-pemeriksaan', 'text-pemeriksaan',
+                            'spinner-pemeriksaan', false, 'Simpan');
                     }
                 });
             });
@@ -1253,23 +1280,21 @@
                         _token: "{{ csrf_token() }}"
                     },
                     beforeSend: function() {
-                        $("#spinner-diagnosis-medis").removeClass("d-none");
-                        $("#text-diagnosis-medis").addClass("d-none");
+                        setButtonState('btn-diagnosis-medis', 'text-diagnosis-medis',
+                            'spinner-diagnosis-medis', true);
                     },
                     success: function(data) {
                         if (data.status == 200) {
-                            swal(data.message, {
-                                icon: "success",
-                            });
+                            showSwal(data.message);
                             // Refresh the table after successful submission
                             $("#tab-diagnosis").click();
                         } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error",
-                            });
+                            showSwal('Terjadi kesalahan saat menyimpan data.', 'error');
                         }
-                        $("#spinner-diagnosis-medis").addClass("d-none");
-                        $("#text-diagnosis-medis").removeClass("d-none");
+                    },
+                    complete: function() {
+                        setButtonState('btn-diagnosis-medis', 'text-diagnosis-medis',
+                            'spinner-diagnosis-medis', false, 'Simpan');
                     }
                 });
             });
@@ -1521,10 +1546,8 @@
                 }
 
                 // Tampilkan spinner dan disable tombol
-                $("#spinner-tambah-obat-daily").removeClass("d-none");
-                $("#text-tambah-obat-daily").addClass("d-none");
-                $("#btn-tambah-obat-daily").prop("disabled", true);
-
+                setButtonState('btn-tambah-obat-daily', 'text-tambah-obat-daily',
+                    'spinner-tambah-obat-daily', true);
                 // ajax post resep
                 let url = "{{ route('observasi.postInpatientDailyMedication', ':id') }}";
                 url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
@@ -1542,49 +1565,22 @@
                         medicine_date: medicine_date
                     },
                     success: function(data) {
-                        $("#spinner-tambah-obat-daily").addClass("d-none");
-                        $("#text-tambah-obat-daily").removeClass("d-none");
-                        $("#btn-tambah-obat-daily").prop("disabled", false);
-
                         if (data.status == 200) {
-                            swal(data.message, {
-                                icon: "success"
-                            });
+                            showSwal(data.message);
                             $("#tab-daily")
                                 .click(); // Refresh the table after successful submission
                         } else {
-                            swal(data.message, {
-                                icon: "error"
-                            });
+                            showSwal(data.message, 'error');
                             $("#tab-daily")
                                 .click(); // Refresh the table even if there's an error
                         }
                     },
                     error: function(xhr) {
-                        $("#spinner-buat-resep").addClass("d-none");
-                        $("#text-buat-resep").removeClass("d-none");
-                        $("#btn-buat-resep").prop("disabled", false);
-
-                        // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorMsg = Object.values(errors).map(function(msgArr) {
-                                return msgArr.join('<br>');
-                            }).join('<br>');
-                            swal({
-                                title: "Validasi Gagal",
-                                html: true,
-                                text: errorMsg,
-                                icon: "error"
-                            });
-                        } else {
-                            swal(xhr.responseJSON.message, {
-                                icon: "error"
-                            });
-                            $("#spinner-tambah-obat-daily").addClass("d-none");
-                            $("#text-tambah-obat-daily").removeClass("d-none");
-                            $("#btn-tambah-obat-daily").prop("disabled", false);
-                        }
+                        handleAjaxError(xhr);
+                    },
+                    complete: function() {
+                        setButtonState('btn-tambah-obat-daily', 'text-tambah-obat-daily',
+                            'spinner-tambah-obat-daily', false, 'Tambah Obat');
                     }
                 });
             });
@@ -1642,7 +1638,8 @@
                     dangerMode: true,
                 }).then((willDelete) => {
                     if (willDelete) {
-                        let url = "{{ route('observasi.updateInpatientDailyMedicationStatus', ':id') }}"
+                        let url =
+                            "{{ route('observasi.updateInpatientDailyMedicationStatus', ':id') }}"
                             .replace(':id', id);
                         $.ajax({
                             url: url,
@@ -1777,10 +1774,7 @@
                     return;
                 }
                 // Tampilkan spinner dan disable tombol
-                $("#spinner-buat-resep").removeClass("d-none");
-                $("#text-buat-resep").addClass("d-none");
-                $("#btn-buat-resep").prop("disabled", true);
-
+                setButtonState('btn-buat-resep', 'text-buat-resep', 'spinner-buat-resep', true);
                 // ajax post resep
                 let url = "{{ route('observasi.postResep', ':id') }}";
                 url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
@@ -1792,46 +1786,22 @@
                         masa_pemakaian_hari: masa_pemakaian_hari
                     },
                     success: function(data) {
-                        $("#spinner-buat-resep").addClass("d-none");
-                        $("#text-buat-resep").removeClass("d-none");
-                        $("#btn-buat-resep").prop("disabled", false);
-
                         if (data.status == 200) {
-                            swal(data.message, {
-                                icon: "success"
-                            });
+                            showSwal(data.message);
                             // Tampilkan kolom resep
                             $("#resep").removeClass("d-none");
-                             $("#kode_resep").text("[" + data.kode_resep + "] " + data
+                            $("#kode_resep").text("[" + data.kode_resep + "] " + data
                                 .masa_pemakaian_hari + " hari");
                         } else {
-                            swal(data.message, {
-                                icon: "error"
-                            });
+                            showSwal(data.message, 'error');
                         }
                     },
                     error: function(xhr) {
-                        $("#spinner-buat-resep").addClass("d-none");
-                        $("#text-buat-resep").removeClass("d-none");
-                        $("#btn-buat-resep").prop("disabled", false);
-
-                        // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorMsg = Object.values(errors).map(function(msgArr) {
-                                return msgArr.join('<br>');
-                            }).join('<br>');
-                            swal({
-                                title: "Validasi Gagal",
-                                html: true,
-                                text: errorMsg,
-                                icon: "error"
-                            });
-                        } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error"
-                            });
-                        }
+                        handleAjaxError(xhr, 'Terjadi kesalahan saat menyimpan data.');
+                    },
+                    complete: function() {
+                        setButtonState('btn-buat-resep', 'text-buat-resep',
+                            'spinner-buat-resep', false, 'Buat Resep');
                     }
                 });
             });
@@ -1855,10 +1825,7 @@
                     return;
                 }
                 // Tampilkan spinner dan disable tombol
-                $("#spinner-tambah-obat").removeClass("d-none");
-                $("#text-tambah-obat").addClass("d-none");
-                $("#btn-tambah-obat").prop("disabled", true);
-                // ajax post resep detail
+                setButtonState('btn-tambah-obat', 'text-tambah-obat', 'spinner-tambah-obat', true);
                 let url = "{{ route('observasi.postResepDetail', ':id') }}";
                 url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
                 $.ajax({
@@ -1871,45 +1838,21 @@
                         aturan_pakai: aturan_pakai
                     },
                     success: function(data) {
-                        $("#spinner-tambah-obat").addClass("d-none");
-                        $("#text-tambah-obat").removeClass("d-none");
-                        $("#btn-tambah-obat").prop("disabled", false);
-
                         if (data.status == 200) {
-                            swal(data.message, {
-                                icon: "success"
-                            });
+                            showSwal(data.message);
                             // Refresh the table after successful submission
                             $("#tab-tatalaksana").click();
                         } else {
-                            swal(data.message, {
-                                icon: "error"
-                            });
+                            showSwal(data.message, 'error');
                             $("#tab-tatalaksana").click();
                         }
                     },
                     error: function(xhr) {
-                        $("#spinner-tambah-obat").addClass("d-none");
-                        $("#text-tambah-obat").removeClass("d-none");
-                        $("#btn-tambah-obat").prop("disabled", false);
-
-                        // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorMsg = Object.values(errors).map(function(msgArr) {
-                                return msgArr.join('<br>');
-                            }).join('<br>');
-                            swal({
-                                title: "Validasi Gagal",
-                                html: true,
-                                text: errorMsg,
-                                icon: "error"
-                            });
-                        } else {
-                            swal(xhr.responseJSON.message, {
-                                icon: "error"
-                            });
-                        }
+                        handleAjaxError(xhr);
+                    },
+                    complete: function() {
+                        setButtonState('btn-tambah-obat', 'text-tambah-obat',
+                            'spinner-tambah-obat', false, 'Tambah Obat');
                     }
                 });
             });
@@ -1956,193 +1899,7 @@
                     }
                 });
             });
-            $("#tab-catatan").click(function() {
-                // ajax getEncounter
-                let url = "{{ route('observasi.getEncounter', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        console.log(data);
-                        // isi table tbody-catatan-tindakan dan tbody-catatan-resep
-                        let tbodyTindakan = $("#tbody-catatan-tindakan");
-                        tbodyTindakan.empty();
-                        let tbodyResep = $("#tbody-catatan-resep");
-                        tbodyResep.empty();
-                        let totalTindakan = 0;
-                        let totalResep = 0;
-                        if (data.tindakan) {
-                            $.each(data.tindakan, function(index, item) {
-                                tbodyTindakan.append(
-                                    `<tr>
-
-                                        <td>${item.tindakan_name}</td>
-                                        <td>${item.qty}</td>
-                                        <td class="text-end">${formatRupiah(item.tindakan_harga)}</td>
-                                        <td class="text-end">${formatRupiah(item.total_harga)}</td>
-                                    </tr>`
-                                );
-                            });
-                        }
-                        $("#total-tindakan").text(formatRupiah(data.total_tindakan));
-                        $("#total-tindakan-diskon").text(formatRupiah(data.diskon_tindakan) +
-                            (data.diskon_tindakan ? ' (' + data.diskon_persen_tindakan +
-                                '%)' : ''));
-                        $("#total-tindakan-harga").text(formatRupiah(data
-                            .total_bayar_tindakan));
-                        if (data.resep) {
-                            $.each(data.resep.details, function(index, item) {
-                                tbodyResep.append(
-                                    `<tr>
-                                                <td>${item.nama_obat}</td>
-                                                <td>${item.qty}</td>
-                                                <td>${item.aturan_pakai}</td>
-                                                <td class="text-end">${formatRupiah(item.harga)}</td>
-                                                <td class="text-end">${formatRupiah(item.total_harga)}</td>
-                                            </tr>`
-                                );
-                            });
-                        }
-                        $("#total-resep-catatan").text(formatRupiah(data.total_resep));
-                        $("#total-resep-diskon").text(formatRupiah(data.diskon_resep) +
-                            (data.diskon_resep ? ' (' + data.diskon_persen_resep + '%)' :
-                                ''));
-                        $("#total-resep-harga").text(formatRupiah(data.total_bayar_resep));
-                    }
-                });
-            });
-            $("#btn-buat-diskon-tindakan").click(function(e) {
-                e.preventDefault();
-                // validasi input
-                let diskon_tindakan = $("#diskon_tindakan").val();
-                if (diskon_tindakan == '') {
-                    alert("Diskon Tindakan tidak boleh kosong");
-                    return;
-                }
-                // Tampilkan spinner dan disable tombol
-                $("#spinner-buat-diskon-tindakan").removeClass("d-none");
-                $("#text-buat-diskon-tindakan").addClass("d-none");
-                $("#btn-buat-diskon-tindakan").prop("disabled", true);
-                // ajax post diskon tindakan
-                let url = "{{ route('observasi.postDiskonTindakan', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        diskon_tindakan: diskon_tindakan
-                    },
-                    success: function(data) {
-                        $("#spinner-buat-diskon-tindakan").addClass("d-none");
-                        $("#text-buat-diskon-tindakan").removeClass("d-none");
-                        $("#btn-buat-diskon-tindakan").prop("disabled", false);
-
-                        if (data.success == true) {
-                            swal(data.message, {
-                                icon: "success"
-                            });
-                            // Refresh the catatan tab
-                            $("#tab-catatan").click();
-                        } else {
-                            swal(data.message, {
-                                icon: "error"
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        $("#spinner-buat-diskon-tindakan").addClass("d-none");
-                        $("#text-buat-diskon-tindakan").removeClass("d-none");
-                        $("#btn-buat-diskon-tindakan").prop("disabled", false);
-
-                        // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorMsg = Object.values(errors).map(function(msgArr) {
-                                return msgArr.join('<br>');
-                            }).join('<br>');
-                            swal({
-                                title: "Validasi Gagal",
-                                html: true,
-                                text: errorMsg,
-                                icon: "error"
-                            });
-                        } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error"
-                            });
-                        }
-                    }
-                });
-            });
-            $("#btn-buat-diskon-resep").click(function(e) {
-                e.preventDefault();
-                // validasi input
-                let diskon_resep = $("#diskon_resep").val();
-                if (diskon_resep == '') {
-                    alert("Diskon Resep tidak boleh kosong");
-                    return;
-                }
-                // Tampilkan spinner dan disable tombol
-                $("#spinner-buat-diskon-resep").removeClass("d-none");
-                $("#text-buat-diskon-resep").addClass("d-none");
-                $("#btn-buat-diskon-resep").prop("disabled", true);
-                // ajax post diskon resep
-                let url = "{{ route('observasi.postDiskonResep', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        diskon_resep: diskon_resep
-                    },
-                    success: function(data) {
-                        $("#spinner-buat-diskon-resep").addClass("d-none");
-                        $("#text-buat-diskon-resep").removeClass("d-none");
-                        $("#btn-buat-diskon-resep").prop("disabled", false);
-
-                        if (data.success == true) {
-                            swal(data.message, {
-                                icon: "success"
-                            });
-                            // Refresh the catatan tab
-                            $("#tab-catatan").click();
-                        } else {
-                            swal(data.message, {
-                                icon: "error"
-                            });
-                        }
-                    },
-                    error: function(xhr) {
-                        $("#spinner-buat-diskon-resep").addClass("d-none");
-                        $("#text-buat-diskon-resep").removeClass("d-none");
-                        $("#btn-buat-diskon-resep").prop("disabled", false);
-
-                        // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorMsg = Object.values(errors).map(function(msgArr) {
-                                return msgArr.join('<br>');
-                            }).join('<br>');
-                            swal({
-                                title: "Validasi Gagal",
-                                html: true,
-                                text: errorMsg,
-                                icon: "error"
-                            });
-                        } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error"
-                            });
-                        }
-                    }
-                });
-            });
+           
             // btn-simpan-catatan
             $("#btn-simpan-catatan").click(function(e) {
                 e.preventDefault();
@@ -2154,12 +1911,9 @@
                     return;
                 }
                 // Tampilkan spinner dan disable tombol
-                $("#spinner-simpan-catatan").removeClass("d-none");
-                $("#text-simpan-catatan").addClass("d-none");
-                $("#btn-simpan-catatan").prop("disabled", true);
-                // ajax post catatan
+                setButtonState('btn-simpan-catatan', 'text-simpan-catatan', 'spinner-simpan-catatan', true);
                 let url = "{{ route('observasi.postCatatanEncounter', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
+                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
                 $.ajax({
                     url: url,
                     type: "POST",
@@ -2170,45 +1924,21 @@
                         status_pulang: status_pulang
                     },
                     success: function(data) {
-                        $("#spinner-simpan-catatan").addClass("d-none");
-                        $("#text-simpan-catatan").removeClass("d-none");
-                        $("#btn-simpan-catatan").prop("disabled", false);
-
                         if (data.success == true) {
-                            swal(data.message, {
-                                icon: "success"
-                            });
+                            showSwal(data.message);
                             // redirect ke halaman observasi
                             window.location.href = data.url;
 
                         } else {
-                            swal(data.message, {
-                                icon: "error"
-                            });
+                            showSwal(data.message, 'error');
                         }
                     },
                     error: function(xhr) {
-                        $("#spinner-simpan-catatan").addClass("d-none");
-                        $("#text-simpan-catatan").removeClass("d-none");
-                        $("#btn-simpan-catatan").prop("disabled", false);
-
-                        // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                            let errors = xhr.responseJSON.errors;
-                            let errorMsg = Object.values(errors).map(function(msgArr) {
-                                return msgArr.join('<br>');
-                            }).join('<br>');
-                            swal({
-                                title: "Validasi Gagal",
-                                html: true,
-                                text: errorMsg,
-                                icon: "error"
-                            });
-                        } else {
-                            swal('Terjadi kesalahan saat menyimpan data.', {
-                                icon: "error"
-                            });
-                        }
+                        handleAjaxError(xhr, 'Terjadi kesalahan saat menyimpan data.');
+                    },
+                    complete: function() {
+                        setButtonState('btn-simpan-catatan', 'text-simpan-catatan',
+                            'spinner-simpan-catatan', false, 'Selesai Pemeriksaan');
                     }
                 });
             });

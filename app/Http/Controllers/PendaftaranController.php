@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Repositories\PendaftaranRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -19,9 +20,10 @@ class PendaftaranController extends Controller
         $pekerjaan  = $this->pendaftaranRepository->pekerjaan();
         $agama      = $this->pendaftaranRepository->agama();
         $provinsi  = $this->pendaftaranRepository->provinsi();
-        $dokter     = $this->pendaftaranRepository->showDokter();
+        $clinics     = $this->pendaftaranRepository->showClinic();
         $ruangan   = $this->pendaftaranRepository->ruangan();
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'dokter', 'ruangan'));
+        $doctors = User::where('role', 2)->get(); // 2 = dokter
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'doctors'));
     }
 
     public function update_antrian()
@@ -250,7 +252,7 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'required|string',
+            'dokter'            => 'nullable|string',
             'tujuan_kunjungan'  => 'required|string',
 
         ], [
@@ -329,5 +331,27 @@ class PendaftaranController extends Controller
         }
 
         return response()->json(['error' => $validator->errors()->all()]);
+    }
+
+    public function getDokterByClinic($clinicId)
+    {
+        $clinic = \App\Models\Clinic::with(['users' => function ($q) {
+            $q->where('role', 2); // 2 = dokter
+        }])->findOrFail($clinicId);
+
+        $dokters = $clinic->users->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name
+            ];
+        });
+
+        return response()->json($dokters);
+    }
+    // destroyEncounterRinap
+    public function destroyRawatInap($id)
+    {
+        $result = $this->pendaftaranRepository->destroyEncounterRinap($id);
+        return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }
 }

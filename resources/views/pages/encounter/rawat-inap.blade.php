@@ -61,8 +61,8 @@
                                         <tr>
                                             <td>{{ $encounter->encounter->no_encounter }}</td>
                                             <td>{{ $encounter->encounter->name_pasien }}</td>
-                                            <td>{{ $encounter->doctor->name }}</td>
-                                            <td>{{ $encounter->room->no_kamar }}</td>
+                                            <td>{{ optional($encounter->doctor)->name ?? "-" }}</td>
+                                            <td>{{ optional($encounter->room)->no_kamar ?? "-" }}</td>
                                             <td class="text-center">
                                                 @if ($encounter->status == 'active')
                                                     <span class="badge bg-success">Sedang Dirawat</span>

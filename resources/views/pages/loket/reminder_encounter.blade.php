@@ -48,29 +48,6 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($encounters as $encounter)
-                                        @php
-                                            $namaPasien = urlencode($encounter->name_pasien);
-
-                                            $noHp = preg_replace('/[^0-9]/', '', $encounter->no_hp); // pastikan hanya angka
-                                            if (substr($noHp, 0, 1) === '0') {
-                                                $noHp = '62' . substr($noHp, 1); // konversi ke format internasional
-                                            }
-
-                                            $pesan =
-                                                "*Bambu Dua Clinic* – *Pengingat Konsultasi*\n" .
-                                                "Halo $encounter->name_pasien,\n" .
-                                                "Kami mengingatkan bahwa obat Anda kemungkinan akan habis dalam beberapa hari ke depan.\n\n" .
-                                                "Untuk menjaga kelangsungan pengobatan, kami sarankan Anda melakukan *kunjungan ulang sebelum obat habis*.\n\n" .
-                                                "*Jadwal kontrol ulang:* Senin - Sabtu Pukul 17.00 - 21.00 WIB\n" .
-                                                "*Lokasi:* Bambu Dua Clinic, Jl. Bambu II No.20\n" .
-                                                "*Konfirmasi kedatangan:* 0811-6311-378\n\n" .
-                                                "Kami siap membantu Anda menjaga kesehatan secara berkelanjutan.\n" .
-                                                "Terima kasih\n" .
-                                                "*Salam sehat*\n*Bambu Dua Clinic*";
-
-                                            $pesanEncoded = urlencode($pesan);
-                                            $waUrl = "https://wa.me/$noHp?text=$pesanEncoded";
-                                        @endphp
                                         <tr>
                                             <td>{{ ucwords($encounter->name_pasien) }}</td>
                                             <td class="text-center">
@@ -93,7 +70,7 @@
                                                 </div>
 
                                                 <div class="btn-group">
-                                                    <a href="{{ $waUrl }}" target="_blank"
+                                                    <a href="{{ $encounter->whatsapp_url }}" target="_blank"
                                                         class="btn btn-sm btn-success btn-bayar-tindakan"
                                                         data-id="{{ $encounter->id }}"
                                                         data-nama="{{ $encounter->name_pasien }}">

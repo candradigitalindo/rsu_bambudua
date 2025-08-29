@@ -96,8 +96,17 @@
     </div>
     <!-- Akhir Kop Surat -->
 
+    @php
+        $judulEncounter = match ($encounter->type) {
+            1 => 'Hasil Pemeriksaan Rawat Jalan',
+            2 => 'Hasil Pemeriksaan Rawat Inap',
+            3 => 'Hasil Pemeriksaan IGD',
+            default => 'Hasil Pemeriksaan',
+        };
+    @endphp
+
     <div class="header">
-        <h2>Hasil Pemeriksaan Rawat Jalan</h2>
+        <h2>{{ $judulEncounter }}</h2>
 
 
     </div>
@@ -256,12 +265,12 @@
             <p>Dokter Pemeriksa,</p>
             <br><br><br><br>
             <p><strong>
-                @if ($encounter->practitioner instanceof \Illuminate\Support\Collection)
-                    {{ $encounter->practitioner->pluck('name')->join(', ') ?: '-' }}
-                @else
-                    {{ $encounter->practitioner->name ?? '-' }}
-                @endif
-            </strong></p>
+                    @if ($encounter->practitioner instanceof \Illuminate\Support\Collection)
+                        {{ $encounter->practitioner->pluck('name')->join(', ') ?: '-' }}
+                    @else
+                        {{ $encounter->practitioner->name ?? '-' }}
+                    @endif
+                </strong></p>
         </div>
     </div>
     <div class="text-center" style="margin-top: 20px;">

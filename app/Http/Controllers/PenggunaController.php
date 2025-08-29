@@ -19,6 +19,7 @@ class PenggunaController extends Controller
     public function index()
     {
         $users = $this->penggunaRepository->index();
+
         $title = 'Delete Data!';
         $text = "Apakah yakin hapus data Pengguna ?";
         confirmDelete($title, $text);
@@ -30,8 +31,9 @@ class PenggunaController extends Controller
      */
     public function create()
     {
+        $clinics = $this->penggunaRepository->getClinics();
         $spesialis = $this->penggunaRepository->create();
-        return view('pages.pengguna.create', compact('spesialis'));
+        return view('pages.pengguna.create', compact('spesialis', 'clinics'));
     }
 
     /**
@@ -78,7 +80,8 @@ class PenggunaController extends Controller
     public function edit(string $id)
     {
         $data = $this->penggunaRepository->edit($id);
-        return view('pages.pengguna.edit', compact('data'));
+        $clinics = $this->penggunaRepository->getClinics();
+        return view('pages.pengguna.edit', compact('data', 'clinics'));
     }
 
     /**

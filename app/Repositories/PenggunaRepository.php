@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Models\Clinic;
 use App\Models\Profile;
 use App\Models\Spesialis;
 use App\Models\User;
@@ -19,46 +20,33 @@ class PenggunaRepository
 
     public function index()
     {
-        $users = User::when(request()->q, function ($user) {
-            $user = $user->where('name', 'like', '%' . request()->q . '%');
-        })->with('profile')->orderBy('updated_at', 'DESC')->paginate(20);
-        $users->map(function ($user) {
-            $spesialis = Spesialis::where('kode', $user->profile->spesialis)->first();
-            $user['spesialis'] =  $spesialis == null ? null : ucwords($spesialis->name) ;
-            switch ($user->role) {
-                case '1':
-                    $user['role'] = "Owner";
-                    break;
-                case '2':
-                    $user['role'] = "Dokter";
-                    break;
-                case '3':
-                    $user['role'] = "Perawat";
-                    break;
-                case '4':
-                    $user['role'] = "Admin";
-                    break;
-                case '5':
-                    $user['role'] = "Pendaftaran";
-                    break;
-                case '6':
-                    $user['role'] = "Kasir";
-                    break;
-                case '7':
-                    $user['role'] = "Apotek";
-                    break;
-                case '8':
-                    $user['role'] = "Gudang";
-                    break;
-                case '9':
-                    $user['role'] = "Teknisi";
-                    break;
+        $query = User::query();
 
-                default:
-                    # code...
-                    break;
-            }
+        if (request()->filled('q')) {
+            $query->where('name', 'like', '%' . request()->q . '%');
+        }
+
+        $users = $query->with(['profile', 'clinics'])->orderByDesc('updated_at')->paginate(20);
+
+        $roleMap = [
+            1 => "Owner",
+            2 => "Dokter",
+            3 => "Perawat",
+            4 => "Admin",
+            5 => "Pendaftaran",
+            6 => "Kasir",
+            7 => "Apotek",
+            8 => "Gudang",
+            9 => "Teknisi"
+        ];
+
+        $users->getCollection()->transform(function ($user) use ($roleMap) {
+            $spesialis = Spesialis::where('kode', $user->profile->spesialis ?? null)->first();
+            $user->spesialis = $spesialis ? ucwords($spesialis->name) : null;
+            $user->role = $roleMap[$user->role] ?? $user->role;
+            return $user;
         });
+
         $users->appends(request()->query());
         return $users;
     }
@@ -70,8 +58,7 @@ class PenggunaRepository
 
     public function store($request)
     {
-
-        $cek    = User::max('id_petugas');
+        $cek = User::max('id_petugas') ?? 0;
         $user = User::create([
             'name'      => ucfirst($request->name),
             'username'  => $request->username,
@@ -80,45 +67,62 @@ class PenggunaRepository
             'password'  => Hash::make($request->password),
         ]);
 
-        Profile::create(['user_id' => $user->id, 'spesialis' => $request->spesialis]);
+        Profile::create([
+            'user_id'   => $user->id,
+            'spesialis' => $request->spesialis
+        ]);
+
+        // Simpan poliklinik
+        if ($request->has('poliklinik')) {
+            $user->clinics()->sync($request->poliklinik);
+        }
+
         return $user;
     }
 
     public function edit($id)
     {
-        $user       = User::findOrFail($id);
-        $spesialis  = Spesialis::orderBy('kode', 'asc')->get();
-
-        return ['user' => $user, 'spesialis' => $spesialis];
+        $user = User::with('profile')->findOrFail($id);
+        $spesialis = Spesialis::orderBy('kode', 'asc')->get();
+        return compact('user', 'spesialis');
     }
 
     public function update($request, $id)
     {
-        $user       = User::findOrFail($id);
-        if ($request->password) {
-            $user->update([
-                'name'      => ucfirst($request->name),
-                'username'  => $request->username,
-                'role'      => $request->role,
-                'password'  => Hash::make($request->password)
-            ]);
+        $user = User::with('profile')->findOrFail($id);
+
+        $data = [
+            'name'      => ucfirst($request->name),
+            'username'  => $request->username,
+            'role'      => $request->role,
+        ];
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+        $user->update($data);
+
+        if ($user->profile) {
+            $user->profile->update(['spesialis' => $request->spesialis]);
         } else {
-            $user->update([
-                'name'      => ucfirst($request->name),
-                'username'  => $request->username,
-                'role'      => $request->role,
-            ]);
+            Profile::create(['user_id' => $user->id, 'spesialis' => $request->spesialis]);
         }
 
-        $user->profile->update(['spesialis' => $request->spesialis]);
+        // Update poliklinik
+        if ($request->has('poliklinik')) {
+            $user->clinics()->sync($request->poliklinik);
+        }
 
         return $user;
     }
 
     public function destroy($id)
     {
-        $user       = User::findOrFail($id);
+        $user = User::findOrFail($id);
         $user->delete();
         return $user;
+    }
+    public function getClinics()
+    {
+        return Clinic::orderBy('nama', 'asc')->get();
     }
 }

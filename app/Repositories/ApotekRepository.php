@@ -15,17 +15,14 @@ class ApotekRepository
     }
     public function dashboard()
     {
-        // Total Obat
-        $totalObat = \App\Models\ProductApotek::count();
-
-        // Obat Tersedia & Habis (gunakan select count dengan case untuk 1x query)
+        // Statistik stok obat (total, tersedia, habis) dalam 1 query
         $stokSummary = \App\Models\ProductApotek::selectRaw("
             COUNT(*) as total,
             SUM(CASE WHEN stok > 0 THEN 1 ELSE 0 END) as tersedia,
             SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END) as habis
         ")->first();
 
-        // Obat Kadaluarsa (langsung count di ApotekStok)
+        // Obat Kadaluarsa (status 0 = stok aktif)
         $obatKadaluarsa = \App\Models\ApotekStok::where('expired_at', '<=', now())
             ->where('status', 0)
             ->count();

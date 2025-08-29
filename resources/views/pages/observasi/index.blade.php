@@ -95,6 +95,27 @@
                                     <ul></ul>
                                 </div>
                                 <div class="row gx-3">
+                                    <!-- Column Dokter yang menangani -->
+                                    <div class="col-sm-12 col-12">
+                                        <div class="mb-3">
+                                            <label class="form-label" for="dokter_id">Dokter yang Menangani</label>
+                                            <div class="input-group">
+                                                <select name="dokter_id" class="form-select" id="dokter_id">
+                                                    @if ($dokters['dokter_terpilih'] == null)
+                                                        <option value="">Pilih Dokter</option>
+                                                        @foreach ($dokters['dokters'] as $dokter)
+                                                            <option value="{{ $dokter->id }}">{{ $dokter->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @else
+                                                        <option value="{{ $dokters['dokter_terpilih']->id }}"selected>
+                                                            {{ $dokters['dokter_terpilih']->name }}</option>
+                                                    @endif
+                                                </select>
+                                            </div>
+                                            <p class="text-danger">{{ $errors->first('dokter_id') }}</p>
+                                        </div>
+                                    </div>
                                     <div class="col-sm-12 col-12">
                                         <div class="mb-3">
                                             <label class="form-label" for="a2">Keluhan Utama</label>
@@ -793,6 +814,23 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                                <!-- buat select perawat -->
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="perawat_ids">Perawat yang Menangani
+                                                        <span class="text-danger">*</span></label>
+                                                    <div class="col-sm-12">
+                                                        <select class="form-select select2" id="perawat_ids"
+                                                            name="perawat_ids[]" multiple style="width: 100%;">
+                                                            @foreach ($perawats['perawats'] as $perawat)
+                                                                <option value="{{ $perawat->id }}"
+                                                                    {{ (is_array($perawats['perawat_terpilih']) && in_array($perawat->id, $perawats['perawat_terpilih'])) || collect(old('perawat_id'))->contains($perawat->id) ? 'selected' : '' }}>
+                                                                    [{{ $perawat->id_petugas }}] - {{ $perawat->name }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                        <p class="text-danger">{{ $errors->first('perawat_ids') }}</p>
+                                                    </div>
+                                                </div>
                                                 <div class="mb-3">
                                                     <label class="form-label" for="a2">Status Pulang</label>
                                                     <div class="col-sm-12">
@@ -853,6 +891,11 @@
 
     <script>
         $(document).ready(function() {
+            $('#perawat_ids').select2({
+                placeholder: "Pilih Perawat",
+                allowClear: true,
+                width: '100%'
+            });
             // tab-anamnesis auto click
             autoClickTab(); // Call the function to auto-click the tab
 
@@ -889,10 +932,15 @@
                 // ajax post anamnesis
                 let url = "{{ route('observasi.postAnemnesis', ':id') }}";
                 url = url.replace(':id', "{{ $observasi }}");
+                let dokter_id = $("#dokter_id").val();
                 let keluhan_utama = $("#keluhan_utama").val();
                 let riwayat_penyakit = $("#riwayat_penyakit").val();
                 let riwayat_penyakit_keluarga = $("#riwayat_penyakit_keluarga").val();
                 // Validate input fields
+                if (dokter_id == '') {
+                    alert("Dokter tidak boleh kosong");
+                    return;
+                }
                 if (keluhan_utama == '') {
                     alert("Keluhan Utama tidak boleh kosong");
                     return;
@@ -912,6 +960,7 @@
                         keluhan_utama: keluhan_utama,
                         riwayat_penyakit: riwayat_penyakit,
                         riwayat_penyakit_keluarga: riwayat_penyakit_keluarga,
+                        dokter_id: dokter_id,
                         _token: "{{ csrf_token() }}"
                     },
                     beforeSend: function() {
@@ -1960,6 +2009,7 @@
                 e.preventDefault();
                 // validasi input
                 let status_pulang = $("#status_pulang").val();
+                let perawat_ids = $("#perawat_ids").val();
                 let catatan = quillCatatan.root.innerHTML;
                 if (status_pulang == '') {
                     alert("Status Pulang tidak boleh kosong");
@@ -1979,7 +2029,8 @@
                         _token: "{{ csrf_token() }}",
                         // ambil isi catatanEditor
                         catatan: catatan,
-                        status_pulang: status_pulang
+                        status_pulang: status_pulang,
+                        perawat_ids: perawat_ids
                     },
                     success: function(data) {
                         $("#spinner-simpan-catatan").addClass("d-none");

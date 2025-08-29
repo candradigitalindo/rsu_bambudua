@@ -18,7 +18,11 @@ class ObservasiController extends Controller
         // Cek apakah encounter_id valid
         $encounter = $this->observasiRepository->getEncounterById($id);
         $observasi = $id;
-        return view('pages.observasi.index', compact('observasi', 'encounter'));
+        // Ambil data dokter yang menangani
+        $dokters = $this->observasiRepository->getDokters($id);
+        // Ambil data perawat yang menangani
+        $perawats = $this->observasiRepository->getPerawats($id);
+        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats'));
     }
     public function riwayatPenyakit($id)
     {
@@ -33,6 +37,7 @@ class ObservasiController extends Controller
     {
         // Validasi input
         $request->validate([
+            'dokter_id' => 'required|string|max:255',
             'keluhan_utama' => 'required|string|max:255',
             'riwayat_penyakit' => 'required|string|max:255',
             'riwayat_penyakit_keluarga' => 'required|string|max:255',
@@ -324,6 +329,12 @@ class ObservasiController extends Controller
         $request->validate([
             'catatan' => 'nullable|string|max:255',
             'status_pulang' => 'required|numeric',
+            'perawat_ids' => 'required|array',
+            'perawat_ids.*' => 'exists:users,id',
+        ], [
+            'perawat_ids.required' => 'Perawat harus dipilih.',
+            'perawat_ids.array' => 'Perawat harus berupa array.',
+            'perawat_ids.*.exists' => 'Perawat yang dipilih tidak valid.'
         ]);
         $result = $this->observasiRepository->postCatatanEncounter($request, $id);
         return response()->json($result);

@@ -18,10 +18,10 @@ class WilayahRepository
      */
     public function __construct(SatusehatRepository $satusehatRepository)
     {
-        $satusehat = Satusehat::first();
-        if ($satusehat->expired_in <= date('Y-m-d H:i:s')) {
-            return $satusehatRepository->accesstoken();
-        }
+        // $satusehat = Satusehat::first();
+        // if ($satusehat->expired_in <= date('Y-m-d H:i:s')) {
+        //     return $satusehatRepository->accesstoken();
+        // }
     }
 
     /**

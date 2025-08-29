@@ -37,7 +37,7 @@
     <td>
         <table>
             <tr>
-                <td>{{ $d->jenis_jaminan }}</td>
+                <td>{{ $d->poliklinik }} / {{ $d->jenis_jaminan }}</td>
             </tr>
             <tr>
                 <td>{{ $d->tujuan_kunjungan }}</td>
@@ -50,7 +50,7 @@
             <i class="ri-edit-2-fill"></i>
             Edit
         </button>
-        <button type="button" class="btn destoryRawatJalan btn-outline-danger btn-sm" id="{{ $d->id }}">
+        <button type="button" class="btn destroyRawatJalan btn-outline-danger btn-sm" id="{{ $d->id }}">
             <i class="ri-delete-bin-5-fill"></i>
             Hapus
         </button>

@@ -2,10 +2,15 @@
 
 namespace App\Repositories;
 
+use App\Models\Encounter;
 use App\Models\InpatientAdmission;
 use App\Models\InpatientDailyMedication;
 use App\Models\InpatientTreatment;
 use App\Models\Pasien;
+use App\Models\Practitioner;
+use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class ObservasiRepository
 {
@@ -42,41 +47,95 @@ class ObservasiRepository
             return null; // Encounter tidak ditemukan
         }
     }
+    // Get doctor
+    public function getDokters($id)
+    {
+        // Ambil dokter yang sudah menangani encounter ini (jika ada)
+        $dokter_terpilih = Practitioner::where('encounter_id', $id)->first();
+
+        // Ambil semua user role dokter
+        $dokters = \App\Models\User::where('role', 2)->get();
+
+        // Jika ada dokter terpilih, letakkan di urutan pertama (untuk dropdown selected)
+        if ($dokter_terpilih) {
+            // Cari user dokter yang sesuai id_petugas
+            $dokterUtama = $dokters->firstWhere('id_petugas', $dokter_terpilih->id_petugas);
+            if ($dokterUtama) {
+                // Buat koleksi baru dengan dokter terpilih di depan
+                $dokters = collect([$dokterUtama])->merge($dokters->where('id', '!=', $dokterUtama->id));
+            }
+            return [
+                'dokter_terpilih' => $dokterUtama,
+                'dokters' => $dokters
+            ];
+        } else {
+            return [
+                'dokter_terpilih' => null,
+                'dokters' => $dokters
+            ];
+        }
+    }
+    // Get Perawat
+    public function getPerawats($id)
+    {
+        // Ambil encounter beserta relasi perawat (nurses)
+        $encounter = \App\Models\Encounter::with('nurses')->find($id);
+
+        // Ambil semua user role perawat
+        $perawats = \App\Models\User::where('role', 3)->get();
+
+        // Ambil array id perawat yang sudah menangani encounter ini
+        $perawat_terpilih = ($encounter && $encounter->nurses)
+            ? $encounter->nurses->pluck('id')->toArray()
+            : [];
+
+        return [
+            'perawat_terpilih' => $perawat_terpilih,
+            'perawats' => $perawats
+        ];
+    }
     public function postAnemnesis($request, $id)
     {
-        // Cek apakah anamnesis sudah ada
-        $anamnesis = \App\Models\Anamnesis::where('encounter_id', $id)->first();
-        if ($anamnesis) {
-            // Jika sudah ada, update data
-            $anamnesis->keluhan_utama = $request->keluhan_utama;
-            $anamnesis->save();
-        } else {
-            // Jika belum ada, buat data baru
-            $anamnesis = new \App\Models\Anamnesis();
-            $anamnesis->encounter_id = $id;
-            $anamnesis->keluhan_utama = $request->keluhan_utama;
-            $anamnesis->save();
-        }
-        // Ambil data pasien berdasarkan rekam_medis di encounter
+        // Update atau buat anamnesis
+        $anamnesis = \App\Models\Anamnesis::updateOrCreate(
+            ['encounter_id' => $id],
+            ['keluhan_utama' => $request->keluhan_utama]
+        );
+
+        // Ambil encounter dan pasien
         $encounter = \App\Models\Encounter::find($id);
-        if ($encounter) {
-            $pasien = \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
-            // Cek apakah riwayat penyakit sudah ada
-            $riwayatPenyakit = \App\Models\RiwayatPenyakit::where('pasien_id', $pasien->id)->first();
-            if ($riwayatPenyakit) {
-                // Jika sudah ada, update data
-                $riwayatPenyakit->riwayat_penyakit = $request->riwayat_penyakit;
-                $riwayatPenyakit->riwayat_penyakit_keluarga = $request->riwayat_penyakit_keluarga;
-                $riwayatPenyakit->save();
-            } else {
-                // Jika belum ada, buat data baru
-                $riwayatPenyakit = new \App\Models\RiwayatPenyakit();
-                $riwayatPenyakit->pasien_id = $pasien->id;
-                $riwayatPenyakit->riwayat_penyakit = $request->riwayat_penyakit;
-                $riwayatPenyakit->riwayat_penyakit_keluarga = $request->riwayat_penyakit_keluarga;
-                $riwayatPenyakit->save();
+        $pasien = $encounter ? \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first() : null;
+
+        // Update atau buat riwayat penyakit jika pasien ditemukan
+        if ($pasien) {
+            \App\Models\RiwayatPenyakit::updateOrCreate(
+                ['pasien_id' => $pasien->id],
+                [
+                    'riwayat_penyakit' => $request->riwayat_penyakit,
+                    'riwayat_penyakit_keluarga' => $request->riwayat_penyakit_keluarga
+                ]
+            );
+        }
+
+        // Pastikan practitioner (dokter) sudah tercatat
+        $practitioner = \App\Models\Practitioner::where('encounter_id', $id)->first();
+        if (!$practitioner && $request->filled('dokter_id')) {
+            $dokter = \App\Models\User::find($request->dokter_id);
+            if ($dokter) {
+                \App\Models\Practitioner::create([
+                    'encounter_id' => $id,
+                    'id_petugas'   => $dokter->id_petugas,
+                    'satusehat_id' => $dokter->satusehat_id ?? '',
+                    'name'         => $dokter->name,
+                ]);
             }
         }
+
+        // Ambil data riwayat penyakit terbaru (jika ada)
+        $riwayatPenyakit = $pasien
+            ? \App\Models\RiwayatPenyakit::where('pasien_id', $pasien->id)->first()
+            : null;
+
         return [$anamnesis, $riwayatPenyakit];
     }
     public function tandaVital($id)
@@ -331,8 +390,8 @@ class ObservasiRepository
             $diagnosis->diagnosis_description = $icd10->description;
             $diagnosis->diagnosis_type = $request->diagnosis_type;
             // Petugas harus mempunyai role dokter
-            $diagnosis->id_petugas = auth()->user()->id_petugas;
-            $diagnosis->petugas_name = auth()->user()->name;
+            $diagnosis->id_petugas = \Illuminate\Support\Facades\Auth::user()->id_petugas;
+            $diagnosis->petugas_name = \Illuminate\Support\Facades\Auth::user()->name;
             $diagnosis->save();
         }
         return $diagnosis;
@@ -386,7 +445,7 @@ class ObservasiRepository
             $resep->encounter_id = $id;
             $resep->kode_resep = $kodeResep;
             $resep->masa_pemakaian_hari = $request->masa_pemakaian_hari;
-            $resep->dokter = auth()->user()->name;
+            $resep->dokter = \Illuminate\Support\Facades\Auth::user()->name;
             $resep->save();
         }
         return $resep;
@@ -427,7 +486,6 @@ class ObservasiRepository
             })
             ->orderBy('expired_at', 'asc')
             ->first();
-
         if (!$stokTerdekat) {
             return [
                 'success' => false,
@@ -591,14 +649,22 @@ class ObservasiRepository
             ];
         }
         if ($request->status_pulang == 3) {
-            $encounter->update([
-                'catatan'   => $request->catatan,
-                'condition' => $request->status_pulang,
-                'type'      => 2, // Rawat Inap
+            // Hitung encounter hari ini, nomor urut selalu dua digit
+            $count = Encounter::whereDate('created_at', now()->toDateString())->count();
+            $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+            // Buat encounter baru
+            $newEncounter = Encounter::create([
+                'no_encounter'        => $noEncounter,
+                'rekam_medis'         => $encounter->rekam_medis,
+                'name_pasien'         => $encounter->name_pasien,
+                'pasien_satusehat_id' => $encounter->pasien_satusehat_id,
+                'type'                => 2,
+                'jenis_jaminan'       => $encounter->jenis_jaminan,
+                'tujuan_kunjungan'    => $encounter->tujuan_kunjungan,
+                'created_by'         => Auth::id()
             ]);
-
             // Ambil data pasien berdasarkan rekam_medis
-            $pasien = \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+            $pasien = \App\Models\Pasien::where('rekam_medis', $newEncounter->rekam_medis)->first();
 
             if (!$pasien) {
                 return [
@@ -614,12 +680,18 @@ class ObservasiRepository
             if (!$inpatientAdmission) {
                 // Jika belum ada, buat record baru
                 $inpatientAdmission = InpatientAdmission::create([
-                    'encounter_id'      => $encounter->id,
+                    'encounter_id'      => $newEncounter->id,
                     'pasien_id'         => $pasien->id,
                     'bed_number'        =>  0,
                     'admission_date'    => now(),
                 ]);
             }
+
+            $encounter->update([
+                'catatan'   => $request->catatan,
+                'condition' => $request->status_pulang,
+                'status'    => 2 // Selesai
+            ]);
         } else {
             // Update catatan, condition, dan status encounter sekaligus
             $encounter->update([
@@ -633,6 +705,11 @@ class ObservasiRepository
                 ->update(['status' => 0]);
         }
 
+        // Simpan perawat yang menangani
+        if ($request->has('perawat_ids')) {
+            $perawatIds = $request->input('perawat_ids');
+            $encounter->nurses()->sync($perawatIds);
+        }
 
         // Tentukan URL redirect sesuai type
         $routes = [
@@ -641,6 +718,20 @@ class ObservasiRepository
             3 => route('kunjungan.rawatDarurat'),
         ];
         $url = $routes[$encounter->type] ?? '';
+        if ($encounter->type == 2) {
+            // Ubah status inpantient menjadi discarge
+            $inpatientAdmission = InpatientAdmission::where('encounter_id', $id)->first();
+            if ($inpatientAdmission) {
+                $inpatientAdmission->status = 'discharge'; // Discharge
+                $inpatientAdmission->save();
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Data rawat inap tidak ditemukan.'
+                ];
+            }
+        }
+
 
         return [
             'success' => true,
@@ -688,7 +779,7 @@ class ObservasiRepository
 
             return $formattedTreatments;
         } catch (\Exception $e) {
-            \Log::error('Error in getInpatientTreatment', [
+            Log::error('Error in getInpatientTreatment', [
                 'admission_id' => $id,
                 'error' => $e->getMessage()
             ]);
@@ -727,7 +818,7 @@ class ObservasiRepository
             $existingTreatment->total = ($existingTreatment->quantity + 1) * $tindakan->harga; // Update total berdasarkan harga dan quantity dan jumlah request
             $existingTreatment->quantity += 1; // Tambah quantity
             $existingTreatment->result = $request->result;
-            $existingTreatment->performed_by = auth()->user()->id;
+            $existingTreatment->performed_by = \Illuminate\Support\Facades\Auth::user()->id;
             $existingTreatment->save();
         } else {
             // Jika belum ada, buat data baru
@@ -740,7 +831,7 @@ class ObservasiRepository
             $inpatientTreatment->total = $tindakan->harga * $request->quantity;
             $inpatientTreatment->quantity = 1; // Set quantity ke 1
             $inpatientTreatment->result = $request->result;
-            $inpatientTreatment->performed_by = auth()->user()->id;
+            $inpatientTreatment->performed_by = \Illuminate\Support\Facades\Auth::user()->id;
             $inpatientTreatment->treatment_date = $treatment_date->format('Y-m-d H:i:s'); // Simpan tanggal tindakan
             if ($request->hasFile('document')) {
                 $file = $request->file('document');
@@ -795,7 +886,6 @@ class ObservasiRepository
 
                 return $medication;
             });
-
     }
     // update status obart harian
     public function updateInpatientDailyMedicationStatus($id)
@@ -808,8 +898,8 @@ class ObservasiRepository
             ];
         }
         $inpatientDailyMedication->status = "Diberikan";
-        $inpatientDailyMedication->administered_by = auth()->user()->id;
-        $inpatientDailyMedication->administered_name = auth()->user()->name;
+        $inpatientDailyMedication->administered_by = \Illuminate\Support\Facades\Auth::user()->id;
+        $inpatientDailyMedication->administered_name = \Illuminate\Support\Facades\Auth::user()->name;
         $inpatientDailyMedication->administered_at = now();
         $inpatientDailyMedication->save();
 
@@ -853,8 +943,8 @@ class ObservasiRepository
         $inpatientDailyMedication->frequency = $request->frequensi;
         $inpatientDailyMedication->expiration_date = $stokTerdekat->expired_at;
         $inpatientDailyMedication->notes = $request->notes;
-        $inpatientDailyMedication->authorized_by = auth()->user()->id;
-        $inpatientDailyMedication->authorized_name = auth()->user()->name;
+        $inpatientDailyMedication->authorized_by = \Illuminate\Support\Facades\Auth::user()->id;
+        $inpatientDailyMedication->authorized_name = \Illuminate\Support\Facades\Auth::user()->name;
         $inpatientDailyMedication->medicine_date = $request->medicine_date ? \Carbon\Carbon::parse($request->medicine_date)->format('Y-m-d') : now()->format('Y-m-d');
         $inpatientDailyMedication->save();
 

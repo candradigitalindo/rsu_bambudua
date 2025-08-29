@@ -78,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
         // route discount
         Route::get('/discount', [\App\Http\Controllers\DiscountController::class, 'index'])->name('discounts.index');
         Route::post('/discount', [\App\Http\Controllers\DiscountController::class, 'update'])->name('discounts.update');
+        Route::resource('clinics', \App\Http\Controllers\ClinicController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
     });
 
     Route::prefix('pendaftaran')->group(function () {
@@ -103,7 +104,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/rawatInap/{id}/postRawatInap', [PendaftaranController::class, 'postRawatInap'])->name('pendaftaran.postRawatInap');
         Route::post('/rawatInap/{id}/update', [PendaftaranController::class, 'updateRawatInap'])->name('pendaftaran.updateRawatInap');
         Route::get('/rawatInap/{id}/editEncounter', [PendaftaranController::class, 'editEncounterRinap'])->name('pendaftaran.editEncounterRinap');
-        Route::delete('/rawatInap/{id}/destroy', [PendaftaranController::class, 'destroyEncounterRinap'])->name('pendaftaran.destroyEncounterRinap');
+        Route::delete('/rawatInap/{id}/destroy', [PendaftaranController::class, 'destroyRawatInap'])->name('pendaftaran.destroyEncounterRinap');
 
         // Rawat Darurat
         Route::get('/rawatDarurat', [PendaftaranController::class, 'showRawatDarurat'])->name('pendaftaran.showRawatDarurat');
@@ -111,6 +112,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/rawatDarurat/{id}/update', [PendaftaranController::class, 'updateRawatDarurat'])->name('pendaftaran.updateRawatDarurat');
         Route::get('/rawatDarurat/{id}/editEncounter', [PendaftaranController::class, 'editEncounterRdarurat'])->name('pendaftaran.editEncounterRdarurat');
         Route::delete('/rawatDarurat/{id}/destroy', [PendaftaranController::class, 'destroyEncounterRdarurat'])->name('pendaftaran.destroyEncounterRdarurat');
+
+        Route::get('/ajax/dokter-by-clinic/{clinic}', [PendaftaranController::class, 'getDokterByClinic'])->name('ajax.dokterByClinic');
     });
     Route::resource('bahans', BahanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     Route::get('/bahans/{id}/input', [BahanController::class, 'getBahan'])->name('bahan.getBahan');
@@ -217,6 +220,5 @@ Route::middleware(['auth'])->group(function () {
 
         // getReminderEncounter
         Route::get('/reminder/getReminderEncounter', [\App\Http\Controllers\LoketController::class, 'getReminderEncounter'])->name('loket.getReminderEncounter');
-
     });
 });

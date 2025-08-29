@@ -31,6 +31,8 @@ class Encounter extends Model
         'metode_pembayaran_resep',
         'status_bayar_tindakan',
         'metode_pembayaran_tindakan',
+        'clinic_id',
+        'created_by'
     ];
 
     public function practitioner()
@@ -69,5 +71,55 @@ class Encounter extends Model
     public function admission()
     {
         return $this->hasOne(InpatientAdmission::class);
+    }
+
+    /**
+     * Mendapatkan URL pengingat WhatsApp untuk encounter.
+     *
+     * @return string
+     */
+    public function getWhatsappUrlAttribute(): string
+    {
+        // Mengambil no_hp dari properti encounter
+        $noHp = preg_replace('/[^0-9]/', '', $this->no_hp);
+        if (str_starts_with($noHp, '0')) {
+            $noHp = '62' . substr($noHp, 1);
+        }
+
+        if (empty($noHp)) {
+            return '#'; // Kembalikan link non-fungsional jika tidak ada nomor HP
+        }
+
+        $pesan = <<<PESAN
+        *Bambu Dua Clinic* – *Pengingat Konsultasi*
+        Halo {$this->name_pasien},
+        Kami mengingatkan bahwa obat Anda kemungkinan akan habis dalam beberapa hari ke depan.
+
+        Untuk menjaga kelangsungan pengobatan, kami sarankan Anda melakukan *kunjungan ulang sebelum obat habis*.
+
+        *Jadwal kontrol ulang:* Senin - Sabtu Pukul 17.00 - 21.00 WIB
+        *Lokasi:* Bambu Dua Clinic, Jl. Bambu II No.20
+        *Konfirmasi kedatangan:* 0811-6311-378
+
+        Kami siap membantu Anda menjaga kesehatan secara berkelanjutan.
+        Terima kasih
+        *Salam sehat*
+        *Bambu Dua Clinic*
+        PESAN;
+
+        $pesanEncoded = urlencode($pesan);
+        return "https://wa.me/{$noHp}?text={$pesanEncoded}";
+    }
+    public function clinic()
+    {
+        return $this->belongsTo(Clinic::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+    public function nurses()
+    {
+        return $this->belongsToMany(User::class, 'encounter_nurse', 'encounter_id', 'user_id')->withTimestamps();
     }
 }

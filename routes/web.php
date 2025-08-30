@@ -4,6 +4,7 @@ use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CategoryRuanganController;
+use App\Http\Controllers\DokterController;
 use App\Http\Controllers\EncounterController;
 use App\Http\Controllers\EtnisController;
 use App\Http\Controllers\HomeController;
@@ -189,6 +190,8 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/observasi/{id}/deleteInpatientDailyMedication', [ObservasiController::class, 'deleteInpatientDailyMedication'])->name('observasi.deleteInpatientDailyMedication');
         //updateInpatientDailyMedicationStatus
         Route::post('/observasi/{id}/updateInpatientDailyMedicationStatus', [ObservasiController::class, 'updateInpatientDailyMedicationStatus'])->name('observasi.updateInpatientDailyMedicationStatus');
+
+        Route::get('/dashboard-dokter', [DokterController::class, 'index'])->name('dokter.index');
     });
 
     Route::prefix('apotek')->group(function () {

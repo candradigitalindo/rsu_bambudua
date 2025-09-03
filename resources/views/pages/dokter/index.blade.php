@@ -62,7 +62,7 @@
                                                     <i class="ri-stethoscope-line fs-5 text-primary"></i>
                                                 </div>
                                                 <h3 class="text-primary">{{ $thisMonth_rawatJalan }}</h3>
-                                                <h6>Pasien Rawat Jalan</h6>
+                                                <h6>Rawat Jalan</h6>
                                                 @php
                                                     $isUp_rawatJalan = $percent_rawatJalan >= 0;
                                                 @endphp
@@ -91,7 +91,7 @@
                                                     <i class="ri-hotel-bed-fill fs-5 text-primary"></i>
                                                 </div>
                                                 <h3 class="text-primary">{{ $thisMonth_inpatient }}</h3>
-                                                <h6>Pasien Rawat Inap</h6>
+                                                <h6>Rawat Inap</h6>
                                                 @php
                                                     $isUp_inpatient = $percent_inpatient >= 0;
                                                 @endphp
@@ -119,7 +119,7 @@
                                                     <i class="ri-dossier-fill fs-5 text-primary"></i>
                                                 </div>
                                                 <h3 class="text-primary">{{ $thisWeek_rawatDaurat }}</h3>
-                                                <h6>Pasien IGD</h6>
+                                                <h6>IGD</h6>
                                                 @php
                                                     $isUp_rawatDaurat = $percent_rawatDaurat >= 0;
                                                 @endphp

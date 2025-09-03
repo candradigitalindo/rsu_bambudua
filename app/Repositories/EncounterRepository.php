@@ -50,7 +50,7 @@ class EncounterRepository
         }
 
         // Jika user dokter, filter by practitioner
-        if (Auth::user()->role == 2) {
+        if (Auth::user()->role == 2 && !request('name')) {
             $query->whereHas('practitioner', function ($q) {
                 $q->where('id_petugas', Auth::user()->id_petugas);
             });
@@ -71,8 +71,8 @@ class EncounterRepository
             });
         }
 
-        // Filter khusus untuk dokter (role 2)
-        if (Auth::user()->role == 2) {
+        // Filter khusus untuk dokter (role 2), HANYA jika tidak ada pencarian
+        if (Auth::user()->role == 2 && !request('name')) {
             $query->where('dokter_id', Auth::user()->id);
         }
 
@@ -95,7 +95,7 @@ class EncounterRepository
         }
 
         // Jika user dokter, filter by practitioner
-        if (Auth::user()->role == 2) {
+        if (Auth::user()->role == 2 && !request('name')) {
             $query->whereHas('practitioner', function ($q) {
                 $q->where('id_petugas', Auth::user()->id_petugas);
             });

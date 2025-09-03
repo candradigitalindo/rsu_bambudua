@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\InpatientAdmission;
+use App\Models\InpatientTreatment;
 use App\Models\Practitioner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -39,15 +40,18 @@ class DokterController extends Controller
                 ->count();
         };
 
-        // Helper closure untuk query InpatientAdmission
+        // Helper closure untuk query InpatientTreatment
+        
         $countInpatient = function ($start, $end) use ($user) {
-            return InpatientAdmission::where('dokter_id', $user->id)
+            return InpatientTreatment::where('performed_by', $user->id)
+                ->where('request_type', 'Visit')
                 ->whereBetween('created_at', [$start, $end])
                 ->count();
         };
 
         $countInpatientMonth = function () use ($user) {
-            return InpatientAdmission::where('dokter_id', $user->id)
+            return InpatientTreatment::where('performed_by', $user->id)
+                ->where('request_type', 'Visit')
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
                 ->count();

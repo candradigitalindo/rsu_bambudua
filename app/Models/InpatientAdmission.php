@@ -40,16 +40,13 @@ class InpatientAdmission extends Model
     {
         return $this->hasMany(InpatientTreatment::class, 'admission_id');
     }
-    public function medications()
-    {
-        return $this->hasMany(InpatientMedication::class, 'admission_id');
-    }
-    public function billings()
-    {
-        return $this->hasMany(InpatientBilling::class, 'admission_id');
-    }
+   
     public function companions()
     {
         return $this->hasOne(PatientCompanion::class, 'admission_id');
+    }
+    public function visits()
+    {
+        return $this->hasMany(InpatientVisit::class, 'inpatient_admission_id');
     }
 }

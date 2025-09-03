@@ -73,8 +73,7 @@
                                             <td class="text-center">
                                                 @if ($encounter->status == 'Progress')
                                                     <a href="{{ route('observasi.index', $encounter->id) }}"
-                                                        class="btn btn-outline-primary btn-sm"
-                                                        id="periksa-{{ $encounter->id }}">
+                                                        class="btn btn-outline-primary btn-sm periksa-btn" data-id="{{ $encounter->id }}">
                                                         <i class="ri-stethoscope-line"></i>
                                                         <span class="btn-text"
                                                             id="textPeriksa-{{ $encounter->id }}">Pemeriksaan</span>
@@ -83,26 +82,14 @@
                                                     </a>
                                                 @else
                                                     <a href="{{ route('observasi.cetakEncounter', $encounter->id) }}"
-                                                        target="_blank"
-                                                        class="btn btn-outline-info btn-sm"
-                                                        id="cetak-{{ $encounter->id }}">
+                                                        target="_blank" class="btn btn-outline-info btn-sm cetak-btn" data-id="{{ $encounter->id }}">
                                                         <i class="ri-profile-line"></i>
-                                                        <span class="btn-text"
-                                                            id="textCetak-{{ $encounter->id }}"> Cetak Hasil </span>
+                                                        <span class="btn-text" id="textCetak-{{ $encounter->id }}"> Cetak
+                                                            Hasil </span>
                                                         <span class="spinner-border spinner-border-sm d-none"
                                                             id="spinerCetak-{{ $encounter->id }}"></span>
                                                     </a>
                                                 @endif
-                                                <script src="{{ asset('js/jquery.min.js') }}"></script>
-                                                <script>
-                                                    $(document).ready(function() {
-                                                        $("#periksa-{{ $encounter->id }}").click(function() {
-                                                            $("#spinerPeriksa-{{ $encounter->id }}").removeClass("d-none");
-                                                            $("#periksa-{{ $encounter->id }}").addClass("disabled", true);
-                                                            $("#textPeriksa-{{ $encounter->id }}").text("Mohon Tunggu ...");
-                                                        });
-                                                    });
-                                                </script>
                                             </td>
                                         </tr>
                                     @empty
@@ -129,12 +116,21 @@
     <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
     <script src="{{ asset('js/custom.js') }}"></script>
+    <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#createTindakan").click(function() {
                 $("#spinerCreateTindakan").removeClass("d-none");
                 $("#createTindakan").addClass("disabled", true);
                 $("#textCreateTindakan").text("Mohon Tunggu ...");
+            });
+
+            // Event delegation for periksa buttons
+            $('.table-responsive').on('click', '.periksa-btn', function() {
+                let encounterId = $(this).data('id');
+                $("#spinerPeriksa-" + encounterId).removeClass("d-none");
+                $(this).addClass("disabled");
+                $("#textPeriksa-" + encounterId).text("Mohon Tunggu ...");
             });
 
         });

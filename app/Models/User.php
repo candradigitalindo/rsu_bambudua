@@ -61,4 +61,13 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Encounter::class, 'encounter_nurse', 'user_id', 'encounter_id')->withTimestamps();
     }
+    public function visitsDokter()
+    {
+        return $this->hasMany(InpatientVisit::class, 'dokter_id');
+    }
+
+    public function visitsPerawat()
+    {
+        return $this->hasMany(InpatientVisit::class, 'perawat_id');
+    }
 }

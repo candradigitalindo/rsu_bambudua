@@ -119,7 +119,7 @@
                 <ul class="treeview-menu">
                     <li>
                         <a class="{{ request()->is('kunjungan/dashboard-dokter*') ? 'active-sub' : '' }}"
-                            href="{{ route('dokter.index') }}">Dashboard Dokter</a>
+                            href="{{ route('dokter.index') }}">Dashboard</a>
                     </li>
                     <li>
                         <a class="{{ request()->is('kunjungan/rawatJalan*') ? 'active-sub' : '' }}"

@@ -154,7 +154,6 @@
                                 </div>
                                 <!-- Row ends -->
                             </div>
-
                             <div class="tab-pane fade" id="treatment" role="tabpanel">
                                 <!-- Row startss -->
                                 <div class="row gx-3">
@@ -171,6 +170,9 @@
                                                         <select name="jenis_pemeriksaan" id="jenis_pemeriksaan"
                                                             class="form-control">
                                                             <option value="">Pilih Tipe Pemeriksaan</option>
+                                                            <option value="Visit"
+                                                                {{ old('jenis_pemeriksaan') == 'Visit' ? 'selected' : '' }}>
+                                                                Visit</option>
                                                             <option value="Fisik"
                                                                 {{ old('jenis_pemeriksaan') == 'Fisik' ? 'selected' : '' }}>
                                                                 Fisik</option>
@@ -255,6 +257,7 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th>Tanggal</th>
+                                                                    <th>Jumlah</th>
                                                                     <th>Tipe | Jenis Tindakan</th>
                                                                     <th>Hasil</th>
                                                                     <th>Dokumen Pendukung</th>
@@ -552,6 +555,7 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th class="text-center">Aksi</th>
+                                                                    <th>Qty</th>
                                                                     <th>Nama Obat</th>
                                                                     <th>Jumlah</th>
                                                                     <th>Aturan Pakai</th>
@@ -971,6 +975,7 @@
                             tbody.append(
                                 `<tr>
                                     <td>${item.treatment_date_formatted}</td>
+                                    <td>${item.quantity}</td>
                                     <td>${item.request_type} | ${item.tindakan_name}</td>
                                     <td>${item.result}</td>
                                     <td class="text-center">${documentColumn}</td>
@@ -1420,6 +1425,7 @@
                                             Tanggal Anjuran : ${item.medicine_date} <br>
                                             Tanggal Diberikan : ${item.administered_date || '-'}
                                         </td>
+                                        <td>${item.jumlah}</td>
                                         <td>${item.medication_name}</td>
                                         <td>${item.dosage_instructions + ' | ' + item.route + ' | ' + item.frequency}</td>
                                         <td>
@@ -1441,6 +1447,7 @@
                                             Jadwal : ${item.medicine_date} <br>
                                             Diberikan : ${item.administered_at || '-'}
                                         </td>
+                                        <td>${item.jumlah}</td>
                                         <td>${item.medication_name}</td>
                                         <td>${item.dosage_instructions + ' | ' + item.route + ' | ' + item.frequency}</td>
                                         <td>
@@ -1899,7 +1906,7 @@
                     }
                 });
             });
-           
+
             // btn-simpan-catatan
             $("#btn-simpan-catatan").click(function(e) {
                 e.preventDefault();

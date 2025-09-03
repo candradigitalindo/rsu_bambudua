@@ -61,8 +61,8 @@
                                         <tr>
                                             <td>{{ $encounter->encounter->no_encounter }}</td>
                                             <td>{{ $encounter->encounter->name_pasien }}</td>
-                                            <td>{{ optional($encounter->doctor)->name ?? "-" }}</td>
-                                            <td>{{ optional($encounter->room)->no_kamar ?? "-" }}</td>
+                                            <td>{{ optional($encounter->doctor)->name ?? '-' }}</td>
+                                            <td>{{ optional($encounter->room)->no_kamar ?? '-' }}</td>
                                             <td class="text-center">
                                                 @if ($encounter->status == 'active')
                                                     <span class="badge bg-success">Sedang Dirawat</span>
@@ -83,12 +83,11 @@
                                                     </a>
                                                 @else
                                                     <a href="{{ route('observasi.cetakEncounter', $encounter->id) }}"
-                                                        target="_blank"
-                                                        class="btn btn-outline-info btn-sm"
+                                                        target="_blank" class="btn btn-outline-info btn-sm"
                                                         id="cetak-{{ $encounter->id }}">
                                                         <i class="ri-profile-line"></i>
-                                                        <span class="btn-text"
-                                                            id="textCetak-{{ $encounter->id }}"> Cetak Hasil </span>
+                                                        <span class="btn-text" id="textCetak-{{ $encounter->id }}"> Cetak
+                                                            Hasil </span>
                                                         <span class="spinner-border spinner-border-sm d-none"
                                                             id="spinerCetak-{{ $encounter->id }}"></span>
                                                     </a>

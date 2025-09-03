@@ -33,4 +33,5 @@ class EncounterController extends Controller
         $encounters = $this->encounterRepository->getAllRawatInap();
         return view('pages.encounter.rawat-inap', compact('encounters'));
     }
+    
 }

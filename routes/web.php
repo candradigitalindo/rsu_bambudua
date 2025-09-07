@@ -12,6 +12,8 @@ use App\Http\Controllers\JaminanController;
 use App\Http\Controllers\LokasiloketController;
 use App\Http\Controllers\LoketController;
 use App\Http\Controllers\ObservasiController;
+use App\Http\Controllers\OtherIncomeController;
+use App\Http\Controllers\OperationalExpenseController;
 use App\Http\Controllers\PekerjaanController;
 use App\Http\Controllers\PendaftaranController;
 use App\Http\Controllers\PendidikanController;
@@ -127,6 +129,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/bahans/diserahkan/{id}', [BahanController::class, 'bahanDiserahkan'])->name('bahan.bahanDiserahkan');
     Route::resource('pengguna', PenggunaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     // route frefix kunjungan
+    Route::get('/pengguna/{user}/gaji', [\App\Http\Controllers\PenggunaController::class, 'aturGaji'])->name('pengguna.gaji.atur');
+    Route::post('/pengguna/{user}/gaji', [\App\Http\Controllers\PenggunaController::class, 'simpanGaji'])->name('pengguna.gaji.simpan');
     Route::prefix('kunjungan')->group(function () {
         Route::get('/rawatJalan', [EncounterController::class, 'getAllRawatJalan'])->name('kunjungan.rawatJalan');
         Route::get('/rawatInap', [EncounterController::class, 'getAllRawatInap'])->name('kunjungan.rawatInap');
@@ -223,5 +227,23 @@ Route::middleware(['auth'])->group(function () {
 
         // getReminderEncounter
         Route::get('/reminder/getReminderEncounter', [\App\Http\Controllers\LoketController::class, 'getReminderEncounter'])->name('loket.getReminderEncounter');
+    });
+
+    Route::prefix('keuangan')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\KeuanganController::class, 'index'])->name('keuangan.index');
+        Route::get('/gaji', [\App\Http\Controllers\KeuanganController::class, 'gaji'])->name('keuangan.gaji');
+        Route::get('/pengaturan-insentif', [\App\Http\Controllers\KeuanganController::class, 'pengaturanIncentive'])->name('keuangan.incentive.settings');
+        Route::post('/pengaturan-insentif', [\App\Http\Controllers\KeuanganController::class, 'simpanPengaturanIncentive'])->name('keuangan.incentive.settings.simpan');
+        Route::post('/gaji/{user}/bayar', [\App\Http\Controllers\KeuanganController::class, 'paySalary'])->name('keuangan.gaji.bayar');
+        Route::get('/gaji/{user}/detail', [\App\Http\Controllers\KeuanganController::class, 'gajiDetail'])->name('keuangan.gaji.detail');
+        // Route untuk menyimpan penyesuaian gaji (bonus/potongan)
+        Route::post('/gaji/{user}/penyesuaian', [\App\Http\Controllers\KeuanganController::class, 'storeSalaryAdjustment'])->name('keuangan.gaji.penyesuaian.simpan');
+        // Route untuk Pengeluaran Operasional
+        Route::resource('operasional', OperationalExpenseController::class)->except(['show']);
+        // Route untuk Pendapatan Lainnya
+        Route::resource('pendapatan-lain', OtherIncomeController::class)->except(['show']);
+        // Route untuk Manajemen Insentif Manual
+        Route::resource('insentif-manual', \App\Http\Controllers\IncentiveController::class)
+            ->except(['show'])->names('keuangan.insentif');
     });
 });

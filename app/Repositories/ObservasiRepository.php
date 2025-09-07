@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Encounter;
 use App\Models\InpatientAdmission;
+use App\Models\IncentiveSetting;
 use App\Models\InpatientDailyMedication;
 use App\Models\InpatientTreatment;
 use App\Models\Pasien;
@@ -500,8 +501,9 @@ class ObservasiRepository
         ]);
 
 
+
         // Jika sudah ada, tambahkan qty, jika belum set qty baru
-        $resepDetail->qty = ($resepDetail->exists ? $resepDetail->qty : 0) + $request->qty;
+        $resepDetail->qty = ($resepDetail->exists ? $resepDetail->qty : 0) + $request->qty_obat;
         $resepDetail->nama_obat = $stokTerdekat->productApotek->name;
         $resepDetail->aturan_pakai = $request->aturan_pakai;
         $resepDetail->expired_at = $stokTerdekat->expired_at;
@@ -641,74 +643,41 @@ class ObservasiRepository
     // Post catatan encounter
     public function postCatatanEncounter($request, $id)
     {
-        $encounter = \App\Models\Encounter::find($id);
+        $encounter = Encounter::find($id);
         if (!$encounter) {
             return [
                 'success' => false,
                 'message' => 'Encounter tidak ditemukan.'
             ];
         }
+
+        // Simpan status sebelum diupdate untuk perbandingan
+        $wasRecentlyCreated = !$encounter->exists;
+        $originalStatus = $encounter->status;
+
         if ($request->status_pulang == 3) {
-            // Hitung encounter hari ini, nomor urut selalu dua digit
-            $count = Encounter::whereDate('created_at', now()->toDateString())->count();
-            $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
-            // Buat encounter baru
-            $newEncounter = Encounter::create([
-                'no_encounter'        => $noEncounter,
-                'rekam_medis'         => $encounter->rekam_medis,
-                'name_pasien'         => $encounter->name_pasien,
-                'pasien_satusehat_id' => $encounter->pasien_satusehat_id,
-                'type'                => 2,
-                'jenis_jaminan'       => $encounter->jenis_jaminan,
-                'tujuan_kunjungan'    => $encounter->tujuan_kunjungan,
-                'created_by'         => Auth::id()
-            ]);
-            // Ambil data pasien berdasarkan rekam_medis
-            $pasien = \App\Models\Pasien::where('rekam_medis', $newEncounter->rekam_medis)->first();
-
-            if (!$pasien) {
-                return [
-                    'success' => false,
-                    'message' => 'Data pasien tidak ditemukan.'
-                ];
-            } else {
-                // Update status pasien menjadi 1 (rawat inap)
-                $pasien->update(['status' => 2]);
-            }
-            // Cek apakah sudah ada record inpatient_admissions untuk encounter ini
-            $inpatientAdmission = InpatientAdmission::where('encounter_id', $id)->first();
-            if (!$inpatientAdmission) {
-                // Jika belum ada, buat record baru
-                $inpatientAdmission = InpatientAdmission::create([
-                    'encounter_id'      => $newEncounter->id,
-                    'pasien_id'         => $pasien->id,
-                    'bed_number'        =>  0,
-                    'admission_date'    => now(),
-                ]);
-            }
-
-            $encounter->update([
-                'catatan'   => $request->catatan,
-                'condition' => $request->status_pulang,
-                'status'    => 2 // Selesai
-            ]);
+            $this->handleRujukanRawatInap($encounter);
         } else {
-            // Update catatan, condition, dan status encounter sekaligus
-            $encounter->update([
-                'catatan'   => $request->catatan,
-                'condition' => $request->status_pulang,
-                'status'    => 2 // Selesai
-            ]);
-
-            // Update status pasien menjadi 0 (tanpa relasi langsung)
-            \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)
+            Pasien::where('rekam_medis', $encounter->rekam_medis)
                 ->update(['status' => 0]);
         }
 
+        // Update encounter utama
+        $encounter->catatan = $request->catatan;
+        $encounter->condition = $request->status_pulang;
+        $encounter->status = 2; // Selesai
+        $encounter->save();
+
         // Simpan perawat yang menangani
+        $perawatIds = $request->input('perawat_ids', []);
         if ($request->has('perawat_ids')) {
-            $perawatIds = $request->input('perawat_ids');
             $encounter->nurses()->sync($perawatIds);
+        }
+
+        // --- LOGIKA INSENTIF (OPTIMIZED) ---
+        // Hanya proses insentif jika status berubah menjadi 'Selesai' (2)
+        if ($originalStatus != 2 && $encounter->status == 2) {
+            $this->processIncentives($encounter, $perawatIds);
         }
 
         // Tentukan URL redirect sesuai type
@@ -718,18 +687,10 @@ class ObservasiRepository
             3 => route('kunjungan.rawatDarurat'),
         ];
         $url = $routes[$encounter->type] ?? '';
+
         if ($encounter->type == 2) {
-            // Ubah status inpantient menjadi discarge
-            $inpatientAdmission = InpatientAdmission::where('encounter_id', $id)->first();
-            if ($inpatientAdmission) {
-                $inpatientAdmission->status = 'discharge'; // Discharge
-                $inpatientAdmission->save();
-            } else {
-                return [
-                    'success' => false,
-                    'message' => 'Data rawat inap tidak ditemukan.'
-                ];
-            }
+            // Perbaikan: Nilai 'discharged' harus berupa string
+            InpatientAdmission::where('encounter_id', $id)->update(['status' => 'discharged']);
         }
 
 
@@ -739,6 +700,118 @@ class ObservasiRepository
             'url'     => $url
         ];
     }
+
+    private function handleRujukanRawatInap(Encounter $encounter)
+    {
+        $pasien = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+        if (!$pasien) {
+            // Sebaiknya throw exception atau return error response
+            return;
+        }
+
+        // Buat encounter baru untuk rawat inap
+        $count = Encounter::whereDate('created_at', now()->toDateString())->count();
+        $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+
+        $newEncounter = Encounter::create([
+            'no_encounter'        => $noEncounter,
+            'rekam_medis'         => $encounter->rekam_medis,
+            'name_pasien'         => $encounter->name_pasien,
+            'pasien_satusehat_id' => $encounter->pasien_satusehat_id,
+            'type'                => 2, // Rawat Inap
+            'jenis_jaminan'       => $encounter->jenis_jaminan,
+            'tujuan_kunjungan'    => $encounter->tujuan_kunjungan,
+            'created_by'          => Auth::id()
+        ]);
+
+        // Buat data admisi rawat inap
+        InpatientAdmission::create([
+            'encounter_id'      => $newEncounter->id,
+            'pasien_id'         => $pasien->id,
+            'bed_number'        => 0,
+            'admission_date'    => now(),
+        ]);
+
+        // Update status pasien
+        $pasien->update(['status' => 2]); // Status Rawat Inap
+    }
+
+    private function processIncentives(Encounter $encounter, array $perawatIds)
+    {
+        $settings = IncentiveSetting::whereIn('setting_key', ['perawat_per_encounter', 'dokter_per_encounter'])
+            ->pluck('setting_value', 'setting_key');
+
+        $amountPerawat = $settings['perawat_per_encounter'] ?? 0;
+        $amountDokter = $settings['dokter_per_encounter'] ?? 0;
+        $now = now();
+        $incentivesToCreate = [];
+
+        // Insentif Perawat (Rawat Jalan/Darurat)
+        if ($amountPerawat > 0 && in_array($encounter->type, [1, 3]) && !empty($perawatIds)) {
+            foreach ($perawatIds as $perawatId) {
+                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawat, 'encounter', $encounter, $now);
+            }
+        }
+
+        // Insentif Dokter (Rawat Jalan/Darurat)
+        if ($amountDokter > 0 && in_array($encounter->type, [1, 3])) {
+            $practitioner = $encounter->practitioner()->with('user')->first();
+            if ($practitioner && $practitioner->user) {
+                $incentivesToCreate[] = $this->buildIncentiveData($practitioner->user->id, $amountDokter, 'encounter', $encounter, $now);
+            }
+        }
+
+        // Insentif Rawat Inap
+        if ($encounter->type == 2) {
+            $inpatientAdmission = InpatientAdmission::where('encounter_id', $encounter->id)->first();
+            if ($inpatientAdmission) {
+                // Insentif Perawat (Tindakan Rawat Inap)
+                if ($amountPerawat > 0) {
+                    $treatments = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
+                        ->whereHas('performedBy', fn($q) => $q->where('role', 3)) // Perawat
+                        ->get();
+                    foreach ($treatments as $treatment) {
+                        $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $amountPerawat, 'treatment_inap', $encounter, $now);
+                    }
+                }
+
+                // Insentif Dokter (Visit Rawat Inap)
+                if ($amountDokter > 0) {
+                    $visits = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
+                        ->where('request_type', 'Visit')
+                        ->whereHas('performedBy', function ($query) {
+                            $query->where('role', '!=', 3); // Hanya untuk yang BUKAN Perawat (misal: Dokter)
+                        })
+                        ->get();
+                    foreach ($visits as $visit) {
+                        $incentivesToCreate[] = $this->buildIncentiveData($visit->performed_by, $amountDokter, 'visit_inap', $encounter, $now);
+                    }
+                }
+            }
+        }
+
+        if (!empty($incentivesToCreate)) {
+            \App\Models\Incentive::insert($incentivesToCreate);
+        }
+    }
+
+    private function buildIncentiveData($userId, $amount, $type, Encounter $encounter, $timestamp)
+    {
+        $description = "Insentif " . str_replace('_', ' ', $type) . ": " . $encounter->name_pasien . ' (No. Encounter: ' . $encounter->no_encounter . ')';
+        return [
+            'id' => \Illuminate\Support\Str::uuid(), // Tambahkan UUID untuk setiap record
+            'user_id' => $userId,
+            'year' => $timestamp->year,
+            'month' => $timestamp->month,
+            'amount' => $amount,
+            'type' => $type,
+            'description' => $description,
+            'status' => 'pending',
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ];
+    }
+
     // Show InpantientAdmission
     public function getInpatientAdmission($id)
     {
@@ -805,42 +878,26 @@ class ObservasiRepository
         }
         $treatment_date = \Carbon\Carbon::parse(trim($request->treatment_date));
 
-        // Cek apakah sudah ada tindakan untuk admission_id dan tanggal yang sama
-        $existingTreatment = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
-            ->where('tindakan_id', $tindakan->id)
-            ->whereDate('treatment_date', now()->toDateString())
-            ->first();
-
-        if ($existingTreatment) {
-            // Jika sudah ada, update data
-            $existingTreatment->tindakan_name = $tindakan->name;
-            $existingTreatment->harga = $tindakan->harga;
-            $existingTreatment->total = ($existingTreatment->quantity + 1) * $tindakan->harga; // Update total berdasarkan harga dan quantity dan jumlah request
-            $existingTreatment->quantity += 1; // Tambah quantity
-            $existingTreatment->result = $request->result;
-            $existingTreatment->performed_by = \Illuminate\Support\Facades\Auth::user()->id;
-            $existingTreatment->save();
-        } else {
-            // Jika belum ada, buat data baru
-            $inpatientTreatment = new InpatientTreatment();
-            $inpatientTreatment->admission_id = $id;
-            $inpatientTreatment->request_type = $request->type; // Simpan tipe tindakan
-            $inpatientTreatment->tindakan_id = $tindakan->id; // Simpan ID tindakan
-            $inpatientTreatment->tindakan_name = $tindakan->name;
-            $inpatientTreatment->harga = $tindakan->harga;
-            $inpatientTreatment->total = $tindakan->harga * $request->quantity;
-            $inpatientTreatment->quantity = 1; // Set quantity ke 1
-            $inpatientTreatment->result = $request->result;
-            $inpatientTreatment->performed_by = \Illuminate\Support\Facades\Auth::user()->id;
-            $inpatientTreatment->treatment_date = $treatment_date->format('Y-m-d H:i:s'); // Simpan tanggal tindakan
-            if ($request->hasFile('document')) {
-                $file = $request->file('document');
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $file->move(public_path('uploads'), $filename);
-                $inpatientTreatment->document = $filename;
-            }
-            $inpatientTreatment->save();
+        // Selalu buat data baru setiap kali ada request, hapus logika pengecekan existingTreatment
+        $inpatientTreatment = new InpatientTreatment();
+        $inpatientTreatment->admission_id = $id;
+        $inpatientTreatment->request_type = $request->type; // Simpan tipe tindakan
+        $inpatientTreatment->tindakan_id = $tindakan->id; // Simpan ID tindakan
+        $inpatientTreatment->tindakan_name = $tindakan->name;
+        $inpatientTreatment->harga = $tindakan->harga;
+        $inpatientTreatment->total = $tindakan->harga; // Total adalah harga per tindakan (quantity selalu 1)
+        $inpatientTreatment->quantity = 1; // Quantity selalu 1 untuk setiap tindakan baru
+        $inpatientTreatment->result = $request->result;
+        $inpatientTreatment->performed_by = \Illuminate\Support\Facades\Auth::user()->id;
+        $inpatientTreatment->treatment_date = $treatment_date->format('Y-m-d H:i:s'); // Simpan tanggal tindakan
+        if ($request->hasFile('document')) {
+            $file = $request->file('document');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads'), $filename);
+            $inpatientTreatment->document = $filename;
         }
+        $inpatientTreatment->save();
+
 
         return [
             'success' => true,

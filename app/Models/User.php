@@ -70,4 +70,26 @@ class User extends Authenticatable
     {
         return $this->hasMany(InpatientVisit::class, 'perawat_id');
     }
+    // app/Models/User.php
+
+    // ... (di dalam class User)
+    public function salary()
+    {
+        return $this->hasOne(\App\Models\Salary::class);
+    }
+
+    public function salaryPayments()
+    {
+        return $this->hasMany(\App\Models\SalaryPayment::class);
+    }
+
+    public function incentives()
+    {
+        return $this->hasMany(\App\Models\Incentive::class);
+    }
+
+    public function salaryAdjustments()
+    {
+        return $this->hasMany(\App\Models\SalaryAdjustment::class);
+    }
 }

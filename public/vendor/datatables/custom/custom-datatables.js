@@ -1,178 +1,41 @@
-// Basic DataTable
+// Basic Data Table
 $(function () {
-  $("#basicExample").DataTable({
-    "dom": 'rtip',
-    lengthMenu: [
-      [12, 25, 50],
-      [12, 25, 50, "All"],
-    ],
-    language: {
-      lengthMenu: "Display _MENU_ Records Per Page",
-      info: "Showing Page _PAGE_ of _PAGES_",
-    },
-  });
+    $("#basic-datatable").DataTable({
+        language: {
+            paginate: {
+                previous: "<i class='ri-arrow-left-s-line'>",
+                next: "<i class='ri-arrow-right-s-line'>",
+            },
+        },
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+        },
+    });
 });
 
-// Vertical Scroll
+// Hide Search and Length
 $(function () {
-  $("#scrollVertical").DataTable({
-    scrollY: "calc(100vh - 360px)",
-    scrollCollapse: true,
-    paging: false,
-    bInfo: false,
-  });
+    $("#hideSearchExample").DataTable({
+        searching: false,
+        lengthChange: false,
+        language: {
+            paginate: {
+                previous: "<i class='ri-arrow-left-s-line'>",
+                next: "<i class='ri-arrow-right-s-line'>",
+            },
+        },
+        drawCallback: function () {
+            $(".dataTables_paginate > .pagination").addClass("pagination-rounded");
+        },
+    });
 });
 
-// Vertical Scroll
-$(function () {
-  $("#scrollVertical2").DataTable({
-    scrollY: "calc(100vh - 310px)",
-    scrollCollapse: true,
-    paging: false,
-    bInfo: false,
-  });
-});
+// Datatable with buttons
+$(document).ready(function () {
+    var table = $("#datatable-button").DataTable({
+        lengthChange: false,
+        buttons: ["copy", "excel", "pdf", "colvis"],
+    });
 
-// Highlighting rows and columns
-$(function () {
-  $("#highlightRowColumn").DataTable({
-    lengthMenu: [
-      [10, 25, 50],
-      [10, 25, 50, "All"],
-    ],
-    language: {
-      lengthMenu: "Display _MENU_ Records Per Page",
-    },
-  });
-  var table = $("#highlightRowColumn").DataTable();
-  $("#highlightRowColumn tbody").on("mouseenter", "td", function () {
-    var colIdx = table.cell(this).index().column;
-    $(table.cells().nodes()).removeClass("highlight");
-    $(table.column(colIdx).nodes()).addClass("highlight");
-  });
-});
-
-// Using API in callbacks
-$(function () {
-  $("#apiCallbacks").DataTable({
-    lengthMenu: [
-      [10, 25, 50],
-      [10, 25, 50, "All"],
-    ],
-    language: {
-      lengthMenu: "Display _MENU_ Records Per Page",
-    },
-    initComplete: function () {
-      var api = this.api();
-      api.$("td").on("click", function () {
-        api.search(this.innerHTML).draw();
-      });
-    },
-  });
-});
-
-// Hiding Search and Show entries
-$(function () {
-  $("#hideSearchExample").DataTable({
-    "dom": 'rtip',
-    lengthMenu: [
-      [10, 25, 50],
-      [10, 25, 50, "All"],
-    ],
-    searching: false,
-    language: {
-      lengthMenu: "Display _MENU_ Records Per Page",
-      info: "Showing Page _PAGE_ of _PAGES_",
-    },
-  });
-});
-
-// Print Export Copy PDF Buttons
-$(function () {
-  $("#customButtons").DataTable({
-    lengthMenu: [
-      [10, 25, 50],
-      [10, 25, 50, "All"],
-    ],
-    dom: "Bfrtip",
-    buttons: ["copy", "csv", "excel", "pdf", "print"],
-  });
-});
-
-// Toggle Buttons
-$(function () {
-  $("#toggleButtons").DataTable({
-    dom: "Bfrtip",
-    buttons: ["columnsToggle"],
-  });
-});
-
-// Space between buttons
-$(function () {
-  $("#spaceButtons").DataTable({
-    dom: "Bfrtip",
-    buttons: [
-      "copy",
-      "print",
-      {
-        extend: "spacer",
-        style: "bar",
-        text: "export files",
-      },
-      "csv",
-      "excel",
-      "spacer",
-      "pdf",
-    ],
-  });
-});
-
-// Appoiuntments
-$(function () {
-  $("#noBInfo").DataTable({
-    bInfo: false,
-    paging: false,
-    "ordering": false,
-  });
-});
-
-// Attandance Vertical Scroll
-$(function () {
-  $("#attandance").DataTable({
-    scrollCollapse: true,
-    paging: false,
-    bInfo: false,
-    "ordering": false,
-  });
-});
-
-// staffLeaves Vertical Scroll
-$(function () {
-  $("#staffLeaves").DataTable({
-    scrollCollapse: true,
-    paging: false,
-    bInfo: false,
-    "ordering": false,
-  });
-});
-
-// Appoiuntments
-$(function () {
-  $("#appointmentsGrid").DataTable({
-    bInfo: false,
-    paging: false,
-    "ordering": false,
-  });
-});
-
-// Print Export Copy PDF Buttons
-$(function () {
-  $("#customButtonsScroll").DataTable({
-    scrollY: "calc(100vh - 360px)",
-    scrollCollapse: true,
-    paging: false,
-    bInfo: false,
-    dom: "Bfrtip",
-    buttons: ["copy", "csv", "excel", "pdf", "print"],
-  });
+    table.buttons().container().appendTo("#datatable-button_wrapper .col-md-6:eq(0)");
 });

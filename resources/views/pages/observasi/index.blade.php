@@ -593,9 +593,9 @@
                                                     </div>
                                                     <label class="form-label mt-3" for="a2">Jumlah</label>
                                                     <div class="input-group">
-                                                        <input type="number" class="form-control" id="qty"
-                                                            name="qty" value="{{ old('qty', 1) }}">
-                                                        <p class="text-danger">{{ $errors->first('qty') }}</p>
+                                                        <input type="number" class="form-control" id="qty_obat"
+                                                            name="qty_obat" value="{{ old('qty_obat', 1) }}">
+                                                        <p class="text-danger">{{ $errors->first('qty_obat') }}</p>
                                                     </div>
                                                     <label class="form-label mt-3" for="a2">Aturan Pakai</label>
                                                     <div class="input-group">
@@ -1701,13 +1701,13 @@
                 e.preventDefault();
                 // validasi input
                 let product_apotek_id = $("#product_apotek_id").val();
-                let qty = $("#qty").val();
+                let qty_obat = $("#qty_obat").val();
                 let aturan_pakai = $("#aturan_pakai").val();
                 if (product_apotek_id == '') {
                     alert("Obat tidak boleh kosong");
                     return;
                 }
-                if (qty == '') {
+                if (qty_obat == '') {
                     alert("Jumlah tidak boleh kosong");
                     return;
                 }
@@ -1728,7 +1728,7 @@
                     data: {
                         _token: "{{ csrf_token() }}",
                         product_apotek_id: product_apotek_id,
-                        qty: qty,
+                        qty_obat: qty_obat,
                         aturan_pakai: aturan_pakai
                     },
                     success: function(data) {

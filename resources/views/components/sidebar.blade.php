@@ -136,6 +136,38 @@
 
                 </ul>
             </li>
+            <li class="treeview {{ request()->is('keuangan*') ? 'active current-page' : '' }}">
+                <a href="#">
+                    <i class="ri-funds-line"></i>
+                    <span class="menu-text">Keuangan</span>
+                </a>
+                <ul class="treeview-menu">
+                    <li>
+                        <a class="{{ request()->is('keuangan/dashboard*') ? 'active-sub' : '' }}"
+                            href="{{ route('keuangan.index') }}">Laporan Keuangan</a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->is('keuangan/gaji*') ? 'active-sub' : '' }}"
+                            href="{{ route('keuangan.gaji') }}">Gaji & Insentif</a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->is('keuangan/pengaturan-insentif*') ? 'active-sub' : '' }}"
+                            href="{{ route('keuangan.incentive.settings') }}">Pengaturan Insentif</a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->is('keuangan/insentif-manual*') ? 'active-sub' : '' }}"
+                            href="{{ route('keuangan.insentif.index') }}">Manajemen Insentif</a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->is('keuangan/operasional*') ? 'active-sub' : '' }}"
+                            href="{{ route('operasional.index') }}">Pengeluaran Operasional</a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->is('keuangan/pendapatan-lain*') ? 'active-sub' : '' }}"
+                            href="{{ route('pendapatan-lain.index') }}">Pendapatan Lainnya</a>
+                    </li>
+                </ul>
+            </li>
             <li class="treeview {{ request()->is('apotek*') ? 'active current-page' : '' }}">
                 <a href="#">
                     <i class="ri-medicine-bottle-line"></i>

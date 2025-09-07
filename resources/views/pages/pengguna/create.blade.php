@@ -127,12 +127,12 @@
                                                             Dokter</option>
                                                         <option value="3" {{ old('role') == '3' ? 'selected' : '' }}>
                                                             Perawat</option>
-                                                        <option value="4" {{ old('role') == '4' ? 'selected' : '' }}>
-                                                            Admin</option>
+                                                        {{-- <option value="4" {{ old('role') == '4' ? 'selected' : '' }}>
+                                                            Admin</option> --}}
                                                         <option value="5" {{ old('role') == '5' ? 'selected' : '' }}>
                                                             Pendaftaran</option>
-                                                        <option value="6" {{ old('role') == '6' ? 'selected' : '' }}>
-                                                            Kasir</option>
+                                                        {{-- <option value="6" {{ old('role') == '6' ? 'selected' : '' }}>
+                                                            Kasir</option> --}}
                                                         <option value="7" {{ old('role') == '7' ? 'selected' : '' }}>
                                                             Apotek</option>
                                                         <option value="8" {{ old('role') == '8' ? 'selected' : '' }}>

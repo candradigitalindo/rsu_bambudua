@@ -73,6 +73,10 @@
                                                     <span class="spinner-border spinner-border-sm d-none"
                                                         id="spiner-{{ $u->id }}"></span>
                                                 </a>
+                                                <a href="{{ route('pengguna.gaji.atur', $u->id) }}"
+                                                    class="btn btn-info btn-sm">
+                                                    <i class="ri-money-dollar-circle-line"></i> Atur Gaji
+                                                </a>
                                                 <script src="{{ asset('js/jquery.min.js') }}"></script>
                                                 <script>
                                                     $(document).ready(function() {
@@ -83,8 +87,13 @@
                                                         });
                                                     });
                                                 </script>
-                                                <a href="{{ route('pengguna.destroy', $u->id) }}"
-                                                    class="btn btn-danger btn-sm" data-confirm-delete="true">Hapus</a>
+                                                <form action="{{ route('pengguna.destroy', $u->id) }}" method="POST"
+                                                    class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger btn-sm"
+                                                        data-confirm-delete="true">Hapus</button>
+                                                </form>
 
                                             </td>
                                         </tr>

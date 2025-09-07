@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Salary;
+use App\Models\User;
 use App\Repositories\PenggunaRepository;
 use Illuminate\Http\Request;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -122,5 +124,31 @@ class PenggunaController extends Controller
         Alert::info('Berhasil', 'Data Pengguna
          dihapus!');
         return back();
+    }
+
+    public function aturGaji(User $user)
+    {
+        // Eager load relasi salary
+        $user->load('salary');
+        return view('pages.pengguna.gaji', compact('user'));
+    }
+
+    public function simpanGaji(Request $request, User $user)
+    {
+        $request->validate([
+            'base_salary' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
+        ], [
+            'base_salary.required' => 'Gaji pokok harus diisi.',
+            'base_salary.numeric' => 'Gaji pokok harus berupa angka.',
+        ]);
+
+        Salary::updateOrCreate(
+            ['user_id' => $user->id],
+            ['base_salary' => $request->base_salary, 'notes' => $request->notes]
+        );
+
+        Alert::success('Berhasil', 'Gaji pokok untuk ' . $user->name . ' berhasil disimpan.');
+        return redirect()->route('pengguna.index');
     }
 }

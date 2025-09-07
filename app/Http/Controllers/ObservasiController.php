@@ -230,7 +230,7 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'masa_pemakaian_hari' => 'required|string|max:255',
-        ],[
+        ], [
             'masa_pemakaian_hari.required' => 'Masa pemakaian hari harus diisi.',
         ]);
         $result = $this->observasiRepository->postResep($request, $id);
@@ -255,7 +255,7 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'product_apotek_id' => 'required|string|max:255',
-            'qty' => 'required|integer|max:255',
+            'qty_obat' => 'required|integer|max:255',
             'aturan_pakai' => 'required|string|max:255',
         ]);
         $result = $this->observasiRepository->postResepDetail($request, $id);
@@ -265,7 +265,7 @@ class ObservasiController extends Controller
                 'status' => 400,
                 'message' => $result['message']
             ], 400);
-        }else {
+        } else {
             return response()->json([
                 'status' => 200,
                 'message' => 'Data Resep Detail berhasil disimpan.',
@@ -298,7 +298,7 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'diskon_tindakan' => 'required|numeric|min:0',
-        ],[
+        ], [
             'diskon_tindakan.required' => 'Diskon tindakan harus diisi.',
             'diskon_tindakan.numeric' => 'Diskon tindakan harus berupa angka.',
             'diskon_tindakan.min' => 'Diskon tindakan minimal 0.',
@@ -313,7 +313,7 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'diskon_resep' => 'required|numeric|min:0',
-        ],[
+        ], [
             'diskon_resep.required' => 'Diskon resep harus diisi.',
             'diskon_resep.numeric' => 'Diskon resep harus berupa angka.',
             'diskon_resep.min' => 'Diskon resep minimal 0.',
@@ -325,16 +325,21 @@ class ObservasiController extends Controller
     // post catatan encounter
     public function postCatatanEncounter(Request $request, $id)
     {
-        // Validasi input
+        // Ambil tipe encounter untuk validasi kondisional
+        $encounter = \App\Models\Encounter::find($id);
+        if (!$encounter) {
+            return response()->json(['message' => 'Encounter tidak ditemukan.'], 404);
+        }
+
         $request->validate([
             'catatan' => 'nullable|string|max:255',
             'status_pulang' => 'required|numeric',
-            'perawat_ids' => 'required|array',
+            // Perawat hanya wajib untuk Rawat Jalan (1) dan Rawat Darurat (3)
+            'perawat_ids' => 'required_if:encounter_type,1,3|array',
             'perawat_ids.*' => 'exists:users,id',
         ], [
             'perawat_ids.required' => 'Perawat harus dipilih.',
-            'perawat_ids.array' => 'Perawat harus berupa array.',
-            'perawat_ids.*.exists' => 'Perawat yang dipilih tidak valid.'
+            'perawat_ids.required_if' => 'Perawat harus dipilih untuk Rawat Jalan/Darurat.',
         ]);
         $result = $this->observasiRepository->postCatatanEncounter($request, $id);
         return response()->json($result);
@@ -361,7 +366,7 @@ class ObservasiController extends Controller
                 'status' => 404,
                 'message' => $result['message']
             ], 404);
-        }else {
+        } else {
             return response()->json([
                 'status' => 200,
                 'message' => 'Tindakan berhasil disimpan.',
@@ -406,7 +411,7 @@ class ObservasiController extends Controller
                 'status' => 404,
                 'message' => $result['message']
             ], 404);
-        }else {
+        } else {
             return response()->json([
                 'status' => 200,
                 'message' => 'Status obat berhasil diperbarui.',
@@ -434,7 +439,7 @@ class ObservasiController extends Controller
                 'status' => 404,
                 'message' => $result['message']
             ], 404);
-        }else {
+        } else {
             return response()->json([
                 'status' => 200,
                 'message' => 'Obat berhasil disimpan.',
@@ -451,7 +456,7 @@ class ObservasiController extends Controller
                 'status' => 404,
                 'message' => $result['message']
             ], 404);
-        }else {
+        } else {
             return response()->json([
                 'status' => 200,
                 'message' => 'Obat berhasil dihapus.'

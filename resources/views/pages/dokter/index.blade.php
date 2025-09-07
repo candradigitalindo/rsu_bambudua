@@ -25,18 +25,9 @@
                     <div class="row gx-3">
                         <div class="col-xl-6 col-sm-6">
                             <div class="d-flex align-items-start gap-3 flex-wrap">
-                                @if ($user->profile == null)
-                                    <img src="{{ asset('images/no Photo.png') }}" class="mw-240 rounded-2"
-                                        alt="Medical Dashboard">
-                                @else
-                                    @if ($user->profile->foto == null)
-                                        <img src="{{ asset('images/no Photo.png') }}" class="mw-240 rounded-2"
-                                            alt="Medical Dashboard">
-                                    @else
-                                        <img src="{{ route('home.profile.filename', $user->profile->foto) }}"
-                                            class="mw-240 rounded-2" alt="Medical Dashboard">
-                                    @endif
-                                @endif
+                                <img src="{{ $user->profile->foto ? route('home.profile.filename', $user->profile->foto) : asset('images/no Photo.png') }}"
+                                    class="mw-240 rounded-2" alt="Medical Dashboard">
+
                                 <div class="">
                                     <span class="badge bg-primary-subtle text-primary"><i
                                             class="ri-circle-fill me-1"></i>Available</span>

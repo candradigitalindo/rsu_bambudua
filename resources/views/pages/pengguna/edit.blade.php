@@ -129,15 +129,15 @@
                                                         <option value="3"
                                                             {{ $data['user']->role == '3' ? 'selected' : '' }}>Perawat
                                                         </option>
-                                                        <option value="4"
+                                                        {{-- <option value="4"
                                                             {{ $data['user']->role == '4' ? 'selected' : '' }}>Admin
-                                                        </option>
+                                                        </option> --}}
                                                         <option value="5"
                                                             {{ $data['user']->role == '5' ? 'selected' : '' }}>Pendaftaran
                                                         </option>
-                                                        <option value="6"
+                                                        {{-- <option value="6"
                                                             {{ $data['user']->role == '6' ? 'selected' : '' }}>Kasir
-                                                        </option>
+                                                        </option> --}}
                                                         <option value="7"
                                                             {{ $data['user']->role == '7' ? 'selected' : '' }}>Apotek
                                                         </option>

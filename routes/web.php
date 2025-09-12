@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AgamaController;
+use App\Http\Controllers\KasirController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ApotekController;
 use App\Http\Controllers\BahanController;
@@ -233,6 +234,12 @@ Route::middleware(['auth'])->group(function () {
 
         // getReminderEncounter
         Route::get('/reminder/getReminderEncounter', [\App\Http\Controllers\LoketController::class, 'getReminderEncounter'])->name('loket.getReminderEncounter');
+    });
+
+    Route::prefix('kasir')->group(function () {
+        Route::get('/', [KasirController::class, 'index'])->name('kasir.index');
+        Route::get('/pembayaran/{pasien_id}', [KasirController::class, 'show'])->name('kasir.show');
+        Route::post('/pembayaran/{pasien_id}', [KasirController::class, 'processPayment'])->name('kasir.processPayment');
     });
 
     Route::prefix('keuangan')->group(function () {

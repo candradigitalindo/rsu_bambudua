@@ -73,16 +73,24 @@
                                         class="ri-stethoscope-line"></i>Tindakan/Prosedur</a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-diagnosis" data-bs-toggle="tab" href="#diagnosis" role="tab"
-                                    aria-controls="diagnosis" aria-selected="false"><i
-                                        class="ri-health-book-line"></i>Diagnosis</a>
+                                <a class="nav-link @if (auth()->user()->role == 3) disabled @endif" id="tab-diagnosis"
+                                    data-bs-toggle="tab" href="#diagnosis" role="tab" aria-controls="diagnosis"
+                                    aria-selected="false"><i class="ri-health-book-line"></i>Diagnosis</a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-tatalaksana" data-bs-toggle="tab" href="#tatalaksana"
-                                    role="tab" aria-controls="tatalaksana" aria-selected="false"><i
-                                        class="ri-capsule-fill"></i>Tatalaksana</a>
+                                <a class="nav-link @if (auth()->user()->role == 3) disabled @endif" id="tab-tatalaksana"
+                                    data-bs-toggle="tab" href="#tatalaksana" role="tab" aria-controls="tatalaksana"
+                                    aria-selected="false"><i class="ri-capsule-fill"></i>Tatalaksana</a>
                             </li>
                             <li class="nav-item" role="presentation">
+                                @php
+                                    $redirectRoute = match ($encounter->type) {
+                                        1 => route('kunjungan.rawatJalan'),
+                                        2 => route('kunjungan.rawatInap'),
+                                        3 => route('kunjungan.rawatDarurat'),
+                                        default => '#',
+                                    };
+                                @endphp
                                 <a class="nav-link" id="tab-catatan" data-bs-toggle="tab" href="#catatan" role="tab"
                                     aria-controls="catatan" aria-selected="false"><i class="ri-draft-line"></i>Catatan</a>
                             </li>
@@ -100,7 +108,8 @@
                                         <div class="mb-3">
                                             <label class="form-label" for="dokter_id">Dokter yang Menangani</label>
                                             <div class="input-group">
-                                                <select name="dokter_id" class="form-select" id="dokter_id">
+                                                <select name="dokter_id" class="form-select" id="dokter_id"
+                                                    @if (auth()->user()->role == 3) disabled @endif>
                                                     @if ($dokters['dokter_terpilih'] == null)
                                                         <option value="">Pilih Dokter</option>
                                                         @foreach ($dokters['dokters'] as $dokter)
@@ -153,8 +162,7 @@
                                         <span class="spinner-border spinner-border-sm d-none"
                                             id="spinner-anamnesis"></span>
                                     </button>
-                                    <a href="{{ route('kunjungan.rawatJalan') }}" class="btn btn-secondary"
-                                        id="btn-kembali-anamnesis">
+                                    <a href="{{ $redirectRoute }}" class="btn btn-secondary" id="btn-kembali-anamnesis">
                                         <span class="btn-txt" id="text-kembali-anamnesis">Kembali</span>
                                         <span class="spinner-border spinner-border-sm d-none"
                                             id="spinner-kembali-anamnesis"></span>
@@ -263,8 +271,7 @@
                                             <span class="btn-txt" id="text-ttv">Simpan</span>
                                             <span class="spinner-border spinner-border-sm d-none" id="spinner-ttv"></span>
                                         </button>
-                                        <a href="{{ route('kunjungan.rawatJalan') }}" class="btn btn-secondary"
-                                            id="btn-kembali-ttv">
+                                        <a href="{{ $redirectRoute }}" class="btn btn-secondary" id="btn-kembali-ttv">
                                             <span class="btn-txt" id="text-kembali-ttv">Kembali</span>
                                             <span class="spinner-border spinner-border-sm d-none"
                                                 id="spinner-kembali-ttv"></span>
@@ -504,6 +511,7 @@
                                                 </div>
                                                 <div class="d-flex gap-2 justify-content-end mt-4">
                                                     <button type="submit" class="btn btn-primary"
+                                                        @if (auth()->user()->role == 3) disabled @endif
                                                         id="btn-diagnosis-medis">
                                                         <span class="btn-txt" id="text-diagnosis-medis">Simpan</span>
                                                         <span class="spinner-border spinner-border-sm d-none"
@@ -566,13 +574,15 @@
                                                             <input type="text" name="masa_pemakaian_hari"
                                                                 class="form-control" placeholder="Jumlah Hari Resep"
                                                                 id="masa_pemakaian_hari">
-                                                            <button class="btn btn-primary" type="submit"
-                                                                id="btn-buat-resep">
-                                                                <span id="text-buat-resep">Buat Resep</span>
-                                                                <span class="spinner-border spinner-border-sm d-none"
-                                                                    id="spinner-buat-resep" role="status"
-                                                                    aria-hidden="true"></span>
-                                                            </button>
+                                                            @if (auth()->user()->role != 3)
+                                                                <button class="btn btn-primary" type="submit"
+                                                                    id="btn-buat-resep">
+                                                                    <span id="text-buat-resep">Buat Resep</span>
+                                                                    <span class="spinner-border spinner-border-sm d-none"
+                                                                        id="spinner-buat-resep" role="status"
+                                                                        aria-hidden="true"></span>
+                                                                </button>
+                                                            @endif
                                                         </div>
                                                     </form>
 
@@ -605,6 +615,7 @@
                                                     </div>
                                                     <div class="d-flex gap-2 justify-content-end mt-4">
                                                         <button type="submit" class="btn btn-primary"
+                                                            @if (auth()->user()->role == 3) disabled @endif
                                                             id="btn-tambah-obat">
                                                             <span class="btn-txt" id="text-tambah-obat">Tambah
                                                                 Obat</span>
@@ -673,14 +684,16 @@
                                                     <div class="input-group">
                                                         <input type="number" name="diskon_tindakan" class="form-control"
                                                             placeholder="Diskon Tindakan" id="diskon_tindakan">
-                                                        <div class="input-group-text">%</div>
-                                                        <button class="btn btn-primary" type="submit"
-                                                            id="btn-buat-diskon-tindakan">
-                                                            <span id="text-buat-diskon-tindakan">Buat Diskon</span>
-                                                            <span class="spinner-border spinner-border-sm d-none"
-                                                                id="spinner-buat-diskon-tindakan" role="status"
-                                                                aria-hidden="true"></span>
-                                                        </button>
+                                                        @if (auth()->user()->role != 3)
+                                                            <div class="input-group-text">%</div>
+                                                            <button class="btn btn-primary" type="submit"
+                                                                id="btn-buat-diskon-tindakan">
+                                                                <span id="text-buat-diskon-tindakan">Buat Diskon</span>
+                                                                <span class="spinner-border spinner-border-sm d-none"
+                                                                    id="spinner-buat-diskon-tindakan" role="status"
+                                                                    aria-hidden="true"></span>
+                                                            </button>
+                                                        @endif
                                                     </div>
 
 
@@ -745,14 +758,16 @@
                                                     <div class="input-group">
                                                         <input type="number" name="diskon_resep" class="form-control"
                                                             placeholder="Diskon Resep" id="diskon_resep">
-                                                        <div class="input-group-text">%</div>
-                                                        <button class="btn btn-primary" type="submit"
-                                                            id="btn-buat-diskon-resep">
-                                                            <span id="text-buat-diskon-resep">Buat Diskon</span>
-                                                            <span class="spinner-border spinner-border-sm d-none"
-                                                                id="spinner-buat-diskon-resep" role="status"
-                                                                aria-hidden="true"></span>
-                                                        </button>
+                                                        @if (auth()->user()->role != 3)
+                                                            <div class="input-group-text">%</div>
+                                                            <button class="btn btn-primary" type="submit"
+                                                                id="btn-buat-diskon-resep">
+                                                                <span id="text-buat-diskon-resep">Buat Diskon</span>
+                                                                <span class="spinner-border spinner-border-sm d-none"
+                                                                    id="spinner-buat-diskon-resep" role="status"
+                                                                    aria-hidden="true"></span>
+                                                            </button>
+                                                        @endif
                                                     </div>
 
 
@@ -852,15 +867,17 @@
                                                 </div>
                                                 {{-- button --}}
                                                 <hr>
-                                                <div class="mb-3 d-flex justify-content-end">
-                                                    <button type="button" class="btn btn-primary"
-                                                        id="btn-simpan-catatan">
-                                                        <span id="text-simpan-catatan">Selesai Pemeriksaan</span>
-                                                        <span class="spinner-border spinner-border-sm d-none"
-                                                            id="spinner-simpan-catatan" role="status"
-                                                            aria-hidden="true"></span>
-                                                    </button>
-                                                </div>
+                                                @if (auth()->user()->role != 3)
+                                                    <div class="mb-3 d-flex justify-content-end">
+                                                        <button type="button" class="btn btn-primary"
+                                                            id="btn-simpan-catatan">
+                                                            <span id="text-simpan-catatan">Selesai Pemeriksaan</span>
+                                                            <span class="spinner-border spinner-border-sm d-none"
+                                                                id="spinner-simpan-catatan" role="status"
+                                                                aria-hidden="true"></span>
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

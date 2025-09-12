@@ -164,6 +164,19 @@
                     </li>
                 </ul>
             </li>
+            <li class="treeview {{ request()->is('kasir*') ? 'active current-page' : '' }}">
+                <a href="#">
+                    <i class="ri-funds-line"></i>
+                    <span class="menu-text">Kasir</span>
+                </a>
+                <ul class="treeview-menu">
+                    <li>
+                        <a class="{{ request()->is('kasir*') ? 'active-sub' : '' }}"
+                            href="{{ route('kasir.index') }}">Transaksi Pembayaran</a>
+                    </li>
+
+                </ul>
+            </li>
             <li class="treeview {{ request()->is('apotek*') ? 'active current-page' : '' }}">
                 <a href="#">
                     <i class="ri-medicine-bottle-line"></i>

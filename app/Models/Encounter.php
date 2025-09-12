@@ -127,4 +127,8 @@ class Encounter extends Model
     {
         return $this->belongsToMany(User::class, 'encounter_nurse', 'encounter_id', 'user_id')->withTimestamps();
     }
+    public function pasien()
+    {
+        return $this->belongsTo(Pasien::class, 'rekam_medis', 'rekam_medis');
+    }
 }

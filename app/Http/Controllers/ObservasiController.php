@@ -374,11 +374,7 @@ class ObservasiController extends Controller
     public function getInpatientTreatment($id)
     {
         $inpatientTreatment = $this->observasiRepository->getInpatientTreatment($id);
-        if ($inpatientTreatment) {
-            return response()->json($inpatientTreatment);
-        } else {
-            return response()->json(['message' => 'Tindakan tidak ditemukan'], 404);
-        }
+        return response()->json($inpatientTreatment ?? []);
     }
     public function deleteInpatientTreatment($id)
     {

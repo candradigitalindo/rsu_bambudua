@@ -900,6 +900,41 @@
                 }
             });
 
+            $('#tbody-pendukung').on('click', '.btn-view-doc', function() {
+                const docUrl = $(this).data('doc');
+                const docName = $(this).data('name');
+                const modal = $('#modalViewDocument');
+                const container = $('#documentContainer');
+                const downloadBtn = $('#btnDownloadDocument');
+
+                modal.find('#modalViewDocumentLabel').text(`Dokumen: ${docName}`);
+                container.html('<div class="spinner-border"></div>'); // Show spinner
+                downloadBtn.attr('href', docUrl).attr('download', docName);
+
+                const fileExtension = docUrl.split('.').pop().toLowerCase();
+
+                if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+                    const img = $('<img>', {
+                        src: docUrl,
+                        class: 'img-fluid rounded',
+                        alt: 'Dokumen',
+                        css: {
+                            'max-height': '70vh',
+                            'object-fit': 'contain'
+                        }
+                    });
+                    container.html(img);
+                } else if (fileExtension === 'pdf') {
+                    const embed =
+                        `<embed src="${docUrl}" type="application/pdf" width="100%" height="500px" />`;
+                    container.html(embed);
+                } else {
+                    container.html(
+                    '<p class="text-danger">Format file tidak didukung untuk pratinjau.</p>');
+                }
+                modal.modal('show');
+            });
+
             // --- Daily Medication Tab ---
             const loadDailyMedications = async () => {
                 try {

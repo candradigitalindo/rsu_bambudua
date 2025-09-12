@@ -21,7 +21,7 @@ class LoketRepository
         $lokets     = Loket::orderBy('created_at', 'DESC')->get();
         $lokasis    = LokasiLoket::latest()->get();
         $users      = User::where('role', 5)->latest()->get();
-        $lokets->map( function ($loket) {
+        $lokets->map(function ($loket) {
             $loket['lokasi'] = $loket->lokasiloket->lokasi_loket;
             $user   = User::where('id', $loket->user_id)->first();
             $loket['user']   = $user == null ? null : $user->name;
@@ -127,15 +127,6 @@ class LoketRepository
 
         return $encounters;
     }
-    // Bayar tindakan
-    public function bayarTindakan($request, $id)
-    {
-        $encounter = \App\Models\Encounter::findOrFail($id);
-        $encounter->status_bayar_tindakan = 1;
-        $encounter->metode_pembayaran_tindakan = $request->metode_pembayaran;
-        $encounter->save();
-        return $encounter;
-    }
     // cetak struk tindakan
     public function cetakEncounter($id)
     {
@@ -150,11 +141,11 @@ class LoketRepository
         // Ambil rekam_medis encounter yang memenuhi kriteria H-3 dan H-7
         $encounters = \App\Models\Encounter::with('resep')
             ->where('condition', $condition)
-            ->whereHas('resep', function($q) use ($today) {
-                $q->where(function($sub) use ($today) {
+            ->whereHas('resep', function ($q) use ($today) {
+                $q->where(function ($sub) use ($today) {
                     $sub->where('masa_pemakaian_hari', '<=', 7)
                         ->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 3 DAY) = ?", [$today]);
-                })->orWhere(function($sub) use ($today) {
+                })->orWhere(function ($sub) use ($today) {
                     $sub->where('masa_pemakaian_hari', '>=', 14)
                         ->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 7 DAY) = ?", [$today]);
                 });

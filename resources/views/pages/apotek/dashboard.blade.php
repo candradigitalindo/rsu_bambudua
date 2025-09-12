@@ -58,7 +58,8 @@
                         <hr>
                         <div class="row mt-4">
                             <div class="col-12">
-                                <h5 class="card-title">Grafik Transaksi Resep Tahun {{ date('Y') }}</h5>
+                                <h5 class="card-title">Grafik Pendapatan Obat (Resep & Rawat Inap) Tahun {{ date('Y') }}
+                                </h5>
                                 <div style="width: 100%; min-width: 300px;">
                                     <canvas id="grafikNominalTransaksi" height="350"></canvas>
                                 </div>
@@ -108,37 +109,39 @@
                                             <thead>
                                                 <tr>
                                                     <th>No</th>
-                                                    <th>No. Resep</th>
+                                                    <th>No. Transaksi</th>
+                                                    <th>Tipe</th>
                                                     <th>Pasien</th>
                                                     <th class="text-center">Tanggal</th>
                                                     <th class="text-end">Nominal</th>
                                                     <th class="text-end">Diskon (Rp)</th>
-                                                    <th class="text-end">Diskon (%)</th>
                                                     <th class="text-end">Total Bayar</th>
                                                     <th class="text-center">Metode Pembayaran</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @forelse ($data['encounter_terbayar'] as $i => $encounter)
+                                                @forelse ($data['encounter_terbayar'] as $item)
                                                     <tr>
-                                                        <td>{{ $i + 1 }}</td>
-                                                        <td>{{ $encounter->resep->kode_resep ?? '-' }}</td>
-                                                        <td>{{ $encounter->name_pasien }}</td>
+                                                        <td>{{ $loop->iteration + $data['encounter_terbayar']->firstItem() - 1 }}
+                                                        </td>
+                                                        <td>{{ $item->kode_transaksi ?? '-' }}</td>
+                                                        <td><span
+                                                                class="badge {{ $item->tipe == 'Resep Rawat Jalan' ? 'bg-primary' : 'bg-info' }}">{{ $item->tipe }}</span>
+                                                        </td>
+                                                        <td>{{ $item->name_pasien }}</td>
                                                         <td class="text-center">
-                                                            {{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}
+                                                            {{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d-m-Y') }}
                                                         </td>
                                                         <td class="text-end">
-                                                            {{ number_format($encounter->total_resep, 0, ',', '.') }}</td>
+                                                            {{ number_format($item->nominal, 0, ',', '.') }}</td>
                                                         <td class="text-end">
-                                                            {{ number_format($encounter->diskon_resep ?? 0, 0, ',', '.') }}
-                                                        </td>
-                                                        <td class="text-end">{{ $encounter->diskon_persen_resep ?? 0 }}%
+                                                            {{ number_format($item->diskon_rp ?? 0, 0, ',', '.') }}
                                                         </td>
                                                         <td class="text-end">
-                                                            {{ number_format($encounter->total_bayar_resep, 0, ',', '.') }}
+                                                            {{ number_format($item->total_bayar, 0, ',', '.') }}
                                                         </td>
                                                         <td class="text-center">
-                                                            {{ $encounter->metode_pembayaran_resep ?? '-' }}</td>
+                                                            {{ $item->metode_pembayaran ?? '-' }}</td>
                                                     </tr>
                                                 @empty
                                                     <tr>
@@ -179,7 +182,7 @@
             data: {
                 labels: bulan,
                 datasets: [{
-                    label: 'Nominal Transaksi (Rp)',
+                    label: 'Total Pendapatan Obat (Rp)',
                     data: dataNominal,
                     backgroundColor: 'rgba(54, 162, 235, 0.7)',
                     borderColor: 'rgba(54, 162, 235, 1)',

@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class ApotekRepository
 {
@@ -43,40 +44,37 @@ class ApotekRepository
         }
 
         // Statistik nominal encounter per bulan (resep sudah terbayar) dalam 1 tahun
-        $nominalPerBulan = \App\Models\Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
+        $nominalResep = \App\Models\Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
             ->whereYear('updated_at', $year)
             ->where('status_bayar_resep', 1)
             ->groupBy('bulan')
-            ->orderBy('bulan')
             ->pluck('total', 'bulan')
             ->toArray();
 
+        // Statistik nominal dari InpatientBilling (Obat) per bulan dalam 1 tahun
+        $nominalInap = \App\Models\InpatientBilling::selectRaw('MONTH(paid_at) as bulan, SUM(amount) as total')
+            ->whereYear('paid_at', $year)
+            ->where('billing_type', 'Obat')
+            ->groupBy('bulan')
+            ->pluck('total', 'bulan')
+            ->toArray();
+
+        // Gabungkan kedua nominal
         $dataNominalBulan = [];
         for ($i = 1; $i <= 12; $i++) {
-            $dataNominalBulan[$i] = $nominalPerBulan[$i] ?? 0;
+            $totalResep = $nominalResep[$i] ?? 0;
+            $totalInap = $nominalInap[$i] ?? 0;
+            $dataNominalBulan[$i] = $totalResep + $totalInap;
         }
 
         // Encounter resep terbayar (paginate 50, filter tanggal, warning jika > 1 tahun)
-        $query = \App\Models\Encounter::where('status_bayar_resep', 1);
-        $start = request('start_date');
-        $end = request('end_date');
-        $warning = null;
+        list($query, $warning) = $this->getPaidPrescriptionQuery(request('start_date'), request('end_date'));
 
-        if ($start && $end) {
-            $startDate = \Carbon\Carbon::parse($start)->startOfDay();
-            $endDate = \Carbon\Carbon::parse($end)->endOfDay();
-
-            if ($startDate->diffInDays($endDate) > 366) {
-                $warning = 'Rentang tanggal maksimal 1 tahun!';
-                $endDate = $startDate->copy()->addYear();
-            }
-
-            $query->whereBetween('updated_at', [$startDate, $endDate]);
-        } else {
-            $query->where('updated_at', '>=', now()->subYear());
-        }
-
-        $encounterTerbayar = $query->orderByDesc('updated_at')->paginate(50);
+        // Manual pagination for the combined collection
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 50;
+        $currentItems = $query->slice(($currentPage - 1) * $perPage, $perPage);
+        $paginatedData = new \Illuminate\Pagination\LengthAwarePaginator($currentItems, $query->count(), $perPage, $currentPage, ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]);
 
         return [
             'total_obat' => $stokSummary->total ?? 0,
@@ -85,112 +83,190 @@ class ApotekRepository
             'obat_kadaluarsa' => $obatKadaluarsa,
             'transaksi_per_bulan' => $dataBulan,
             'nominal_transaksi_per_bulan' => $dataNominalBulan,
-            'encounter_terbayar' => $encounterTerbayar,
+            'encounter_terbayar' => $paginatedData,
             'warning' => $warning,
         ];
     }
 
-    // ambil encounter yang status 2 beserta resep dan resep detailnya
-    public function getEncounter($status = 2)
-    {
-        $typeList = [
-            1 => 'Rawat Jalan',
-            2 => 'Rawat Inap',
-            3 => 'IGD'
-        ];
-
-        $encounters = \App\Models\Encounter::with(['resep.details', 'practitioner.user'])
-            ->where('status', $status)
-            ->whereYear('created_at', date('Y'))
-            ->when(request('search'), function ($query, $search) {
-                $query->where('name_pasien', 'like', '%' . $search . '%');
-            })
-            ->orderBy('status_bayar_resep', 'asc')
-            ->orderByDesc('updated_at')
-            ->paginate(50);
-
-        // Tambahkan label type pada setiap encounter
-        $encounters->getCollection()->transform(function ($item) use ($typeList) {
-            $item->type_label = $typeList[$item->type] ?? '-';
-            return $item;
-        });
-
-        return $encounters;
-    }
-    // bayar resep
-    public function bayarResep($request, $id)
-    {
-        $encounter = \App\Models\Encounter::findOrFail($id);
-        $encounter->status_bayar_resep = 1;
-        $encounter->metode_pembayaran_resep = $request->metode_pembayaran;
-        $encounter->save();
-
-        $details = $encounter->resep && $encounter->resep->details ? $encounter->resep->details : [];
-        foreach ($details as $detail) {
-            // Update stok ProductApotek
-            \App\Models\ProductApotek::where('id', $detail->product_apotek_id)
-                ->decrement('stok', $detail->qty);
-
-            // Ambil stok yang akan diupdate statusnya (expired_at dulu)
-            $stokIds = \App\Models\ApotekStok::where('product_apotek_id', $detail->product_apotek_id)
-                ->where('expired_at', $detail->expired_at)
-                ->where('status', 0)
-                ->orderBy('id')
-                ->limit($detail->qty)
-                ->pluck('id')
-                ->toArray();
-
-            // Jika stokIds kosong, ambil stok terlama tanpa filter expired_at
-            if (empty($stokIds)) {
-                $stokIds = \App\Models\ApotekStok::where('product_apotek_id', $detail->product_apotek_id)
-                    ->where('status', 0)
-                    ->orderBy('expired_at', 'asc')
-                    ->orderBy('id')
-                    ->limit($detail->qty)
-                    ->pluck('id')
-                    ->toArray();
-            }
-
-            // Update status stok sekaligus (lebih cepat)
-            if (!empty($stokIds)) {
-                \App\Models\ApotekStok::whereIn('id', $stokIds)->update(['status' => 1]);
-            }
-
-            // Catat histori stok keluar
-            \App\Models\HistoriApotek::create([
-                'product_apotek_id' => $detail->product_apotek_id,
-                'jumlah' => -$detail->qty,
-                'expired_at' => $detail->expired_at,
-                'type' => 1,
-                'keterangan' => 'Pengurangan stok karena resep ' . ($encounter->resep->kode_resep ?? ''),
-            ]);
-        }
-
-        return $encounter;
-    }
-    // cetak resep dari encounter
-    public function cetakResep($id)
-    {
-        $encounter = \App\Models\Encounter::with(['resep.details', 'practitioner.user'])
-            ->findOrFail($id);
-        return $encounter;
-    }
     // export transaksi resep pdf
     public function exportPdf($start = null, $end = null)
     {
-        $query = \App\Models\Encounter::where('status_bayar_resep', 1);
+        list($data, $warning) = $this->getPaidPrescriptionQuery($start, $end);
+        // $data is already a sorted collection, no need for further queries.
+        $pdf = Pdf::loadView('pages.apotek.transaksi_resep_pdf', ['data' => $data]);
+        $pdf->loadView('pages.apotek.transaksi_resep_pdf', ['data' => $data]);
+        return $pdf->download('transaksi_resep.pdf');
+    }
+
+    public function getPaidPrescriptionQuery($start, $end)
+    {
+        $warning = null;
+        $startDate = null;
+        $endDate = null;
 
         if ($start && $end) {
             $startDate = \Carbon\Carbon::parse($start)->startOfDay();
             $endDate = \Carbon\Carbon::parse($end)->endOfDay();
-            $query->whereBetween('updated_at', [$startDate, $endDate]);
+            if ($startDate->diffInDays($endDate) > 366) {
+                $warning = 'Rentang tanggal maksimal 1 tahun!';
+                $endDate = $startDate->copy()->addYear();
+            }
         } else {
-            $query->where('updated_at', '>=', now()->subYear());
+            // Default ke 1 tahun terakhir jika tidak ada rentang tanggal
+            $startDate = now()->subYear()->startOfDay();
+            $endDate = now()->endOfDay();
         }
 
-        $data = $query->orderByDesc('updated_at')->get();
+        // 1. Ambil data transaksi resep rawat jalan (Encounter)
+        $resepJalan = \App\Models\Encounter::where('status_bayar_resep', 1)
+            ->whereBetween('updated_at', [$startDate, $endDate])
+            ->with('resep')
+            ->get()
+            ->map(function ($item) {
+                return (object) [
+                    'id' => $item->id,
+                    'kode_transaksi' => $item->resep->kode_resep ?? 'N/A',
+                    'name_pasien' => $item->name_pasien,
+                    'tanggal_transaksi' => $item->updated_at,
+                    'nominal' => $item->total_resep,
+                    'diskon_rp' => $item->diskon_resep,
+                    'diskon_persen_resep' => $item->diskon_persen_resep,
+                    'total_bayar' => $item->total_bayar_resep,
+                    'metode_pembayaran' => $item->metode_pembayaran_resep,
+                    'tipe' => 'Resep Rawat Jalan',
+                ];
+            });
 
-        $pdf = Pdf::loadView('pages.apotek.transaksi_resep_pdf', ['data' => $data]);
-        return $pdf->download('transaksi_resep.pdf');
+        // 2. Ambil data transaksi obat rawat inap (InpatientBilling)
+        $resepInap = \App\Models\InpatientBilling::where('billing_type', 'Obat')
+            ->whereBetween('paid_at', [$startDate, $endDate])
+            ->with('admission.encounter')
+            ->get()
+            ->map(function ($item) {
+                return (object) [
+                    'id' => $item->id,
+                    'kode_transaksi' => 'BILL-' . substr($item->admission->id, 0, 8),
+                    'name_pasien' => $item->admission->encounter->name_pasien ?? 'N/A',
+                    'tanggal_transaksi' => $item->paid_at,
+                    'nominal' => $item->amount,
+                    'diskon_rp' => 0,
+                    'diskon_persen_resep' => 0,
+                    'total_bayar' => $item->amount,
+                    'metode_pembayaran' => $item->payment_method,
+                    'tipe' => 'Obat Rawat Inap',
+                ];
+            });
+
+        // 3. Gabungkan kedua koleksi dan urutkan berdasarkan tanggal
+        $combinedData = $resepJalan->merge($resepInap)->sortByDesc('tanggal_transaksi');
+
+        return [$combinedData, $warning];
+    }
+
+
+    public function siapkanResep($resepId): array
+    {
+        $resep = \App\Models\Resep::with('details.productApotek')->findOrFail($resepId);
+
+        // Ambil semua detail yang masih 'Diajukan'
+        $detailsToPrepare = $resep->details()->where('status', 'Diajukan')->get();
+
+        if ($detailsToPrepare->isEmpty()) {
+            return ['success' => false, 'message' => 'Tidak ada item resep yang perlu disiapkan.'];
+        }
+
+        // Validasi stok untuk semua item sekaligus
+        foreach ($detailsToPrepare as $detail) {
+            if (!$detail->productApotek || $detail->productApotek->stok < $detail->qty) {
+                return ['success' => false, 'message' => 'Stok untuk obat "' . ($detail->productApotek->name ?? $detail->nama_obat) . '" tidak mencukupi.'];
+            }
+        }
+
+        // Lakukan semua operasi dalam satu transaksi database
+        \Illuminate\Support\Facades\DB::transaction(function () use ($detailsToPrepare, $resep) {
+            foreach ($detailsToPrepare as $detail) {
+                $this->processStockReduction($detail, $resep);
+                $detail->update(['status' => 'Disiapkan']);
+            }
+
+            // Cek apakah semua item sudah disiapkan
+            // Reload relasi untuk mendapatkan data terbaru setelah update di loop
+            $resep->load('details');
+            $remainingItems = $resep->details->where('status', 'Diajukan')->count();
+            // Jika tidak ada lagi item yang 'Diajukan', update status resep utama
+            if ($remainingItems === 0) {
+                $resep->status = 'Disiapkan';
+                $resep->save();
+            }
+        });
+
+        return ['success' => true, 'message' => 'Semua item resep berhasil disiapkan.'];
+    }
+
+
+    public function siapkanItemResep($resepDetailId): array
+    {
+        $detail = \App\Models\ResepDetail::with('productApotek', 'resep.details')->findOrFail($resepDetailId);
+
+        if ($detail->status !== 'Diajukan') {
+            return ['success' => false, 'message' => 'Item ini sudah diproses sebelumnya.'];
+        }
+
+        if (!$detail->productApotek || $detail->productApotek->stok < $detail->qty) {
+            return ['success' => false, 'message' => 'Stok untuk obat "' . $detail->productApotek->name . '" tidak mencukupi.'];
+        }
+
+        DB::transaction(function () use ($detail) {
+            $this->processStockReduction($detail, $detail->resep);
+            $detail->update(['status' => 'Disiapkan']);
+
+            // Cek apakah semua item lain dalam resep ini sudah disiapkan
+            $resep = $detail->resep;
+            // Reload relasi untuk mendapatkan data terbaru
+            $resep->load('details');
+            $remainingItems = $resep->details->where('status', 'Diajukan')->count();
+            // Jika tidak ada lagi item yang 'Diajukan', update status resep utama
+            if ($remainingItems === 0) {
+                $resep->status = 'Disiapkan';
+                $resep->save();
+            }
+        });
+
+        return ['success' => true, 'message' => 'Item resep berhasil disiapkan.'];
+    }
+
+    private function processStockReduction(\App\Models\ResepDetail $detail, \App\Models\Resep $resep): void
+    {
+        $product = $detail->productApotek;
+        if (!$product) {
+            // Throw exception jika produk tidak terhubung, ini akan menghentikan transaksi
+            throw new \Exception('Produk untuk item resep "' . $detail->nama_obat . '" tidak ditemukan.');
+        }
+
+        $quantity = $detail->qty;
+
+        // 1. Kurangi stok utama di produk
+        $product->decrement('stok', $quantity);
+
+        // 2. Ambil ID stok yang akan diupdate (FIFO berdasarkan expired date)
+        $stokIds = \App\Models\ApotekStok::where('product_apotek_id', $product->id)
+            ->where('status', 0) // Hanya yang tersedia
+            ->orderBy('expired_at', 'asc')
+            ->limit($quantity)
+            ->pluck('id')
+            ->toArray();
+
+        // 3. Update status stok menjadi 'Terpakai' (status = 1)
+        if (!empty($stokIds)) {
+            \App\Models\ApotekStok::whereIn('id', $stokIds)->update(['status' => 1]);
+        }
+
+        // 4. Catat histori stok keluar
+        \App\Models\HistoriApotek::create([
+            'product_apotek_id' => $product->id,
+            'jumlah'            => -$quantity, // Stok keluar bernilai negatif
+            'type'              => 1, // Tipe 1 untuk stok keluar
+            'keterangan'        => 'Pengurangan stok dari resep ' . ($resep->kode_resep ?? 'N/A'),
+        ]);
     }
 }

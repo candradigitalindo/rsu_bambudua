@@ -62,12 +62,12 @@
         <thead>
             <tr>
                 <th>No</th>
-                <th>No. Resep</th>
+                <th>No. Transaksi</th>
+                <th>Tipe</th>
                 <th>Pasien</th>
                 <th>Tanggal</th>
                 <th>Nominal</th>
                 <th>Diskon (Rp)</th>
-                <th>Diskon (%)</th>
                 <th>Metode Pembayaran</th>
                 <th>Nominal Bayar</th>
             </tr>
@@ -78,25 +78,34 @@
                 $totalDiskon = 0;
                 $totalNominal = 0;
             @endphp
-            @foreach($data as $i => $encounter)
-            @php
-                $totalBayar += $encounter->total_bayar_resep ?? 0;
-            @endphp
-            <tr>
-                <td>{{ $i+1 }}</td>
-                <td>{{ $encounter->resep->kode_resep ?? '-' }}</td>
-                <td>{{ $encounter->name_pasien }}</td>
-                <td>{{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}</td>
-                <td>{{ number_format($encounter->total_resep ?? 0,0,',','.') }}</td>
-                <td>{{ number_format($encounter->diskon_resep ?? 0,0,',','.') }}</td>
-                <td>{{ $encounter->diskon_persen_resep ?? 0 }}%</td>
-                <td>{{ $encounter->metode_pembayaran_resep ?? '-' }}</td>
-                <td>{{ number_format($encounter->total_bayar_resep,0,',','.') }}</td>
-            </tr>
+            @foreach ($data as $i => $item)
+                @php
+                    $totalNominal += $item->nominal ?? 0;
+                    $totalDiskon += $item->diskon_rp ?? 0;
+                    $totalBayar += $item->total_bayar ?? 0;
+                @endphp
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $item->kode_transaksi ?? '-' }}</td>
+                    <td>{{ $item->tipe }}</td>
+                    <td>{{ $item->name_pasien }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d-m-Y') }}</td>
+                    <td>{{ number_format($item->nominal ?? 0, 0, ',', '.') }}</td>
+                    <td>{{ number_format($item->diskon_rp ?? 0, 0, ',', '.') }}</td>
+                    <td>{{ $item->metode_pembayaran ?? '-' }}</td>
+                    <td>{{ number_format($item->total_bayar, 0, ',', '.') }}</td>
+                </tr>
             @endforeach
             <tr>
-                <th colspan="9" style="text-align:right">
-                    Total Bayar: Rp {{ number_format($totalBayar, 0, ',', '.') }}
+                <th colspan="5" style="text-align:right">Total</th>
+                <th style="text-align:left">{{ number_format($totalNominal, 0, ',', '.') }}</th>
+                <th style="text-align:left">{{ number_format($totalDiskon, 0, ',', '.') }}</th>
+                <th colspan="2"></th>
+                <th style="text-align:left">{{ number_format($totalBayar, 0, ',', '.') }}</th>
+            </tr>
+            <tr>
+                <th colspan="9" style="text-align:right; background-color: #f9f9f9;">
+                    Grand Total: Rp {{ number_format($totalBayar, 0, ',', '.') }}
                 </th>
             </tr>
         </tbody>

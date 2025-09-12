@@ -78,25 +78,25 @@
                 $totalDiskon = 0;
                 $totalNominal = 0;
             @endphp
-            @foreach($data as $i => $encounter)
-            @php
-                $totalBayar += $encounter->total_bayar_resep ?? 0;
-            @endphp
-            <tr>
-                <td>{{ $i+1 }}</td>
-                <td>{{ $encounter->resep->kode_resep ?? '-' }}</td>
-                <td>{{ $encounter->name_pasien }}</td>
-                <td>{{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}</td>
-                <td>{{ $encounter->total_resep ?? 0 }}</td>
-                <td>{{ $encounter->diskon_resep ?? 0 }}</td>
-                <td>{{ $encounter->diskon_persen_resep ?? 0 }}%</td>
-                <td>{{ $encounter->metode_pembayaran_resep ?? '-' }}</td>
-                <td>{{ $encounter->total_bayar_resep ?? 0 }}</td>
-            </tr>
+            @foreach ($data as $i => $item)
+                @php
+                    $totalBayar += $item->total_bayar ?? 0;
+                @endphp
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $item->kode_transaksi ?? '-' }}</td>
+                    <td>{{ $item->name_pasien }}</td>
+                    <td>{{ \Carbon\Carbon::parse($item->tanggal_transaksi)->format('d-m-Y') }}</td>
+                    <td>{{ $item->nominal ?? 0 }}</td>
+                    <td>{{ $item->diskon_rp ?? 0 }}</td>
+                    <td>{{ $item->diskon_persen_resep ?? 0 }}%</td>
+                    <td>{{ $item->metode_pembayaran ?? '-' }}</td>
+                    <td>{{ $item->total_bayar ?? 0 }}</td>
+                </tr>
             @endforeach
             <tr>
                 <th colspan="9" style="text-align:right">
-                    Total Bayar: {{ $totalBayar }}
+                    Total Bayar: {{ number_format($totalBayar, 0, ',', '.') }}
                 </th>
             </tr>
         </tbody>

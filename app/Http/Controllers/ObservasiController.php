@@ -184,11 +184,7 @@ class ObservasiController extends Controller
     public function getDiagnosis($id)
     {
         $diagnosis = $this->observasiRepository->getDiagnosis($id);
-        if ($diagnosis) {
-            return response()->json($diagnosis);
-        } else {
-            return response()->json($diagnosis);
-        }
+        return response()->json($diagnosis);
     }
     // post diagnosis
     public function postDiagnosis(Request $request, $id)
@@ -334,12 +330,12 @@ class ObservasiController extends Controller
         $request->validate([
             'catatan' => 'nullable|string|max:255',
             'status_pulang' => 'required|numeric',
-            // Perawat hanya wajib untuk Rawat Jalan (1) dan Rawat Darurat (3)
-            'perawat_ids' => 'required_if:encounter_type,1,3|array',
+            // Validasi perawat_ids, wajib jika tipe encounter adalah 1 (RJ) atau 3 (IGD)
+            'perawat_ids' => 'required_if:encounter.type,1,3|array',
             'perawat_ids.*' => 'exists:users,id',
         ], [
-            'perawat_ids.required' => 'Perawat harus dipilih.',
-            'perawat_ids.required_if' => 'Perawat harus dipilih untuk Rawat Jalan/Darurat.',
+            'perawat_ids.required_if' => 'Perawat harus dipilih untuk Rawat Jalan atau Rawat Darurat.',
+            'perawat_ids.array' => 'Format data perawat tidak valid.'
         ]);
         $result = $this->observasiRepository->postCatatanEncounter($request, $id);
         return response()->json($result);
@@ -425,12 +421,12 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'product_apotek_id' => 'required|string|max:255',
-            'jumlah' => 'required|integer|min:1',
+            'jumlah' => 'required|integer|max:255',
             'dosage_instructions' => 'required|string|max:255',
-            'route' => 'required|string|max:50',
-            'frequensi' => 'required|string|max:50',
+            'frequensi' => 'required|string|max:255',
+            'route' => 'required|string|max:255',
             'notes' => 'nullable|string|max:255',
-            'medicine_date' => 'nullable|date',
+            'medicine_date' => 'required|date',
         ]);
 
         $result = $this->observasiRepository->postInpatientDailyMedication($request, $id);

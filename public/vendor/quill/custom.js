@@ -19,23 +19,9 @@ var toolbarOptions = [
 ];
 
 // Inisialisasi untuk #fullEditor
-var quill = new Quill("#fullEditor", {
-    theme: "snow",
-    modules: {
-        toolbar: toolbarOptions,
-    },
-});
-// Inisialisasi untuk #fullEditor2
-var quill2 = new Quill("#fullEditor2", {
-    theme: "snow",
-    modules: {
-        toolbar: toolbarOptions,
-    },
-});
-
-// Inisialisasi untuk editor lain, misal #catatanEditor dan #diagnosisEditor
-if (document.querySelector("#catatanEditor")) {
-    var quillCatatan = new Quill("#catatanEditor", {
+var quill;
+if (document.querySelector("#fullEditor")) {
+    quill = new Quill("#fullEditor", {
         theme: "snow",
         modules: {
             toolbar: toolbarOptions,
@@ -43,8 +29,30 @@ if (document.querySelector("#catatanEditor")) {
     });
 }
 
+// Inisialisasi untuk #fullEditor2 (jika ada)
+var quill2;
+if (document.querySelector("#fullEditor2")) {
+    quill2 = new Quill("#fullEditor2", {
+        theme: "snow",
+        modules: {
+            toolbar: toolbarOptions,
+        },
+    });
+}
+// Inisialisasi untuk editor lain, misal #catatanEditor dan #diagnosisEditor
+var quillCatatan;
+if (document.querySelector("#catatanEditor")) {
+    quillCatatan = new Quill("#catatanEditor", {
+        theme: "snow",
+        modules: {
+            toolbar: toolbarOptions,
+        },
+    });
+}
+
+var quillDiagnosis;
 if (document.querySelector("#diagnosisEditor")) {
-    var quillDiagnosis = new Quill("#diagnosisEditor", {
+    quillDiagnosis = new Quill("#diagnosisEditor", {
         theme: "snow",
         modules: {
             toolbar: toolbarOptions,

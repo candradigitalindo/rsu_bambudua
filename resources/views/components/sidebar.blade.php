@@ -39,10 +39,6 @@
                             href="{{ route('pendaftaran.index') }}">Pendaftaran</a>
                     </li>
                     <li>
-                        <a class="{{ request()->is('loket/encounter*') ? 'active-sub' : '' }}"
-                            href="{{ route('loket.getEncounter') }}">Bayar Tindakan</a>
-                    </li>
-                    <li>
                         <a class="{{ request()->is('loket/reminder*') ? 'active-sub' : '' }}"
                             href="{{ route('loket.getReminderEncounter') }}"><span class="menu-text">Reminder
                                 Pasien</span>
@@ -187,8 +183,12 @@
                             href="{{ route('products.index') }}">Produk</a>
                     </li>
                     <li>
-                        <a class="{{ request()->is('apotek/encounter*') ? 'active-sub' : '' }}"
-                            href="{{ route('apotek.getEncounter') }}">Bayar Resep</a>
+                        <a class="{{ request()->is('apotek/penyiapan-resep*') ? 'active-sub' : '' }}"
+                            href="{{ route('apotek.penyiapan-resep') }}">Penyiapan Resep</a>
+                    </li>
+                    <li>
+                        <a class="{{ request()->is('apotek/permintaan-inap*') ? 'active-sub' : '' }}"
+                            href="{{ route('apotek.permintaan-inap') }}">Permintaan Obat Inap</a>
                     </li>
                 </ul>
             </li>

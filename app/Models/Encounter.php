@@ -73,6 +73,11 @@ class Encounter extends Model
         return $this->hasOne(InpatientAdmission::class);
     }
 
+    public function patient()
+    {
+        return $this->belongsTo(Pasien::class, 'rekam_medis', 'rekam_medis');
+    }
+
     /**
      * Mendapatkan URL pengingat WhatsApp untuk encounter.
      *

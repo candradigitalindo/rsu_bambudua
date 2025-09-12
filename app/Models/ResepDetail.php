@@ -19,10 +19,19 @@ class ResepDetail extends Model
         'product_apotek_id',
         'harga',
         'total_harga',
+        'status',
     ];
 
     public function resep()
     {
         return $this->belongsTo(Resep::class);
+    }
+
+    /**
+     * Mendefinisikan relasi ke model ProductApotek.
+     */
+    public function productApotek()
+    {
+        return $this->belongsTo(ProductApotek::class, 'product_apotek_id');
     }
 }

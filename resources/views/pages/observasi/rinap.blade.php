@@ -447,6 +447,7 @@
                                                                 <tr>
                                                                     <th class="text-center">Aksi</th>
                                                                     <th>Tanggal</th>
+                                                                    <th>Qty</th>
                                                                     <th>Nama Obat</th>
                                                                     <th>Aturan Pakai</th>
                                                                     <th>Keterangan</th>
@@ -458,7 +459,7 @@
                                                             </tbody>
                                                             <tfoot>
                                                                 <tr>
-                                                                    <td colspan="5" class="text-end fw-bold">Total</td>
+                                                                    <td colspan="6" class="text-end fw-bold">Total</td>
                                                                     <td class="text-end fw-bold" id="total-resep-daily">
                                                                         Rp. 0
                                                                     </td>
@@ -557,7 +558,6 @@
                                                                     <th class="text-center">Aksi</th>
                                                                     <th>Qty</th>
                                                                     <th>Nama Obat</th>
-                                                                    <th>Jumlah</th>
                                                                     <th>Aturan Pakai</th>
                                                                     <th>Harga</th>
                                                                     <th>Subtotal</th>
@@ -584,146 +584,7 @@
                             <div class="tab-pane fade" id="catatan" role="tabpanel">
                                 <!-- Row startss -->
                                 <div class="row gx-3">
-                                    {{-- <div class="col-xxl-6 col-sm-12">
-                                        <div class="card mb-1">
-                                            <div class="card-header">
-                                                <h5 class="card-title">Tindakan</h5>
-                                                <hr class="mb-1">
-                                            </div>
-                                            <div class="card-body">
 
-                                                <div class="mb-1">
-                                                    <label class="form-label" for="a2">Diskon Tindakan</label>
-
-
-                                                    <div class="input-group">
-                                                        <input type="number" name="diskon_tindakan" class="form-control"
-                                                            placeholder="Diskon Tindakan" id="diskon_tindakan">
-                                                        <div class="input-group-text">%</div>
-                                                        <button class="btn btn-primary" type="submit"
-                                                            id="btn-buat-diskon-tindakan">
-                                                            <span id="text-buat-diskon-tindakan">Buat Diskon</span>
-                                                            <span class="spinner-border spinner-border-sm d-none"
-                                                                id="spinner-buat-diskon-tindakan" role="status"
-                                                                aria-hidden="true"></span>
-                                                        </button>
-                                                    </div>
-
-
-                                                </div>
-                                                <div class="table-outer">
-                                                    <div class="table-responsive">
-                                                        <table class="table truncate m-0">
-                                                            <thead>
-                                                                <tr>
-                                                                    <th>Nama Tindakan</th>
-                                                                    <th>Qty</th>
-                                                                    <th>Harga</th>
-                                                                    <th>Sub Total</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbody-catatan-tindakan">
-
-
-                                                            </tbody>
-                                                            <tfoot>
-                                                                <tr>
-                                                                    <td colspan="3" class="text-end fw-bold">Nominal
-                                                                    </td>
-                                                                    <td class="text-end">
-                                                                        <span id="total-tindakan" class="fw-bold">0</span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td colspan="3" class="text-end fw-bold">Diskon
-                                                                    </td>
-                                                                    <td class="text-end">
-                                                                        <span id="total-tindakan-diskon"
-                                                                            class="fw-bold">0</span>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td colspan="3" class="text-end fw-bold">Total</td>
-                                                                    <td class="text-end">
-                                                                        <span id="total-tindakan-harga"
-                                                                            class="fw-bold">0</span>
-                                                                    </td>
-                                                                </tr>
-                                                            </tfoot>
-                                                        </table>
-                                                    </div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-xxl-6 col-sm-12">
-                                        <div class="card mb-3">
-                                            <div class="card-header">
-                                                <h5 class="card-title">Resep</h5>
-                                                <hr class="mb-1">
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="mb-1">
-                                                    <label class="form-label" for="a2">Diskon Resep</label>
-
-
-                                                    <div class="input-group">
-                                                        <input type="number" name="diskon_resep" class="form-control"
-                                                            placeholder="Diskon Resep" id="diskon_resep">
-                                                        <div class="input-group-text">%</div>
-                                                        <button class="btn btn-primary" type="submit"
-                                                            id="btn-buat-diskon-resep">
-                                                            <span id="text-buat-diskon-resep">Buat Diskon</span>
-                                                            <span class="spinner-border spinner-border-sm d-none"
-                                                                id="spinner-buat-diskon-resep" role="status"
-                                                                aria-hidden="true"></span>
-                                                        </button>
-                                                    </div>
-
-
-                                                </div>
-                                                <div class="table-outer">
-                                                    <div class="table-responsive">
-                                                        <table class="table truncate m-0">
-                                                            <thead>
-                                                                <tr>
-
-                                                                    <th>Nama Obat</th>
-                                                                    <th>Jumlah</th>
-                                                                    <th>Aturan Pakai</th>
-                                                                    <th>Harga</th>
-                                                                    <th>Subtotal</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbody-catatan-resep">
-                                                                <!-- Data resep diisi via JS -->
-                                                            </tbody>
-                                                            <tfoot>
-                                                                <tr>
-                                                                    <td colspan="4" class="text-end fw-bold">Nominal
-                                                                    </td>
-                                                                    <td class="text-end fw-bold" id="total-resep-catatan">
-                                                                        Rp. 0</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td colspan="4" class="text-end fw-bold">Diskon
-                                                                    </td>
-                                                                    <td class="text-end fw-bold" id="total-resep-diskon">
-                                                                        Rp. 0</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td colspan="4" class="text-end fw-bold">Total</td>
-                                                                    <td class="text-end fw-bold" id="total-resep-harga">
-                                                                        Rp. 0</td>
-                                                                </tr>
-                                                            </tfoot>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div> --}}
                                     <div class="col-xxl-12 col-sm-12">
                                         <div class="card mb-3">
                                             <div class="card-header">
@@ -827,1128 +688,592 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        // Helper function to manage button state during AJAX calls
-        function setButtonState(buttonId, textId, spinnerHTMLId, isLoading, text) {
-            const button = $(`#${buttonId}`);
-            const textElement = $(`#${textId}`);
-            const spinner = $(`#${spinnerHTMLId}`);
-
-            if (isLoading) {
-                button.prop('disabled', true);
-                textElement.addClass('d-none');
-                spinner.removeClass('d-none');
-            } else {
-                button.prop('disabled', false);
-                textElement.removeClass('d-none').text(text);
-                spinner.addClass('d-none');
-            }
-        }
-
-        // Helper function for consistent Swal notifications
-        function showSwal(message, type = 'success') {
-            swal(message, {
-                icon: type,
-            });
-        }
-
-        // Helper function to handle AJAX errors
-        function handleAjaxError(xhr, defaultMessage = 'Terjadi kesalahan saat memproses permintaan.') {
-            if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
-                let errorMsg = Object.values(xhr.responseJSON.errors).map(msgArr => msgArr.join('<br>')).join('<br>');
-                swal({
-                    title: "Validasi Gagal",
-                    html: true,
-                    text: errorMsg,
-                    icon: "error"
-                });
-            } else {
-                const message = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : defaultMessage;
-                showSwal(message, 'error');
-            }
-        }
-
         $(document).ready(function() {
-            // tab-anamnesis auto click
-            autoClickTab(); // Call the function to auto-click the tab
+            const admissionId = "{{ $getInpatientAdmission->id }}";
+            const encounterId = "{{ $getInpatientAdmission->encounter_id }}";
+            const csrfToken = "{{ csrf_token() }}";
 
-            $("#btn-kembali-anamnesis").click(function() {
-                $("#spiner-kembali-anamnesis").removeClass("d-none");
-                $("#btn-kembali-anamnesis").addClass("disabled", true);
-                $("#text-kembali-anamnesis").text("Mohon Tunggu ...");
-            });
+            const ROUTES = {
+                riwayatPenyakit: "{{ route('observasi.riwayatPenyakit', ':id') }}",
+                postAnemnesis: "{{ route('observasi.postAnemnesis', ':id') }}",
+                getInpatientTreatment: "{{ route('observasi.getInpatientTreatment', ':id') }}",
+                postInpatientTreatment: "{{ route('observasi.postInpatientTreatment', ':id') }}",
+                deleteInpatientTreatment: "{{ route('observasi.deleteInpatientTreatment', ':id') }}",
+                getTindakan: "{{ route('observasi.getTindakan', ':id') }}",
+                getDiagnosis: "{{ route('observasi.getDiagnosis', ':id') }}",
+                postDiagnosis: "{{ route('observasi.postDiagnosis', ':id') }}",
+                deleteDiagnosis: "{{ route('observasi.deleteDiagnosis', ':id') }}",
+                getIcd10: "{{ route('observasi.getIcd10', ':id') }}",
+                getDailyMedications: "{{ route('observasi.getInpatientDailyMedications', ':id') }}",
+                postDailyMedication: "{{ route('observasi.postInpatientDailyMedication', ':id') }}",
+                deleteDailyMedication: "{{ route('observasi.deleteInpatientDailyMedication', ':id') }}",
+                updateDailyMedicationStatus: "{{ route('observasi.updateInpatientDailyMedicationStatus', ':id') }}",
+                getResep: "{{ route('observasi.getResep', ':id') }}",
+                postResep: "{{ route('observasi.postResep', ':id') }}",
+                postResepDetail: "{{ route('observasi.postResepDetail', ':id') }}",
+                deleteResepDetail: "{{ route('observasi.deleteResepDetail', ':id') }}",
+                getProdukApotek: "{{ route('observasi.getProdukApotek', ':id') }}",
+                postCatatanEncounter: "{{ route('observasi.postCatatanEncounter', ':id') }}",
+            };
 
-            function autoClickTab() {
-                // ajax riwayat penyakit
-                let url = "{{ route('observasi.riwayatPenyakit', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter->id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    _token: "{{ csrf_token() }}", // Added CSRF token for security
-
-                    success: function(data) {
-                        $("#riwayat_penyakit").val(data.riwayatPenyakit.riwayat_penyakit);
-                        $("#riwayat_penyakit_keluarga").val(data.riwayatPenyakit
-                            .riwayat_penyakit_keluarga);
-                        $("#keluhan_utama").val(data.anamnesis ? data.anamnesis.keluhan_utama :
-                            ''); // Update keluhan_utama
-                    }
-                });
-            }
-            // tab-anamnesis click
-            $("#tab-anamnesis").click(function() {
-                autoClickTab(); // Call the function to auto-click the tab
-            });
-            // btn-anamnesis click
-            $("#btn-anamnesis").click(function() {
-                // ajax post anamnesis
-                let url = "{{ route('observasi.postAnemnesis', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter->id }}");
-                let keluhan_utama = $("#keluhan_utama").val();
-                let riwayat_penyakit = $("#riwayat_penyakit").val();
-                let riwayat_penyakit_keluarga = $("#riwayat_penyakit_keluarga").val();
-                // Validate input fields
-                if (keluhan_utama == '') {
-                    alert("Keluhan Utama tidak boleh kosong");
-                    return;
-                }
-                if (riwayat_penyakit == '') {
-                    alert("Riwayat Penyakit tidak boleh kosong");
-                    return;
-                }
-                if (riwayat_penyakit_keluarga == '') {
-                    alert("Riwayat Penyakit Keluarga tidak boleh kosong");
-                    return;
-                }
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        keluhan_utama: keluhan_utama,
-                        riwayat_penyakit: riwayat_penyakit,
-                        riwayat_penyakit_keluarga: riwayat_penyakit_keluarga,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    beforeSend: function() {
-                        setButtonState('btn-anamnesis', 'text-anamnesis', 'spinner-anamnesis',
-                            true);
-                    },
-                    success: function(data) {
-                        if (data.status == 200) {
-                            showSwal(data.message);
-                        } else {
-                            showSwal('Terjadi kesalahan saat menyimpan data.', 'error');
-                        }
-                    },
-                    error: (xhr) => handleAjaxError(xhr),
-                    complete: function() {
-                        setButtonState('btn-anamnesis', 'text-anamnesis', 'spinner-anamnesis',
-                            false, 'Simpan');
-                    }
-                });
-            });
-
-            // tab-treatment click (update yang sudah ada)
-            $("#tab-treatment").click(function() {
-                // ajax treatment
-                let url = "{{ route('observasi.getInpatientTreatment', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    success: function(data) {
-                        console.log(data);
-                        // Populate the table with data
-                        let tbody = $("#tbody-pendukung");
-                        tbody.empty(); // Clear existing rows
-                        $.each(data, function(index, item) {
-                            // Format kolom dokumen
-                            let documentColumn = '';
-                            if (item.document && item.document !== '' && item
-                                .document !== null) {
-                                documentColumn =
-                                    `<button class="btn btn-info btn-sm btn-view-doc" data-doc="${item.document}" data-name="${item.tindakan_name || 'Dokumen'}" title="Lihat Dokumen"><i class="bi bi-eye">Dokumen</i></button>`;
-                            } else {
-                                documentColumn = '<span class="text-muted">-</span>';
-                            }
-
-                            tbody.append(
-                                `<tr>
-                                    <td>${item.treatment_date_formatted}</td>
-                                    <td>${item.quantity}</td>
-                                    <td>${item.request_type} | ${item.tindakan_name}</td>
-                                    <td>${item.result}</td>
-                                    <td class="text-center">${documentColumn}</td>
-                                    <td>${item.performed_by}</td>
-                                    <td class="text-center">
-                                        <button class="btn btn-danger btn-sm btn-hapus-pemeriksaan" data-id="${item.id}">
-                                            <i class="bi bi-trash"></i> Hapus
-                                        </button>
-                                    </td>
-                                </tr>`
-                            );
-                        });
-
-                        // Reset form (existing code)
-                        $("#jenis_pemeriksaan").val(null);
-                        quill.setContents(0);
-                    }
-                });
-            });
-
-            // Event handler untuk view dokumen (tambah ini di akhir document ready)
-            $('#tbody-pendukung').on('click', '.btn-view-doc', function() {
-                let docPath = $(this).data('doc');
-                let docName = $(this).data('name');
-                let docUrl = docPath;
-
-                // Set modal content
-                $('#modalViewDocumentLabel').text('Dokumen: ' + docName);
-                $('#documentName').text(docName);
-
-                // Detect file type
-                let ext = docPath.split('.').pop().toLowerCase();
-                let container = $('#documentContainer');
-
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-                    // Image
-                    container.html(`<img src="${docUrl}" class="img-fluid" style="max-height: 400px;">`);
-                } else if (ext === 'pdf') {
-                    // PDF
-                    container.html(
-                        `<embed src="${docUrl}" type="application/pdf" width="100%" height="400px">`);
+            // --- Helper Functions ---
+            const setButtonLoading = (btn, isLoading) => {
+                const spinner = btn.find('.spinner-border');
+                const text = btn.find('.btn-txt');
+                if (isLoading) {
+                    btn.prop('disabled', true);
+                    spinner.removeClass('d-none');
+                    text.addClass('d-none');
                 } else {
-                    // Other files
-                    container.html(`<div class="alert alert-info text-center">
-                        <i class="bi bi-file-earmark fs-1"></i><br>
-                        <p>File tidak dapat ditampilkan di browser</p>
-                        <a href="${docUrl}" target="_blank" class="btn btn-primary">Download File</a>
-                    </div>`);
+                    btn.prop('disabled', false);
+                    spinner.addClass('d-none');
+                    text.removeClass('d-none');
                 }
+            };
 
-                // Set download button
-                $('#btnDownloadDocument').off('click').on('click', function() {
-                    window.open(docUrl, '_blank');
-                });
-
-                // Show modal
-                $('#modalViewDocument').modal('show');
+            const showNotification = (message, type = 'success') => swal(message, {
+                icon: type
             });
 
-            // Event delegation untuk tombol hapus
-            $('#tbody-pendukung').on('click', '.btn-hapus-pemeriksaan', function() {
-                let id = $(this).data('id');
-                // Konfirmasi hapus
-                swal({
-                    title: "Apakah Anda yakin?",
-                    text: "Data ini akan dihapus!",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true,
-                }).then((willDelete) => {
-                    if (willDelete) {
-                        let url = "{{ route('observasi.deleteInpatientTreatment', ':id') }}"
-                            .replace(':id', id);
-                        $.ajax({
-                            url: url,
-                            type: "DELETE",
-                            data: {
-                                _token: "{{ csrf_token() }}"
-                            },
-                            success: function(data) {
-                                swal(data.message, {
-                                    icon: "success"
-                                });
-                                $("#tab-treatment").trigger('click'); // Refresh tabel
-                            },
-                            error: function() {
-                                swal('Terjadi kesalahan saat menghapus data.', {
-                                    icon: "error"
-                                });
-                            }
-                        });
-                    }
+            const ajaxRequest = (options) => {
+                return $.ajax({
+                    ...options,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
                 });
-            });
+            };
 
-            // btn-pemeriksaan click
-            $("#btn-pemeriksaan").click(function() {
-                // URL untuk AJAX
-                let url = "{{ route('observasi.postInpatientTreatment', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-
-                // Ambil data dari form
-                let type = $("#jenis_pemeriksaan").val();
-                let tindakan_id = $("#jenis_tindakan").val();
-                let result = quill.root.innerHTML; // Ambil isi editor
-                let document = $("#dokumen_pemeriksaan")[0].files[0]; // Ambil file
-                let treatment_date = $("#treatment_date").val(); // Ambil tanggal tindakan
-
-                // Validasi input
-                if (type == '') {
-                    alert("Tipe Pemeriksaan tidak boleh kosong");
-                    return;
-                }
-                if (result == '') {
-                    alert("Hasil Pemeriksaan tidak boleh kosong");
-                    return;
-                }
-                if (tindakan_id == '') {
-                    alert("Tindakan tidak boleh kosong");
-                    return;
-                }
-                if (document && document.size > 5048000) { // 5MB
-                    alert("Dokumen Pemeriksaan tidak boleh lebih dari 5MB");
-                    return;
-                }
-                if (treatment_date == '') {
-                    alert("Tanggal Tindakan tidak boleh kosong");
-                    return;
-                }
-
-                // Buat objek FormData
-                let formData = new FormData();
-                formData.append("type", type);
-                formData.append("result", result);
-                formData.append("document", document); // Tambahkan file
-                formData.append("tindakan_id", tindakan_id);
-                formData.append("treatment_date", treatment_date);
-                formData.append("_token", "{{ csrf_token() }}"); // Tambahkan CSRF token
-
-                // Kirim data melalui AJAX
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: formData,
-                    processData: false, // Jangan proses data
-                    contentType: false, // Jangan tetapkan header Content-Type
-                    beforeSend: function() {
-                        setButtonState('btn-pemeriksaan', 'text-pemeriksaan',
-                            'spinner-pemeriksaan', true);
-                    },
-                    success: function(data) {
-                        if (data.status == 200) {
-                            showSwal(data.message);
-                            // Refresh the table after successful submission
-                            $("#tab-treatment").click();
-                        } else {
-                            showSwal('Terjadi kesalahan saat menyimpan data.', 'error');
-                        }
-                    },
-                    error: (xhr) => {
-                        handleAjaxError(xhr, 'Terjadi kesalahan saat mengirim data.');
-                    },
-                    complete: function() {
-                        setButtonState('btn-pemeriksaan', 'text-pemeriksaan',
-                            'spinner-pemeriksaan', false, 'Simpan');
-                    }
-                });
-            });
-
-            $('#jenis_tindakan').select2({
-                placeholder: 'Pilih Tindakan',
-                allowClear: true,
-                width: '100%',
-
-            });
-
-            // tab-treatment-medis click
-            $("#tab-treatment").click(function() {
-                // ajax getTindakan jenis_tindakan
-                let url = "{{ route('observasi.getTindakan', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        let select = $("#jenis_tindakan");
-                        select.empty(); // Clear existing options
-                        select.append('<option value="">Pilih Jenis Tindakan</option>');
-                        $.each(data, function(index, item) {
-                            select.append(
-                                `<option value="${item.id}">${item.name}</option>`
-                            );
-                        });
-                    }
-                });
-                // ajax getTindakanEncounter
-                let url2 = "{{ route('observasi.getTindakanEncounter', ':id') }}";
-                url2 = url2.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url2,
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        // Populate the table with data
-                        let tbody = $("#tbody-tindakan");
-                        tbody.empty(); // Clear existing rows
-                        let total_harga = 0;
-                        $.each(data, function(index, item) {
-                            tbody.append(
-                                `<tr>
-                                        <td class="text-center">
-                                            <button class="btn btn-danger btn-sm btn-hapus-tindakan" data-id="${item.id}">
-                                                <i class="bi bi-trash"></i> Hapus
-                                            </button>
-                                        </td>
-                                        <td>${item.tindakan_name}</td>
-                                        <td>${item.qty}</td>
-                                        <td class="text-end">${formatRupiah(item.tindakan_harga)}</td>
-                                        <td class="text-end">${formatRupiah(item.total_harga)}</td>
-                                    </tr>`
-                            );
-                            total_harga += item.tindakan_harga * item.qty;
-                        });
-                        $("#total-harga").text(formatRupiah(total_harga));
-                    }
-                });
-            });
-            // format rupiah
-            function formatRupiah(angka, prefix) {
-                angka = angka ? angka.toString() : '0'; // Pastikan angka adalah string
-                let number_string = angka.replace(/[^,\d]/g, ''),
+            const formatRupiah = (angka, prefix) => {
+                angka = angka ? String(angka) : '0';
+                let number_string = angka.replace(/[^,\d]/g, '').toString(),
                     split = number_string.split(','),
                     sisa = split[0].length % 3,
                     rupiah = split[0].substr(0, sisa),
                     ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
                 if (ribuan) {
-                    separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
+                    rupiah += (sisa ? '.' : '') + ribuan.join('.');
                 }
+
                 rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
-            }
+                return prefix === undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+            };
 
-            // tab-diagnosis click
-            $("#tab-diagnosis").click(function() {
-                // Kosongkan kolom ICD10 dan Diagnosis Type
-                $("#icd10_id").val(null).trigger('change'); // untuk select2
-                $("#diagnosis_type").val(''); // untuk select biasa
-
-                // ajax getDiagnosis
-                let url = "{{ route('observasi.getDiagnosis', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        // Populate the table with data
-                        let tbody = $("#tbody-diagnosis");
-                        tbody.empty(); // Clear existing rows
-                        $.each(data, function(index, item) {
-                            tbody.append(
-                                `<tr>
-                                        <td class="text-center">
-                                            <button class="btn btn-danger btn-sm btn-hapus-diagnosis" data-id="${item.id}">
-                                                <i class="bi bi-trash"></i> Hapus
-                                            </button>
-                                        </td>
-                                        <td>${item.diagnosis_code}</td>
-                                        <td>${item.diagnosis_description}</td>
-                                        <td>${item.diagnosis_type}</td>
-                                        <td>${item.petugas_name}</td>
-                                    </tr>`
-                            );
-                        });
-                    }
-                });
-            });
-            // btn-diagnosis-medis click
-            $("#btn-diagnosis-medis").click(function() {
-                // ajax post diagnosis medis
-                let url = "{{ route('observasi.postDiagnosis', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
-                let icd10_id = $("#icd10_id").val();
-                let diagnosis_type = $("#diagnosis_type").val();
-                if (icd10_id == '') {
-                    alert("Jenis Diagnosis tidak boleh kosong");
-                    return;
-                }
-                if (diagnosis_type == '') {
-                    alert("Tipe Diagnosis tidak boleh kosong");
-                    return;
-                }
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        icd10_id: icd10_id,
-                        diagnosis_type: diagnosis_type,
-                        _token: "{{ csrf_token() }}"
-                    },
-                    beforeSend: function() {
-                        setButtonState('btn-diagnosis-medis', 'text-diagnosis-medis',
-                            'spinner-diagnosis-medis', true);
-                    },
-                    success: function(data) {
-                        if (data.status == 200) {
-                            showSwal(data.message);
-                            // Refresh the table after successful submission
-                            $("#tab-diagnosis").click();
-                        } else {
-                            showSwal('Terjadi kesalahan saat menyimpan data.', 'error');
-                        }
-                    },
-                    complete: function() {
-                        setButtonState('btn-diagnosis-medis', 'text-diagnosis-medis',
-                            'spinner-diagnosis-medis', false, 'Simpan');
-                    }
-                });
-            });
-            // tab-tatalaksana click
-            $('#icd10_id').select2({
-                placeholder: 'Cari kode atau nama diagnosis...',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: "{{ route('observasi.getIcd10', $getInpatientAdmission->encounter_id) }}", // sesuaikan dengan route Anda
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // kata kunci pencarian
-                        };
-                    },
-                    processResults: function(data) {
-                        // Jika response adalah array langsung:
-                        if (Array.isArray(data)) {
-                            return {
-                                results: data.map(function(item) {
-                                    return {
-                                        id: item.code,
-                                        text: item.code + ' - ' + item.description
-                                    }
-                                })
-                            };
-                        }
-                        // Jika response adalah object dengan key 'data'
-                        if (data.data && Array.isArray(data.data)) {
-                            return {
-                                results: data.data.map(function(item) {
-                                    return {
-                                        id: item.code,
-                                        text: item.description + (item.code ? ' - [' + item
-                                            .code + ']' : '')
-                                    }
-                                })
-                            };
-                        }
-                        // Jika response tidak sesuai, kembalikan array kosong
-                        return {
-                            results: []
-                        };
-                    },
-                    cache: true
-                }
-            });
-            // Event delegation untuk tombol hapus
-            $('#tbody-diagnosis').on('click', '.btn-hapus-diagnosis', function() {
-                let id = $(this).data('id');
-                // Konfirmasi hapus
-                swal({
-                    title: "Apakah Anda yakin?",
-                    text: "Data ini akan dihapus!",
+            const confirmAction = (title, text) => {
+                return swal({
+                    title,
+                    text,
                     icon: "warning",
                     buttons: true,
-                    dangerMode: true,
-                }).then((willDelete) => {
-                    if (willDelete) {
-                        let url = "{{ route('observasi.deleteDiagnosis', ':id') }}"
-                            .replace(':id', id);
-                        $.ajax({
-                            url: url,
-                            type: "DELETE",
-                            data: {
-                                _token: "{{ csrf_token() }}"
-                            },
-                            success: function(data) {
-
-                                if (data.status == true) {
-                                    swal(data.message, {
-                                        icon: "success"
-                                    });
-                                } else {
-                                    swal(data.message, {
-                                        icon: "error"
-                                    });
-
-                                }
-                                $("#tab-diagnosis")
-                                    .click(); // Refresh tabel
-                            },
-                            error: function() {
-                                swal('Terjadi kesalahan saat menghapus data.', {
-                                    icon: "error"
-                                });
-                            }
-                        });
-                    }
+                    dangerMode: true
                 });
+            };
+
+            // --- Anamnesis Tab ---
+            const loadAnamnesis = async () => {
+                try {
+                    const data = await ajaxRequest({
+                        url: ROUTES.riwayatPenyakit.replace(':id', encounterId)
+                    });
+                    $("#riwayat_penyakit").val(data.riwayatPenyakit.riwayat_penyakit);
+                    $("#riwayat_penyakit_keluarga").val(data.riwayatPenyakit.riwayat_penyakit_keluarga);
+                    $("#keluhan_utama").val(data.anamnesis ? data.anamnesis.keluhan_utama : '');
+                } catch (error) {
+                    console.error("Gagal memuat anamnesis:", error);
+                }
+            };
+
+            $('#btn-anamnesis').on('click', async function() {
+                const btn = $(this);
+                const payload = {
+                    dokter_id: "{{ $getInpatientAdmission->doctor->id ?? '' }}",
+                    keluhan_utama: $("#keluhan_utama").val(),
+                    riwayat_penyakit: $("#riwayat_penyakit").val(),
+                    riwayat_penyakit_keluarga: $("#riwayat_penyakit_keluarga").val(),
+                };
+
+                if (!payload.keluhan_utama || !payload.riwayat_penyakit || !payload
+                    .riwayat_penyakit_keluarga) {
+                    return showNotification("Semua field anamnesis harus diisi.", "error");
+                }
+
+                setButtonLoading(btn, true);
+                try {
+                    const response = await ajaxRequest({
+                        url: ROUTES.postAnemnesis.replace(':id', encounterId),
+                        method: 'POST',
+                        data: payload
+                    });
+                    showNotification(response.message);
+                } catch (error) {
+                    showNotification('Gagal menyimpan anamnesis.', 'error');
+                } finally {
+                    setButtonLoading(btn, false);
+                }
             });
-            $("#tab-daily").click(function() {
-                // ajax getInpatientDailyMedications
-                let url = "{{ route('observasi.getInpatientDailyMedications', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        console.log(data);
-                        // Populate the table with data
-                        let tbody = $("#tbody-resep-daily");
-                        tbody.empty();
+
+            // --- Treatment Tab ---
+            const loadTreatments = async () => {
+                try {
+                    const data = await ajaxRequest({
+                        url: ROUTES.getInpatientTreatment.replace(':id', admissionId)
+                    });
+                    const tbody = $("#tbody-pendukung").empty();
+                    if (!data || data.length === 0) return;
+
+                    data.forEach(item => {
+                        const docButton = item.document ?
+                            `<button class="btn btn-info btn-sm btn-view-doc" data-doc="${item.document}" data-name="${item.tindakan_name || 'Dokumen'}"><i class="bi bi-eye"></i> Dokumen</button>` :
+                            '<span class="text-muted">-</span>';
+
+                        tbody.append(`
+                            <tr>
+                                <td>${item.treatment_date_formatted}</td>
+                                <td>${item.quantity}</td>
+                                <td>${item.request_type} | ${item.tindakan_name}</td>
+                                <td>${item.result || '-'}</td>
+                                <td class="text-center">${docButton}</td>
+                                <td>${item.performed_by}</td>
+                                <td class="text-center">
+                                    <button class="btn btn-danger btn-sm btn-hapus-pemeriksaan" data-id="${item.id}"><i class="bi bi-trash"></i> Hapus</button>
+                                </td>
+                            </tr>`);
+                    });
+                } catch (error) {
+                    console.error("Gagal memuat tindakan:", error);
+                    $("#tbody-pendukung").html(
+                        '<tr><td colspan="7" class="text-center text-danger">Gagal memuat data.</td></tr>'
+                    );
+                }
+            };
+
+            $('#btn-pemeriksaan').on('click', async function() {
+                const btn = $(this);
+                const formData = new FormData();
+                formData.append("type", $("#jenis_pemeriksaan").val());
+                formData.append("tindakan_id", $("#jenis_tindakan").val());
+                formData.append("result", quill.root.innerHTML);
+                formData.append("document", $("#dokumen_pemeriksaan")[0].files[0]);
+                formData.append("treatment_date", $("#treatment_date").val());
+
+                if (!formData.get('type') || !formData.get('tindakan_id') || !formData.get(
+                        'treatment_date')) {
+                    return showNotification("Tipe, Tindakan, dan Tanggal harus diisi.", "error");
+                }
+
+                setButtonLoading(btn, true);
+                try {
+                    const response = await ajaxRequest({
+                        url: ROUTES.postInpatientTreatment.replace(':id', admissionId),
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                    });
+                    showNotification(response.message);
+                    loadTreatments();
+                    $('#dokumen_pemeriksaan').val('');
+                    quill.setContents([]);
+                } catch (error) {
+                    showNotification('Gagal menyimpan tindakan.', 'error');
+                } finally {
+                    setButtonLoading(btn, false);
+                }
+            });
+
+            $('#tbody-pendukung').on('click', '.btn-hapus-pemeriksaan', async function() {
+                const id = $(this).data('id');
+                const confirmed = await confirmAction("Hapus Tindakan?",
+                    "Data ini akan dihapus permanen.");
+                if (confirmed) {
+                    try {
+                        const response = await ajaxRequest({
+                            url: ROUTES.deleteInpatientTreatment.replace(':id', id),
+                            method: 'DELETE'
+                        });
+                        showNotification(response.message);
+                        loadTreatments();
+                    } catch (error) {
+                        showNotification('Gagal menghapus data.', 'error');
+                    }
+                }
+            });
+
+            // --- Daily Medication Tab ---
+            const loadDailyMedications = async () => {
+                try {
+                    const data = await ajaxRequest({
+                        url: ROUTES.getDailyMedications.replace(':id', admissionId)
+                    });
+                    const tbody = $("#tbody-resep-daily").empty();
+                    let total = 0;
+                    if (!data || data.length === 0) return;
+
+                    data.forEach(item => {
+                        let actionButtons = '';
+                        let statusBadge = '';
+
+                        if (item.status === "Diajukan") {
+                            actionButtons =
+                                `<button class="btn btn-danger btn-sm btn-hapus-resep-daily" data-id="${item.id}"><i class="bi bi-trash"></i> Hapus</button>`;
+                            statusBadge = `<span class="badge bg-warning">Menunggu Apotek</span>`;
+                        } else if (item.status === "Disiapkan") {
+                            actionButtons =
+                                `<button class="btn btn-primary btn-sm btn-diberikan-resep-daily" data-id="${item.id}"><i class="bi bi-check-circle"></i> Berikan ke Pasien</button>`;
+                            statusBadge = `<span class="badge bg-info">Siap Diberikan</span>`;
+                        } else { // Diberikan
+                            statusBadge = `<span class="badge bg-success">Sudah Diberikan</span>`;
+                        }
+                        tbody.append(`
+                            <tr>
+                                <td class="text-center">${actionButtons}</td>
+                                <td>Jadwal: ${item.medicine_date}<br>Diberikan: ${item.administered_at || '-'}<br>${statusBadge}</td>
+                                <td>${item.jumlah}</td>
+                                <td>${item.medication_name}</td>
+                                <td>${item.dosage_instructions} | ${item.route} | ${item.frequency}</td>
+                                <td><span class="badge bg-success">Dokter: ${item.authorized_name}</span><br><span class="badge bg-primary">Perawat: ${item.administered_name}</span></td>
+                                <td class="text-end">${formatRupiah(item.total, 'Rp. ')}</td>
+                            </tr>`);
+                        total += parseInt(item.total || 0);
+                    });
+                    $("#total-resep-daily").text(formatRupiah(total, 'Rp. '));
+                } catch (error) {
+                    console.error("Gagal memuat obat harian:", error);
+                    $("#tbody-resep-daily").html(
+                        '<tr><td colspan="6" class="text-center text-danger">Gagal memuat data.</td></tr>'
+                    );
+                }
+            };
+
+            $('#btn-tambah-obat-daily').on('click', async function() {
+                const btn = $(this);
+                const payload = {
+                    product_apotek_id: $("#product_apotek_id_daily").val(),
+                    jumlah: $("#jumlah_daily").val(),
+                    dosage_instructions: $("#dosis_daily").val(),
+                    frequensi: $("#frequensi_daily").val(),
+                    route: $("#route_daily").val(),
+                    notes: $("#note_daily").val(),
+                    medicine_date: $("#medicine_date").val(),
+                };
+
+                if (!payload.product_apotek_id || !payload.jumlah || !payload.dosage_instructions || !
+                    payload.frequensi || !payload.route || !payload.medicine_date) {
+                    return showNotification("Semua field obat harian (kecuali catatan) harus diisi.",
+                        "error");
+                }
+
+                setButtonLoading(btn, true);
+                try {
+                    const response = await ajaxRequest({
+                        url: ROUTES.postDailyMedication.replace(':id', admissionId),
+                        method: 'POST',
+                        data: payload
+                    });
+                    showNotification(response.message);
+                    loadDailyMedications();
+                    $('#obat_harian').find('input, select').val('').trigger('change');
+                } catch (error) {
+                    showNotification('Gagal menambah obat harian.', 'error');
+                } finally {
+                    setButtonLoading(btn, false);
+                }
+            });
+
+            $('#tbody-resep-daily').on('click', '.btn-hapus-resep-daily', async function() {
+                const id = $(this).data('id');
+                const confirmed = await confirmAction("Hapus Obat?", "Data ini akan dihapus permanen.");
+                if (confirmed) {
+                    try {
+                        const response = await ajaxRequest({
+                            url: ROUTES.deleteDailyMedication.replace(':id', id),
+                            method: 'DELETE'
+                        });
+                        showNotification(response.message);
+                        loadDailyMedications();
+                    } catch (error) {
+                        showNotification(error.responseJSON?.message || 'Gagal menghapus data.',
+                            'error');
+                    }
+                }
+            });
+
+            $('#tbody-resep-daily').on('click', '.btn-diberikan-resep-daily', async function() {
+                const id = $(this).data('id');
+                const confirmed = await confirmAction("Konfirmasi Pemberian Obat",
+                    "Anda yakin obat ini sudah diberikan ke pasien?");
+                if (confirmed) {
+                    try {
+                        const response = await ajaxRequest({
+                            url: ROUTES.updateDailyMedicationStatus.replace(':id', id),
+                            method: 'POST'
+                        });
+                        showNotification(response.message);
+                        loadDailyMedications();
+                    } catch (error) {
+                        showNotification('Gagal memperbarui status.', 'error');
+                    }
+                }
+            });
+
+            // --- Diagnosis Tab ---
+            const loadDiagnosis = async () => {
+                try {
+                    const data = await ajaxRequest({
+                        url: ROUTES.getDiagnosis.replace(':id', encounterId)
+                    });
+                    const tbody = $("#tbody-diagnosis").empty();
+                    if (!data || data.length === 0) return;
+
+                    data.forEach(item => {
+                        tbody.append(`
+                            <tr>
+                                <td class="text-center">
+                                    <button class="btn btn-danger btn-sm btn-hapus-diagnosis" data-id="${item.id}"><i class="bi bi-trash"></i> Hapus</button>
+                                </td>
+                                <td>${item.diagnosis_code}</td>
+                                <td>${item.diagnosis_description}</td>
+                                <td>${item.diagnosis_type}</td>
+                                <td>${item.petugas_name}</td>
+                            </tr>`);
+                    });
+                } catch (error) {
+                    console.error("Gagal memuat diagnosis:", error);
+                    $("#tbody-diagnosis").html(
+                        '<tr><td colspan="5" class="text-center text-danger">Gagal memuat data.</td></tr>'
+                    );
+                }
+            };
+
+            $('#btn-diagnosis-medis').on('click', async function() {
+                const btn = $(this);
+                const payload = {
+                    icd10_id: $("#icd10_id").val(),
+                    diagnosis_type: $("#diagnosis_type").val(),
+                };
+
+                if (!payload.icd10_id || !payload.diagnosis_type) {
+                    return showNotification("Diagnosis (ICD10) dan Tipe Diagnosis harus diisi.",
+                        "error");
+                }
+
+                setButtonLoading(btn, true);
+                try {
+                    const response = await ajaxRequest({
+                        url: ROUTES.postDiagnosis.replace(':id', encounterId),
+                        method: 'POST',
+                        data: payload
+                    });
+                    showNotification(response.message);
+                    loadDiagnosis();
+                    $('#icd10_id').val(null).trigger('change');
+                    $('#diagnosis_type').val('');
+                } catch (error) {
+                    showNotification('Gagal menyimpan diagnosis.', 'error');
+                } finally {
+                    setButtonLoading(btn, false);
+                }
+            });
+
+            $('#tbody-diagnosis').on('click', '.btn-hapus-diagnosis', async function() {
+                const id = $(this).data('id');
+                const confirmed = await confirmAction("Hapus Diagnosis?",
+                    "Data ini akan dihapus permanen.");
+                if (confirmed) {
+                    try {
+                        const response = await ajaxRequest({
+                            url: ROUTES.deleteDiagnosis.replace(':id', id),
+                            method: 'DELETE'
+                        });
+                        showNotification(response.message);
+                        loadDiagnosis();
+                    } catch (error) {
+                        showNotification('Gagal menghapus data.', 'error');
+                    }
+                }
+            });
+
+            // --- Resep Pulang (Tatalaksana) Tab ---
+            const loadResepPulang = async () => {
+                try {
+                    const data = await ajaxRequest({
+                        url: ROUTES.getResep.replace(':id', encounterId)
+                    });
+                    const tbody = $("#tbody-resep").empty();
+
+                    if (data && data.id) {
+                        $("#resep").removeClass("d-none");
+                        $("#kode_resep").text(`[${data.kode_resep}] ${data.masa_pemakaian_hari} hari`);
+
                         let total = 0;
-                        $.each(data, function(index, item) {
-                            if (item.status == "Diajukan") {
-                                tbody.append(
-                                    `<tr>
+                        if (data.details && data.details.length > 0) {
+                            data.details.forEach(item => {
+                                tbody.append(`
+                                    <tr>
                                         <td class="text-center">
-                                            <button class="btn btn-danger btn-sm btn-hapus-resep-daily" data-id="${item.id}">
-                                                <i class="bi bi-trash"></i> Hapus
-                                            </button>
-                                            <button class="btn btn-primary btn-sm btn-diserahkan-resep-daily" data-id="${item.id}">
-                                                <i class="bi bi-check"></i> Diserahkan
-                                            </button>
+                                            <button class="btn btn-danger btn-sm btn-hapus-resep" data-id="${item.id}"><i class="bi bi-trash"></i> Hapus</button>
                                         </td>
-                                        <td>
-                                            Tanggal Anjuran : ${item.medicine_date} <br>
-                                            Tanggal Diberikan : ${item.administered_date || '-'}
-                                        </td>
-                                        <td>${item.jumlah}</td>
-                                        <td>${item.medication_name}</td>
-                                        <td>${item.dosage_instructions + ' | ' + item.route + ' | ' + item.frequency}</td>
-                                        <td>
-                                            <span class="badge bg-success">Dokter : ${item.authorized_name}</span><br>
-                                            <span class="badge bg-primary">Perawat : ${item.administered_name}</span>
-                                        </td>
-                                        <td class="text-end">${formatRupiah(item.total, 'Rp. ')}</td>
-
-                                    </tr>`
-                                );
-                                total += parseInt(item.total || 0);
-                            } else {
-                                tbody.append(
-                                    `<tr>
-                                        <td class="text-center">
-
-                                        </td>
-                                        <td>
-                                            Jadwal : ${item.medicine_date} <br>
-                                            Diberikan : ${item.administered_at || '-'}
-                                        </td>
-                                        <td>${item.jumlah}</td>
-                                        <td>${item.medication_name}</td>
-                                        <td>${item.dosage_instructions + ' | ' + item.route + ' | ' + item.frequency}</td>
-                                        <td>
-                                            <span class="badge bg-success">Dokter : ${item.authorized_name}</span><br>
-                                            <span class="badge bg-primary">Perawat : ${item.administered_name}</span>
-                                        </td>
-                                        <td class="text-end">${formatRupiah(item.total, 'Rp. ')}</td>
-
-                                    </tr>`
-                                );
-                                total += parseInt(item.total || 0);
-                            }
-                        });
-
-
-                        $("#total-resep-daily").text(formatRupiah(total, 'Rp. '));
-                    }
-                });
-            });
-            $('#product_apotek_id_daily').select2({
-                placeholder: 'Pilih Obat',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: "{{ route('observasi.getProdukApotek', $getInpatientAdmission->encounter_id) }}", // sesuaikan dengan route Anda
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // kata kunci pencarian
-                        };
-                    },
-                    processResults: function(data) {
-                        // Jika response adalah array langsung:
-                        if (Array.isArray(data)) {
-                            return {
-                                results: data.map(function(item) {
-                                    return {
-                                        id: item.id,
-                                        text: item.name + ' - [' + item.satuan + ']' + (item
-                                            .harga ? ' - [' + formatRupiah(
-                                                item.harga, 'Rp. ') + ']' : '')
-                                    }
-                                })
-                            };
-                        }
-                        // Jika response adalah object dengan key 'data'
-                        if (data.data && Array.isArray(data.data)) {
-                            return {
-                                results: data.data.map(function(item) {
-                                    return {
-                                        id: item.id,
-                                        text: item.name + ' - [' + item.satuan + ']' + (item
-                                            .harga ? ' - [' + formatRupiah(
-                                                item.harga, 'Rp. ') + ']' : '')
-                                    }
-                                })
-                            };
-                        }
-                        // Jika response tidak sesuai, kembalikan array kosong
-                        return {
-                            results: []
-                        };
-                    },
-                    cache: true
-                }
-
-            });
-            // btn-tambah-obat-daily click
-            $("#btn-tambah-obat-daily").click(function(e) {
-                e.preventDefault();
-                // Validasi input
-                let product_apotek_id_daily = $("#product_apotek_id_daily").val();
-                let jumlah_daily = $("#jumlah_daily").val();
-                let dosis_daily = $("#dosis_daily").val();
-                let frequensi_daily = $("#frequensi_daily").val();
-                let route_daily = $("#route_daily").val();
-                let note_daily = $("#note_daily").val();
-                let medicine_date = $("#medicine_date").val();
-                if (product_apotek_id_daily == '') {
-                    alert("Obat tidak boleh kosong");
-                    return;
-                }
-                if (jumlah_daily == '') {
-                    alert("Jumlah tidak boleh kosong");
-                    return;
-                }
-                if (dosis_daily == '') {
-                    alert("Dosis tidak boleh kosong");
-                    return;
-                }
-                if (frequensi_daily == '') {
-                    alert("Frekuensi tidak boleh kosong");
-                    return;
-                }
-                if (route_daily == '') {
-                    alert("Rute tidak boleh kosong");
-                    return;
-                }
-                if (medicine_date == '') {
-                    alert("Tanggal obat tidak boleh kosong");
-                    return;
-                }
-
-                // Tampilkan spinner dan disable tombol
-                setButtonState('btn-tambah-obat-daily', 'text-tambah-obat-daily',
-                    'spinner-tambah-obat-daily', true);
-                // ajax post resep
-                let url = "{{ route('observasi.postInpatientDailyMedication', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->id }}");
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        product_apotek_id: product_apotek_id_daily,
-                        jumlah: jumlah_daily,
-                        dosage_instructions: dosis_daily,
-                        frequensi: frequensi_daily,
-                        route: route_daily,
-                        notes: note_daily,
-                        medicine_date: medicine_date
-                    },
-                    success: function(data) {
-                        if (data.status == 200) {
-                            showSwal(data.message);
-                            $("#tab-daily")
-                                .click(); // Refresh the table after successful submission
-                        } else {
-                            showSwal(data.message, 'error');
-                            $("#tab-daily")
-                                .click(); // Refresh the table even if there's an error
-                        }
-                    },
-                    error: function(xhr) {
-                        handleAjaxError(xhr);
-                    },
-                    complete: function() {
-                        setButtonState('btn-tambah-obat-daily', 'text-tambah-obat-daily',
-                            'spinner-tambah-obat-daily', false, 'Tambah Obat');
-                    }
-                });
-            });
-
-            $('#tbody-resep-daily').on('click', '.btn-hapus-resep-daily', function() {
-                let id = $(this).data('id');
-                // Konfirmasi hapus
-                swal({
-                    title: "Apakah Anda yakin?",
-                    text: "Data ini akan dihapus!",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true,
-                }).then((willDelete) => {
-                    if (willDelete) {
-                        let url = "{{ route('observasi.deleteInpatientDailyMedication', ':id') }}"
-                            .replace(':id', id);
-                        $.ajax({
-                            url: url,
-                            type: "DELETE",
-                            data: {
-                                _token: "{{ csrf_token() }}"
-                            },
-                            success: function(data) {
-                                if (data.status == 200) {
-                                    swal(data.message, {
-                                        icon: "success"
-                                    });
-                                } else {
-                                    swal(data.message, {
-                                        icon: "error"
-                                    });
-
-                                }
-                                $("#tab-daily")
-                                    .click(); // Refresh tabel
-                            },
-                            error: function() {
-                                swal('Terjadi kesalahan saat menghapus data.', {
-                                    icon: "error"
-                                });
-                            }
-                        });
-                    }
-                });
-            });
-            $('#tbody-resep-daily').on('click', '.btn-diserahkan-resep-daily', function() {
-                let id = $(this).data('id');
-                // Konfirmasi hapus
-                swal({
-                    title: "Apakah Anda yakin sudah diberikan ke pasien?",
-                    text: "Jika sudah diberikan data ini tidak bisa dihapus!",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true,
-                }).then((willDelete) => {
-                    if (willDelete) {
-                        let url =
-                            "{{ route('observasi.updateInpatientDailyMedicationStatus', ':id') }}"
-                            .replace(':id', id);
-                        $.ajax({
-                            url: url,
-                            type: "POST",
-                            data: {
-                                _token: "{{ csrf_token() }}"
-                            },
-                            success: function(data) {
-                                if (data.status == 200) {
-                                    swal(data.message, {
-                                        icon: "success"
-                                    });
-                                } else {
-                                    swal(data.message, {
-                                        icon: "error"
-                                    });
-
-                                }
-                                $("#tab-daily")
-                                    .click(); // Refresh tabel
-                            },
-                            error: function() {
-                                swal('Terjadi kesalahan saat menghapus data.', {
-                                    icon: "error"
-                                });
-                            }
-                        });
-                    }
-                });
-            });
-            $("#tab-tatalaksana").click(function() {
-                // ajax getResep
-                let url = "{{ route('observasi.getResep', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
-                $.ajax({
-                    url: url,
-                    type: "GET",
-                    data: {
-                        _token: "{{ csrf_token() }}"
-                    },
-                    success: function(data) {
-                        // Jika data resep ada, tampilkan form resep
-                        if (data.id) {
-                            $("#resep").removeClass("d-none");
-                            $("#kode_resep").text("[" + data.kode_resep + "] " + data
-                                .masa_pemakaian_hari + " hari");
-                        } else {
-                            $("#resep").addClass("d-none");
-                        }
-
-                        // Populate the table with data
-                        let tbody = $("#tbody-resep");
-                        tbody.empty();
-                        let total = 0;
-                        if (data && data.details) {
-                            $.each(data.details, function(index, item) {
-                                tbody.append(
-                                    `<tr>
-                                            <td class="text-center">
-                                                <button class="btn btn-danger btn-sm btn-hapus-resep" data-id="${item.id}">
-                                                    <i class="bi bi-trash"></i> Hapus
-                                                </button>
-                                            </td>
-                                            <td>${item.nama_obat}</td>
-                                            <td>${item.qty}</td>
-                                            <td>${item.aturan_pakai}</td>
-                                            <td class="text-end">${formatRupiah(item.harga, 'Rp. ')}</td>
-                                            <td class="text-end">${formatRupiah(item.total_harga, 'Rp. ')}</td>
-                                        </tr>`
-                                );
+                                        <td>${item.qty}</td>
+                                        <td>${item.nama_obat}</td>
+                                        <td>${item.aturan_pakai}</td>
+                                        <td class="text-end">${formatRupiah(item.harga, 'Rp. ')}</td>
+                                        <td class="text-end">${formatRupiah(item.total_harga, 'Rp. ')}</td>
+                                    </tr>`);
                                 total += parseInt(item.total_harga || 0);
                             });
                         }
                         $("#total-resep").text(formatRupiah(total, 'Rp. '));
+                    } else {
+                        $("#resep").addClass("d-none");
+                        $("#total-resep").text(formatRupiah(0, 'Rp. '));
                     }
-                });
-            });
-            $('#product_apotek_id').select2({
-                placeholder: 'Pilih Obat',
-                allowClear: true,
-                width: '100%',
-                ajax: {
-                    url: "{{ route('observasi.getProdukApotek', $getInpatientAdmission->encounter_id) }}", // sesuaikan dengan route Anda
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return {
-                            search: params.term // kata kunci pencarian
-                        };
-                    },
-                    processResults: function(data) {
-                        // Jika response adalah array langsung:
-                        if (Array.isArray(data)) {
-                            return {
-                                results: data.map(function(item) {
-                                    return {
-                                        id: item.id,
-                                        text: item.name + (item.harga ? ' - [' + formatRupiah(
-                                            item.harga, 'Rp. ') + ']' : '')
-                                    }
-                                })
-                            };
-                        }
-                        // Jika response adalah object dengan key 'data'
-                        if (data.data && Array.isArray(data.data)) {
-                            return {
-                                results: data.data.map(function(item) {
-                                    return {
-                                        id: item.id,
-                                        text: item.name + (item.harga ? ' - [' + formatRupiah(
-                                            item.harga, 'Rp. ') + ']' : '')
-                                    }
-                                })
-                            };
-                        }
-                        // Jika response tidak sesuai, kembalikan array kosong
-                        return {
-                            results: []
-                        };
-                    },
-                    cache: true
+                } catch (error) {
+                    console.error("Gagal memuat resep pulang:", error);
+                    $("#tbody-resep").html(
+                        '<tr><td colspan="7" class="text-center text-danger">Gagal memuat data.</td></tr>'
+                    );
                 }
+            };
 
-            });
-            // btn-resep click
-            $("#btn-buat-resep").click(function(e) {
+            $('#btn-buat-resep').on('click', async function(e) {
                 e.preventDefault();
-                // validasi input masa_pemakaian_hari
-                let masa_pemakaian_hari = $("#masa_pemakaian_hari").val();
-                if (masa_pemakaian_hari == '') {
-                    alert("Jumlah hari tidak boleh kosong");
-                    return;
-                }
-                // Tampilkan spinner dan disable tombol
-                setButtonState('btn-buat-resep', 'text-buat-resep', 'spinner-buat-resep', true);
-                // ajax post resep
-                let url = "{{ route('observasi.postResep', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        masa_pemakaian_hari: masa_pemakaian_hari
-                    },
-                    success: function(data) {
-                        if (data.status == 200) {
-                            showSwal(data.message);
-                            // Tampilkan kolom resep
-                            $("#resep").removeClass("d-none");
-                            $("#kode_resep").text("[" + data.kode_resep + "] " + data
-                                .masa_pemakaian_hari + " hari");
-                        } else {
-                            showSwal(data.message, 'error');
-                        }
-                    },
-                    error: function(xhr) {
-                        handleAjaxError(xhr, 'Terjadi kesalahan saat menyimpan data.');
-                    },
-                    complete: function() {
-                        setButtonState('btn-buat-resep', 'text-buat-resep',
-                            'spinner-buat-resep', false, 'Buat Resep');
-                    }
-                });
-            });
-            // btn-tambah-obat click
-            $("#btn-tambah-obat").click(function(e) {
-                e.preventDefault();
-                // validasi input
-                let product_apotek_id = $("#product_apotek_id").val();
-                let qty = $("#qty").val();
-                let aturan_pakai = $("#aturan_pakai").val();
-                if (product_apotek_id == '') {
-                    alert("Obat tidak boleh kosong");
-                    return;
-                }
-                if (qty == '') {
-                    alert("Jumlah tidak boleh kosong");
-                    return;
-                }
-                if (aturan_pakai == '') {
-                    alert("Aturan pakai tidak boleh kosong");
-                    return;
-                }
-                // Tampilkan spinner dan disable tombol
-                setButtonState('btn-tambah-obat', 'text-tambah-obat', 'spinner-tambah-obat', true);
-                let url = "{{ route('observasi.postResepDetail', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        product_apotek_id: product_apotek_id,
-                        qty: qty,
-                        aturan_pakai: aturan_pakai
-                    },
-                    success: function(data) {
-                        if (data.status == 200) {
-                            showSwal(data.message);
-                            // Refresh the table after successful submission
-                            $("#tab-tatalaksana").click();
-                        } else {
-                            showSwal(data.message, 'error');
-                            $("#tab-tatalaksana").click();
-                        }
-                    },
-                    error: function(xhr) {
-                        handleAjaxError(xhr);
-                    },
-                    complete: function() {
-                        setButtonState('btn-tambah-obat', 'text-tambah-obat',
-                            'spinner-tambah-obat', false, 'Tambah Obat');
-                    }
-                });
-            });
-            // Hapus obat
-            $('#tbody-resep').on('click', '.btn-hapus-resep', function() {
-                let id = $(this).data('id');
-                // Konfirmasi hapus
-                swal({
-                    title: "Apakah Anda yakin?",
-                    text: "Data ini akan dihapus!",
-                    icon: "warning",
-                    buttons: true,
-                    dangerMode: true,
-                }).then((willDelete) => {
-                    if (willDelete) {
-                        let url = "{{ route('observasi.deleteResepDetail', ':id') }}"
-                            .replace(':id', id);
-                        $.ajax({
-                            url: url,
-                            type: "DELETE",
-                            data: {
-                                _token: "{{ csrf_token() }}"
-                            },
-                            success: function(data) {
-                                if (data.status == true) {
-                                    swal(data.message, {
-                                        icon: "success"
-                                    });
-                                } else {
-                                    swal(data.message, {
-                                        icon: "error"
-                                    });
+                const btn = $(this);
+                const masa_pemakaian_hari = $("#masa_pemakaian_hari").val();
 
-                                }
-                                $("#tab-tatalaksana")
-                                    .click(); // Refresh tabel
-                            },
-                            error: function() {
-                                swal('Terjadi kesalahan saat menghapus data.', {
-                                    icon: "error"
-                                });
-                            }
-                        });
-                    }
-                });
+                if (!masa_pemakaian_hari) {
+                    return showNotification("Jumlah hari resep harus diisi.", "error");
+                }
+
+                setButtonLoading(btn, true);
+                try {
+                    const response = await ajaxRequest({
+                        url: ROUTES.postResep.replace(':id', encounterId),
+                        method: 'POST',
+                        data: {
+                            masa_pemakaian_hari
+                        }
+                    });
+                    showNotification(response.message);
+                    loadResepPulang();
+                } catch (error) {
+                    showNotification('Gagal membuat resep.', 'error');
+                } finally {
+                    setButtonLoading(btn, false);
+                }
             });
 
-            // btn-simpan-catatan
-            $("#btn-simpan-catatan").click(function(e) {
-                e.preventDefault();
-                // validasi input
-                let status_pulang = $("#status_pulang").val();
-                let catatan = quillCatatan.root.innerHTML;
-                if (status_pulang == '') {
-                    alert("Status Pulang tidak boleh kosong");
-                    return;
-                }
-                // Tampilkan spinner dan disable tombol
-                setButtonState('btn-simpan-catatan', 'text-simpan-catatan', 'spinner-simpan-catatan', true);
-                let url = "{{ route('observasi.postCatatanEncounter', ':id') }}";
-                url = url.replace(':id', "{{ $getInpatientAdmission->encounter_id }}");
-                $.ajax({
-                    url: url,
-                    type: "POST",
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        // ambil isi catatanEditor
-                        catatan: catatan,
-                        status_pulang: status_pulang
-                    },
-                    success: function(data) {
-                        if (data.success == true) {
-                            showSwal(data.message);
-                            // redirect ke halaman observasi
-                            window.location.href = data.url;
+            $('#btn-tambah-obat').on('click', async function() {
+                const btn = $(this);
+                const payload = {
+                    product_apotek_id: $("#product_apotek_id").val(),
+                    qty_obat: $("#qty").val(),
+                    aturan_pakai: $("#aturan_pakai").val(),
+                };
 
-                        } else {
-                            showSwal(data.message, 'error');
-                        }
-                    },
-                    error: function(xhr) {
-                        handleAjaxError(xhr, 'Terjadi kesalahan saat menyimpan data.');
-                    },
-                    complete: function() {
-                        setButtonState('btn-simpan-catatan', 'text-simpan-catatan',
-                            'spinner-simpan-catatan', false, 'Selesai Pemeriksaan');
+                if (!payload.product_apotek_id || !payload.qty_obat || !payload.aturan_pakai) {
+                    return showNotification("Obat, Jumlah, dan Aturan Pakai harus diisi.", "error");
+                }
+
+                setButtonLoading(btn, true);
+                try {
+                    const response = await ajaxRequest({
+                        url: ROUTES.postResepDetail.replace(':id', encounterId),
+                        method: 'POST',
+                        data: payload
+                    });
+                    showNotification(response.data.message || 'Obat berhasil ditambahkan.');
+                    loadResepPulang();
+                    $('#product_apotek_id').val(null).trigger('change');
+                    $('#qty').val(1);
+                    $('#aturan_pakai').val('');
+                } catch (error) {
+                    showNotification(error.responseJSON?.message || 'Gagal menambah obat.', 'error');
+                } finally {
+                    setButtonLoading(btn, false);
+                }
+            });
+
+            $('#tbody-resep').on('click', '.btn-hapus-resep', async function() {
+                const id = $(this).data('id');
+                const confirmed = await confirmAction("Hapus Obat dari Resep?",
+                    "Obat ini akan dihapus dari resep.");
+                if (confirmed) {
+                    const response = await ajaxRequest({
+                        url: ROUTES.deleteResepDetail.replace(':id', id),
+                        method: 'DELETE'
+                    });
+                    showNotification(response.message);
+                    loadResepPulang();
+                }
+            });
+
+            const setupSelect2 = (selector, url, placeholder, textMapper) => {
+                $(selector).select2({
+                    placeholder: placeholder,
+                    allowClear: true,
+                    width: '100%',
+                    ajax: {
+                        url: url,
+                        dataType: 'json',
+                        delay: 250,
+                        data: params => ({
+                            search: params.term
+                        }),
+                        processResults: data => ({
+                            results: (data.data || data).map(textMapper)
+                        }),
+                        cache: true
                     }
                 });
+            };
+
+            setupSelect2('#jenis_tindakan', ROUTES.getTindakan.replace(':id', admissionId), 'Pilih Tindakan',
+                item => ({
+                    id: item.id,
+                    text: item.name
+                }));
+            setupSelect2('#icd10_id', ROUTES.getIcd10.replace(':id', encounterId),
+                'Cari kode atau nama diagnosis...', item => ({
+                    id: item.code,
+                    text: `${item.code} - ${item.description}`
+                }));
+            setupSelect2('#product_apotek_id_daily', ROUTES.getProdukApotek.replace(':id', encounterId),
+                'Pilih Obat', item => ({
+                    id: item.id,
+                    text: `${item.name} - [${item.satuan}] - [${formatRupiah(item.harga, 'Rp. ')}]`
+                }));
+            setupSelect2('#product_apotek_id', ROUTES.getProdukApotek.replace(':id', encounterId), 'Pilih Obat',
+                item => ({
+                    id: item.id,
+                    text: `${item.name} - [${formatRupiah(item.harga, 'Rp. ')}]`
+                }));
+
+            // --- Tab Click Handlers ---
+            $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                const targetId = $(e.target).attr("href");
+                switch (targetId) {
+                    case "#anamnesis":
+                        loadAnamnesis();
+                        break;
+                    case "#treatment":
+                        loadTreatments();
+                        break;
+                    case "#daily":
+                        loadDailyMedications();
+                        break;
+                    case "#diagnosis":
+                        loadDiagnosis();
+                        break;
+                    case "#tatalaksana":
+                        loadResepPulang();
+                        break;
+                        // Add other tab load functions here
+                }
             });
+
+            // Initial load for the active tab
+            loadAnamnesis();
         });
     </script>
 @endpush

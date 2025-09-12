@@ -46,16 +46,16 @@ class LoketController extends Controller
             'lokasi'      => 'required|string',
             'kode_loket' => 'required|string|unique:lokets',
             'user'       => 'required|string'
-        ],[
+        ], [
             'kode_loket.required' => 'kolom masih kosong',
-            'kode_loket.unique' => 'Kode loket '.$request->kode_loket. ' sudah terdaftar',
+            'kode_loket.unique' => 'Kode loket ' . $request->kode_loket . ' sudah terdaftar',
             'lokasi.required'    => 'Pilih Lokasi Loket',
             'user.required'     => 'Pilih Petugas'
         ]);
         $loket = $this->loketRepository->store($request);
         if ($loket) {
             Alert::success('Berhasil', 'Data Loket Tersimpan!');
-        }else {
+        } else {
             Alert::error('Error', 'Data Loket Gagal Tersimpan, silahkan coba secara berkala atau hubungi Developer');
         }
         return redirect()->route('loket.index');
@@ -108,19 +108,6 @@ class LoketController extends Controller
     {
         $encounter = Encounter::with('tindakan')->findOrFail($id);
         return view('pages.loket._tindakan_detail_table', compact('encounter'))->render();
-    }
-    // Bayar Tindakan
-    public function bayarTindakan(Request $request, $id)
-    {
-        $request->validate([
-            'metode_pembayaran' => 'required|string',
-        ]);
-        $encounter = $this->loketRepository->bayarTindakan($request, $id);
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Tindakan berhasil dibayar.',
-            'encounter' => $encounter
-        ]);
     }
     // Cetak struk tindakan
     public function cetakEncounter($id)

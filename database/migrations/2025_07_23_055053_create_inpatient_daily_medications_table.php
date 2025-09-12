@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('frequency')->nullable();
             $table->date('expiration_date')->nullable();
             $table->text('notes')->nullable();
-            $table->enum('status', ['Diajukan', 'Diberikan', 'Batal'])->default('Diajukan');
+            $table->enum('status', ['Diajukan', 'Diberikan', 'Batal', 'Disiapkan'])->default('Diajukan');
             $table->foreignId('authorized_by')->nullable()->constrained('users')->onDelete('set null');
             $table->string('authorized_name')->nullable();
             $table->foreignId('administered_by')->nullable()->constrained('users')->onDelete('set null');

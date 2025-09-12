@@ -60,7 +60,6 @@
                                         <th class="text-center">Tipe</th>
                                         <th class="text-center">Nama Dokter</th>
                                         <th class="text-center">Nominal</th>
-                                        <th class="text-center">Diskon</th>
                                         <th class="text-center">Total</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center" style="width: 20%;">Aksi</th>
@@ -89,22 +88,10 @@
                                             </td>
                                             <td class="text-center">
                                                 <span
-                                                    class="text-danger fw-bold">{{ formatPrice($encounter->diskon_tindakan) }}
-                                                    ({{ $encounter->diskon_persen_tindakan }}%)
-                                                </span>
-                                            </td>
-                                            <td class="text-center">
-                                                <span
                                                     class="text-success fw-bold">{{ formatPrice($encounter->total_bayar_tindakan) }}</span>
                                             </td>
                                             <td class="text-center">
-                                                @if ($encounter->status_bayar_tindakan == 0)
-                                                    <span class="badge bg-warning">Belum Dibayar</span>
-                                                @elseif ($encounter->status_bayar_tindakan == 1)
-                                                    <span class="badge bg-success">Sudah Dibayar</span>
-                                                @else
-                                                    <span class="badge bg-danger">Batal</span>
-                                                @endif
+                                                <span class="badge bg-info">Selesai</span>
                                             </td>
                                             <td class="text-center">
                                                 <div class="btn-group">
@@ -117,29 +104,19 @@
                                                 </div>
                                                 {{-- button bayar --}}
                                                 <div class="btn-group">
-                                                    @if ($encounter->status_bayar_tindakan == 0)
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-success btn-bayar-tindakan"
-                                                            data-id="{{ $encounter->id }}"
-                                                            data-nama="{{ $encounter->name_pasien }}">
-                                                            <i class="ri-money-dollar-circle-line"></i> Bayar
-                                                        </button>
-                                                    @else
-                                                        {{-- Cetak Struk --}}
-                                                        <button type="button"
-                                                            class="btn btn-sm btn-primary btn-cetak-struk"
-                                                            data-id="{{ $encounter->id }}"
-                                                            data-nama="{{ $encounter->name_pasien }}">
-                                                            <i class="ri-printer-line"></i> Cetak Struk
-                                                        </button>
-                                                    @endif
+                                                    {{-- Cetak Struk --}}
+                                                    <button type="button" class="btn btn-sm btn-primary btn-cetak-struk"
+                                                        data-id="{{ $encounter->id }}"
+                                                        data-nama="{{ $encounter->name_pasien }}">
+                                                        <i class="ri-printer-line"></i> Cetak Struk
+                                                    </button>
                                                 </div>
                                             </td>
 
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center">Data tidak ada</td>
+                                            <td colspan="6" class="text-center">Data tidak ada</td>
                                         </tr>
                                     @endforelse
 
@@ -160,7 +137,8 @@
     <!-- Row ends -->
 
     <!-- Modal Dinamis -->
-    <div class="modal fade" id="modalTindakanDetail" tabindex="-1" aria-labelledby="modalTindakanDetailLabel" aria-hidden="true">
+    <div class="modal fade" id="modalTindakanDetail" tabindex="-1" aria-labelledby="modalTindakanDetailLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -198,60 +176,6 @@
             }).fail(function() {
                 $('#modalTindakanDetailBody').html(
                     '<div class="text-danger text-center">Gagal memuat data.</div>');
-            });
-        });
-        $(document).on('click', '.btn-bayar-tindakan', function() {
-            var id = $(this).data('id');
-            var nama = $(this).data('nama');
-            Swal.fire({
-                title: 'Konfirmasi Pembayaran',
-                text: 'Pilih metode pembayaran untuk ' + nama,
-                icon: 'question',
-                input: 'select',
-                inputOptions: {
-                    'Tunai': 'Tunai',
-                    'Debit': 'Debit',
-                    'QRIS': 'QRIS',
-                    'Transfer': 'Transfer'
-                },
-                inputPlaceholder: 'Pilih metode pembayaran',
-                showCancelButton: true,
-                confirmButtonText: 'Bayar',
-                cancelButtonText: 'Batal',
-                inputValidator: (value) => {
-                    if (!value) {
-                        return 'Silakan pilih metode pembayaran!';
-                    }
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.post("{{ url('loket/encounter') }}/" + id + "/bayar", {
-                        _token: '{{ csrf_token() }}',
-                        metode_pembayaran: result.value
-                    }, function(res) {
-                        if (res.status == 'success') {
-                            Swal.fire({
-                                title: 'Berhasil',
-                                text: res.message,
-                                icon: 'success'
-                            }).then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Gagal',
-                                text: res.message,
-                                icon: 'error'
-                            });
-                        }
-                    }).fail(function() {
-                        Swal.fire({
-                            title: 'Gagal',
-                            text: 'Terjadi kesalahan saat memproses pembayaran.',
-                            icon: 'error'
-                        });
-                    });
-                }
             });
         });
         $(document).on('click', '.btn-cetak-struk', function() {

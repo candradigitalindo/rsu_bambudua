@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\AntrianController;
+use App\Http\Controllers\ApotekController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\CategoryRuanganController;
 use App\Http\Controllers\DokterController;
@@ -205,11 +206,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'addStock'])->name('product.addStock');
         Route::post('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'storeStock'])->name('product.storeStock');
         Route::get('/products/getAllHistori', [\App\Http\Controllers\ProductController::class, 'getHistori'])->name('product.getAllHistori');
-        // ambil encounter
-        Route::get('/encounter', [\App\Http\Controllers\ApotekController::class, 'getEncounter'])->name('apotek.getEncounter');
-        Route::get('resep-detail/{id}', [\App\Http\Controllers\ApotekController::class, 'resepDetailAjax']);
-        Route::post('/encounter/{id}/bayar', [\App\Http\Controllers\ApotekController::class, 'bayarResep'])->name('apotek.bayarResep');
-        Route::get('/encounter/{id}/cetak', [\App\Http\Controllers\ApotekController::class, 'cetakResep'])->name('apotek.cetakResep');
+        // Permintaan Obat Inap
+        Route::get('/permintaan-inap', [ApotekController::class, 'permintaanObatInap'])->name('apotek.permintaan-inap');
+        Route::get('/permintaan-inap/detail/{id}', [ApotekController::class, 'permintaanObatInapDetail'])->name('apotek.permintaan-inap.detail');
+        Route::get('/permintaan-inap/detail-grouped/{admissionId}', [ApotekController::class, 'permintaanObatInapDetailGrouped'])->name('apotek.permintaan-inap.detail-grouped');
+        Route::post('/permintaan-inap/siapkan/{id}', [ApotekController::class, 'siapkanObatInap'])->name('apotek.siapkan-inap');
+        // Route untuk Penyiapan Resep (Rawat Jalan & Pulang)
+        Route::get('/penyiapan-resep', [ApotekController::class, 'penyiapanResepIndex'])->name('apotek.penyiapan-resep');
+        Route::get('/penyiapan-resep/detail/{id}', [ApotekController::class, 'penyiapanResepDetail'])->name('apotek.penyiapan-resep.detail');
+        Route::post('/penyiapan-resep/siapkan/{id}', [ApotekController::class, 'siapkanResep'])->name('apotek.penyiapan-resep.siapkan');
+        Route::post('/penyiapan-resep/siapkan-item/{id}', [ApotekController::class, 'siapkanItemResep'])->name('apotek.penyiapan-resep.siapkan-item');
+        Route::post('/penyiapan-resep/batalkan/{id}', [ApotekController::class, 'batalkanResep'])->name('apotek.penyiapan-resep.batalkan');
+
 
         Route::get('transaksi-resep/pdf', [\App\Http\Controllers\ApotekController::class, 'exportPdf'])->name('apotek.transaksi-resep.pdf');
         Route::get('transaksi-resep/excel', [\App\Http\Controllers\ApotekController::class, 'exportExcel'])->name('apotek.transaksi-resep.excel');
@@ -218,8 +226,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\LoketController::class, 'dashboard'])->name('loket.dashboard');
         Route::get('/encounter', [\App\Http\Controllers\LoketController::class, 'getEncounter'])->name('loket.getEncounter');
         Route::get('tindakan-detail/{id}', [\App\Http\Controllers\LoketController::class, 'tindakanAjax']);
-        // bayar tindakan
-        Route::post('/encounter/{id}/bayar', [\App\Http\Controllers\LoketController::class, 'bayarTindakan'])->name('loket.bayarTindakan');
         Route::get('/encounter/{id}/cetak', [\App\Http\Controllers\LoketController::class, 'cetakEncounter'])->name('loket.cetakEncounter');
         // PDF
         Route::get('transaksi-tindakan/pdf', [\App\Http\Controllers\LoketController::class, 'exportPdf'])->name('loket.transaksi-tindakan.pdf');

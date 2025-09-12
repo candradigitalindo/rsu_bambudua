@@ -371,10 +371,7 @@ class ObservasiRepository
     public function getDiagnosis($id)
     {
         $diagnosis = \App\Models\Diagnosis::where('encounter_id', $id)->get();
-        if ($diagnosis->isEmpty()) {
-            return null; // Jika tidak ada data diagnosis
-        }
-        return $diagnosis;
+        return $diagnosis; // Selalu kembalikan koleksi, meskipun kosong
     }
     // Post diagnosis
     public function postDiagnosis($request, $id)
@@ -958,11 +955,12 @@ class ObservasiRepository
         $inpatientDailyMedication->administered_by = \Illuminate\Support\Facades\Auth::user()->id;
         $inpatientDailyMedication->administered_name = \Illuminate\Support\Facades\Auth::user()->name;
         $inpatientDailyMedication->administered_at = now();
+        $inpatientDailyMedication->is_billing = 'Ya'; // Tandai untuk penagihan
         $inpatientDailyMedication->save();
 
         return [
             'success' => true,
-            'message' => 'Status obat harian berhasil diperbarui.'
+            'message' => 'Status obat berhasil diperbarui.'
         ];
     }
 

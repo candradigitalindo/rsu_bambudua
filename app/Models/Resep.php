@@ -15,6 +15,7 @@ class Resep extends Model
         'masa_pemakaian_hari',
         'dokter',
         'catatan',
+        'status', // Tambahkan status ke fillable
     ];
     // encounter
     public function encounter()
@@ -24,5 +25,31 @@ class Resep extends Model
     public function details()
     {
         return $this->hasMany(ResepDetail::class);
+    }
+
+    /**
+     * Get the overall status of the prescription.
+     *
+     * @return string
+     */
+    public function getStatusAttribute()
+    {
+        // Pastikan relasi 'details' sudah dimuat untuk menghindari N+1 query
+        if (!$this->relationLoaded('details')) {
+            $this->load('details');
+        }
+
+        // Cek apakah ada detail yang masih 'Diajukan'
+        if ($this->details->contains('status', 'Diajukan')) {
+            return 'Diajukan';
+        }
+
+        // Jika tidak ada yang 'Diajukan' dan ada detail, berarti semua sudah diproses
+        if ($this->details->isNotEmpty()) {
+            return 'Disiapkan';
+        }
+
+        // Default jika tidak ada detail atau kondisi lain
+        return 'Tidak Ada Item';
     }
 }

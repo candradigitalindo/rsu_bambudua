@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\HomeRepository; // Tetap digunakan untuk profile
 use App\Repositories\WilayahRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
@@ -22,6 +23,28 @@ class HomeController extends Controller
     }
     public function index()
     {
+        $userRole = Auth::user()->role;
+        switch ($userRole) {
+            case 1: // Owner
+            case 4: // Admin
+                // Lanjutkan untuk menampilkan dashboard owner
+                break;
+            case 2: // Dokter
+            case 3: // Perawat
+                return redirect()->route('dokter.index');
+            case 5: // Pendaftaran
+                return redirect()->route('loket.dashboard');
+            case 6: // Keuangan
+                return redirect()->route('keuangan.index');
+            case 7: // Apotek
+                return redirect()->route('apotek.dashboard');
+            case 10: // Kasir
+                return redirect()->route('kasir.index');
+            default:
+                // Arahkan ke halaman profil jika tidak ada dashboard khusus
+                return redirect()->route('home.profile', Auth::id());
+        }
+
         $currentMonth = now()->month;
         $currentYear = now()->year;
 

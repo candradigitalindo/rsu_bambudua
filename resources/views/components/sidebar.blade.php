@@ -26,7 +26,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [5, 4]))
+            @if (in_array(auth()->user()->role, [5, 4, 1]))
                 <li
                     class="treeview {{ request()->is('pendaftaran*') || request()->is('loket*') ? 'active current-page' : '' }}">
                     <a href="#">
@@ -115,7 +115,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [2, 3, 4]))
+            @if (in_array(auth()->user()->role, [2, 3, 4, 1]))
                 <li class="treeview {{ request()->is('kunjungan*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-dossier-line"></i>
@@ -178,7 +178,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [10, 4]))
+            @if (in_array(auth()->user()->role, [10, 4, 1]))
                 <li class="treeview {{ request()->is('kasir*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-bank-card-line"></i>
@@ -194,7 +194,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [7, 4]))
+            @if (in_array(auth()->user()->role, [7, 4, 1]))
                 <li class="treeview {{ request()->is('apotek*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-medicine-bottle-line"></i>

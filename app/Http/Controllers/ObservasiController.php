@@ -119,6 +119,13 @@ class ObservasiController extends Controller
             'data' => $result
         ]);
     }
+    public function printPemeriksaanPenunjang($id)
+    {
+        $pemeriksaan = \App\Models\PemeriksaanPenunjang::findOrFail($id);
+        $encounter = \App\Models\Encounter::findOrFail($pemeriksaan->encounter_id);
+        $pasien = \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+        return view('pages.observasi.pemeriksaan_penunjang_print', compact('pemeriksaan', 'encounter', 'pasien'));
+    }
 
     // ambil data tindakan
     public function getTindakan($id)

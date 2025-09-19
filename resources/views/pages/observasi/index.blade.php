@@ -376,6 +376,7 @@
                                                                 <tr>
                                                                     <th>Jenis Pemeriksaan</th>
                                                                     <th>Hasil</th>
+                                                                    <th>Dokumen</th>
                                                                     <th class="text-center">Aksi</th>
                                                                 </tr>
                                                             </thead>
@@ -601,17 +602,49 @@
                                                             value="{{ old('product_apotek_id') }}">
 
                                                     </div>
-                                                    <label class="form-label mt-3" for="a2">Jumlah</label>
-                                                    <div class="input-group">
-                                                        <input type="number" class="form-control" id="qty_obat"
-                                                            name="qty_obat" value="{{ old('qty_obat', 1) }}">
-                                                        <p class="text-danger">{{ $errors->first('qty_obat') }}</p>
+                                                    <div class="row gx-2 mt-3">
+                                                        <div class="col-md-6">
+                                                            <label class="form-label" for="qty_obat">Jumlah</label>
+                                                            <input type="number" class="form-control" id="qty_obat"
+                                                                name="qty_obat" value="{{ old('qty_obat', 1) }}">
+                                                            <p class="text-danger">{{ $errors->first('qty_obat') }}</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <label class="form-label" for="aturan_pakai_jumlah">Aturan
+                                                                Pakai</label>
+                                                            <div class="input-group">
+                                                                <input type="number" class="form-control"
+                                                                    id="aturan_pakai_jumlah" value="1">
+                                                                <select class="form-select" id="aturan_pakai_frekuensi">
+                                                                    <option value="x Sehari">x Sehari</option>
+                                                                    <option value="x Seminggu">x Seminggu</option>
+                                                                    <option value="x Sebulan">x Sebulan</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <label class="form-label mt-3" for="a2">Aturan Pakai</label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="aturan_pakai"
-                                                            name="aturan_pakai" value="{{ old('aturan_pakai') }}">
-                                                        <p class="text-danger">{{ $errors->first('aturan_pakai') }}</p>
+                                                    <div class="mt-3">
+                                                        <label class="form-label">Waktu Pemberian</label>
+                                                        <div class="d-flex flex-wrap gap-3">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                    value="Pagi" id="waktu_pagi">
+                                                                <label class="form-check-label"
+                                                                    for="waktu_pagi">Pagi</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                    value="Siang" id="waktu_siang">
+                                                                <label class="form-check-label"
+                                                                    for="waktu_siang">Siang</label>
+                                                            </div>
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                    value="Malam" id="waktu_malam">
+                                                                <label class="form-check-label"
+                                                                    for="waktu_malam">Malam</label>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                     <div class="d-flex gap-2 justify-content-end mt-4">
                                                         <button type="submit" class="btn btn-primary"
@@ -1095,11 +1128,26 @@
                         tbody.empty(); // Clear existing rows
                         $.each(data, function(index, item) {
                             tbody.append(
-                                `<tr>
+                                `
+                                <tr>
                                         <td>${item.jenis_pemeriksaan}</td>
                                         <td>${item.hasil_pemeriksaan}</td>
+                                        <td>
+                                            ${item.dokumen_pemeriksaan ?
+                                                `<a href="${item.dokumen_pemeriksaan}" target="_blank" class="btn btn-sm btn-info">Lihat Dokumen</a>` :
+                                                'Tidak ada'}
+                                        </td>
                                         <td class="text-center">
-                                            <button class="btn btn-danger btn-sm btn-hapus-pemeriksaan" data-id="${item.id}">
+                                            <a href="{{ url('observasi/pemeriksaan-penunjang/print') }}/${item.id}"
+                                               target="_blank"
+                                               class="btn btn-sm btn-secondary">
+                                                <i class="ri-printer-line"></i> Cetak Hasil
+                                            </a>
+                                            <button
+                                                class="btn btn-danger btn-sm btn-hapus-pemeriksaan"
+                                                data-id="${item.id}"
+                                                style="margin-left: 5px;"
+                                            >
                                                 <i class="bi bi-trash"></i> Hapus
                                             </button>
                                         </td>
@@ -1114,6 +1162,30 @@
                     }
                 });
             });
+
+            // Auto-fill editor for Ekokardiografi
+            $('#jenis_pemeriksaan').on('change', function() {
+                if ($(this).val() === 'Ekokardiografi') {
+                    const template = `
+                        <p><strong>Dimensi Ruang Jantung:</strong></p>
+                        <ul>
+                            <li>LA: ... cm</li>
+                            <li>LV EDD: ... cm, LV ESD: ... cm</li>
+                            <li>IVS: ... cm, LVPW: ... cm</li>
+                        </ul>
+                        <p><strong>Fungsi Sistolik Ventrikel Kiri:</strong></p>
+                        <ul>
+                            <li>EF (Teich): ... %</li>
+                            <li>Kontraktilitas: ...</li>
+                        </ul>
+                        <p><strong>Fungsi Diastolik:</strong> ...</p>
+                        <p><strong>Analisis Katup:</strong> ...</p>
+                        <p><strong>Kesan:</strong> ...</p>
+                    `;
+                    quill.root.innerHTML = template;
+                }
+            });
+
 
             // Event delegation untuk tombol hapus
             $('#tbody-pendukung').on('click', '.btn-hapus-pemeriksaan', function() {
@@ -1717,19 +1789,31 @@
             $("#btn-tambah-obat").click(function(e) {
                 e.preventDefault();
                 // validasi input
-                let product_apotek_id = $("#product_apotek_id").val();
-                let qty_obat = $("#qty_obat").val();
-                let aturan_pakai = $("#aturan_pakai").val();
+                const product_apotek_id = $("#product_apotek_id").val();
+                const qty_obat = $("#qty_obat").val();
+                const aturan_jumlah = $("#aturan_pakai_jumlah").val();
+                const aturan_frekuensi = $("#aturan_pakai_frekuensi").val();
+
+                let waktu_pemberian = [];
+                if ($('#waktu_pagi').is(':checked')) waktu_pemberian.push('Pagi');
+                if ($('#waktu_siang').is(':checked')) waktu_pemberian.push('Siang');
+                if ($('#waktu_malam').is(':checked')) waktu_pemberian.push('Malam');
+
+                let aturan_pakai = `${aturan_jumlah} ${aturan_frekuensi}`;
+                if (waktu_pemberian.length > 0) {
+                    aturan_pakai += ` (${waktu_pemberian.join(', ')})`;
+                }
+
                 if (product_apotek_id == '') {
                     alert("Obat tidak boleh kosong");
                     return;
                 }
-                if (qty_obat == '') {
+                if (qty_obat == '' || parseInt(qty_obat) <= 0) {
                     alert("Jumlah tidak boleh kosong");
                     return;
                 }
-                if (aturan_pakai == '') {
-                    alert("Aturan pakai tidak boleh kosong");
+                if (aturan_jumlah == '' || parseInt(aturan_jumlah) <= 0) {
+                    alert("Aturan pakai harus diisi dengan benar.");
                     return;
                 }
                 // Tampilkan spinner dan disable tombol

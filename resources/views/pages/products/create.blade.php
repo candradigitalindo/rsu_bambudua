@@ -11,6 +11,7 @@
             /* And disable the pointer events */
             pointer-events: none;
         }
+
         /* Pastikan Select2 full width seperti input lain */
         .select2-container--default .select2-selection--single {
             height: 38px;
@@ -18,12 +19,15 @@
             border: 1px solid #ced4da;
             border-radius: 0.375rem;
         }
+
         .select2-container {
             width: 100% !important;
         }
+
         .select2-selection__rendered {
             line-height: 24px;
         }
+
         .select2-selection__arrow {
             height: 36px;
         }
@@ -41,8 +45,8 @@
                         @csrf
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Produk</label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                   id="name" name="name" value="{{ old('name') }}" required autofocus>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
+                                name="name" value="{{ old('name') }}" required autofocus>
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -50,10 +54,11 @@
                         <div class="mb-3">
                             <label for="category_id" class="form-label">Kategori</label>
                             <select class="form-select @error('category_id') is-invalid @enderror" id="category_id"
-                                    name="category_id" required>
+                                name="category_id" required>
                                 <option value="" disabled selected>Pilih Kategori</option>
                                 @foreach ($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                    <option value="{{ $category->id }}"
+                                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
                                         {{ $category->name }}</option>
                                 @endforeach
                             </select>
@@ -64,8 +69,8 @@
 
                         <div class="mb-3">
                             <label for="satuan" class="form-label">Satuan</label>
-                            <input type="text" class="form-control @error('satuan') is-invalid @enderror"
-                                   id="satuan" name="satuan" value="{{ old('satuan') }}" required>
+                            <input type="text" class="form-control @error('satuan') is-invalid @enderror" id="satuan"
+                                name="satuan" value="{{ old('satuan') }}" required>
                             @error('satuan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -73,8 +78,8 @@
 
                         <div class="mb-3">
                             <label for="harga" class="form-label">Harga</label>
-                            <input type="text" class="form-control @error('harga') is-invalid @enderror"
-                                   id="harga" name="harga" value="{{ old('harga') }}" required>
+                            <input type="text" class="form-control @error('harga') is-invalid @enderror" id="harga"
+                                name="harga" value="{{ old('harga') }}" required>
                             @error('harga')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -82,8 +87,8 @@
                         {{-- column Select type --}}
                         <div class="mb-3">
                             <label for="type" class="form-label">Tipe</label>
-                            <select class="form-select @error('type') is-invalid @enderror" id="type"
-                                    name="type" required>
+                            <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
+                                required>
                                 <option value="" disabled selected>Pilih Tipe</option>
                                 <option value="0" {{ old('type') == 0 ? 'selected' : '' }}>Obat Resep</option>
                                 <option value="1" {{ old('type') == 1 ? 'selected' : '' }}>Non Resep</option>
@@ -96,11 +101,12 @@
                         {{-- column select apakah ada expired --}}
                         <div class="mb-3">
                             <label for="expired" class="form-label">Expired</label>
-                            <select class="form-select @error('expired') is-invalid @enderror" id="expired"
-                                    name="expired" required>
+                            <select class="form-select @error('expired') is-invalid @enderror" id="expired" name="expired"
+                                required>
                                 <option value="" disabled selected>Pilih Expired</option>
                                 <option value="0" {{ old('expired') == 0 ? 'selected' : '' }}>Ada Expired</option>
-                                <option value="1" {{ old('expired') == 1 ? 'selected' : '' }}>Tidak Ada Expired</option>
+                                <option value="1" {{ old('expired') == 1 ? 'selected' : '' }}>Tidak Ada Expired
+                                </option>
                             </select>
                             @error('expired')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -110,18 +116,30 @@
                         <div class="mb-3">
                             <label for="warning_stok" class="form-label">Warning Stok</label>
                             <input type="number" class="form-control @error('warning_stok') is-invalid @enderror"
-                                   id="warning_stok" name="warning_stok" value="{{ old('warning_stok') }}" required>
+                                id="warning_stok" name="warning_stok" value="{{ old('warning_stok') }}" required>
                             @error('warning_stok')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        {{-- input warning expired --}}
+                        <div class="mb-3" id="expired_warning_group" style="display: none;">
+                            <label for="expired_warning" class="form-label">Warning Expired (Hari)</label>
+                            <input type="number" class="form-control @error('expired_warning') is-invalid @enderror"
+                                id="expired_warning" name="expired_warning" value="{{ old('expired_warning', 30) }}"
+                                required>
+                            @error('expired_warning')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('products.index') }}" class="btn btn-secondary" id="btnKembaliProduk">
-                                <span class="spinner-border spinner-border-sm d-none" id="spinnerKembaliProduk" role="status" aria-hidden="true"></span>
+                                <span class="spinner-border spinner-border-sm d-none" id="spinnerKembaliProduk"
+                                    role="status" aria-hidden="true"></span>
                                 <span id="textKembaliProduk">Kembali</span>
                             </a>
                             <button type="submit" class="btn btn-primary" id="btnSimpanProduk">
-                                <span class="spinner-border spinner-border-sm d-none" id="spinnerSimpanProduk" role="status" aria-hidden="true"></span>
+                                <span class="spinner-border spinner-border-sm d-none" id="spinnerSimpanProduk"
+                                    role="status" aria-hidden="true"></span>
                                 <span id="textSimpanProduk">Simpan</span>
                             </button>
                         </div>
@@ -148,7 +166,7 @@
             const btnSimpan = document.getElementById('btnSimpanProduk');
             const spinnerSimpan = document.getElementById('spinnerSimpanProduk');
             const textSimpan = document.getElementById('textSimpanProduk');
-            if(btnSimpan) {
+            if (btnSimpan) {
                 btnSimpan.form.addEventListener('submit', function() {
                     btnSimpan.disabled = true;
                     spinnerSimpan.classList.remove('d-none');
@@ -159,12 +177,31 @@
             const btnKembali = document.getElementById('btnKembaliProduk');
             const spinnerKembali = document.getElementById('spinnerKembaliProduk');
             const textKembali = document.getElementById('textKembaliProduk');
-            if(btnKembali) {
+            if (btnKembali) {
                 btnKembali.addEventListener('click', function() {
                     spinnerKembali.classList.remove('d-none');
                     textKembali.textContent = 'Loading...';
                 });
             }
+
+            // Toggle visibility of expired_warning based on expired dropdown
+            const expiredSelect = document.getElementById('expired');
+            const expiredWarningGroup = document.getElementById('expired_warning_group');
+            const expiredWarningInput = document.getElementById('expired_warning');
+
+            function toggleExpiredWarning() {
+                if (expiredSelect.value === '0') { // '0' is for "Ada Expired"
+                    expiredWarningGroup.style.display = 'block';
+                    expiredWarningInput.required = true;
+                } else {
+                    expiredWarningGroup.style.display = 'none';
+                    expiredWarningInput.required = false;
+                }
+            }
+
+            expiredSelect.addEventListener('change', toggleExpiredWarning);
+            // Initial check on page load
+            toggleExpiredWarning();
         });
         // Funngsi format rupiah waktu kolom harga diketik
         function formatRupiah(angka, prefix) {

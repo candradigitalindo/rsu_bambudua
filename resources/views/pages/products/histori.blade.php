@@ -3,6 +3,7 @@
 @push('style')
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
+
     <style>
         a.disabled {
             /* Make the disabled links grayish*/
@@ -33,14 +34,22 @@
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    <form method="GET" action="{{ route('product.getAllHistori') }}" class="mb-3">
-                        <div class="row g-2 align-items-center">
-                            <div class="col-auto">
+                    <form method="GET" class="mb-4">
+                        <div class="row gx-2 gy-2 align-items-center">
+                            <div class="col-md-4">
                                 <input type="text" name="search" class="form-control"
                                     placeholder="Cari nama/kode produk..." value="{{ request('search') }}">
                             </div>
-                            <div class="col-auto">
-                                <button type="submit" class="btn btn-outline-primary btn-sm">Cari</button>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" name="start_date"
+                                    value="{{ request('start_date', now()->subMonth()->toDateString()) }}">
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" class="form-control" name="end_date"
+                                    value="{{ request('end_date', now()->toDateString()) }}">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">Filter</button>
                             </div>
                         </div>
                     </form>
@@ -86,28 +95,30 @@
                                 @endforelse
                             </tbody>
                         </table>
+                        <div class="mt-3">
+                            {{ $historis->appends(request()->query())->links() }}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    @push('scripts')
-        <!-- Overlay Scroll JS -->
-        <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-        <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-        <script src="{{ asset('js/custom.js') }}"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const btnKembali = document.getElementById('btnKembaliProduk');
-                const spinnerKembali = document.getElementById('spinnerKembaliProduk');
-                const textKembali = document.getElementById('textKembaliProduk');
-                if (btnKembali) {
-                    btnKembali.addEventListener('click', function() {
-                        spinnerKembali.classList.remove('d-none');
-                        textKembali.textContent = 'Loading...';
-                    });
-                }
-            });
-        </script>
-    @endpush
 @endsection
+@push('scripts')
+    <!-- Overlay Scroll JS -->
+    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
+    <script src="{{ asset('js/custom.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnKembali = document.getElementById('btnKembaliProduk');
+            const spinnerKembali = document.getElementById('spinnerKembaliProduk');
+            const textKembali = document.getElementById('textKembaliProduk');
+            if (btnKembali) {
+                btnKembali.addEventListener('click', function() {
+                    spinnerKembali.classList.remove('d-none');
+                    textKembali.textContent = 'Loading...';
+                });
+            }
+        });
+    </script>
+@endpush

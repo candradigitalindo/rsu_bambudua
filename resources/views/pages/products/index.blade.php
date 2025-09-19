@@ -24,7 +24,8 @@
                                 aria-hidden="true"></span>
                             <span id="textTambahProduk">Tambah Produk</span>
                         </a>
-                        <a href="{{ route('product.getAllHistori') }}" class="btn btn-outline-primary ms-2" id="btnHistoriProduk">
+                        <a href="{{ route('product.getAllHistori') }}" class="btn btn-outline-primary ms-2"
+                            id="btnHistoriProduk">
                             <span class="spinner-border spinner-border-sm d-none" id="spinnerHistoriProduk" role="status"
                                 aria-hidden="true"></span>
                             <span id="textHistoriProduk">Histori Produk</span>
@@ -41,10 +42,24 @@
                     @endif
 
                     <form method="GET" class="mb-3">
-                        <div class="input-group">
-                            <input type="text" name="search" class="form-control" placeholder="Cari produk..."
-                                value="{{ request('search') }}">
-                            <button class="btn btn-primary" type="submit">Cari</button>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <input type="text" name="search" class="form-control" placeholder="Cari nama produk..."
+                                    value="{{ request('search') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <select name="category_id" class="form-select">
+                                    <option value="">Semua Kategori</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}"
+                                            {{ request('category_id') == $category->id ? 'selected' : '' }}>
+                                            {{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" type="submit">Filter</button>
+                            </div>
                         </div>
                     </form>
 
@@ -82,18 +97,21 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($product->expired_count > 0)
-                                                <span class="badge bg-warning text-dark">
-                                                    Akan Expired: {{ $product->expired_count }}
-                                                </span>
-                                            @endif
-                                            @if ($product->expired_past_count > 0)
-                                                <span class="badge bg-danger ms-1">
-                                                    Expired: {{ $product->expired_past_count }}
-                                                </span>
-                                            @endif
-                                            @if ($product->expired_count == 0 && $product->expired_past_count == 0)
-                                                <span class="badge bg-success">Aman</span>
+                                            @if ($product->expired == 0)
+                                                @if ($product->expired_count > 0)
+                                                    <span class="badge bg-warning text-dark">
+                                                        Akan Expired ({{ $product->expired_warning }} hari):
+                                                        {{ $product->expired_count }}
+                                                    </span>
+                                                @endif
+                                                @if ($product->expired_past_count > 0)
+                                                    <span class="badge bg-danger ms-1">
+                                                        Expired: {{ $product->expired_past_count }}
+                                                    </span>
+                                                @endif
+                                                @if ($product->expired_count == 0 && $product->expired_past_count == 0)
+                                                    <span class="badge bg-success">Aman</span>
+                                                @endif
                                             @endif
                                         </td>
                                         <td>

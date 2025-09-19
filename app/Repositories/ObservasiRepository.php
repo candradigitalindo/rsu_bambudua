@@ -55,7 +55,7 @@ class ObservasiRepository
         $dokter_terpilih = Practitioner::where('encounter_id', $id)->first();
 
         // Ambil semua user role dokter
-        $dokters = \App\Models\User::where('role', 2)->get();
+        $dokters = \App\Models\User::whereIn('role', [1, 2, 4])->get(); // Owner, Dokter, Admin
 
         // Jika ada dokter terpilih, letakkan di urutan pertama (untuk dropdown selected)
         if ($dokter_terpilih) {

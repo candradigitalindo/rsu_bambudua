@@ -21,6 +21,11 @@ class ProductRepository
         if (request('search')) {
             $query->where('name', 'like', '%' . request('search') . '%');
         }
+
+        // Filter berdasarkan kategori
+        if (request('category_id')) {
+            $query->where('category_id', request('category_id'));
+        }
         // Count ProductApotek yang akan expired 30 hari lagi berdasarkan data apotekStok
         $query->withCount([
             'apotekStok as expired_count' => function ($q) {
@@ -49,17 +54,21 @@ class ProductRepository
     // Tambah produk baru
     public function create(array $data)
     {
-        // Generate kode otomatis unik
-        $maxTry = 100;
-        $try = 0;
-        do {
-            $last = ProductApotek::orderBy('id', 'desc')->first();
-            $nextId = $last ? ((int) $last->id + 1 + $try) : 1 + $try;
-            $kode = 'PRD-' . date('Ymd') . '-' . str_pad($nextId, 4, '0', STR_PAD_LEFT);
-            $exists = ProductApotek::where('code', $kode)->exists();
-            $try++;
-        } while ($exists && $try < $maxTry);
-        $data['code'] = $kode;
+        // Generate kode produk baru berdasarkan 2 huruf pertama nama produk
+        $productName = $data['name'] ?? '';
+        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $productName), 0, 2));
+
+        // Cari produk terakhir dengan prefix yang sama untuk mendapatkan nomor urut berikutnya
+        $lastProduct = ProductApotek::where('code', 'like', $prefix . '-%')
+            ->orderBy('code', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastProduct) {
+            $lastNumber = (int) substr($lastProduct->code, strrpos($lastProduct->code, '-') + 1);
+            $nextNumber = $lastNumber + 1;
+        }
+        $data['code'] = $prefix . '-' . $nextNumber;
 
         // Pastikan harga hanya angka (integer)
         if (isset($data['harga'])) {
@@ -184,12 +193,24 @@ class ProductRepository
     // Ambil histori semua produk
     public function getHistori($perPage = 20)
     {
-        // Ambil histori tahun ini
-        $query = \App\Models\HistoriApotek::query()
-            ->whereYear('created_at', now()->year);
+        $query = \App\Models\HistoriApotek::query();
+
+        // Filter berdasarkan tanggal
+        $startDate = request('start_date');
+        $endDate = request('end_date');
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [\Carbon\Carbon::parse($startDate)->startOfDay(), \Carbon\Carbon::parse($endDate)->endOfDay()]);
+        } else {
+            // Default: tampilkan data 1 bulan terakhir
+            $query->where('created_at', '>=', now()->subMonth());
+        }
+
+        // Filter pencarian
         if (request('search')) {
             $query->whereHas('productApotek', function ($q) {
-                $q->where('name', 'like', '%' . request('search') . '%');
+                $q->where('name', 'like', '%' . request('search') . '%')
+                    ->orWhere('code', 'like', '%' . request('search') . '%');
             });
         }
         return $query->orderBy('created_at', 'desc')->paginate($perPage);

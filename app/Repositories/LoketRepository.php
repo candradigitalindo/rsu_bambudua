@@ -138,17 +138,11 @@ class LoketRepository
     {
         $today = now()->toDateString();
 
-        // Ambil rekam_medis encounter yang memenuhi kriteria H-3 dan H-7
+        // Ambil encounter yang masa resepnya akan habis dalam 7 hari
         $encounters = \App\Models\Encounter::with('resep')
             ->where('condition', $condition)
             ->whereHas('resep', function ($q) use ($today) {
-                $q->where(function ($sub) use ($today) {
-                    $sub->where('masa_pemakaian_hari', '<=', 7)
-                        ->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 3 DAY) = ?", [$today]);
-                })->orWhere(function ($sub) use ($today) {
-                    $sub->where('masa_pemakaian_hari', '>=', 14)
-                        ->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 7 DAY) = ?", [$today]);
-                });
+                $q->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 7 DAY) = ?", [$today]);
             })
             ->orderByDesc('created_at')
             ->get();

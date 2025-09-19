@@ -90,7 +90,8 @@
                         <div class="mb-3">
                             <label for="harga" class="form-label">Harga</label>
                             <input type="text" class="form-control @error('harga') is-invalid @enderror" id="harga"
-                                name="harga" value="{{ old('harga', number_format($product->harga, 0, ',', '.')) }}" required>
+                                name="harga" value="{{ old('harga', number_format($product->harga, 0, ',', '.')) }}"
+                                required>
                             @error('harga')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -105,6 +106,15 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+                        <div class="mb-3" id="expired_warning_group">
+                            <label for="expired_warning" class="form-label">Warning Expired (Hari)</label>
+                            <input type="number" class="form-control @error('expired_warning') is-invalid @enderror"
+                                id="expired_warning" name="expired_warning"
+                                value="{{ old('expired_warning', $product->expired_warning) }}">
+                            @error('expired_warning')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <div class="mb-3">
                             <label for="satuan" class="form-label">Satuan</label>
                             <input type="text" class="form-control @error('satuan') is-invalid @enderror" id="satuan"
@@ -115,12 +125,16 @@
                         </div>
                         <div class="mb-3">
                             <label for="type" class="form-label">Tipe</label>
-                            <select class="form-select @error('type') is-invalid @enderror" id="type"
-                                    name="type" required>
-                                <option value="" disabled {{ old('type', $product->type) === null ? 'selected' : '' }}>Pilih Tipe</option>
-                                <option value="0" {{ old('type', $product->type) == 0 ? 'selected' : '' }}>Obat Resep</option>
-                                <option value="1" {{ old('type', $product->type) == 1 ? 'selected' : '' }}>Non Resep</option>
-                                <option value="2" {{ old('type', $product->type) == 2 ? 'selected' : '' }}>Umum</option>
+                            <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
+                                required>
+                                <option value="" disabled
+                                    {{ old('type', $product->type) === null ? 'selected' : '' }}>Pilih Tipe</option>
+                                <option value="0" {{ old('type', $product->type) == 0 ? 'selected' : '' }}>Obat Resep
+                                </option>
+                                <option value="1" {{ old('type', $product->type) == 1 ? 'selected' : '' }}>Non Resep
+                                </option>
+                                <option value="2" {{ old('type', $product->type) == 2 ? 'selected' : '' }}>Umum
+                                </option>
                             </select>
                             @error('type')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -129,10 +143,14 @@
                         <div class="mb-3">
                             <label for="expired" class="form-label">Expired</label>
                             <select class="form-select @error('expired') is-invalid @enderror" id="expired"
-                                    name="expired" required>
-                                <option value="" disabled {{ old('expired', $product->expired) === null ? 'selected' : '' }}>Pilih Expired</option>
-                                <option value="0" {{ old('expired', $product->expired) == 0 ? 'selected' : '' }}>Ada Expired</option>
-                                <option value="1" {{ old('expired', $product->expired) == 1 ? 'selected' : '' }}>Tidak Ada Expired</option>
+                                name="expired" required>
+                                <option value="" disabled
+                                    {{ old('expired', $product->expired) === null ? 'selected' : '' }}>Pilih Expired
+                                </option>
+                                <option value="0" {{ old('expired', $product->expired) == 0 ? 'selected' : '' }}>Ada
+                                    Expired</option>
+                                <option value="1" {{ old('expired', $product->expired) == 1 ? 'selected' : '' }}>
+                                    Tidak Ada Expired</option>
                             </select>
                             @error('expired')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -141,7 +159,7 @@
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('products.index') }}" class="btn btn-secondary" id="btnKembaliProduk">
                                 <span class="spinner-border spinner-border-sm d-none" id="spinnerKembaliProduk"
-                                role="status" aria-hidden="true"></span>
+                                    role="status" aria-hidden="true"></span>
                                 <span id="textKembaliProduk">Kembali</span>
                             </a>
                             <button type="submit" class="btn btn-primary" id="btnSimpanProduk">
@@ -190,6 +208,25 @@
                     textKembali.textContent = 'Loading...';
                 });
             }
+
+            // Toggle visibility of expired_warning based on expired dropdown
+            const expiredSelect = document.getElementById('expired');
+            const expiredWarningGroup = document.getElementById('expired_warning_group');
+            const expiredWarningInput = document.getElementById('expired_warning');
+
+            function toggleExpiredWarning() {
+                if (expiredSelect.value === '0') { // '0' is for "Ada Expired"
+                    expiredWarningGroup.style.display = 'block';
+                    expiredWarningInput.required = true;
+                } else {
+                    expiredWarningGroup.style.display = 'none';
+                    expiredWarningInput.required = false;
+                }
+            }
+
+            expiredSelect.addEventListener('change', toggleExpiredWarning);
+            // Initial check on page load
+            toggleExpiredWarning();
         });
 
         function formatRupiah(angka, prefix) {

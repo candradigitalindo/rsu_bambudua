@@ -259,4 +259,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('insentif-manual', \App\Http\Controllers\IncentiveController::class)
             ->except(['show'])->names('keuangan.insentif');
     });
+
+    // Rute ini dipindah ke sini agar tidak terpengaruh oleh prefix 'kunjungan'
+    Route::get('/observasi/pemeriksaan-penunjang/print/{id}', [ObservasiController::class, 'printPemeriksaanPenunjang'])->name('observasi.printPemeriksaanPenunjang');
 });

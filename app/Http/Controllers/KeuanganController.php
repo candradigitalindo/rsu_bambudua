@@ -60,7 +60,10 @@ class KeuanganController extends Controller
         $grafikData = $this->getGrafikDataTahunan($currentYear);
 
         // 4. Ambil Berita Terbaru
-        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+        $beritaTerbaru = Berita::where('is_published', true)
+            ->where('created_at', '>=', now()->subMonth())
+            ->latest()
+            ->take(5)->get();
 
         return view('pages.keuangan.index', compact(
             'totalPendapatanBulanIni',

@@ -93,7 +93,10 @@ class HomeController extends Controller
         $grafikKunjungan = $this->getGrafikKunjungan();
 
         // 5. Ambil Berita Terbaru
-        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+        $beritaTerbaru = Berita::where('is_published', true)
+            ->where('created_at', '>=', now()->subMonth())
+            ->latest()
+            ->take(5)->get();
 
 
         return view('pages.dashboard.owner', compact(

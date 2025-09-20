@@ -26,7 +26,10 @@ class ApotekController extends Controller
     {
         $data = $this->apotekRepository->dashboard();
         // Ambil Berita Terbaru
-        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+        $beritaTerbaru = Berita::where('is_published', true)
+            ->where('created_at', '>=', now()->subMonth())
+            ->latest()
+            ->take(5)->get();
         return view('pages.apotek.dashboard', compact('data', 'beritaTerbaru'));
     }
     // PDF

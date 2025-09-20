@@ -109,18 +109,18 @@
                                                 <div class="icon-box md border border-primary rounded-5 mb-2 m-auto">
                                                     <i class="ri-dossier-fill fs-5 text-primary"></i>
                                                 </div>
-                                                <h3 class="text-primary">{{ $thisWeek_rawatDaurat }}</h3>
+                                                <h3 class="text-primary">{{ $thisWeek_rawatDarurat }}</h3>
                                                 <h6>IGD</h6>
                                                 @php
-                                                    $isUp_rawatDaurat = $percent_rawatDaurat >= 0;
+                                                    $isUp_rawatDarurat = $percent_rawatDarurat >= 0;
                                                 @endphp
-                                                <small class="{{ $isUp_rawatDaurat ? 'text-primary' : 'text-danger' }}">
-                                                    @if ($percent_rawatDaurat >= 0)
+                                                <small class="{{ $isUp_rawatDarurat ? 'text-primary' : 'text-danger' }}">
+                                                    @if ($percent_rawatDarurat >= 0)
                                                         <i class="ri-arrow-up-s-line text-primary"></i>
                                                     @else
                                                         <i class="ri-arrow-down-s-line text-danger"></i>
                                                     @endif
-                                                    {{ number_format(abs($percent_rawatDaurat), 0) }}%
+                                                    {{ number_format(abs($percent_rawatDarurat), 0) }}%
                                                     dari minggu lalu
                                                 </small>
                                             </div>
@@ -203,12 +203,9 @@
                     <h5 class="card-title">Pendapatan Tahun {{ date('Y') }}</h5>
                 </div>
                 <div class="card-body">
-
-                    <div class="scroll300">
-                        <div id="income"></div>
-                        <div class="mt-2 text-center">
-                            <span class="badge bg-primary">22%</span> income has increase that last year.
-                        </div>
+                    <div class="scroll300 text-center">
+                        <div id="grafikPendapatan"></div>
+                        <h5 class="mt-2">Total: {{ formatPrice($grafikPendapatan['total_tahun_ini']) }}</h5>
                     </div>
 
                 </div>
@@ -319,11 +316,6 @@
 
     <!-- Apex Charts -->
     <script src="{{ asset('vendor/apex/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/doc-dashboard/patients.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/doc-dashboard/appointments.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/doc-dashboard/gender.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/doc-dashboard/surgeries.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/doc-dashboard/income.js') }}"></script>
 
     <!-- Raty JS -->
     <script src="{{ asset('vendor/rating/raty.js') }}"></script>
@@ -537,6 +529,58 @@
             };
             var chartBulanan = new ApexCharts(document.querySelector("#grafikKunjunganBulanan"), optionsBulanan);
             chartBulanan.render();
+
+            // Grafik Pendapatan
+            var optionsPendapatan = {
+                chart: {
+                    height: 300,
+                    type: 'area',
+                    toolbar: {
+                        show: false,
+                    },
+                },
+                dataLabels: {
+                    enabled: false,
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 2,
+                },
+                series: @json($grafikPendapatan['series']),
+                xaxis: {
+                    categories: @json($grafikPendapatan['categories']),
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function(val) {
+                            if (val >= 1000000) {
+                                return (val / 1000000).toFixed(1) + ' Jt';
+                            } else if (val >= 1000) {
+                                return (val / 1000).toFixed(0) + ' Rb';
+                            }
+                            return val;
+                        }
+                    }
+                },
+                colors: ["#238781"],
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return "Rp " + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+                        },
+                    },
+                },
+                grid: {
+                    borderColor: '#f1f1f1',
+                    strokeDashArray: 5,
+                },
+            };
+
+            var chartPendapatan = new ApexCharts(
+                document.querySelector("#grafikPendapatan"),
+                optionsPendapatan
+            );
+            chartPendapatan.render();
         });
     </script>
 @endpush

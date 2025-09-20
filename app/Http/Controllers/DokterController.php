@@ -41,7 +41,7 @@ class DokterController extends Controller
         };
 
         // Helper closure untuk query InpatientTreatment
-        
+
         $countInpatient = function ($start, $end) use ($user) {
             return InpatientTreatment::where('performed_by', $user->id)
                 ->where('request_type', 'Visit')
@@ -63,9 +63,9 @@ class DokterController extends Controller
         $thisMonth_rawatJalan = $countPractitionerMonth(1);
 
         // Rawat Darurat (type 3)
-        $thisWeek_rawatDaurat = $countPractitioner(3, now()->startOfWeek(), now()->endOfWeek());
-        $lastWeek_rawatDaurat = $countPractitioner(3, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
-        $thisMonth_rawatDaurat = $countPractitionerMonth(3);
+        $thisWeek_rawatDarurat = $countPractitioner(3, now()->startOfWeek(), now()->endOfWeek());
+        $lastWeek_rawatDarurat = $countPractitioner(3, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
+        $thisMonth_rawatDarurat = $countPractitionerMonth(3);
 
         // Rawat Inap
         $thisWeek_inpatient = $countInpatient(now()->startOfWeek(), now()->endOfWeek());
@@ -81,9 +81,11 @@ class DokterController extends Controller
         };
 
         $percent_rawatJalan = $percent($thisWeek_rawatJalan, $lastWeek_rawatJalan);
-        $percent_rawatDaurat = $percent($thisWeek_rawatDaurat, $lastWeek_rawatDaurat);
+        $percent_rawatDarurat = $percent($thisWeek_rawatDarurat, $lastWeek_rawatDarurat);
         $percent_inpatient = $percent($thisWeek_inpatient, $lastWeek_inpatient);
         $grafik = $this->grafikTahunan(); // hasil: ['rawat_jalan'=>[...], 'rawat_darurat'=>[...], 'rawat_inap'=>[...]]
+        $grafikKunjungan = $this->getGrafikKunjungan();
+        $grafikPendapatan = $this->getGrafikPendapatan();
 
         return view('pages.dokter.index', compact(
             'user',
@@ -91,15 +93,17 @@ class DokterController extends Controller
             'lastWeek_rawatJalan',
             'thisMonth_rawatJalan',
             'percent_rawatJalan',
-            'thisWeek_rawatDaurat',
-            'lastWeek_rawatDaurat',
-            'thisMonth_rawatDaurat',
-            'percent_rawatDaurat',
+            'thisWeek_rawatDarurat',
+            'lastWeek_rawatDarurat',
+            'thisMonth_rawatDarurat',
+            'percent_rawatDarurat',
             'thisWeek_inpatient',
             'lastWeek_inpatient',
             'thisMonth_inpatient',
             'percent_inpatient',
-            'grafik'
+            'grafik',
+            'grafikKunjungan',
+            'grafikPendapatan'
         ));
     }
 
@@ -167,6 +171,101 @@ class DokterController extends Controller
             'total_encounter_tahun_ini' => $totalTahunIni,
             'total_encounter_tahun_lalu' => $totalTahunLalu,
             'persen_total_encounter' => $persen($totalTahunIni, $totalTahunLalu),
+        ];
+    }
+
+    private function getGrafikKunjungan()
+    {
+        $user = Auth::user();
+        $year = now()->year;
+        $month = now()->month;
+        $daysInMonth = now()->daysInMonth;
+
+        // Helper untuk rekap bulanan (index 1-12)
+        $rekapBulanan = function ($query, $year) {
+            $data = $query
+                ->whereYear('created_at', $year)
+                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+                ->groupBy('bulan')
+                ->pluck('total', 'bulan')
+                ->toArray();
+
+            return array_map(fn($i) => $data[$i] ?? 0, range(1, 12));
+        };
+
+        // Helper untuk rekap harian dalam sebulan
+        $rekapHarian = function ($query, $year, $month) use ($daysInMonth) {
+            $data = $query
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->selectRaw('DAY(created_at) as tanggal, COUNT(*) as total')
+                ->groupBy('tanggal')
+                ->pluck('total', 'tanggal')
+                ->toArray();
+
+            return array_map(fn($i) => $data[$i] ?? 0, range(1, $daysInMonth));
+        };
+
+        // Query dasar untuk practitioner
+        $practitionerQuery = Practitioner::where('id_petugas', $user->id_petugas);
+
+        // Data untuk Grafik Bulanan (1 Tahun)
+        $bulanan = [
+            'series' => [
+                ['name' => 'Rawat Jalan', 'data' => $rekapBulanan(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 1)), $year)],
+                ['name' => 'IGD', 'data' => $rekapBulanan(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 3)), $year)],
+            ],
+            'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+        ];
+
+        // Data untuk Grafik Harian (1 Bulan)
+        $harian = [
+            'series' => [
+                ['name' => 'Rawat Jalan', 'data' => $rekapHarian(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 1)), $year, $month)],
+                ['name' => 'IGD', 'data' => $rekapHarian(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 3)), $year, $month)],
+            ],
+            'categories' => range(1, $daysInMonth),
+        ];
+
+        return ['bulanan' => $bulanan, 'harian' => $harian];
+    }
+
+    private function getGrafikPendapatan()
+    {
+        $user = Auth::user();
+        $year = now()->year;
+
+        // Helper untuk rekap pendapatan bulanan
+        $rekapPendapatanBulanan = function ($query, $year) {
+            $data = $query
+                ->whereYear('created_at', $year)
+                ->selectRaw('MONTH(created_at) as bulan, SUM(total) as total')
+                ->groupBy('bulan')
+                ->pluck('total', 'bulan')
+                ->toArray();
+
+            return array_map(fn($i) => (int)($data[$i] ?? 0), range(1, 12));
+        };
+
+        // Query untuk pendapatan dari tindakan (InpatientTreatment dengan tipe 'Tindakan')
+        $queryPendapatanTindakan = InpatientTreatment::where('performed_by', $user->id)
+            ->where('request_type', 'Tindakan');
+        $pendapatanTindakan = $rekapPendapatanBulanan(clone $queryPendapatanTindakan, $year);
+
+        // Query untuk pendapatan dari visit rawat inap (InpatientTreatment)
+        $queryPendapatanVisit = InpatientTreatment::where('performed_by', $user->id) // Asumsi 'fee' ada di InpatientTreatment
+            ->where('request_type', 'Visit');
+        $pendapatanVisit = $rekapPendapatanBulanan(clone $queryPendapatanVisit, $year);
+
+        // Gabungkan data pendapatan
+        $totalPendapatan = array_map(fn($tindakan, $visit) => $tindakan + $visit, $pendapatanTindakan, $pendapatanVisit);
+
+        return [
+            'series' => [
+                ['name' => 'Pendapatan', 'data' => $totalPendapatan],
+            ],
+            'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+            'total_tahun_ini' => array_sum($totalPendapatan)
         ];
     }
 }

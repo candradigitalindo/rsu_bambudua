@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Berita;
 use App\Models\Encounter;
 use App\Models\OperationalExpense;
 use App\Models\OtherIncome;
@@ -89,6 +90,11 @@ class HomeController extends Controller
 
         // 4. Data untuk Grafik
         $grafikData = $this->getGrafikDataTahunan($currentYear);
+        $grafikKunjungan = $this->getGrafikKunjungan();
+
+        // 5. Ambil Berita Terbaru
+        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+
 
         return view('pages.dashboard.owner', compact(
             'totalPendapatanBulanIni',
@@ -98,7 +104,9 @@ class HomeController extends Controller
             'totalPengeluaranBulanIni',
             'labaRugiBulanIni',
             'totalPasienBulanIni',
-            'grafikData'
+            'grafikData',
+            'grafikKunjungan',
+            'beritaTerbaru'
         ));
     }
 
@@ -187,5 +195,59 @@ class HomeController extends Controller
             ],
             'categories' => $namaBulan,
         ];
+    }
+
+    private function getGrafikKunjungan()
+    {
+        $year = now()->year;
+        $month = now()->month;
+        $daysInMonth = now()->daysInMonth;
+
+        // Helper untuk rekap per bulan (index 1-12)
+        $rekapBulanan = function ($type) use ($year) {
+            $data = \App\Models\Encounter::where('type', $type)
+                ->whereYear('created_at', $year)
+                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
+                ->groupBy('bulan')
+                ->pluck('total', 'bulan')
+                ->toArray();
+
+            return array_map(fn($i) => $data[$i] ?? 0, range(1, 12));
+        };
+
+        // Helper untuk rekap per hari dalam sebulan
+        $rekapHarian = function ($type) use ($year, $month) {
+            $data = \App\Models\Encounter::where('type', $type)
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month)
+                ->selectRaw('DAY(created_at) as tanggal, COUNT(*) as total')
+                ->groupBy('tanggal')
+                ->pluck('total', 'tanggal')
+                ->toArray();
+
+            return array_map(fn($i) => $data[$i] ?? 0, range(1, now()->daysInMonth));
+        };
+
+        // Data untuk Grafik Bulanan (1 Tahun)
+        $bulanan = [
+            'series' => [
+                ['name' => 'Rawat Jalan', 'data' => $rekapBulanan(1)],
+                ['name' => 'Rawat Inap', 'data' => $rekapBulanan(2)],
+                ['name' => 'IGD', 'data' => $rekapBulanan(3)],
+            ],
+            'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+        ];
+
+        // Data untuk Grafik Harian (1 Bulan)
+        $harian = [
+            'series' => [
+                ['name' => 'Rawat Jalan', 'data' => $rekapHarian(1)],
+                ['name' => 'Rawat Inap', 'data' => $rekapHarian(2)],
+                ['name' => 'IGD', 'data' => $rekapHarian(3)],
+            ],
+            'categories' => range(1, $daysInMonth),
+        ];
+
+        return ['bulanan' => $bulanan, 'harian' => $harian];
     }
 }

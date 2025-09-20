@@ -259,6 +259,12 @@
 
                     </ul>
                 </li>
+                <li class="{{ request()->is('berita*') ? 'active current-page' : '' }}">
+                    <a href="{{ route('berita.index') }}">
+                        <i class="ri-newspaper-line"></i>
+                        <span class="menu-text">Berita Terbaru</span>
+                    </a>
+                </li>
             @endif
         </ul>
     </div>

@@ -5,6 +5,7 @@ use App\Http\Controllers\KasirController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ApotekController;
 use App\Http\Controllers\BahanController;
+use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\CategoryRuanganController;
 use App\Http\Controllers\DokterController;
 use App\Http\Controllers\EncounterController;
@@ -269,4 +270,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('insentif-manual', \App\Http\Controllers\IncentiveController::class)
             ->except(['show'])->names('keuangan.insentif');
     });
+
+    // Route untuk Berita
+    Route::resource('berita', BeritaController::class);
 });

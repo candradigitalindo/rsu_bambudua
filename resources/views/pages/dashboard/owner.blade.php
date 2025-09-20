@@ -129,17 +129,72 @@
     </div>
     <!-- Row ends -->
 
+
     <!-- Row starts -->
     <div class="row gx-3">
-        <div class="col-12">
+        <div class="col-lg-8 col-12">
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title">Grafik Keuangan Tahun {{ date('Y') }}</h5>
                 </div>
                 <div class="card-body pt-0">
-                    <div class="overflow-hidden">
-                        <div id="grafikTahunan"></div>
+                    <div id="grafikTahunan"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Berita Terbaru</h5>
+                </div>
+                <div class="card-body">
+                    <div class="scroll350">
+                        @forelse ($beritaTerbaru as $berita)
+                            <div class="d-flex align-items-start mb-4">
+                                <img src="{{ $berita->gambar ? asset('storage/berita/' . $berita->gambar) : asset('images/doc-1.jpg') }}"
+                                    class="img-fluid me-3 rounded-2" width="60" alt="News">
+                                <div class="flex-grow-1">
+                                    <h6 class="m-0">{{ $berita->judul }}</h6>
+                                    <p class="small m-0 text-muted">
+                                        {{ \Illuminate\Support\Str::limit(strip_tags($berita->konten), 70) }}
+                                    </p>
+                                    <p class="small m-0 text-muted">
+                                        <i class="ri-time-line"></i>
+                                        {{ $berita->created_at->diffForHumans() }}
+                                    </p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="text-center">
+                                <p>Belum ada berita yang dipublikasikan.</p>
+                            </div>
+                        @endforelse
                     </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Row ends -->
+    <!-- Row starts -->
+    <div class="row gx-3">
+        <div class="col-lg-6 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Grafik Kunjungan Harian (Bulan {{ now()->translatedFormat('F') }})</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div id="grafikKunjunganHarian"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Grafik Kunjungan Bulanan (Tahun {{ date('Y') }})</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div id="grafikKunjunganBulanan"></div>
                 </div>
             </div>
         </div>
@@ -230,5 +285,106 @@
         var chart = new ApexCharts(document.querySelector("#grafikTahunan"), options);
 
         chart.render();
+
+        // Grafik Kunjungan Harian
+        var optionsHarian = {
+            chart: {
+                height: 350,
+                type: 'area',
+                toolbar: {
+                    show: false
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                curve: 'smooth'
+            },
+            series: @json($grafikKunjungan['harian']['series']),
+            xaxis: {
+                type: 'category',
+                categories: @json($grafikKunjungan['harian']['categories']),
+                title: {
+                    text: 'Tanggal'
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Jumlah Kunjungan'
+                },
+                min: 0,
+                labels: {
+                    formatter: function(val) {
+                        return parseInt(val);
+                    }
+                }
+            },
+            colors: ["#238781", "#4f9f9a", "#a7cfcd"],
+            tooltip: {
+                x: {
+                    format: 'dd'
+                },
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'right'
+            }
+        };
+        var chartHarian = new ApexCharts(document.querySelector("#grafikKunjunganHarian"), optionsHarian);
+        chartHarian.render();
+
+        // Grafik Kunjungan Bulanan
+        var optionsBulanan = {
+            chart: {
+                height: 350,
+                type: 'bar',
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['transparent']
+            },
+            series: @json($grafikKunjungan['bulanan']['series']),
+            xaxis: {
+                categories: @json($grafikKunjungan['bulanan']['categories']),
+            },
+            yaxis: {
+                title: {
+                    text: 'Jumlah Kunjungan'
+                },
+                labels: {
+                    formatter: function(val) {
+                        return parseInt(val);
+                    }
+                }
+            },
+            fill: {
+                opacity: 1
+            },
+            colors: ["#238781", "#4f9f9a", "#a7cfcd"],
+            tooltip: {
+                y: {
+                    formatter: function(val) {
+                        return val + " kunjungan"
+                    }
+                }
+            }
+        };
+        var chartBulanan = new ApexCharts(document.querySelector("#grafikKunjunganBulanan"), optionsBulanan);
+        chartBulanan.render();
     </script>
 @endpush

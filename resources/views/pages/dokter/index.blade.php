@@ -144,6 +144,30 @@
 
     <!-- Row starts -->
     <div class="row gx-3">
+        <div class="col-lg-6 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Grafik Kunjungan Harian Anda (Bulan {{ now()->translatedFormat('F') }})</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div id="grafikKunjunganHarian"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Grafik Kunjungan Bulanan Anda (Tahun {{ date('Y') }})</h5>
+                </div>
+                <div class="card-body pt-0">
+                    <div id="grafikKunjunganBulanan"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Row ends -->
+    <!-- Row starts -->
+    <div class="row gx-3">
         <div class="col-sm-12">
             <div class="card mb-3">
                 <div class="card-header">
@@ -412,6 +436,107 @@
                 $("#btn-update").attr("disabled", true);
                 $(".btn-txt").text("Mohon Tunggu ...");
             });
+
+            // Grafik Kunjungan Harian
+            var optionsHarian = {
+                chart: {
+                    height: 350,
+                    type: 'area',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth'
+                },
+                series: @json($grafikKunjungan['harian']['series']),
+                xaxis: {
+                    type: 'category',
+                    categories: @json($grafikKunjungan['harian']['categories']),
+                    title: {
+                        text: 'Tanggal'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Jumlah Kunjungan'
+                    },
+                    min: 0,
+                    labels: {
+                        formatter: function(val) {
+                            return parseInt(val);
+                        }
+                    }
+                },
+                colors: ["#238781", "#4f9f9a", "#a7cfcd"],
+                tooltip: {
+                    x: {
+                        format: 'dd'
+                    },
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'right'
+                }
+            };
+            var chartHarian = new ApexCharts(document.querySelector("#grafikKunjunganHarian"), optionsHarian);
+            chartHarian.render();
+
+            // Grafik Kunjungan Bulanan
+            var optionsBulanan = {
+                chart: {
+                    height: 350,
+                    type: 'bar',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        endingShape: 'rounded'
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                series: @json($grafikKunjungan['bulanan']['series']),
+                xaxis: {
+                    categories: @json($grafikKunjungan['bulanan']['categories']),
+                },
+                yaxis: {
+                    title: {
+                        text: 'Jumlah Kunjungan'
+                    },
+                    labels: {
+                        formatter: function(val) {
+                            return parseInt(val);
+                        }
+                    }
+                },
+                fill: {
+                    opacity: 1
+                },
+                colors: ["#238781", "#4f9f9a", "#a7cfcd"],
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return val + " kunjungan"
+                        }
+                    }
+                }
+            };
+            var chartBulanan = new ApexCharts(document.querySelector("#grafikKunjunganBulanan"), optionsBulanan);
+            chartBulanan.render();
         });
     </script>
 @endpush

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Berita;
 use App\Models\Encounter;
 use App\Models\Incentive;
 use App\Models\OtherIncome;
@@ -58,6 +59,9 @@ class KeuanganController extends Controller
         // 3. Data untuk Grafik Tahunan
         $grafikData = $this->getGrafikDataTahunan($currentYear);
 
+        // 4. Ambil Berita Terbaru
+        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+
         return view('pages.keuangan.index', compact(
             'totalPendapatanBulanIni',
             'totalPengeluaranBulanIni',
@@ -65,7 +69,8 @@ class KeuanganController extends Controller
             'labaRugiBulanIni',
             'pengeluaranOperasionalBulanIni',
             'pendapatanLainnyaBulanIni',
-            'grafikData'
+            'grafikData',
+            'beritaTerbaru'
         ));
     }
 

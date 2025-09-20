@@ -147,12 +147,11 @@
                 <div class="card-header">
                     <h5 class="card-title">Berita Terbaru</h5>
                 </div>
-                <div class="card-body">
-                    <div class="scroll350">
+                <div class="card-body" style="height: 400px; overflow-y: auto;">
+                    <div>
                         @forelse ($beritaTerbaru as $berita)
                             <div class="d-flex align-items-start mb-4">
-                                <img src="{{ $berita->gambar ? asset('storage/berita/' . $berita->gambar) : asset('images/doc-1.jpg') }}"
-                                    class="img-fluid me-3 rounded-2" width="60" alt="News">
+
                                 <div class="flex-grow-1">
                                     <h6 class="m-0">{{ $berita->judul }}</h6>
                                     <p class="small m-0 text-muted">

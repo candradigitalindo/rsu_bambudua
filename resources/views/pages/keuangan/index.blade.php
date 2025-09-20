@@ -4,8 +4,8 @@
 @endsection
 @push('style')
     <!-- *************
-                      ************ Vendor Css Files *************
-                     ************ -->
+                          ************ Vendor Css Files *************
+                         ************ -->
 
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
@@ -147,15 +147,40 @@
 
     <!-- Row starts -->
     <div class="row gx-3">
-        <div class="col-xxl-12 col-sm-12">
+        <div class="col-lg-8 col-12">
             <div class="card mb-3">
                 <div class="card-header pb-0">
                     <h5 class="card-title">Grafik Tahun {{ date('Y') }}</h5>
                 </div>
                 <div class="card-body pt-0">
-                    <div class="overflow-hidden">
-                        <div id="grafikTahunan"></div>
-                    </div>
+                    <div id="grafikTahunan"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Berita Terbaru</h5>
+                </div>
+                <div class="card-body" style="height: 400px; overflow-y: auto;">
+                    @forelse ($beritaTerbaru as $berita)
+                        <div class="d-flex align-items-start mb-4">
+                            <div class="flex-grow-1">
+                                <h6 class="m-0">{{ $berita->judul }}</h6>
+                                <p class="small m-0 text-muted">
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($berita->konten), 70) }}
+                                </p>
+                                <p class="small m-0 text-muted">
+                                    <i class="ri-time-line"></i>
+                                    {{ $berita->created_at->diffForHumans() }}
+                                </p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center">
+                            <p>Belum ada berita yang dipublikasikan.</p>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -164,8 +189,8 @@
 @endsection
 @push('scripts')
     <!-- *************
-                       ************ Vendor Js Files *************
-                      ************* -->
+                           ************ Vendor Js Files *************
+                          ************* -->
 
     <!-- Overlay Scroll JS -->
     <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
@@ -177,10 +202,6 @@
 
     <!-- Apex Charts -->
     <script src="{{ asset('vendor/apex/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/home/patients.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/home/department-income.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/home/patients-age.js') }}"></script>
-    <script src="{{ asset('vendor/apex/custom/home/sparklines.js') }}"></script>
 
     <!-- Data Tables -->
     <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>

@@ -13,119 +13,148 @@
     </style>
 @endpush
 @section('content')
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Dashboard Loket</h3>
+    <!-- Row starts -->
+    <div class="row gx-3">
+        <div class="col-lg-8 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Grafik Transaksi Tindakan Tahun {{ date('Y') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div style="width: 100%; min-width: 300px;">
+                        <canvas id="grafikNominalTransaksi" height="350"></canvas>
                     </div>
-                    <div class="card-body">
-
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <h5 class="card-title">Grafik Transaksi Tindakan Tahun {{ date('Y') }}</h5>
-                                <div style="width: 100%; min-width: 300px;">
-                                    <canvas id="grafikNominalTransaksi" height="350"></canvas>
-                                </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Berita Terbaru</h5>
+                </div>
+                <div class="card-body" style="height: 400px; overflow-y: auto;">
+                    @forelse ($beritaTerbaru as $berita)
+                        <div class="d-flex align-items-start mb-4">
+                            <div class="flex-grow-1">
+                                <h6 class="m-0">{{ $berita->judul }}</h6>
+                                <p class="small m-0 text-muted">
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($berita->konten), 70) }}
+                                </p>
+                                <p class="small m-0 text-muted">
+                                    <i class="ri-time-line"></i>
+                                    {{ $berita->created_at->diffForHumans() }}
+                                </p>
                             </div>
                         </div>
-                        <hr>
-                        {{-- Filter dan tombol download --}}
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <h5 class="card-title">Data Transaksi Tindakan</h5>
-                                <form method="GET" class="mb-3" id="filterForm">
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <div>
-                                            <label for="start_date" class="form-label mb-0">Start Date</label>
-                                            <input type="date" name="start_date" id="start_date"
-                                                value="{{ request('start_date') }}" class="form-control form-control-sm">
-                                        </div>
-                                        <div>
-                                            <label for="end_date" class="form-label mb-0">End Date</label>
-                                            <input type="date" name="end_date" id="end_date"
-                                                value="{{ request('end_date') }}" class="form-control form-control-sm">
-                                        </div>
-                                        <div class="align-self-end">
-                                            <button type="submit" class="btn btn-sm btn-primary" id="btnFilter">
-                                                <span id="spinnerFilter" class="spinner-border spinner-border-sm d-none"
-                                                    role="status" aria-hidden="true"></span>
-                                                <span id="textFilter">Filter</span>
-                                            </button>
-                                        </div>
-                                        <div class="align-self-end">
-                                            <a href="{{ route('loket.transaksi-tindakan.pdf', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
-                                                class="btn btn-sm btn-danger">
-                                                <i class="ri-file-pdf-line"></i> Download PDF
-                                            </a>
-                                            <a href="{{ route('loket.transaksi-tindakan.excel', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
-                                                class="btn btn-sm btn-success">
-                                                <i class="ri-file-excel-2-line"></i> Download Excel
-                                            </a>
-                                        </div>
-                                    </div>
-                                </form>
-
-                                {{-- Tabel Data Transaksi Resep --}}
-                                <div class="table-outer">
-                                    <div class="table-responsive">
-                                        <table class="table truncate m-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>No</th>
-                                                    <th>No. Encounter</th>
-                                                    <th>Pasien</th>
-                                                    <th class="text-center">Tanggal</th>
-                                                    <th class="text-end">Nominal</th>
-                                                    <th class="text-end">Diskon (Rp)</th>
-                                                    <th class="text-end">Diskon (%)</th>
-                                                    <th class="text-end">Total Bayar</th>
-                                                    <th class="text-center">Metode Pembayaran</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse ($data['encounter_terbayar'] as $i => $encounter)
-                                                    <tr>
-                                                        <td>{{ $i + 1 }}</td>
-                                                        <td>{{ $encounter->no_encounter ?? '-' }}</td>
-                                                        <td>{{ $encounter->name_pasien }}</td>
-                                                        <td class="text-center">
-                                                            {{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ number_format($encounter->total_tindakan, 0, ',', '.') }}</td>
-                                                        <td class="text-end">
-                                                            {{ number_format($encounter->diskon_tindakan ?? 0, 0, ',', '.') }}
-                                                        </td>
-                                                        <td class="text-end">{{ $encounter->diskon_persen_tindakan ?? 0 }}%
-                                                        </td>
-                                                        <td class="text-end">
-                                                            {{ number_format($encounter->total_bayar_tindakan, 0, ',', '.') }}
-                                                        </td>
-                                                        <td class="text-center">
-                                                            {{ $encounter->metode_pembayaran_tindakan ?? '-' }}</td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="9" class="text-center">Data tidak ada</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
-                                        <div class="mt-2">
-                                            {{ $data['encounter_terbayar']->withQueryString()->links() }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    @empty
+                        <div class="text-center">
+                            <p>Belum ada berita yang dipublikasikan.</p>
                         </div>
-                    </div>
-
+                    @endforelse
                 </div>
             </div>
         </div>
     </div>
+    <!-- Row ends -->
+
+    <!-- Row starts -->
+    <div class="row gx-3">
+        <div class="col-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="card-title">Data Transaksi Tindakan</h5>
+                </div>
+                <div class="card-body">
+                    {{-- Filter dan tombol download --}}
+                    <form method="GET" class="mb-3" id="filterForm">
+                        <div class="d-flex flex-wrap gap-2">
+                            <div>
+                                <label for="start_date" class="form-label mb-0">Start Date</label>
+                                <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
+                                    class="form-control form-control-sm">
+                            </div>
+                            <div>
+                                <label for="end_date" class="form-label mb-0">End Date</label>
+                                <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}"
+                                    class="form-control form-control-sm">
+                            </div>
+                            <div class="align-self-end">
+                                <button type="submit" class="btn btn-sm btn-primary" id="btnFilter">
+                                    <span id="spinnerFilter" class="spinner-border spinner-border-sm d-none" role="status"
+                                        aria-hidden="true"></span>
+                                    <span id="textFilter">Filter</span>
+                                </button>
+                            </div>
+                            <div class="align-self-end">
+                                <a href="{{ route('loket.transaksi-tindakan.pdf', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                                    class="btn btn-sm btn-danger">
+                                    <i class="ri-file-pdf-line"></i> Download PDF
+                                </a>
+                                <a href="{{ route('loket.transaksi-tindakan.excel', ['start_date' => request('start_date'), 'end_date' => request('end_date')]) }}"
+                                    class="btn btn-sm btn-success">
+                                    <i class="ri-file-excel-2-line"></i> Download Excel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+
+                    {{-- Tabel Data Transaksi Resep --}}
+                    <div class="table-outer">
+                        <div class="table-responsive">
+                            <table class="table truncate m-0">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>No. Encounter</th>
+                                        <th>Pasien</th>
+                                        <th class="text-center">Tanggal</th>
+                                        <th class="text-end">Nominal</th>
+                                        <th class="text-end">Diskon (Rp)</th>
+                                        <th class="text-end">Diskon (%)</th>
+                                        <th class="text-end">Total Bayar</th>
+                                        <th class="text-center">Metode Pembayaran</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($data['encounter_terbayar'] as $i => $encounter)
+                                        <tr>
+                                            <td>{{ $i + 1 }}</td>
+                                            <td>{{ $encounter->no_encounter ?? '-' }}</td>
+                                            <td>{{ $encounter->name_pasien }}</td>
+                                            <td class="text-center">
+                                                {{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ number_format($encounter->total_tindakan, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ number_format($encounter->diskon_tindakan ?? 0, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-end">{{ $encounter->diskon_persen_tindakan ?? 0 }}%
+                                            </td>
+                                            <td class="text-end">
+                                                {{ number_format($encounter->total_bayar_tindakan, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-center">
+                                                {{ $encounter->metode_pembayaran_tindakan ?? '-' }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-center">Data tidak ada</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                            <div class="mt-2">
+                                {{ $data['encounter_terbayar']->withQueryString()->links() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Row ends -->
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->

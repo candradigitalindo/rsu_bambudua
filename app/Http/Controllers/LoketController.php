@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Berita;
 use App\Models\Encounter;
 use App\Repositories\LoketRepository;
 use Illuminate\Http\Request;
@@ -96,8 +97,11 @@ class LoketController extends Controller
     }
     public function dashboard()
     {
+        // Ambil Berita Terbaru
+        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+
         $data = $this->loketRepository->dashboard();
-        return view('pages.loket.dashboard', compact('data'));
+        return view('pages.loket.dashboard', compact('data', 'beritaTerbaru'));
     }
     public function getEncounter()
     {

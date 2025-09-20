@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Berita;
 use App\Models\InpatientBilling;
 use App\Repositories\ApotekRepository;
 use Illuminate\Http\Request;
@@ -24,7 +25,9 @@ class ApotekController extends Controller
     public function dashboard()
     {
         $data = $this->apotekRepository->dashboard();
-        return view('pages.apotek.dashboard', compact('data'));
+        // Ambil Berita Terbaru
+        $beritaTerbaru = Berita::where('is_published', true)->latest()->take(5)->get();
+        return view('pages.apotek.dashboard', compact('data', 'beritaTerbaru'));
     }
     // PDF
     public function exportPdf()

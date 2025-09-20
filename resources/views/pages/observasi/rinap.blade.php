@@ -393,12 +393,19 @@
                                                         <p class="text-danger">{{ $errors->first('dosis_daily') }}</p>
                                                     </div>
                                                     <label class="form-label mt-3" for="a2">Frequensi
-                                                        (x/hari)</label>
+                                                    </label>
                                                     <div class="input-group">
-                                                        <input type="text" class="form-control" id="frequensi_daily"
-                                                            name="frequensi_daily" value="{{ old('frequensi_daily') }}">
-                                                        <p class="text-danger">{{ $errors->first('frequensi_daily') }}</p>
+                                                        <input type="number" class="form-control"
+                                                            id="frequensi_daily_jumlah" value="1" min="1">
+                                                        <select class="form-select" id="frequensi_daily_frekuensi">
+                                                            <option value="x Sehari">x Sehari</option>
+                                                            <option value="x Seminggu">x Seminggu</option>
+                                                            <option value="x Sebulan">x Sebulan</option>
+                                                            <option value="Jika Perlu">Jika Perlu</option>
+                                                        </select>
                                                     </div>
+                                                    <input type="hidden" id="frequensi_daily" name="frequensi_daily">
+
                                                     <label class="form-label mt-3" for="a2">Route (Oral, IV,
                                                         dll)</label>
                                                     <div class="input-group">
@@ -930,7 +937,7 @@
                     container.html(embed);
                 } else {
                     container.html(
-                    '<p class="text-danger">Format file tidak didukung untuk pratinjau.</p>');
+                        '<p class="text-danger">Format file tidak didukung untuk pratinjau.</p>');
                 }
                 modal.modal('show');
             });
@@ -987,7 +994,14 @@
                     product_apotek_id: $("#product_apotek_id_daily").val(),
                     jumlah: $("#jumlah_daily").val(),
                     dosage_instructions: $("#dosis_daily").val(),
-                    frequensi: $("#frequensi_daily").val(),
+                    frequensi: (() => {
+                        const jumlah = $('#frequensi_daily_jumlah').val();
+                        const frekuensi = $('#frequensi_daily_frekuensi').val();
+                        if (frekuensi === 'Jika Perlu') {
+                            return 'Jika Perlu';
+                        }
+                        return `${jumlah} ${frekuensi}`;
+                    })(),
                     route: $("#route_daily").val(),
                     notes: $("#note_daily").val(),
                     medicine_date: $("#medicine_date").val(),

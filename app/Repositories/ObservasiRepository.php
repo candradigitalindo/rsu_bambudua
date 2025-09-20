@@ -577,7 +577,7 @@ class ObservasiRepository
     // ambbil data encounter bedasarkan id beserta tindakan dan resep
     public function getEncounterById($id)
     {
-        $encounter = \App\Models\Encounter::with(['tindakan', 'resep.details'])
+        $encounter = \App\Models\Encounter::with(['tindakan', 'resep.details', 'pemeriksaanPenunjang'])
             ->where('id', $id)
             ->first();
         if (!$encounter) {

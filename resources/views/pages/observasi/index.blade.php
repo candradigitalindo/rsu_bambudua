@@ -579,14 +579,25 @@
                                                                 Pakai</label>
                                                             <div class="input-group">
                                                                 <input type="number" class="form-control"
-                                                                    id="aturan_pakai_jumlah" value="1">
+                                                                    id="aturan_pakai_jumlah" value="1"
+                                                                    min="1">
                                                                 <select class="form-select" id="aturan_pakai_frekuensi">
                                                                     <option value="x Sehari">x Sehari</option>
                                                                     <option value="x Seminggu">x Seminggu</option>
                                                                     <option value="x Sebulan">x Sebulan</option>
+                                                                    <option value="x Setahun">x Setahun</option>
+                                                                    <option value="Jika Perlu">Jika Perlu</option>
                                                                 </select>
                                                             </div>
                                                         </div>
+                                                    </div>
+                                                    <div class="mt-2">
+                                                        <label class="form-label">Keterangan Tambahan</label>
+                                                        <select class="form-select" id="aturan_pakai_tambahan">
+                                                            <option value="">- Tidak ada -</option>
+                                                            <option value="Sebelum Makan">Sebelum Makan</option>
+                                                            <option value="Sesudah Makan">Sesudah Makan</option>
+                                                        </select>
                                                     </div>
                                                     <div class="mt-3">
                                                         <label class="form-label">Waktu Pemberian</label>
@@ -1857,13 +1868,21 @@
                 const qty_obat = $("#qty_obat").val();
                 const aturan_jumlah = $("#aturan_pakai_jumlah").val();
                 const aturan_frekuensi = $("#aturan_pakai_frekuensi").val();
+                const aturan_tambahan = $("#aturan_pakai_tambahan").val();
 
                 let waktu_pemberian = [];
                 if ($('#waktu_pagi').is(':checked')) waktu_pemberian.push('Pagi');
                 if ($('#waktu_siang').is(':checked')) waktu_pemberian.push('Siang');
                 if ($('#waktu_malam').is(':checked')) waktu_pemberian.push('Malam');
 
-                let aturan_pakai = `${aturan_jumlah} ${aturan_frekuensi}`;
+                let aturan_pakai = '';
+                if (aturan_frekuensi === 'Jika Perlu') {
+                    aturan_pakai = 'Jika Perlu';
+                } else {
+                    aturan_pakai = `${aturan_jumlah} ${aturan_frekuensi}`;
+                }
+
+                if (aturan_tambahan) aturan_pakai += ` ${aturan_tambahan}`;
                 if (waktu_pemberian.length > 0) {
                     aturan_pakai += ` (${waktu_pemberian.join(', ')})`;
                 }
@@ -1993,34 +2012,57 @@
                         _token: "{{ csrf_token() }}"
                     },
                     success: function(data) {
-                        console.log(data);
-                        // isi table tbody-catatan-tindakan dan tbody-catatan-resep
                         let tbodyTindakan = $("#tbody-catatan-tindakan");
                         tbodyTindakan.empty();
+
+                        // Gabungkan tindakan dan pemeriksaan penunjang
+                        let allTindakan = [];
+                        if (data.tindakan && Array.isArray(data.tindakan) && data.tindakan
+                            .length > 0) {
+                            allTindakan = allTindakan.concat(data.tindakan.map(item => ({
+                                nama: item.tindakan_name,
+                                qty: item.qty,
+                                harga: item.tindakan_harga,
+                                total: item.total_harga
+                            })));
+                        }
+                        if (data.pemeriksaan_penunjang && Array.isArray(data
+                                .pemeriksaan_penunjang) &&
+                            data.pemeriksaan_penunjang.length > 0) {
+                            allTindakan = allTindakan.concat(data.pemeriksaan_penunjang.map(
+                                item => ({
+                                    nama: item.jenis_pemeriksaan,
+                                    qty: item.qty,
+                                    harga: item.harga,
+                                    total: item.total_harga
+                                })));
+                        }
+
+                        // Tampilkan semua tindakan yang sudah digabung
+                        $.each(allTindakan, function(index, item) {
+                            tbodyTindakan.append(
+                                `<tr>
+                                    <td>${item.nama}</td>
+                                    <td>${item.qty}</td>
+                                    <td class="text-end">${formatRupiah(item.harga)}</td>
+                                    <td class="text-end">${formatRupiah(item.total)}</td>
+                                </tr>`
+                            );
+                        });
+
+                        // Handle Resep
                         let tbodyResep = $("#tbody-catatan-resep");
                         tbodyResep.empty();
-                        let totalTindakan = 0;
-                        let totalResep = 0;
-                        if (data.tindakan) {
-                            $.each(data.tindakan, function(index, item) {
-                                tbodyTindakan.append(
-                                    `<tr>
 
-                                        <td>${item.tindakan_name}</td>
-                                        <td>${item.qty}</td>
-                                        <td class="text-end">${formatRupiah(item.tindakan_harga)}</td>
-                                        <td class="text-end">${formatRupiah(item.total_harga)}</td>
-                                    </tr>`
-                                );
-                            });
-                        }
                         $("#total-tindakan").text(formatRupiah(data.total_tindakan));
-                        $("#total-tindakan-diskon").text(formatRupiah(data.diskon_tindakan) +
-                            (data.diskon_tindakan ? ' (' + data.diskon_persen_tindakan +
-                                '%)' : ''));
+                        $("#total-tindakan-diskon").text(formatRupiah(data.diskon_tindakan) + (
+                            data.diskon_tindakan ?
+                            ' (' + data.diskon_persen_tindakan + '%)' : ''));
                         $("#total-tindakan-harga").text(formatRupiah(data
-                            .total_bayar_tindakan));
-                        if (data.resep) {
+                        .total_bayar_tindakan));
+
+                        if (data.resep && data.resep.details && Array.isArray(data.resep
+                                .details)) {
                             $.each(data.resep.details, function(index, item) {
                                 tbodyResep.append(
                                     `<tr>
@@ -2033,6 +2075,7 @@
                                 );
                             });
                         }
+
                         $("#total-resep-catatan").text(formatRupiah(data.total_resep));
                         $("#total-resep-diskon").text(formatRupiah(data.diskon_resep) +
                             (data.diskon_resep ? ' (' + data.diskon_persen_resep + '%)' :
@@ -2086,7 +2129,8 @@
                         $("#btn-buat-diskon-tindakan").prop("disabled", false);
 
                         // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON
+                            .errors) {
                             let errors = xhr.responseJSON.errors;
                             let errorMsg = Object.values(errors).map(function(msgArr) {
                                 return msgArr.join('<br>');
@@ -2150,7 +2194,8 @@
                         $("#btn-buat-diskon-resep").prop("disabled", false);
 
                         // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON
+                            .errors) {
                             let errors = xhr.responseJSON.errors;
                             let errorMsg = Object.values(errors).map(function(msgArr) {
                                 return msgArr.join('<br>');
@@ -2221,7 +2266,8 @@
                         $("#btn-simpan-catatan").prop("disabled", false);
 
                         // Tampilkan error validasi dari server jika ada
-                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                        if (xhr.status === 422 && xhr.responseJSON && xhr.responseJSON
+                            .errors) {
                             let errors = xhr.responseJSON.errors;
                             let errorMsg = Object.values(errors).map(function(msgArr) {
                                 return msgArr.join('<br>');

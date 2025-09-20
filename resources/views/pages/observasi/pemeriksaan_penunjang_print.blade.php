@@ -117,7 +117,7 @@
                     <td>{{ $encounter->name_pasien }}</td>
                     <td><strong>Jenis Kelamin</strong></td>
                     <td>:</td>
-                    <td>{{ $pasien ? ($pasien->gender == 'L' ? 'Laki-laki' : 'Perempuan') : 'N/A' }}</td>
+                    <td>{{ $pasien ? ($pasien->jenis_kelamin == 1 ? 'Laki-laki' : 'Perempuan') : 'N/A' }}</td>
                 </tr>
                 <tr>
                     <td><strong>Tanggal Pemeriksaan</strong></td>

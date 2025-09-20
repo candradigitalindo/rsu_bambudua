@@ -296,61 +296,27 @@
                                                         <select name="jenis_pemeriksaan" id="jenis_pemeriksaan"
                                                             class="form-control">
                                                             <option value="">Pilih Jenis Pemeriksaan</option>
-                                                            <option value="EKG"
-                                                                {{ old('jenis_pemeriksaan') == 'EKG' ? 'selected' : '' }}>
-                                                                EKG</option>
-                                                            <option value="Ekokardiografi"
-                                                                {{ old('jenis_pemeriksaan') == 'Ekokardiografi' ? 'selected' : '' }}>
-                                                                Ekokardiografi</option>
-                                                            <option value="Rontgen Dada"
-                                                                {{ old('jenis_pemeriksaan') == 'Rontgen Dada' ? 'selected' : '' }}>
-                                                                Rontgen Dada</option>
-                                                            <option value="Tes Treadmill"
-                                                                {{ old('jenis_pemeriksaan') == 'Tes Treadmill' ? 'selected' : '' }}>
-                                                                Tes Treadmill</option>
-                                                            <option value="Holter Monitoring"
-                                                                {{ old('jenis_pemeriksaan') == 'Holter Monitoring' ? 'selected' : '' }}>
-                                                                Holter Monitoring</option>
-                                                            <option value="CT Koroner"
-                                                                {{ old('jenis_pemeriksaan') == 'CT Koroner' ? 'selected' : '' }}>
-                                                                CT Koroner</option>
-                                                            <option value="MRI Jantung"
-                                                                {{ old('jenis_pemeriksaan') == 'MRI Jantung' ? 'selected' : '' }}>
-                                                                MRI Jantung</option>
-                                                            <option value="Kateterisasi Jantung"
-                                                                {{ old('jenis_pemeriksaan') == 'Kateterisasi Jantung' ? 'selected' : '' }}>
-                                                                Kateterisasi Jantung</option>
-                                                            <option value="USG Jantung"
-                                                                {{ old('jenis_pemeriksaan') == 'USG Jantung' ? 'selected' : '' }}>
-                                                                USG Jantung</option>
-                                                            <option value="CT Scan"
-                                                                {{ old('jenis_pemeriksaan') == 'CT Scan' ? 'selected' : '' }}>
-                                                                CT Scan</option>
+                                                            @foreach ($jenisPemeriksaan as $item)
+                                                                <option value="{{ $item->id }}"
+                                                                    data-name="{{ $item->name }}">{{ $item->name }} -
+                                                                    {{ number_format($item->harga, 0, ',', '.') }}</option>
+                                                            @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a2">Hasil Pemeriksaan</label>
-                                                    <div class="col-sm-12">
-                                                        <div id="fullEditor">
-
-                                                        </div>
-                                                    </div>
+                                                <!-- Container untuk field dinamis -->
+                                                <div id="dynamic-fields-container" class="mt-3">
+                                                    <!-- Field-field dinamis akan muncul di sini -->
                                                 </div>
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a2">Dokumen Pemeriksaan (Jika
-                                                        ada)</label>
-                                                    <div class="input-group">
-                                                        <input type="file" class="form-control"
-                                                            id="dokumen_pemeriksaan" name="dokumen_pemeriksaan">
-                                                        <input type="hidden" name="dokumen_pemeriksaan"
-                                                            id="dokumen_pemeriksaan"
-                                                            value="{{ old('dokumen_pemeriksaan') }}">
-                                                        <p class="text-danger">
-                                                            {{ $errors->first('dokumen_pemeriksaan') }}</p>
 
-                                                    </div>
+                                                <!-- [NEW] Kolom Saran (Rekomendasi) -->
+                                                <div class="mb-3">
+                                                    <label for="recomendation" class="form-label">Saran
+                                                        (Rekomendasi)</label>
+                                                    <textarea class="form-control" id="recomendation" name="recomendation" rows="3"
+                                                        placeholder="Tuliskan saran atau rekomendasi dokter..."></textarea>
                                                 </div>
+
                                                 <div class="d-flex gap-2 justify-content-end mt-4">
                                                     <button type="submit" class="btn btn-primary" id="btn-pemeriksaan">
                                                         <span class="btn-txt" id="text-pemeriksaan">Simpan</span>
@@ -371,19 +337,18 @@
                                             <div class="card-body">
                                                 <div class="table-outer">
                                                     <div class="table-responsive">
+
                                                         <table class="table truncate m-0">
                                                             <thead>
                                                                 <tr>
                                                                     <th>Jenis Pemeriksaan</th>
-                                                                    <th>Hasil</th>
-                                                                    <th>Dokumen</th>
+                                                                    <th>Qty</th>
+                                                                    <th>Harga</th>
+                                                                    <th>Total Harga</th>
                                                                     <th class="text-center">Aksi</th>
                                                                 </tr>
                                                             </thead>
-                                                            <tbody id="tbody-pendukung">
-
-
-                                                            </tbody>
+                                                            <tbody id="tbody-pendukung"></tbody>
                                                         </table>
                                                     </div>
                                                 </div>
@@ -925,6 +890,36 @@
             <!-- Row ends -->
         </div>
     </div>
+
+    <!-- [NEW] Modal untuk Cetak Hasil Pemeriksaan Penunjang -->
+    <div class="modal fade" id="modalCetakPenunjang" tabindex="-1" aria-labelledby="modalCetakPenunjangLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCetakPenunjangLabel">Hasil Pemeriksaan Penunjang</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="print-content-container">
+                        <!-- Konten dari halaman cetak akan dimuat di sini -->
+                        <div class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <a href="#" class="btn btn-success" id="btn-download-pdf-modal" download><i
+                            class="ri-download-2-line"></i> Download PDF</a>
+                    <button type="button" class="btn btn-primary" id="btn-print-modal"><i class="ri-printer-line"></i>
+                        Cetak</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
@@ -940,7 +935,12 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
+        // [FIX] Inisialisasi modal di luar event handler untuk mencegah konflik
+        let modalCetakInstance = null;
+
         $(document).ready(function() {
+            modalCetakInstance = new bootstrap.Modal(document.getElementById('modalCetakPenunjang'));
+
             $('#perawat_ids').select2({
                 placeholder: "Pilih Perawat",
                 allowClear: true,
@@ -1128,23 +1128,16 @@
                         tbody.empty(); // Clear existing rows
                         $.each(data, function(index, item) {
                             tbody.append(
-                                `
-                                <tr>
+                                `<tr>
                                         <td>${item.jenis_pemeriksaan}</td>
-                                        <td>${item.hasil_pemeriksaan}</td>
-                                        <td>
-                                            ${item.dokumen_pemeriksaan ?
-                                                `<a href="${item.dokumen_pemeriksaan}" target="_blank" class="btn btn-sm btn-info">Lihat Dokumen</a>` :
-                                                'Tidak ada'}
-                                        </td>
+                                        <td class="text-center">${item.qty}</td>
+                                        <td class="text-end">${formatRupiah(item.harga)}</td>
+                                        <td class="text-end">${formatRupiah(item.total_harga)}</td>
                                         <td class="text-center">
-                                            <a href="{{ url('observasi/pemeriksaan-penunjang/print') }}/${item.id}"
-                                               target="_blank"
-                                               class="btn btn-sm btn-secondary">
+                                            <button class="btn btn-sm btn-secondary btn-cetak-hasil" data-id="${item.id}">
                                                 <i class="ri-printer-line"></i> Cetak Hasil
-                                            </a>
-                                            <button
-                                                class="btn btn-danger btn-sm btn-hapus-pemeriksaan"
+                                            </button>
+                                            <button class="btn btn-danger btn-sm btn-hapus-pemeriksaan"
                                                 data-id="${item.id}"
                                                 style="margin-left: 5px;"
                                             >
@@ -1154,36 +1147,97 @@
                                     </tr>`
                             );
                         });
-                        // kosongkan kolom dokumen pemeriksaan
                         $("#jenis_pemeriksaan").val(null);
-                        // kembalikan editor ke default
-                        quill.setContents(0);
-
                     }
                 });
             });
 
+            // [NEW] Logika untuk Modal Cetak Hasil Penunjang
+            let currentPemeriksaanId = null;
+
+            $('#tbody-pendukung').on('click', '.btn-cetak-hasil', function() {
+                currentPemeriksaanId = $(this).data('id');
+                const url =
+                    `{{ url('kunjungan/observasi/pemeriksaan-penunjang/print') }}/${currentPemeriksaanId}`;
+                const container = $('#print-content-container');
+
+                // Tampilkan spinner saat loading
+                container.html(
+                    '<div class="text-center p-5"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>'
+                );
+
+                // Ambil konten halaman cetak via AJAX
+                $.get(url, function(data) {
+                    // [FIX] Parsing HTML response correctly
+                    // Create a temporary div to hold the response and parse it with jQuery
+                    const tempDiv = $('<div>').html(data);
+                    const content = tempDiv.find('.container').html();
+
+                    container.html(content);
+                    container.find('.btn-print')
+                        .remove(); // Hapus tombol cetak bawaan dari halaman print
+
+                    // [NEW] Set URL untuk tombol download
+                    const downloadUrl =
+                        `{{ url('kunjungan/observasi/pemeriksaan-penunjang/download') }}/${currentPemeriksaanId}`;
+                    $('#btn-download-pdf-modal').attr('href', downloadUrl);
+
+                    modalCetakInstance.show(); // Tampilkan modal yang sudah diinisialisasi
+                }).fail(function() {
+                    container.html(
+                        '<div class="alert alert-danger">Gagal memuat konten. Silakan coba lagi.</div>'
+                    );
+                });
+            });
+
+            $('#btn-print-modal').on('click', function() {
+                const printContent = document.getElementById('print-content-container').innerHTML;
+                const originalContent = document.body.innerHTML;
+                document.body.innerHTML = printContent;
+                window.print();
+                document.body.innerHTML = originalContent;
+                location.reload(); // Reload untuk mengembalikan event listener
+            });
+
             // Auto-fill editor for Ekokardiografi
+            // [MODIFIKASI] Ganti logika template statis dengan AJAX untuk field dinamis
             $('#jenis_pemeriksaan').on('change', function() {
-                if ($(this).val() === 'Ekokardiografi') {
-                    const template = `
-                        <p><strong>Dimensi Ruang Jantung:</strong></p>
-                        <ul>
-                            <li>LA: ... cm</li>
-                            <li>LV EDD: ... cm, LV ESD: ... cm</li>
-                            <li>IVS: ... cm, LVPW: ... cm</li>
-                        </ul>
-                        <p><strong>Fungsi Sistolik Ventrikel Kiri:</strong></p>
-                        <ul>
-                            <li>EF (Teich): ... %</li>
-                            <li>Kontraktilitas: ...</li>
-                        </ul>
-                        <p><strong>Fungsi Diastolik:</strong> ...</p>
-                        <p><strong>Analisis Katup:</strong> ...</p>
-                        <p><strong>Kesan:</strong> ...</p>
-                    `;
-                    quill.root.innerHTML = template;
+                let templateId = $(this).val();
+                let container = $('#dynamic-fields-container');
+                container.html(''); // Kosongkan container
+
+                if (!templateId) {
+                    return;
                 }
+
+                // [BARU] Buat route dan method controller untuk ini
+                // Contoh: Route::get('/pemeriksaan-penunjang/templates/{id}', [ObservasiController::class, 'getTemplateFields']);
+                let url = `/kunjungan/pemeriksaan-penunjang/templates/${templateId}`;
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    beforeSend: function() {
+                        container.html(
+                            '<div class="spinner-border spinner-border-sm"></div> Mohon tunggu...'
+                        );
+                    },
+                    success: function(fields) {
+                        container.empty();
+                        if (fields && fields.length > 0) {
+                            fields.forEach(function(field) {
+                                // Generate HTML untuk setiap field berdasarkan tipe
+                                let fieldHtml = `
+                                    <div class="mb-3">
+                                        <label class="form-label">${field.field_label}</label>
+                                        <input type="${field.field_type}" name="dynamic_fields[${field.id}]" class="form-control" placeholder="${field.placeholder || ''}">
+                                    </div>
+                                `;
+                                container.append(fieldHtml);
+                            });
+                        }
+                    }
+                });
             });
 
 
@@ -1231,25 +1285,29 @@
                 url = url.replace(':id', "{{ $observasi }}");
 
                 // Ambil data dari form
-                let jenis_pemeriksaan = $("#jenis_pemeriksaan").val();
-                let hasil_pemeriksaan = quill.root.innerHTML; // Ambil isi editor
-                let dokumen_pemeriksaan = $("#dokumen_pemeriksaan")[0].files[0]; // Ambil file
+                let jenis_pemeriksaan_id = $("#jenis_pemeriksaan").val();
+                let hasil_pemeriksaan = "{}"; // Placeholder, akan diisi di backend
+                let recomendation = $("#recomendation").val(); // Ambil data dari textarea
 
                 // Validasi input
-                if (jenis_pemeriksaan == '') {
+                if (jenis_pemeriksaan_id == '') {
                     alert("Jenis Pemeriksaan tidak boleh kosong");
-                    return;
-                }
-                if (hasil_pemeriksaan == '') {
-                    alert("Hasil Pemeriksaan tidak boleh kosong");
                     return;
                 }
 
                 // Buat objek FormData
                 let formData = new FormData();
-                formData.append("jenis_pemeriksaan", jenis_pemeriksaan);
+                formData.append("jenis_pemeriksaan_id", jenis_pemeriksaan_id);
+
+                // Ambil semua field dinamis
+                $('#dynamic-fields-container input, #dynamic-fields-container textarea, #dynamic-fields-container select')
+                    .each(
+                        function() {
+                            formData.append($(this).attr('name'), $(this).val());
+                        });
+
                 formData.append("hasil_pemeriksaan", hasil_pemeriksaan);
-                formData.append("dokumen_pemeriksaan", dokumen_pemeriksaan); // Tambahkan file
+                formData.append("recomendation", recomendation); // Tambahkan recomendation ke FormData
                 formData.append("_token", "{{ csrf_token() }}"); // Tambahkan CSRF token
 
                 // Kirim data melalui AJAX
@@ -1270,6 +1328,11 @@
                             });
                             // Refresh the table after successful submission
                             $("#tab-pemeriksaan-penunjang").click();
+
+                            // [FIX] Reset form fields to their initial state
+                            $('#jenis_pemeriksaan').val('').trigger('change'); // Reset select2
+                            $('#dynamic-fields-container').html(''); // Clear dynamic fields
+                            $('#recomendation').val(''); // Clear recommendation textarea
                         } else {
                             swal('Terjadi kesalahan saat menyimpan data.', {
                                 icon: "error",
@@ -1353,18 +1416,19 @@
             });
             // format rupiah
             function formatRupiah(angka, prefix) {
-                angka = angka ? angka.toString() : '0'; // Pastikan angka adalah string
-                let number_string = angka.replace(/[^,\d]/g, ''),
-                    split = number_string.split(','),
-                    sisa = split[0].length % 3,
-                    rupiah = split[0].substr(0, sisa),
-                    ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+                if (angka === null || angka === undefined) return '0';
+
+                // 1. Ubah ke string dan ambil bagian integer-nya saja
+                let integer_part = Math.floor(parseFloat(angka)).toString();
+                let sisa = integer_part.length % 3;
+                let rupiah = integer_part.substr(0, sisa);
+                let ribuan = integer_part.substr(sisa).match(/\d{3}/gi);
+
                 if (ribuan) {
-                    separator = sisa ? '.' : '';
+                    let separator = sisa ? '.' : '';
                     rupiah += separator + ribuan.join('.');
                 }
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+                return prefix === undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
             }
             $("#btn-tindakan-medis").click(function() {
                 // ajax post tindakan medis

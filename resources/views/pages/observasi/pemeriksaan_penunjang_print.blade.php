@@ -124,21 +124,67 @@
                     <td>:</td>
                     <td colspan="4">{{ \Carbon\Carbon::parse($pemeriksaan->created_at)->format('d F Y H:i') }}</td>
                 </tr>
+                <tr>
+                    <td><strong>Dokter Pemeriksa</strong></td>
+                    <td>:</td>
+                    <td colspan="4">
+                        {{ $encounter->practitioner->first()->name ?? 'Dokter tidak ditemukan' }}</td>
+                </tr>
             </table>
         </div>
 
         <div class="result-content">
             <h5>Hasil Pemeriksaan:</h5>
             <div class="ql-snow">
-                <div class="ql-editor">
-                    {!! $pemeriksaan->hasil_pemeriksaan !!}
+                @php
+                    // Decode JSON string to array, handle potential errors
+                    $hasil = json_decode($pemeriksaan->hasil_pemeriksaan, true);
+                @endphp
+
+                @if (is_array($hasil) && !empty($hasil))
+                    <table class="table table-bordered" style="width: 100%; border-collapse: collapse;">
+                        <tbody>
+                            @foreach ($hasil as $item)
+                                <tr>
+                                    <td style="width: 40%; border: 1px solid #ccc; padding: 8px;">
+                                        {{ $item['label'] ?? '' }}</td>
+                                    <td style="border: 1px solid #ccc; padding: 8px;">{{ $item['value'] ?? '' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <div class="ql-editor">
+                        <p>Tidak ada detail hasil pemeriksaan.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <div class="result-content" style="margin-top: 30px;">
+            <h5>Saran (Rekomendasi):</h5>
+            <div class="ql-snow">
+                <div class="ql-editor" style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px;">
+                    {!! $pemeriksaan->recomendation !!}
                 </div>
             </div>
         </div>
 
-        <div class="text-center mt-4">
-            <button class="btn btn-primary btn-print" onclick="window.print()">Cetak</button>
+        <!-- Tanda Tangan Dokter -->
+        <div style="margin-top: 50px; width: 100%; text-align: right;">
+            <div style="display: inline-block; text-align: center;">
+                <p style="margin-bottom: 70px;">Dokter Pemeriksa,</p>
+                <p style="font-weight: bold; border-bottom: 1px solid #000; padding: 0 20px;">
+                    {{ $encounter->practitioner->first()->name ?? '____________________' }}
+                </p>
+            </div>
         </div>
+
+        @if (!isset($pdf))
+            <div class="text-center mt-4">
+                <button class="btn btn-primary btn-print" onclick="window.print()">Cetak</button>
+            </div>
+        @endif
     </div>
 </body>
 

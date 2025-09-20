@@ -78,21 +78,21 @@
                 $totalDiskon = 0;
                 $totalNominal = 0;
             @endphp
-            @foreach($data as $i => $encounter)
-            @php
-                $totalBayar += $encounter->total_bayar_tindakan ?? 0;
-            @endphp
-            <tr>
-                <td>{{ $i+1 }}</td>
-                <td>{{ $encounter->no_encounter ?? '-' }}</td>
-                <td>{{ $encounter->name_pasien }}</td>
-                <td>{{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}</td>
-                <td>{{ number_format($encounter->total_tindakan ?? 0,0,',','.') }}</td>
-                <td>{{ number_format($encounter->diskon_tindakan ?? 0,0,',','.') }}</td>
-                <td>{{ $encounter->diskon_persen_tindakan ?? 0 }}%</td>
-                <td>{{ $encounter->metode_pembayaran_tindakan ?? '-' }}</td>
-                <td>{{ number_format($encounter->total_bayar_tindakan,0,',','.') }}</td>
-            </tr>
+            @foreach ($data as $i => $encounter)
+                @php
+                    $totalBayar += $encounter->total_bayar_tindakan ?? 0;
+                @endphp
+                <tr>
+                    <td>{{ $i + 1 }}</td>
+                    <td>{{ $encounter->no_encounter ?? '-' }}</td>
+                    <td>{{ $encounter->name_pasien }}</td>
+                    <td>{{ \Carbon\Carbon::parse($encounter->updated_at)->format('d-m-Y') }}</td>
+                    <td>{{ number_format($encounter->total_tindakan ?? 0, 0, ',', '.') }}</td>
+                    <td>{{ number_format($encounter->diskon_tindakan ?? 0, 0, ',', '.') }}</td>
+                    <td>{{ $encounter->diskon_persen_tindakan ?? 0 }}%</td>
+                    <td>{{ $encounter->metode_pembayaran_tindakan ?? '-' }}</td>
+                    <td>{{ number_format($encounter->total_bayar_tindakan, 0, ',', '.') }}</td>
+                </tr>
             @endforeach
             <tr>
                 <th colspan="9" style="text-align:right">

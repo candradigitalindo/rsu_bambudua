@@ -13,6 +13,9 @@ class PemeriksaanPenunjang extends Model
         'jenis_pemeriksaan',
         'hasil_pemeriksaan',
         'dokumen_pemeriksaan',
+        'harga',
+        'qty',
+        'total_harga',
     ];
     public function encounter()
     {

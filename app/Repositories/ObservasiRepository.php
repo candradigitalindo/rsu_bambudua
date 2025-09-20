@@ -192,18 +192,50 @@ class ObservasiRepository
     }
     public function postPemeriksaanPenunjang($request, $id)
     {
+        $jenisPemeriksaan = \App\Models\JenisPemeriksaanPenunjang::find($request->jenis_pemeriksaan_id);
+        if (!$jenisPemeriksaan) {
+            return null;
+        }
+
         // Jika belum ada, buat data baru
         $pemeriksaanPenunjang = new \App\Models\PemeriksaanPenunjang();
         $pemeriksaanPenunjang->encounter_id = $id;
-        $pemeriksaanPenunjang->jenis_pemeriksaan = $request->jenis_pemeriksaan;
-        $pemeriksaanPenunjang->hasil_pemeriksaan = $request->hasil_pemeriksaan;
-        if ($request->hasFile('dokumen_pemeriksaan')) {
-            $file = $request->file('dokumen_pemeriksaan');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->move(public_path('uploads'), $filename);
-            $pemeriksaanPenunjang->dokumen_pemeriksaan = $filename;
+        $pemeriksaanPenunjang->jenis_pemeriksaan_id = $jenisPemeriksaan->id;
+        $pemeriksaanPenunjang->jenis_pemeriksaan = $jenisPemeriksaan->name;
+
+        // [MODIFIED] Proses dynamic fields menjadi JSON atau format lain
+        $dynamicFieldsData = $request->input('dynamic_fields', []);
+        $hasil = [];
+        if (!empty($dynamicFieldsData)) {
+            // Ambil definisi field dari database untuk mendapatkan label
+            $templateFields = \App\Models\TemplateField::whereIn('id', array_keys($dynamicFieldsData))->get()->keyBy('id');
+
+            foreach ($dynamicFieldsData as $fieldId => $value) {
+                // Pastikan field ada di database untuk menghindari data tak terduga
+                if (isset($templateFields[$fieldId])) {
+                    $hasil[] = [
+                        'label' => $templateFields[$fieldId]->field_label,
+                        'value' => $value,
+                        'field_id' => $fieldId // Simpan juga ID field untuk referensi
+                    ];
+                }
+            }
         }
+        $pemeriksaanPenunjang->hasil_pemeriksaan = json_encode($hasil);
+
+        $pemeriksaanPenunjang->recomendation = $request->recomendation;
+        $pemeriksaanPenunjang->harga = $jenisPemeriksaan->harga;
+        $pemeriksaanPenunjang->qty = 1; // Asumsi qty selalu 1 untuk pemeriksaan
+        $pemeriksaanPenunjang->total_harga = $jenisPemeriksaan->harga;
+
         $pemeriksaanPenunjang->save();
+
+        // Update total_tindakan di encounter
+        $encounter = Encounter::find($id);
+        $totalTindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
+        $totalPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $id)->sum('total_harga');
+        $encounter->total_tindakan = $totalTindakan + $totalPenunjang;
+        $encounter->save();
 
         return $pemeriksaanPenunjang;
     }
@@ -211,14 +243,14 @@ class ObservasiRepository
     {
         $pemeriksaanPenunjang = \App\Models\PemeriksaanPenunjang::find($id);
         if ($pemeriksaanPenunjang) {
-            // Hapus file dokumen jika ada
-            if ($pemeriksaanPenunjang->dokumen_pemeriksaan) {
-                $filePath = public_path('uploads/' . $pemeriksaanPenunjang->dokumen_pemeriksaan);
-                if (file_exists($filePath)) {
-                    unlink($filePath);
-                }
-            }
             $pemeriksaanPenunjang->delete();
+
+            // Update total_tindakan di encounter
+            $encounter = Encounter::find($pemeriksaanPenunjang->encounter_id);
+            $totalTindakan = \App\Models\TindakanEncounter::where('encounter_id', $pemeriksaanPenunjang->encounter_id)->sum('total_harga');
+            $totalPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $pemeriksaanPenunjang->encounter_id)->sum('total_harga');
+            $encounter->total_tindakan = $totalTindakan + $totalPenunjang;
+            $encounter->save();
             return true;
         }
         return false;

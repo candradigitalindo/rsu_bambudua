@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\JenisPemeriksaanPenunjang;
 use App\Repositories\ObservasiRepository;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class ObservasiController extends Controller
 {
@@ -20,9 +22,10 @@ class ObservasiController extends Controller
         $observasi = $id;
         // Ambil data dokter yang menangani
         $dokters = $this->observasiRepository->getDokters($id);
+        $jenisPemeriksaan = JenisPemeriksaanPenunjang::all();
         // Ambil data perawat yang menangani
         $perawats = $this->observasiRepository->getPerawats($id);
-        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats'));
+        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats', 'jenisPemeriksaan'));
     }
     public function riwayatPenyakit($id)
     {
@@ -90,19 +93,11 @@ class ObservasiController extends Controller
     }
     public function postPemeriksaanPenunjang(Request $request, $id)
     {
-        // cek jika dokumen undifined
-        if ($request->hasFile('dokumen_pemeriksaan')) {
-            $request->validate([
-                'jenis_pemeriksaan' => 'required|string',
-                'hasil_pemeriksaan' => 'required|string',
-                'dokumen_pemeriksaan' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
-            ]);
-        } else {
-            $request->validate([
-                'jenis_pemeriksaan' => 'required|string',
-                'hasil_pemeriksaan' => 'required|string',
-            ]);
-        }
+        $request->validate([
+            'jenis_pemeriksaan_id' => 'required|exists:jenis_pemeriksaan_penunjangs,id',
+            'hasil_pemeriksaan' => 'required|string',
+            'recomendation' => 'nullable|string',
+        ]);
         $result = $this->observasiRepository->postPemeriksaanPenunjang($request, $id);
         return response()->json([
             'status' => 200,
@@ -122,9 +117,26 @@ class ObservasiController extends Controller
     public function printPemeriksaanPenunjang($id)
     {
         $pemeriksaan = \App\Models\PemeriksaanPenunjang::findOrFail($id);
-        $encounter = \App\Models\Encounter::findOrFail($pemeriksaan->encounter_id);
+        $encounter = \App\Models\Encounter::with('practitioner')->findOrFail($pemeriksaan->encounter_id);
         $pasien = \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
         return view('pages.observasi.pemeriksaan_penunjang_print', compact('pemeriksaan', 'encounter', 'pasien'));
+    }
+
+    public function downloadPemeriksaanPenunjang($id)
+    {
+        $pemeriksaan = \App\Models\PemeriksaanPenunjang::findOrFail($id);
+        $encounter = \App\Models\Encounter::with('practitioner')->findOrFail($pemeriksaan->encounter_id);
+        $pasien = \App\Models\Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+
+        $pdf = Pdf::loadView('pages.observasi.pemeriksaan_penunjang_print', compact('pemeriksaan', 'encounter', 'pasien') + ['pdf' => true]);
+        return $pdf->download('hasil-pemeriksaan-' . $encounter->rekam_medis . '.pdf');
+    }
+
+    public function getTemplateFields($id)
+    {
+        $jenisPemeriksaan = JenisPemeriksaanPenunjang::with('templateFields')->find($id);
+        $fields = $jenisPemeriksaan ? $jenisPemeriksaan->templateFields : [];
+        return response()->json($fields);
     }
 
     // ambil data tindakan

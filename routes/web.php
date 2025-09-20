@@ -78,6 +78,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/tindakan/getBahan/{id}', [TindakanController::class, 'getBahan'])->name('tindakan.getBahan');
         Route::post('/tindakan/storeBahan/{id}', [TindakanController::class, 'storeBahan'])->name('tindakan.storeBahan');
         Route::delete('/tindakan/destroyBahan/{id}', [TindakanController::class, 'destroyBahan'])->name('tindakan.destroyBahan');
+        // Route CRUD Jenis Pemeriksaan Penunjang
+        Route::get('jenis-pemeriksaan/{id}/fields', [\App\Http\Controllers\JenisPemeriksaanPenunjangController::class, 'showFields'])->name('jenis-pemeriksaan.fields.index');
+        Route::post('jenis-pemeriksaan/{id}/fields', [\App\Http\Controllers\JenisPemeriksaanPenunjangController::class, 'storeField'])->name('jenis-pemeriksaan.fields.store');
+        Route::delete('jenis-pemeriksaan/fields/{field_id}', [\App\Http\Controllers\JenisPemeriksaanPenunjangController::class, 'destroyField'])->name('jenis-pemeriksaan.fields.destroy');
+        Route::resource('jenis-pemeriksaan', \App\Http\Controllers\JenisPemeriksaanPenunjangController::class)->except(['show']);
         Route::resource('icd10', \App\Http\Controllers\Icd10Controller::class);
         Route::post('icd10/import', [\App\Http\Controllers\Icd10Controller::class, 'import'])->name('icd10.import');
         // route discount
@@ -145,7 +150,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/observasi/{id}/pemeriksaanPenunjang', [ObservasiController::class, 'pemeriksaanPenunjang'])->name('observasi.pemeriksaanPenunjang');
         Route::post('/observasi/{id}/postPemeriksaanPenunjang', [ObservasiController::class, 'postPemeriksaanPenunjang'])->name('observasi.postPemeriksaanPenunjang');
         // delete pemeriksaan penunjang
+        // [FIX] Route untuk mengambil template field dinamis
+        Route::get('/pemeriksaan-penunjang/templates/{id}', [ObservasiController::class, 'getTemplateFields'])->name('observasi.getTemplateFields');
         Route::delete('/observasi/{id}/destroyPemeriksaanPenunjang', [ObservasiController::class, 'deletePemeriksaanPenunjang'])->name('observasi.deletePemeriksaanPenunjang');
+        // [FIX] Pindahkan rute cetak ke dalam grup kunjungan
+        Route::get('/observasi/pemeriksaan-penunjang/print/{id}', [ObservasiController::class, 'printPemeriksaanPenunjang'])->name('observasi.printPemeriksaanPenunjang');
+        Route::get('/observasi/pemeriksaan-penunjang/download/{id}', [ObservasiController::class, 'downloadPemeriksaanPenunjang'])->name('observasi.downloadPemeriksaanPenunjang');
 
         // route untuk tindakan counter
         Route::get('/observasi/getTindakan/{id}', [ObservasiController::class, 'getTindakan'])->name('observasi.getTindakan');
@@ -259,7 +269,4 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('insentif-manual', \App\Http\Controllers\IncentiveController::class)
             ->except(['show'])->names('keuangan.insentif');
     });
-
-    // Rute ini dipindah ke sini agar tidak terpengaruh oleh prefix 'kunjungan'
-    Route::get('/observasi/pemeriksaan-penunjang/print/{id}', [ObservasiController::class, 'printPemeriksaanPenunjang'])->name('observasi.printPemeriksaanPenunjang');
 });

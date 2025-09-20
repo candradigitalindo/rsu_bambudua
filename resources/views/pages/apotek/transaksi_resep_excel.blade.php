@@ -96,7 +96,7 @@
             @endforeach
             <tr>
                 <th colspan="9" style="text-align:right">
-                    Total Bayar: {{ number_format($totalBayar, 0, ',', '.') }}
+                    Total Bayar: Rp {{ number_format($totalBayar, 0, ',', '.') }}
                 </th>
             </tr>
         </tbody>

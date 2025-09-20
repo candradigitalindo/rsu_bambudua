@@ -99,6 +99,10 @@
                                 href="{{ route('tindakan.index') }}">Data Tindakan</a>
                         </li>
                         <li>
+                            <a class="{{ request()->is('masterdata/jenis-pemeriksaan*') ? 'active-sub' : '' }}"
+                                href="{{ route('jenis-pemeriksaan.index') }}">Pemeriksaan Penunjang</a>
+                        </li>
+                        <li>
                             <a class="{{ request()->is('masterdata/icd10*') ? 'active-sub' : '' }}"
                                 href="{{ route('icd10.index') }}">Data ICD10</a>
                         </li>

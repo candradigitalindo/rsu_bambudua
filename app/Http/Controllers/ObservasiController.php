@@ -2,13 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\LogsActivity;
+
 use App\Models\JenisPemeriksaanPenunjang;
+use App\Models\LabRequest;
+use App\Models\LabRequestItem;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Repositories\ObservasiRepository;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class ObservasiController extends Controller
 {
+    use LogsActivity;
     public $observasiRepository;
     public function __construct(ObservasiRepository $observasiRepository)
     {
@@ -25,7 +32,9 @@ class ObservasiController extends Controller
         $jenisPemeriksaan = JenisPemeriksaanPenunjang::all();
         // Ambil data perawat yang menangani
         $perawats = $this->observasiRepository->getPerawats($id);
-        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats', 'jenisPemeriksaan'));
+        // [LAB] Ambil semua permintaan lab dan hasilnya untuk encounter ini
+        $labRequests = \App\Models\LabRequest::with('items')->where('encounter_id', $id)->orderByDesc('created_at')->get();
+        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats', 'jenisPemeriksaan', 'labRequests'));
     }
     public function riwayatPenyakit($id)
     {
@@ -40,12 +49,14 @@ class ObservasiController extends Controller
     {
         // Validasi input
         $request->validate([
-            'dokter_id' => 'required|string|max:255',
-            'keluhan_utama' => 'required|string|max:255',
-            'riwayat_penyakit' => 'required|string|max:255',
-            'riwayat_penyakit_keluarga' => 'required|string|max:255',
+            'dokter_ids'   => 'required|array',
+            'dokter_ids.*' => 'exists:users,id', // Memastikan setiap ID dokter valid
+            'keluhan_utama' => 'required|string',
+            'riwayat_penyakit' => 'nullable|string',
+            'riwayat_penyakit_keluarga' => 'nullable|string',
         ]);
         $result = $this->observasiRepository->postAnemnesis($request, $id);
+        $this->activity('Mengisi Anamnesis', ['encounter_id' => $id], 'kunjungan');
         return response()->json([
             'status' => 200,
             'message' => 'Data Anamnesis berhasil disimpan.',
@@ -56,11 +67,7 @@ class ObservasiController extends Controller
     public function tandaVital($id)
     {
         $tandaVital = $this->observasiRepository->tandaVital($id);
-        if ($tandaVital) {
-            return response()->json($tandaVital);
-        } else {
-            return response()->json(['message' => 'Tanda vital tidak ditemukan'], 404);
-        }
+        return response()->json($tandaVital); // Selalu kembalikan 200, frontend akan handle jika null
     }
     public function postTandaVital(Request $request, $id)
     {
@@ -76,6 +83,7 @@ class ObservasiController extends Controller
             'kesadaran' => 'nullable|string|max:255',
         ]);
         $result = $this->observasiRepository->postTandaVital($request, $id);
+        $this->activity('Mengisi Tanda Vital', ['encounter_id' => $id], 'kunjungan');
         return response()->json([
             'status' => 200,
             'message' => 'Data Tanda Vital berhasil disimpan.',
@@ -84,34 +92,82 @@ class ObservasiController extends Controller
     }
     public function pemeriksaanPenunjang($id)
     {
-        $pemeriksaanPenunjang = $this->observasiRepository->pemeriksaanPenunjang($id);
-        if ($pemeriksaanPenunjang) {
-            return response()->json($pemeriksaanPenunjang);
-        } else {
-            return response()->json($pemeriksaanPenunjang);
+        // Kembalikan daftar permintaan LAB (LabRequest + items) untuk encounter ini dengan status
+        $rows = \App\Models\LabRequest::with('items')
+            ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
+            ->get();
+        $flat = [];
+        foreach ($rows as $req) {
+            foreach ($req->items as $it) {
+                $flat[] = [
+                    'id' => $it->id,            // LabRequestItem id (untuk delete)
+                    'request_id' => $req->id,   // LabRequest id (untuk print)
+                    'jenis_pemeriksaan' => $it->test_name,
+                    'qty' => 1,
+                    'harga' => (int)$it->price,
+                    'total_harga' => (int)$it->price,
+                    'status' => $req->status,
+                    'created_at' => optional($req->created_at)->toDateTimeString(),
+                ];
+            }
         }
+        return response()->json($flat);
     }
     public function postPemeriksaanPenunjang(Request $request, $id)
     {
-        $request->validate([
+        $validated = $request->validate([
             'jenis_pemeriksaan_id' => 'required|exists:jenis_pemeriksaan_penunjangs,id',
-            'hasil_pemeriksaan' => 'required|string',
-            'recomendation' => 'nullable|string',
         ]);
-        $result = $this->observasiRepository->postPemeriksaanPenunjang($request, $id);
+
+        // Buat Permintaan Laboratorium dari Pelayanan Medis (request-only)
+        $jp = JenisPemeriksaanPenunjang::findOrFail($validated['jenis_pemeriksaan_id']);
+
+        DB::transaction(function () use ($id, $jp, $request) {
+            $encounter = \App\Models\Encounter::findOrFail($id);
+            $dokter = Auth::user();
+            $req = LabRequest::create([
+                'encounter_id' => $id,
+                'requested_by' => $dokter->id,
+                'status' => 'requested',
+                'requested_at' => now(),
+                'notes' => null,
+                'total_charge' => (int)$jp->harga,
+                'charged' => false,
+            ]);
+            LabRequestItem::create([
+                'lab_request_id' => $req->id,
+                'test_id' => $jp->id,
+                'test_name' => $jp->name,
+                'price' => (int)$jp->harga,
+            ]);
+
+            // Buat insentif untuk dokter
+            $this->observasiRepository->createPemeriksaanPenunjangIncentive($encounter, $dokter, $jp->name, (float)$jp->harga);
+        });
+
+        // Recalculate encounter totals to include LabRequest items
+        $this->observasiRepository->updateEncounterTotalTindakan($id);
+
+        $this->activity('Membuat Permintaan Laboratorium', ['encounter_id' => $id, 'pemeriksaan' => $jp->name], 'kunjungan');
         return response()->json([
             'status' => 200,
-            'message' => 'Data Pemeriksaan Penunjang berhasil disimpan.',
-            'data' => $result
+            'message' => 'Permintaan Laboratorium berhasil dibuat.',
         ]);
     }
     public function deletePemeriksaanPenunjang($id)
     {
         $result = $this->observasiRepository->deletePemeriksaanPenunjang($id);
+        $this->activity('Menghapus Permintaan Penunjang', ['item_id' => $id], 'kunjungan');
+        if (is_array($result) && array_key_exists('success', $result)) {
+            return response()->json([
+                'status' => $result['success'],
+                'message' => $result['message'] ?? ($result['success'] ? 'Berhasil dihapus.' : 'Gagal menghapus.'),
+            ]);
+        }
         return response()->json([
-            'status' => 200,
-            'message' => 'Data Pemeriksaan Penunjang berhasil dihapus.',
-            'data' => $result
+            'status' => (bool)$result,
+            'message' => $result ? 'Berhasil dihapus.' : 'Gagal menghapus.'
         ]);
     }
     public function printPemeriksaanPenunjang($id)
@@ -130,6 +186,33 @@ class ObservasiController extends Controller
 
         $pdf = Pdf::loadView('pages.observasi.pemeriksaan_penunjang_print', compact('pemeriksaan', 'encounter', 'pasien') + ['pdf' => true]);
         return $pdf->download('hasil-pemeriksaan-' . $encounter->rekam_medis . '.pdf');
+    }
+
+    // AJAX: Ambil semua LabRequest beserta items untuk encounter
+    public function labRequests($id)
+    {
+        $rows = \App\Models\LabRequest::with('items')
+            ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
+            ->get();
+        return response()->json($rows->map(function ($req) {
+            return [
+                'id' => $req->id,
+                'status' => $req->status,
+                'created_at' => optional($req->created_at)->format('d M Y H:i'),
+                'items' => $req->items->map(function ($it) {
+                    return [
+                        'test_name' => $it->test_name,
+                        'price' => (int) $it->price,
+                        'result_payload' => $it->result_payload,
+                        'result_value' => $it->result_value,
+                        'result_unit' => $it->result_unit,
+                        'result_reference' => $it->result_reference,
+                        'result_notes' => $it->result_notes,
+                    ];
+                })->toArray(),
+            ];
+        })->toArray());
     }
 
     public function getTemplateFields($id)
@@ -168,6 +251,7 @@ class ObservasiController extends Controller
             'qty' => 'required|integer|max:255',
         ]);
         $result = $this->observasiRepository->postTindakanEncounter($request, $id);
+        $this->activity('Menambahkan Tindakan Medis', ['encounter_id' => $id, 'jenis_tindakan' => $request->input('jenis_tindakan'), 'qty' => (int)$request->input('qty')], 'kunjungan');
         return response()->json([
             'status' => 200,
             'message' => 'Data Tindakan berhasil disimpan.',
@@ -178,6 +262,7 @@ class ObservasiController extends Controller
     public function deleteTindakanEncounter($id)
     {
         $result = $this->observasiRepository->deleteTindakanEncounter($id);
+        $this->activity('Menghapus Tindakan Medis', ['tindakan_encounter_id' => $id], 'kunjungan');
         return response()->json([
             'status' => $result['success'],
             'message' => $result['message']
@@ -214,6 +299,7 @@ class ObservasiController extends Controller
             'diagnosis_type' => 'required|string|max:255',
         ]);
         $result = $this->observasiRepository->postDiagnosis($request, $id);
+        $this->activity('Menambahkan Diagnosis', ['encounter_id' => $id, 'icd10_id' => $request->input('icd10_id')], 'kunjungan');
         return response()->json([
             'status' => 200,
             'message' => 'Data Diagnosis berhasil disimpan.',
@@ -224,6 +310,7 @@ class ObservasiController extends Controller
     public function deleteDiagnosis($id)
     {
         $result = $this->observasiRepository->deleteDiagnosis($id);
+        $this->activity('Menghapus Diagnosis', ['diagnosis_id' => $id], 'kunjungan');
         return response()->json([
             'status' => $result['success'],
             'message' => $result['message']
@@ -249,6 +336,7 @@ class ObservasiController extends Controller
             'masa_pemakaian_hari.required' => 'Masa pemakaian hari harus diisi.',
         ]);
         $result = $this->observasiRepository->postResep($request, $id);
+        $this->activity('Membuat Resep', ['encounter_id' => $id, 'masa_pemakaian_hari' => $request->input('masa_pemakaian_hari')], 'kunjungan');
         return response()->json([
             'status' => 200,
             'message' => 'Data Resep berhasil disimpan.',
@@ -286,12 +374,18 @@ class ObservasiController extends Controller
                 'message' => 'Data Resep Detail berhasil disimpan.',
                 'data' => $result
             ]);
+            $this->activity('Menambahkan Obat ke Resep', [
+                'encounter_id' => $id,
+                'product_apotek_id' => $request->input('product_apotek_id'),
+                'qty' => (int)$request->input('qty_obat'),
+            ], 'kunjungan');
         }
     }
     // hapus resep detail
     public function deleteResepDetail($id)
     {
         $result = $this->observasiRepository->deleteResepDetail($id);
+        $this->activity('Menghapus Obat dari Resep', ['resep_detail_id' => $id], 'kunjungan');
         return response()->json([
             'status' => $result['success'],
             'message' => $result['message']
@@ -306,6 +400,13 @@ class ObservasiController extends Controller
         } else {
             return response()->json($encounter);
         }
+    }
+
+    // Ringkasan encounter terakhir pasien
+    public function lastEncounterSummary($id)
+    {
+        $summary = $this->observasiRepository->getLastEncounterSummary($id);
+        return response()->json($summary ?? []);
     }
     // Buat diskon tindakan
     public function postDiskonTindakan(Request $request, $id)
@@ -363,7 +464,17 @@ class ObservasiController extends Controller
     public function getInpatientAdmission($id)
     {
         $getInpatientAdmission = $this->observasiRepository->getInpatientAdmission($id);
-        return view('pages.observasi.rinap', compact('getInpatientAdmission'));
+        if (!$getInpatientAdmission) {
+            abort(404, 'Rawat inap tidak ditemukan');
+        }
+        // Samakan variabel dengan Observasi index
+        $encounter = \App\Models\Encounter::findOrFail($getInpatientAdmission->encounter_id);
+        $observasi = $encounter->id;
+        $dokters = $this->observasiRepository->getDokters($observasi);
+        $perawats = $this->observasiRepository->getPerawats($observasi);
+        $jenisPemeriksaan = \App\Models\JenisPemeriksaanPenunjang::all();
+        $labRequests = \App\Models\LabRequest::with('items')->where('encounter_id', $observasi)->orderByDesc('created_at')->get();
+        return view('pages.observasi.rinap', compact('encounter', 'observasi', 'dokters', 'perawats', 'jenisPemeriksaan', 'labRequests'));
     }
     public function postInpatientTreatment(Request $request, $id)
     {

@@ -14,4 +14,11 @@ return new class extends Migration
             $table->decimal('total_harga', 15, 2)->default(0)->after('qty');
         });
     }
+
+    public function down(): void
+    {
+        Schema::table('pemeriksaan_penunjangs', function (Blueprint $table) {
+            $table->dropColumn(['harga', 'qty', 'total_harga']);
+        });
+    }
 };

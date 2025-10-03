@@ -23,6 +23,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Pemeriksaan</th>
+                                    <th>Tipe</th>
                                     <th>Harga</th>
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -32,6 +33,13 @@
                                     <tr>
                                         <td>{{ $jenisPemeriksaan->firstItem() + $key }}</td>
                                         <td>{{ $item->name }}</td>
+                                        <td>
+                                            @if ($item->type == 'lab')
+                                                <span class="badge bg-info">Laboratorium</span>
+                                            @else
+                                                <span class="badge bg-primary">Radiologi</span>
+                                            @endif
+                                        </td>
                                         <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
                                         <td class="text-center">
                                             <a href="{{ route('jenis-pemeriksaan.fields.index', $item->id) }}"
@@ -54,7 +62,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center">Tidak ada data</td>
+                                        <td colspan="5" class="text-center">Tidak ada data</td>
                                     </tr>
                                 @endforelse
                             </tbody>

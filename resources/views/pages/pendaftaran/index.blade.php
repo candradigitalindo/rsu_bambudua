@@ -1,10 +1,10 @@
 @extends('layouts.app')
 @section('title', 'Pendaftaran')
 @push('style')
-    <!-- Scrollbar CSS -->
+    <!-- Existing CSS -->
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
-
-    <!-- Uploader CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
 @endpush
 @section('content')
@@ -15,7 +15,8 @@
             <div class="card border mb-3">
                 <div class="card-body">
                     <div class="card-info rounded-1 small lh-1">
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-pasien" id="loket">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-pasien"
+                            id="loket">
                             <i class="ri-folder-user-fill"></i>
                             <span class="btn-text" id="text-loket">Buka Data Pasien</span>
                             <span class="spinner-border spinner-border-sm d-none" id="spiner-loket"></span>
@@ -748,7 +749,7 @@
                                             <div class="mb-3">
                                                 <label class="form-label" for="dokter">Dokter</label>
                                                 <div class="input-group">
-                                                    <select class="form-select" name="dokter" id="dokter">
+                                                    <select class="form-select" name="dokter[]" id="dokter" multiple>
                                                         <option value="">-- Pilih Dokter --</option>
                                                         {{-- Akan diisi via JS --}}
                                                     </select>
@@ -885,7 +886,7 @@
                                         </div>
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="a7">Dokter</label>
+                                                <label class="form-label" for="dokter_rawatRinap">Dokter</label>
                                                 <span class="text-danger">*</span>
                                                 <div class="input-group">
                                                     <select class="form-select" name="dokter_rawatRinap"
@@ -1063,7 +1064,7 @@
                                     </div>
                                     <hr>
                                     <div class="row gx-3 mt-3">
-                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a7">Jenis Jaminan</label>
                                                 <div class="input-group">
@@ -1079,8 +1080,7 @@
                                             </div>
                                         </div>
 
-
-                                        <div class="col-xxl-6 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Tujuan Kunjungan
 
@@ -1269,6 +1269,9 @@
     <!-- Row ends -->
 @endsection
 @push('scripts')
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <!-- Overlay Scroll JS -->
     <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
@@ -1283,6 +1286,27 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script>
         $(document).ready(function() {
+
+            // Initialize Select2 untuk single select
+            $('#dokter_rawatRinap').select2({
+                placeholder: "Pilih Dokter",
+                allowClear: true,
+                width: '100%'
+            });
+
+            // [FIX] Initialize Select2 untuk dokter, pastikan modalnya juga di-handle
+            $('#dokter').select2({
+                placeholder: "Pilih satu atau lebih dokter",
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#modal-rawatJalan') // Penting untuk select2 di dalam modal
+            });
+            $('#dokter_rawatDarurat').select2({
+                placeholder: "Pilih satu atau lebih dokter",
+                width: '100%',
+                dropdownParent: $('#modal-rawatDarurat')
+            });
+
             rawatJalan();
             $("#tab-rawatJalan").on("click", function() {
                 rawatJalan();
@@ -1528,6 +1552,7 @@
             let url = "{{ route('pendaftaran.editPasien', ':id') }}"
             url = url.replace(':id', id);
             $("#error-edit").css("display", "none");
+
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -1535,47 +1560,32 @@
                     _token: "{{ csrf_token() }}"
                 },
                 success: function(res) {
-                    $("#jenis_identitas_edit").val(res.data.jenis_identitas);
-                    $("#no_identitas_edit").val(res.data.no_identitas);
-                    $("#name_pasien_edit").val(res.data.name);
-                    $("#jenis_kelamin_edit").val(res.data.jenis_kelamin);
-                    $("#tgl_lahir_edit").val(res.data.tgl_lahir);
-                    $("#golongan_darah_edit").val(res.data.golongan_darah);
-                    $("#kewarganegaraan_edit").val(res.data.kewarganegaraan);
-                    $("#pekerjaan_edit").val(res.data.pekerjaan);
-                    $("#status_menikah_edit").val(res.data.status_menikah);
-                    $("#agama_edit").val(res.data.agama);
-                    $("#no_hp_edit").val(res.data.no_hp);
-                    $("#no_telepon_edit").val(res.data.no_telepon);
-                    $("#mr_lama_edit").val(res.data.mr_lama);
-                    $("#alamat_edit").val(res.data.alamat);
-                    $("#province_edit").val(res.data.province_code);
-                    $("#id").val(res.data.id);
-                    let url = "{{ route('wilayah.city', ':code') }}";
-                    url = url.replace(':code', res.data.province_code);
-                    let city_code = res.data.city_code;
-                    $.ajax({
-                        url: url,
-                        type: 'GET',
-                        data: {
-                            _token: "{{ csrf_token() }}"
-                        },
-                        success: function(response) {
-                            $.each(response, function(id, item) {
-                                if (city_code == item.code) {
-                                    $("#city_edit").append("<option value=" + item
-                                        .code +
-                                        " selected>" + item.name +
-                                        "</option>");
-                                } else {
-                                    $("#city_edit").append("<option value=" + item
-                                        .code +
-                                        ">" + item.name +
-                                        "</option>");
-                                }
-                            })
-                        }
-                    })
+                    const data = res.data;
+                    $("#id").val(data.id);
+                    $("#jenis_identitas_edit").val(data.jenis_identitas);
+                    $("#no_identitas_edit").val(data.no_identitas);
+                    $("#name_pasien_edit").val(data.name);
+                    $("#jenis_kelamin_edit").val(data.jenis_kelamin);
+                    $("#tgl_lahir_edit").val(data.tgl_lahir);
+                    $("#golongan_darah_edit").val(data.golongan_darah);
+                    $("#kewarganegaraan_edit").val(data.kewarganegaraan);
+                    $("#pekerjaan_edit").val(data.pekerjaan);
+                    $("#status_menikah_edit").val(data.status_menikah);
+                    $("#agama_edit").val(data.agama);
+                    $("#no_hp_edit").val(data.no_hp);
+                    $("#no_telepon_edit").val(data.no_telepon);
+                    $("#mr_lama_edit").val(data.mr_lama);
+                    $("#alamat_edit").val(data.alamat);
+
+                    // [FIX] Logic for province and city dropdowns
+                    const provinceDropdown = $('#province_edit');
+                    const cityDropdown = $('#city_edit');
+
+                    // Store the target city code
+                    cityDropdown.data('selected-city', data.city_code);
+
+                    // Set province and trigger change to load cities
+                    provinceDropdown.val(data.province_code).trigger('change');
                 }
             })
         });
@@ -1640,8 +1650,9 @@
             let url = "{{ route('pendaftaran.showPasien', ':id') }}"
             url = url.replace(':id', id);
             $("#error-rawatJalan").css("display", "none");
+            $("#clinic").val("").trigger('change'); // [FIX] Reset clinic
             $("#jenis_jaminan").val("");
-            $("#dokter").val("");
+            $("#dokter").val(null).trigger('change'); // Clear multiple selection
             $("#tujuan_kunjungan").val("");
             $("#btn-submit-rawatJalan").text("Simpan");
             $.ajax({
@@ -1674,29 +1685,30 @@
             let url = "{{ route('pendaftaran.postRawatJalan', ':id') }}"
             url = url.replace(':id', $("#id-rawatJalan").val());
 
+            var selectedDoctors = $("#dokter").val();
+
             $.ajax({
                 url: url,
                 type: 'POST',
                 data: {
                     _token: "{{ csrf_token() }}",
                     jenis_jaminan: $("#jenis_jaminan").val(),
-                    dokter: $("#dokter").val(),
+                    dokter: selectedDoctors,
                     clinic_id: $("#clinic").val(),
                     tujuan_kunjungan: $("#tujuan_kunjungan").val(),
                 },
-
                 success: function(res) {
                     if ($.isEmptyObject(res.error)) {
                         $("#error-rawatJalan").css("display", "none");
                         if (res.status == false) {
                             swal(res.text, {
-                                icon: "error",
+                                icon: "error"
                             });
                         } else {
                             $("#tab-rawatJalan").click();
                             $("#btn-tutup-rawatJalan").click();
                             swal(res.text, {
-                                icon: "success",
+                                icon: "success"
                             });
                         }
                     } else {
@@ -1717,8 +1729,8 @@
                     _token: "{{ csrf_token() }}",
                     jenis_jaminan: $("#jenis_jaminan").val(),
                     dokter: $("#dokter").val(),
-                    tujuan_kunjungan: $("#tujuan_kunjungan").val(),
-                    clinic: $("#clinic").val(),
+                    clinic_id: $("#clinic").val(),
+                    tujuan_kunjungan: $("#tujuan_kunjungan").val()
                 },
 
                 success: function(res) {
@@ -1748,7 +1760,7 @@
             url = url.replace(':id', id);
             $("#error-rawatJalan").css("display", "none");
             $("#jenis_jaminan").val("");
-            $("#dokter").val("");
+            $("#dokter").val(null).trigger('change'); // Clear multiple selection
             $("#tujuan_kunjungan").val("");
             $.ajax({
                 url: url,
@@ -1766,15 +1778,42 @@
                     $("#created_rawatJalan").text(res.data.tgl_encounter);
                     $("#type_rawatJalan").text(res.data.type);
                     $("#jenis_jaminan").val(res.data.jenis_jaminan);
-                    $("#dokter").val(res.data.dokter);
                     $("#tujuan_kunjungan").val(res.data.tujuan_kunjungan);
                     $("#btn-submit-rawatJalan").text("Update Rawat Jalan");
                     $("#clinic").val(res.data.clinic_id).trigger(
                         'change'); // trigger agar dokter terupdate
-                    $("#dokter").data('selected', res.data.dokter_id);
+                    $("#dokter").data('selected', res.data.dokter_ids); // [FIX] Use dokter_ids (array)
                     $("#error-rawatJalan").css("display", "none");
                 }
             })
+        });
+
+        // [NEW] Handle edit for Rawat Darurat (IGD)
+        $(document).on('click', '.editrawatDarurat', function() {
+            let id = $(this).attr('id');
+            let url = "{{ route('pendaftaran.editEncounterRdarurat', ':id') }}";
+            url = url.replace(':id', id);
+
+            // Reset form
+            $("#error-rawatDarurat").css("display", "none");
+            $("#jenis_jaminan_rawatDarurat").val("");
+            $("#tujuan_kunjungan_rawatDarurat").val("");
+            $("#btn-submit-rawatDarurat").text("Update Rawat Darurat");
+
+            $.get(url, function(res) {
+                const data = res.data;
+                $("#no_rm_rawatDarurat").text(data.rekam_medis);
+                $("#name_rawatDarurat").text(data.name_pasien);
+                $("#tgl_lahir_rawatDarurat").text(data.umur);
+                $("#id-rawatDarurat").val(id);
+                $("#status-pasien-rawatDarurat").text(data.status);
+                $("#no_encounter_rawatDarurat").text(data.no_encounter);
+                $("#created_rawatDarurat").text(data.tgl_encounter);
+                $("#type_rawatDarurat").text(data.type);
+                $("#jenis_jaminan_rawatDarurat").val(data.jenis_jaminan);
+                $("#tujuan_kunjungan_rawatDarurat").val(data.tujuan_kunjungan);
+                $("#dokter_rawatDarurat").val(data.dokter_ids).trigger('change');
+            });
         });
 
         function error_rawatJalan(msg) {
@@ -1791,7 +1830,7 @@
             url = url.replace(':id', id);
             $("#error-rawatInap").css("display", "none");
             $("#jenis_jaminan_rawatInap").val("");
-            $("#dokter_rawatInap").val("");
+            $("#dokter_rawatInap").val(null).trigger('change'); // Clear multiple selection
             $("#tujuan_kunjungan_rawatInap").val("");
             $("#btn-submit-rawatInap").text("Simpan");
             $.ajax({
@@ -1804,312 +1843,15 @@
                     $("#no_rm_rawatInap").text(res.data.rekam_medis);
                     $("#name_rawatInap").text(res.data.name);
                     $("#tgl_lahir_rawatInap").text(res.data.umur);
-                    $("#id-rawatInap").val(id);
-                    $("#status-pasien-rawatInap").text(res.data.status);
-                    $("#no_encounter_rawatInap").text(res.data.no_encounter);
-                    $("#created_rawatInap").text(res.data.tgl_encounter);
-                    $("#type_rawatInap").text(res.data.type);
-                }
-            });
-        });
-        $("#btn-submit-rawatInap").on('click', function() {
-            if ($(this).text() === 'Update Rawat Inap') {
-                update_rawatInap();
-            } else {
-                submit_rawatInap();
-            }
-        });
-        $(document).on('click', '.igd', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.showPasien', ':id') }}"
-            url = url.replace(':id', id);
-            $("#error-rawatDarurat").css("display", "none");
-            $("#jenis_jaminan_rawatDarurat").val("");
-            $("#dokter_rawatDarurat").val("");
-            $("#tujuan_kunjungan_rawatDarurat").val("");
-            $("#btn-submit-rawatDarurat").text("Simpan");
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(res) {
-                    $("#no_rm_rawatDarurat").text(res.data.rekam_medis);
-                    $("#name_rawatDarurat").text(res.data.name);
-                    $("#tgl_lahir_rawatDarurat").text(res.data.umur);
-                    $("#id-rawatDarurat").val(id);
-                    $("#status-pasien-rawatDarurat").text(res.data.status);
-                    $("#no_encounter_rawatDarurat").text(res.data.no_encounter);
-                    $("#created_rawatDarurat").text(res.data.tgl_encounter);
-                    $("#type_rawatDarurat").text(res.data.type);
-                }
-            });
-        });
-        $("#btn-submit-rawatDarurat").on('click', function() {
-            if ($(this).text() === 'Update Rawat Darurat') {
-                update_rawatDarurat();
-            } else {
-                submit_rawatDarurat();
-            }
-        });
-
-        function submit_rawatDarurat() {
-            let url = "{{ route('pendaftaran.postRawatDarurat', ':id') }}"
-            url = url.replace(':id', $("#id-rawatDarurat").val());
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    jenis_jaminan: $("#jenis_jaminan_rawatDarurat").val(),
-                    dokter: $("#dokter_rawatDarurat").val(),
-                    tujuan_kunjungan: $("#tujuan_kunjungan_rawatDarurat").val(),
-                },
-
-                success: function(res) {
-                    if ($.isEmptyObject(res.error)) {
-                        $("#error-rawatDarurat").css("display", "none");
-                        if (res.status == false) {
-                            swal(res.text, {
-                                icon: "error",
-                            });
-                        } else {
-                            $("#tab-igd").click();
-                            $("#btn-tutup-rawatDarurat").click();
-                            swal(res.text, {
-                                icon: "success",
-                            });
-                        }
-                    } else {
-                        error_rawatDarurat(res.error)
-                    }
-                }
-            });
-        }
-
-        function update_rawatDarurat() {
-            let url = "{{ route('pendaftaran.updateRawatDarurat', ':id') }}"
-            url = url.replace(':id', $("#id-rawatDarurat").val());
-
-            $.ajax({
-                url: url,
-                type: 'POST',
-                data: {
-                    _token: "{{ csrf_token() }}",
-                    jenis_jaminan: $("#jenis_jaminan_rawatDarurat").val(),
-                    dokter: $("#dokter_rawatDarurat").val(),
-                    tujuan_kunjungan: $("#tujuan_kunjungan_rawatDarurat").val(),
-                },
-
-                success: function(res) {
-                    if ($.isEmptyObject(res.error)) {
-                        $("#error-rawatDarurat").css("display", "none");
-                        if (res.status == false) {
-                            swal(res.text, {
-                                icon: "error",
-                            });
-                        } else {
-                            $("#tab-igd").click();
-                            $("#btn-tutup-rawatDarurat").click();
-                            swal(res.text, {
-                                icon: "success",
-                            });
-                        }
-                    } else {
-                        error_rawatDarurat(res.error)
-                    }
-                }
-            });
-        }
-        $(document).on('click', '.editrawatDarurat', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.editEncounterRdarurat', ':id') }}"
-            url = url.replace(':id', id);
-            $("#error-rawatDarurat").css("display", "none");
-            $("#jenis_jaminan_rawatDarurat").val("");
-            $("#dokter_rawatDarurat").val("");
-            $("#tujuan_kunjungan_rawatDarurat").val("");
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(res) {
-                    console.log(res);
-                    $("#no_rm_rawatDarurat").text(res.data.rekam_medis);
-                    $("#name_rawatDarurat").text(res.data.name_pasien);
-                    $("#tgl_lahir_rawatDarurat").text(res.data.umur);
-                    $("#id-rawatDarurat").val(id);
-                    $("#status-pasien-rawatDarurat").text(res.data.status);
-                    $("#no_encounter_rawatDarurat").text(res.data.no_encounter);
-                    $("#created_rawatDarurat").text(res.data.tgl_encounter);
-                    $("#type_rawatDarurat").text(res.data.type);
-                    $("#jenis_jaminan_rawatDarurat").val(res.data.jenis_jaminan);
-                    $("#dokter_rawatDarurat").val(res.data.dokter);
-                    $("#tujuan_kunjungan_rawatDarurat").val(res.data.tujuan_kunjungan);
-                    $("#btn-submit-rawatDarurat").text("Update Rawat Darurat");
-                    $("#error-rawatDarurat").css("display", "none");
-                }
-            })
-        });
-        $(document).on('click', '.destroyRawatDarurat', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.destroyEncounterRdarurat', ':id') }}"
-            url = url.replace(':id', id);
-            swal({
-                title: "Apakah Anda Yakin?",
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                        },
-                        success: function(res) {
-                            if (res.status == true) {
-                                $("#tab-igd").click();
-                                swal(res.text, {
-                                    icon: "success",
-                                });
-                            } else {
-                                swal(res.text, {
-                                    icon: "error",
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-        });
-        $(document).on('click', '.editrawatJalan', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.editEncounterRajal', ':id') }}"
-            url = url.replace(':id', id);
-            $("#error-rawatJalan").css("display", "none");
-            $("#jenis_jaminan").val("");
-            $("#dokter").val("");
-            $("#tujuan_kunjungan").val("");
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(res) {
-                    $("#no_rm_rawatJalan").text(res.data.rekam_medis);
-                    $("#name_rawatJalan").text(res.data.name_pasien);
-                    $("#tgl_lahir_rawatJalan").text(res.data.umur);
-                    $("#id-rawatJalan").val(id);
-                    $("#status-pasien").text(res.data.status);
-                    $("#no_encounter_rawatJalan").text(res.data.no_encounter);
-                    $("#created_rawatJalan").text(res.data.tgl_encounter);
-                    $("#type_rawatJalan").text(res.data.type);
-                    $("#jenis_jaminan").val(res.data.jenis_jaminan);
-                    $("#dokter").val(res.data.dokter);
-                    $("#tujuan_kunjungan").val(res.data.tujuan_kunjungan);
-                    $("#btn-submit-rawatJalan").text("Update Rawat Jalan");
-                    $("#clinic").val(res.data.clinic_id).trigger(
-                        'change'); // trigger agar dokter terupdate
-                    $("#dokter").data('selected', res.data.dokter_id);
-                    $("#error-rawatJalan").css("display", "none");
-                }
-            })
-        });
-        $(document).on('click', '.destroyRawatJalan', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.destroyEncounterRajal', ':id') }}".replace(':id', id);
-            swal({
-                title: "Apakah Anda Yakin?",
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                        },
-                        success: function(res) {
-                            if (res.status == true) {
-                                $("#tab-rawatJalan").click();
-                                swal(res.text, {
-                                    icon: "success",
-                                });
-                            } else {
-                                swal(res.text, {
-                                    icon: "error",
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-        });
-
-        function error_rawatDarurat(msg) {
-            $("#error-rawatDarurat").find("ul").html('');
-            $("#error-rawatDarurat").css('display', 'block');
-            $.each(msg, function(key, value) {
-                $("#error-rawatDarurat").find("ul").append('<li>' + value + '</li>');
-            });
-        }
-
-        function error_rawatJalan(msg) {
-            $("#error-rawatJalan").find("ul").html('');
-            $("#error-rawatJalan").css('display', 'block');
-            $.each(msg, function(key, value) {
-                $("#error-rawatJalan").find("ul").append('<li>' + value + '</li>');
-            });
-        }
-        $(document).on('click', '.editrawatInap', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.editEncounterRinap', ':id') }}"
-            url = url.replace(':id', id);
-            $("#error-rawatRinap").css("display", "none");
-            $("#jenis_jaminan_rawatRinap").val("");
-            $("#dokter_rawatRinap").val("");
-            $("#tujuan_kunjungan_rawatRinap").val("");
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: {
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(res) {
-                    console.log(res);
-                    $("#no_rm_rawatRinap").text(res.data.rekam_medis);
-                    $("#name_rawatRinap").text(res.data.name_pasien);
-                    $("#tgl_lahir_rawatRinap").text(res.data.umur);
                     $("#id-rawatRinap").val(id);
                     $("#status-pasien-rawatRinap").text(res.data.status);
                     $("#no_encounter_rawatRinap").text(res.data.no_encounter);
                     $("#created_rawatRinap").text(res.data.tgl_encounter);
                     $("#type_rawatRinap").text(res.data.type);
-                    $("#jenis_jaminan_rawatRinap").val(res.data.jenis_jaminan);
-                    $("#dokter_rawatRinap").val(res.data.dokter);
-                    $("#tujuan_kunjungan_rawatRinap").val(res.data.tujuan_kunjungan);
-                    $("#btn-submit-rawatRinap").text("Update Rawat Inap");
-                    $("#error-rawatRinap").css("display", "none");
-                    $("#ruangan_rawatRinap").val(res.data.admission.ruangan_id);
-                    $("#name_companion").val(res.data.admission.companions.name);
-                    $("#nik_companion").val(res.data.admission.companions.nik);
-                    $("#phone_companion").val(res.data.admission.companions.phone);
-                    $("#relation_companion").val(res.data.admission.companions.relation);
                 }
-            })
+            });
         });
-        $("#btn-submit-rawatRinap").on('click', function() {
+        $("#btn-submit-rawatInap").on('click', function() {
             if ($(this).text() === 'Update Rawat Inap') {
                 update_rawatRinap();
             }
@@ -2154,66 +1896,47 @@
             });
         }
 
-        function error_rawatRinap(msg) {
-            $("#error-rawatRinap").find("ul").html('');
-            $("#error-rawatRinap").css('display', 'block');
-            $.each(msg, function(key, value) {
-                $("#error-rawatRinap").find("ul").append('<li>' + value + '</li>');
-            });
-        }
+        // Event ketika poliklinik berubah - update dokter options
+        // [FIX] Pindahkan event handler ini setelah inisialisasi Select2
         $('#clinic').on('change', function() {
             var clinicId = $(this).val();
-            $('#dokter').html('<option value="">-- Pilih Dokter --</option>');
             if (clinicId) {
-                $.get("{{ route('ajax.dokterByClinic', ':id') }}".replace(':id', clinicId), function(data) {
-                    $.each(data, function(i, dokter) {
-                        $('#dokter').append('<option value="' + dokter.id + '">' + dokter.name +
-                            '</option>');
-                    });
-                    // Jika sedang edit, set dokter yang sesuai
-                    if ($("#dokter").data('selected')) {
-                        $("#dokter").val($("#dokter").data('selected'));
-                        $("#dokter").removeData('selected');
+                $.ajax({
+                    url: "{{ route('ajax.dokterByClinic', ':id') }}".replace(':id',
+                        clinicId),
+                    type: 'GET',
+                    success: function(doctors) {
+                        $('#dokter').empty().append('<option value="">-- Pilih Dokter --</option>');
+                        $.each(doctors, function(key, doctor) {
+                            $('#dokter').append('<option value="' + doctor.id + '">' +
+                                doctor
+                                .name + '</option>');
+                        });
+
+                        // Set selected doctors jika ada data yang disimpan
+                        var selectedDoctors = $('#dokter').data(
+                            'selected'); // This will be an array of IDs
+                        if (selectedDoctors) {
+                            $('#dokter').val(selectedDoctors).trigger(
+                                'change'); // Select2 handles array values for multiple selects
+                            $('#dokter').removeData('selected');
+                        }
                     }
                 });
+            } else {
+                $('#dokter').empty().append('<option value="">-- Pilih Poliklinik dulu --</option>');
             }
         });
-        // destroyEncounterRinap
-        $(document).on('click', '.destroyEncounterRinap', function() {
-            let id = $(this).attr('id');
-            let url = "{{ route('pendaftaran.destroyEncounterRinap', ':id') }}"
-            url = url.replace(':id', id);
-            swal({
-                title: "Apakah Anda Yakin?",
-                text: "Data yang dihapus tidak dapat dikembalikan!",
-                icon: "warning",
-                buttons: true,
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
-                    $.ajax({
-                        url: url,
-                        type: 'DELETE',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                        },
-                        success: function(res) {
-                            if (res.status == true) {
-                                // tab rawat inap
-                                $("#tab-rawatInap").click();
-                                swal(res.text, {
-                                    icon: "success",
-                                });
-                            } else {
-                                swal(res.text, {
-                                    icon: "error",
-                                });
-                            }
-                        }
-                    });
-                }
-            });
-        });
 
+        // [FIX] Handle city selection after province change on edit form
+        $('#province_edit').on('change', function() {
+            const cityDropdown = $('#city_edit');
+            const selectedCity = cityDropdown.data('selected-city');
+            if (selectedCity) {
+                // Set a brief timeout to allow city options to be populated by the other event listener
+                setTimeout(() => cityDropdown.val(selectedCity).trigger('change'), 200);
+                cityDropdown.removeData('selected-city'); // Clean up
+            }
+        });
     </script>
 @endpush

@@ -169,25 +169,13 @@ class PendaftaranRepository
 
     public function editEncounterRajal($id)
     {
-        $encounter = Encounter::with(['clinic', 'practitioner'])->findOrFail($id);
+        $encounter = Encounter::with(['clinic', 'practitioner.user'])->findOrFail($id);
 
         // Ambil data pasien
         $pasien = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
 
-        // Ambil dokter terakhir (jika ada)
-        $dokter = $encounter->practitioner->first();
-
         // Umur pasien
         $encounter['umur'] = $pasien ? Carbon::parse($pasien->tgl_lahir)->diff(Carbon::now())->format('%y tahun, %m bulan, %d hari') : '-';
-
-        // Status pasien
-        $statusList = [
-            0 => "-",
-            1 => "Rawat Jalan",
-            2 => "Rawat Inap",
-            3 => "IGD"
-        ];
-        $encounter['status'] = $pasien ? ($statusList[$pasien->status] ?? "-") : "-";
 
         // Tanggal encounter
         $encounter['tgl_encounter'] = $encounter->created_at ? date('d M Y H:i', strtotime($encounter->created_at)) : "-";
@@ -201,15 +189,8 @@ class PendaftaranRepository
         ];
         $encounter['type'] = $typeList[$encounter->type] ?? "-";
 
-        // Nama dokter dan id dokter (ambil dari tabel users)
-        if ($dokter) {
-            $user = User::where('id_petugas', $dokter->id_petugas)->first();
-            $encounter['dokter'] = $dokter->name;
-            $encounter['dokter_id'] = $user ? $user->id : null;
-        } else {
-            $encounter['dokter'] = "-";
-            $encounter['dokter_id'] = null;
-        }
+        // [MODIFIED] Ambil semua ID dokter yang terkait
+        $encounter['dokter_ids'] = $encounter->practitioner->pluck('user.id')->filter()->toArray();
 
         // Nama poliklinik dan id klinik
         $encounter['poliklinik'] = $encounter->clinic ? $encounter->clinic->nama : "-";
@@ -444,17 +425,19 @@ class PendaftaranRepository
             'created_by'         => Auth::id()
         ]);
 
-        // Jika ada dokter, buat practitioner
-        if ($request->filled('dokter')) {
-            $dokter = User::where('id', $request->dokter)->first();
-            if ($dokter) {
-                Practitioner::create([
+        // [MODIFIED] Handle multiple doctors
+        if ($request->filled('dokter') && is_array($request->dokter)) {
+            $dokters = User::whereIn('id', $request->dokter)->get();
+            $practitionersData = [];
+            foreach ($dokters as $dokter) {
+                $practitionersData[] = [
                     'encounter_id' => $encounter->id,
                     'name'         => $dokter->name,
                     'id_petugas'   => $dokter->id_petugas,
                     'satusehat_id' => $dokter->satusehat_id
-                ]);
+                ];
             }
+            Practitioner::insert($practitionersData);
         }
 
         // Update status pasien menjadi Rawat Jalan (1)
@@ -469,22 +452,26 @@ class PendaftaranRepository
         // Update encounter hanya jika ada perubahan
         $encounter->update([
             'jenis_jaminan'    => $request->jenis_jaminan,
-            'tujuan_kunjungan' => $request->tujuan_kunjungan
+            'tujuan_kunjungan' => $request->tujuan_kunjungan,
+            'clinic_id'        => $request->clinic_id ? $request->clinic_id : null,
         ]);
 
-        // Update practitioner hanya jika dokter valid
-        if ($request->filled('dokter')) {
-            $dokter = User::where('name', $request->dokter)->first();
-            if ($dokter) {
-                Practitioner::updateOrCreate(
-                    ['encounter_id' => $encounter->id],
-                    [
-                        'name'         => $dokter->name,
-                        'id_petugas'   => $dokter->id_petugas,
-                        'satusehat_id' => $dokter->satusehat_id
-                    ]
-                );
+        // [MODIFIED] Handle multiple doctors on update
+        if ($request->filled('dokter') && is_array($request->dokter)) {
+            // Hapus practitioner lama
+            Practitioner::where('encounter_id', $encounter->id)->delete();
+            // Tambah practitioner baru
+            $dokters = User::whereIn('id', $request->dokter)->get();
+            $practitionersData = [];
+            foreach ($dokters as $dokter) {
+                $practitionersData[] = [
+                    'encounter_id' => $encounter->id,
+                    'name'         => $dokter->name,
+                    'id_petugas'   => $dokter->id_petugas,
+                    'satusehat_id' => $dokter->satusehat_id
+                ];
             }
+            Practitioner::insert($practitionersData);
         }
 
         return $encounter;
@@ -520,17 +507,19 @@ class PendaftaranRepository
             'created_by'         => Auth::id()
         ]);
 
-        // Jika ada dokter, buat practitioner
-        if ($request->filled('dokter')) {
-            $dokter = User::where('name', $request->dokter)->first();
-            if ($dokter) {
-                Practitioner::create([
+        // [MODIFIED] Handle multiple doctors for IGD
+        if ($request->filled('dokter') && is_array($request->dokter)) {
+            $dokters = User::whereIn('id', $request->dokter)->get();
+            $practitionersData = [];
+            foreach ($dokters as $dokter) {
+                $practitionersData[] = [
                     'encounter_id' => $encounter->id,
                     'name'         => $dokter->name,
                     'id_petugas'   => $dokter->id_petugas,
                     'satusehat_id' => $dokter->satusehat_id
-                ]);
+                ];
             }
+            Practitioner::insert($practitionersData);
         }
 
         // Update status pasien menjadi Rawat Darurat (3)
@@ -541,25 +530,12 @@ class PendaftaranRepository
     // editEncounterRdarurat
     public function editEncounterRdarurat($id)
     {
-        $encounter = Encounter::findOrFail($id);
+        $encounter = Encounter::with(['practitioner.user'])->findOrFail($id);
 
-        // Eager load pasien dan dokter sekaligus
         $pasien = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
-        $dokter = Practitioner::where('encounter_id', $encounter->id)
-            ->orderByDesc('created_at')
-            ->first();
 
         // Umur pasien
         $encounter['umur'] = $pasien ? Carbon::parse($pasien->tgl_lahir)->diff(Carbon::now())->format('%y tahun, %m bulan, %d hari') : '-';
-
-        // Status pasien
-        $statusList = [
-            0 => "-",
-            1 => "Rawat Jalan",
-            2 => "Rawat Inap",
-            3 => "IGD"
-        ];
-        $encounter['status'] = $pasien ? ($statusList[$pasien->status] ?? "-") : "-";
 
         // Tanggal encounter
         $encounter['tgl_encounter'] = $encounter->created_at ? date('d M Y H:i', strtotime($encounter->created_at)) : "-";
@@ -573,8 +549,8 @@ class PendaftaranRepository
         ];
         $encounter['type'] = $typeList[$encounter->type] ?? "-";
 
-        // Nama dokter
-        $encounter['dokter'] = $dokter ? $dokter->name : "-";
+        // [MODIFIED] Ambil semua ID dokter yang terkait
+        $encounter['dokter_ids'] = $encounter->practitioner->pluck('user.id')->filter()->toArray();
 
         return $encounter;
     }
@@ -589,19 +565,22 @@ class PendaftaranRepository
             'tujuan_kunjungan' => $request->tujuan_kunjungan
         ]);
 
-        // Update practitioner hanya jika dokter valid
-        if ($request->filled('dokter')) {
-            $dokter = User::where('name', $request->dokter)->first();
-            if ($dokter) {
-                Practitioner::updateOrCreate(
-                    ['encounter_id' => $encounter->id],
-                    [
-                        'name'         => $dokter->name,
-                        'id_petugas'   => $dokter->id_petugas,
-                        'satusehat_id' => $dokter->satusehat_id
-                    ]
-                );
+        // [MODIFIED] Handle multiple doctors on update for IGD
+        if ($request->filled('dokter') && is_array($request->dokter)) {
+            // Hapus practitioner lama
+            Practitioner::where('encounter_id', $encounter->id)->delete();
+            // Tambah practitioner baru
+            $dokters = User::whereIn('id', $request->dokter)->get();
+            $practitionersData = [];
+            foreach ($dokters as $dokter) {
+                $practitionersData[] = [
+                    'encounter_id' => $encounter->id,
+                    'name'         => $dokter->name,
+                    'id_petugas'   => $dokter->id_petugas,
+                    'satusehat_id' => $dokter->satusehat_id
+                ];
             }
+            Practitioner::insert($practitionersData);
         }
 
         return $encounter;
@@ -620,13 +599,28 @@ class PendaftaranRepository
     public function postRawatInap($request, $id)
     {
         $encounter = Encounter::findOrFail($id);
-        // ambil data dokter dari user
-        $dokter = User::findOrFail($request->dokter);
+
+        // [MODIFIED] Hapus practitioner lama dan tambahkan yang baru
+        Practitioner::where('encounter_id', $encounter->id)->delete();
+        if ($request->filled('dokter') && is_array($request->dokter)) {
+            $dokters = User::whereIn('id', $request->dokter)->get();
+            $practitionersData = [];
+            foreach ($dokters as $dokter) {
+                $practitionersData[] = [
+                    'id'           => \Illuminate\Support\Str::uuid(),
+                    'encounter_id' => $encounter->id,
+                    'name'         => $dokter->name,
+                    'id_petugas'   => $dokter->id_petugas,
+                    'satusehat_id' => $dokter->satusehat_id
+                ];
+            }
+            Practitioner::insert($practitionersData);
+        }
+
         $encounter->admission->update([
             'ruang_id' => $request->ruang_id,
-            'dokter_id' => $dokter->id,
-            'nama_dokter' => $dokter->name,
             'ruangan_id' => $request->ruangan,
+            'nama_dokter' => $dokters->pluck('name')->implode(', '), // Simpan nama gabungan untuk legacy view
         ]);
         $patient_companions = PatientCompanion::where('admission_id', $encounter->admission->id)->first();
         if (!$patient_companions) {
@@ -651,10 +645,10 @@ class PendaftaranRepository
     public function editEncounterRinap($id)
     {
         // with admission dan companions
-        $encounter = Encounter::with(['admission', 'admission.companions'])->findOrFail($id);
+        $encounter = Encounter::with(['admission', 'admission.companions', 'practitioner.user'])->findOrFail($id);
 
-        // Eager load pasien dan dokter sekaligus
         $pasien = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
+        $dokters = $encounter->practitioner;
 
         // Umur pasien
         $encounter['umur'] = $pasien ? Carbon::parse($pasien->tgl_lahir)->diff(Carbon::now())->format('%y tahun, %m bulan, %d hari') : '-';
@@ -680,8 +674,8 @@ class PendaftaranRepository
         ];
         $encounter['type'] = $typeList[$encounter->type] ?? "-";
 
-        // Nama dokter
-        $encounter['dokter'] = $encounter->admission ? $encounter->admission->dokter_id : "-";
+        // [MODIFIED] Ambil ID dokter dari relasi practitioner
+        $encounter['dokter_ids'] = $dokters->pluck('user.id')->filter()->toArray();
 
         return $encounter;
     }

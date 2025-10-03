@@ -45,7 +45,7 @@
                                 <!-- Search Patient Starts -->
                                 <div class="search-container d-xl-block d-none">
                                     <form method="GET" action="{{ route('bahans.index') }}">
-                                        <input type="text" class="form-control" name="name" placeholder="Search">
+                                        <input type="text" class="form-control" name="name" value="{{ request('name') }}" placeholder="Cari nama bahan...">
                                         <i class="ri-search-line"></i>
                                     </form>
                                 </div>
@@ -101,15 +101,12 @@
                                         <tr>
                                             <td>{{ ucwords($bahan->name) }}</td>
                                             <td class="text-center">{{ $bahan->is_expired == 1 ? 'YA' : 'TIDAK' }}</td>
-                                            <td class="text-center"><span
-                                                    class="text-primary fw-bold">{{ $bahan->getStockQuantityAttribute() }}</span>
-                                            </td>
+                                            <td class="text-center"><span class="text-primary fw-bold">{{ number_format($bahan->available_count ?? 0, 0, ',', '.') }}</span></td>
                                             <td class="text-center">
 
                                                 @if ($bahan->is_expired == 1)
-                                                    @if ($bahan->getWarningStockQuantityAttribute() > 0)
-                                                        <span
-                                                            class="text-info fw-bold">{{ $bahan->getWarningStockQuantityAttribute() }}</span>
+                                                    @if (($bahan->warning_count ?? 0) > 0)
+                                                        <span class="text-info fw-bold">{{ number_format($bahan->warning_count ?? 0, 0, ',', '.') }}</span>
                                                     @else
                                                         <span class="text-success">Tidak ada</span>
                                                     @endif
@@ -119,9 +116,8 @@
                                             </td>
                                             <td class="text-center">
                                                 @if ($bahan->is_expired == 1)
-                                                    @if ($bahan->getExpiredStockQuantityAttribute() > 0)
-                                                        <span
-                                                            class="text-danger fw-bold">{{ $bahan->getExpiredStockQuantityAttribute() }}</span>
+                                                    @if (($bahan->expired_count ?? 0) > 0)
+                                                        <span class="text-danger fw-bold">{{ number_format($bahan->expired_count ?? 0, 0, ',', '.') }}</span>
                                                     @else
                                                         <span class="text-success">Tidak ada</span>
                                                     @endif
@@ -131,53 +127,13 @@
                                             </td>
                                             <td class="text-center">
 
-                                                <button type="button" class="btn btn-outline-primary btn-sm"
-                                                     data-bs-toggle="modal"
-                                                    data-bs-target="#modalDetailTindakan-{{ $bahan->id }}">
+                                                <button type="button" class="btn btn-outline-primary btn-sm btn-detail-tindakan"
+                                                    id="histori-{{ $bahan->id }}"
+                                                    data-url="{{ route('bahans.tindakan.json', $bahan->id) }}">
                                                     <i class="ri-archive-line"></i>
-                                                    <span class="btn-text"
-                                                        id="textHistori-{{ $bahan->id }}">Detail Tindakan</span>
-                                                    <span class="spinner-border spinner-border-sm d-none"
-                                                        id="spinerHistori-{{ $bahan->id }}"></span>
+                                                    <span class="btn-text" id="textHistori-{{ $bahan->id }}">Detail Tindakan</span>
+                                                    <span class="spinner-border spinner-border-sm d-none" id="spinerHistori-{{ $bahan->id }}"></span>
                                                 </button>
-                                                <div class="modal fade" id="modalDetailTindakan-{{ $bahan->id }}"
-                                                    tabindex="-1" role="dialog"
-                                                    aria-labelledby="modalDetailTindakanLabel-{{ $bahan->id }}"
-                                                    aria-hidden="true">
-                                                    <div class="modal-dialog modal-lg" role="document">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title"
-                                                                    id="modalDetailTindakanLabel-{{ $bahan->id }}">
-                                                                    Tindakan yang menggunakan {{ $bahan->name }}</h5>
-                                                                <button type="button" class="btn-close"
-                                                                    data-bs-dismiss="modal" aria-label="Close"></button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                <table class="table table-bordered">
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th>Nama Tindakan</th>
-                                                                            <th>Harga</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @foreach ($bahan->tindakan as $tindakan)
-                                                                            <tr>
-                                                                                <td>{{ $tindakan->name }}</td>
-                                                                                <td>{{ $tindakan->getHargaFormattedAttribute() }}</td>
-                                                                            </tr>
-                                                                        @endforeach
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-bs-dismiss="modal">Close</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 @if ($bahan->is_active == 1)
@@ -223,41 +179,12 @@
                                                         Hapus
                                                     </button>
                                                 </form>
-                                                <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-                                                <script src="{{ asset('js/jquery.min.js') }}"></script>
-
-                                                <script>
-                                                    $(document).ready(function() {
-                                                        $("#edit-{{ $bahan->id }}").click(function() {
-                                                            $("#spiner-{{ $bahan->id }}").removeClass("d-none");
-                                                            $("#edit-{{ $bahan->id }}").addClass("disabled", true);
-                                                            $("#text-{{ $bahan->id }}").text("Mohon Tunggu ...");
-                                                        });
-                                                        $("#histori-{{ $bahan->id }}").click(function() {
-                                                            $("#spinerHistori-{{ $bahan->id }}").removeClass("d-none");
-                                                            $("#histori-{{ $bahan->id }}").addClass("disabled", true);
-                                                            $("#textHistori-{{ $bahan->id }}").text("Mohon Tunggu ...");
-                                                        });
-
-                                                        $("#stokKeluar-{{ $bahan->id }}").click(function() {
-                                                            $("#spinerStokKeluar-{{ $bahan->id }}").removeClass("d-none");
-                                                            $("#stokKeluar-{{ $bahan->id }}").addClass("disabled", true);
-                                                            $("#textStokKeluar-{{ $bahan->id }}").text("Mohon Tunggu ...");
-                                                        });
-                                                        $("#stokMasuk-{{ $bahan->id }}").click(function() {
-                                                            $("#spinerStokMasuk-{{ $bahan->id }}").removeClass("d-none");
-                                                            $("#stokMasuk-{{ $bahan->id }}").addClass("disabled", true);
-                                                            $("#textStokMasuk-{{ $bahan->id }}").text("Mohon Tunggu ...");
-                                                        })
-
-                                                    });
-                                                </script>
 
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center">Data tidak ada</td>
+                                            <td colspan="8" class="text-center">Data tidak ada</td>
                                         </tr>
                                     @endforelse
 
@@ -266,12 +193,46 @@
                         </div>
                     </div>
 
+                    <div class="mt-3">
+                        {{ $bahans->withQueryString()->links() }}
+                    </div>
+
                 </div>
             </div>
         </div>
 
     </div>
     <!-- Row ends -->
+
+    <!-- Global Modal: Detail Tindakan -->
+    <div class="modal fade" id="modalDetailTindakan" tabindex="-1" aria-labelledby="modalDetailTindakanLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetailTindakanLabel">Detail Tindakan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered m-0">
+                            <thead>
+                                <tr>
+                                    <th>Nama Tindakan</th>
+                                    <th class="text-end">Harga</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalTindakanBody">
+                                <tr><td colspan="2" class="text-center text-muted">Memuat...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
@@ -281,17 +242,69 @@
     <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         $(document).ready(function() {
-            $("#createBahan").click(function() {
-                $("#spinerCreateBahan").removeClass("d-none");
-                $("#createBahan").addClass("disabled", true);
-                $("#textCreateBahan").text("Mohon Tunggu ...");
+            // Top-level buttons
+            $(document).on('click', '#createBahan', function() {
+                $('#spinerCreateBahan').removeClass('d-none');
+                $('#createBahan').addClass('disabled');
+                $('#textCreateBahan').text('Mohon Tunggu ...');
             });
-            $("#histori").click(function() {
-                $("#spinerHistori").removeClass("d-none");
-                $("#histori").addClass("disabled", true);
-                $("#textHistori").text("Mohon Tunggu ...");
+            $(document).on('click', '#histori', function() {
+                $('#spinerHistori').removeClass('d-none');
+                $('#histori').addClass('disabled');
+                $('#textHistori').text('Mohon Tunggu ...');
             });
 
+            // Row-level buttons (delegated)
+            function handleRowAction(prefix, spinnerPrefix, textPrefix, newText) {
+                $(document).on('click', `a[id^="${prefix}-"], button[id^="${prefix}-"]`, function() {
+                    const id = this.id.split('-').pop();
+                    $(`#${spinnerPrefix}-${id}`).removeClass('d-none');
+                    $(`#${prefix}-${id}`).addClass('disabled');
+                    if (textPrefix) {
+                        $(`#${textPrefix}-${id}`).text(newText);
+                    }
+                });
+            }
+
+            handleRowAction('edit', 'spiner', 'text', 'Mohon Tunggu ...');
+            handleRowAction('histori', 'spinerHistori', 'textHistori', 'Mohon Tunggu ...');
+
+            // Load tindakan via AJAX ke modal global
+            $(document).on('click', '.btn-detail-tindakan', function(e) {
+                const url = $(this).data('url');
+                const $tbody = $('#modalTindakanBody');
+                $tbody.html('<tr><td colspan="2" class="text-center text-muted">Memuat...</td></tr>');
+                $.getJSON(url)
+                    .done(function(resp) {
+                        const rows = resp.tindakan || [];
+                        if (!rows.length) {
+                            $tbody.html('<tr><td colspan="2" class="text-center text-muted">Tidak ada tindakan terkait.</td></tr>');
+                            $('#modalDetailTindakanLabel').text('Detail Tindakan');
+                            return;
+                        }
+                        let html = '';
+                        rows.forEach(function(r){
+                            html += '<tr>' +
+                                    '<td>' + $('<div>').text(r.name).html() + '</td>' +
+                                    '<td class="text-end">' + $('<div>').text(r.harga_formatted).html() + '</td>' +
+                                    '</tr>';
+                        });
+                        $tbody.html(html);
+                        $('#modalDetailTindakanLabel').text('Tindakan yang menggunakan ' + resp.bahan.name);
+                    })
+                    .fail(function(){
+                        $tbody.html('<tr><td colspan="2" class="text-center text-danger">Gagal memuat data.</td></tr>');
+                    })
+                    .always(function(){
+                        const modalEl = document.getElementById('modalDetailTindakan');
+                        if (modalEl) {
+                            const modal = new bootstrap.Modal(modalEl);
+                            modal.show();
+                        }
+                    });
+            });
+            handleRowAction('stokKeluar', 'spinerStokKeluar', 'textStokKeluar', 'Mohon Tunggu ...');
+            handleRowAction('stokMasuk', 'spinerStokMasuk', 'textStokMasuk', 'Mohon Tunggu ...');
         });
     </script>
 @endpush

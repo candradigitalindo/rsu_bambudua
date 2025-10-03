@@ -59,7 +59,7 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-                    <form action="{{ route('pengguna.update', $data['user']->id) }}" method="POST" id="submit">
+<form action="{{ route('pengguna.update', $data['user']->id) }}" method="POST" id="submit" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <!-- Custom tabs starts -->
@@ -210,6 +210,73 @@
                                         </div>
 
                                     </div>
+
+                                    <hr>
+                                    <h6 class="mb-3">Data Perizinan (SIP/STR)</h6>
+                                    <div class="row gx-3">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Profesi</label>
+                                                @php($lic = $data['license'] ?? null)
+                                                <select name="profession" class="form-select">
+                                                    @php($profVal = old('profession', $lic->profession ?? ''))
+                                                    <option value="">- Pilih Profesi -</option>
+                                                    <option value="dokter" @selected($profVal==='dokter')>Dokter</option>
+                                                    <option value="perawat" @selected($profVal==='perawat')>Perawat</option>
+                                                    <option value="apoteker" @selected($profVal==='apoteker')>Apoteker</option>
+                                                    <option value="asisten_apoteker" @selected($profVal==='asisten_apoteker')>Asisten Apoteker</option>
+                                                    <option value="radiografer" @selected($profVal==='radiografer')>Radiografer</option>
+                                                    <option value="analis_lab" @selected($profVal==='analis_lab')>Analis Lab</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nomor SIP</label>
+                                                <input type="text" name="sip_number" class="form-control" value="{{ old('sip_number', $lic->sip_number ?? '') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Kadaluarsa SIP</label>
+                                                <input type="date" name="sip_expiry_date" class="form-control" value="{{ old('sip_expiry_date', optional($lic->sip_expiry_date ?? null)->format('Y-m-d')) }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Nomor STR</label>
+                                                <input type="text" name="str_number" class="form-control" value="{{ old('str_number', $lic->str_number ?? '') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Kadaluarsa STR</label>
+                                                <input type="date" name="str_expiry_date" class="form-control" value="{{ old('str_expiry_date', optional($lic->str_expiry_date ?? null)->format('Y-m-d')) }}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row gx-3">
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Upload Berkas SIP (PDF/JPG/PNG, maks 2MB)</label>
+                                                <input type="file" name="sip_file" class="form-control" accept="application/pdf,image/*">
+                                                @if(!empty(($data['license']->sip_file_path ?? null)))
+                                                    <div class="small mt-1"><a href="{{ Storage::url($data['license']->sip_file_path) }}" target="_blank">Lihat Berkas SIP</a></div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Upload Berkas STR (PDF/JPG/PNG, maks 2MB)</label>
+                                                <input type="file" name="str_file" class="form-control" accept="application/pdf,image/*">
+                                                @if(!empty(($data['license']->str_file_path ?? null)))
+                                                    <div class="small mt-1"><a href="{{ Storage::url($data['license']->str_file_path) }}" target="_blank">Lihat Berkas STR</a></div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!-- Row ends -->
 
                                 </div>
@@ -251,6 +318,26 @@
     <script src="{{ asset('js/validations.js') }}"></script>
     <script>
         $(document).ready(function() {
+            function mapRoleToProfession(role){
+                switch(parseInt(role)){
+                    case 2: return 'dokter';
+                    case 3: return 'perawat';
+                    case 7: return 'apoteker';
+                    default: return '';
+                }
+            }
+            const roleSelect = $("select[name='role']");
+            const profSelect = $("select[name='profession']");
+            function syncProfession(){
+                const mapped = mapRoleToProfession(roleSelect.val());
+                if(mapped){
+                    profSelect.val(mapped).prop('disabled', true);
+                } else {
+                    profSelect.prop('disabled', false);
+                }
+            }
+            roleSelect.on('change', syncProfession);
+            syncProfession();
             $('.select2').select2({
                 placeholder: "Pilih Poliklinik",
                 allowClear: true

@@ -3,11 +3,15 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "lint": "eslint resources/js --ext .js,.vue",
+        "format": "prettier --write resources/js"
+    },
+    "dependencies": {
+        "axios": "^1.7.4"
     },
     "devDependencies": {
         "autoprefixer": "^10.4.20",
-        "axios": "^1.7.4",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.47",

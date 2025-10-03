@@ -51,30 +51,17 @@ class ObservasiRepository
     // Get doctor
     public function getDokters($id)
     {
-        // Ambil dokter yang sudah menangani encounter ini (jika ada)
-        $dokter_terpilih = Practitioner::where('encounter_id', $id)->first();
+        // [MODIFIED] Ambil SEMUA dokter yang sudah menangani encounter ini
+        $practitioners = Practitioner::with('user')->where('encounter_id', $id)->get();
+        $selected_doctor_ids = $practitioners->pluck('user.id')->filter()->toArray();
 
         // Ambil semua user role dokter
         $dokters = \App\Models\User::whereIn('role', [1, 2, 4])->get(); // Owner, Dokter, Admin
 
-        // Jika ada dokter terpilih, letakkan di urutan pertama (untuk dropdown selected)
-        if ($dokter_terpilih) {
-            // Cari user dokter yang sesuai id_petugas
-            $dokterUtama = $dokters->firstWhere('id_petugas', $dokter_terpilih->id_petugas);
-            if ($dokterUtama) {
-                // Buat koleksi baru dengan dokter terpilih di depan
-                $dokters = collect([$dokterUtama])->merge($dokters->where('id', '!=', $dokterUtama->id));
-            }
-            return [
-                'dokter_terpilih' => $dokterUtama,
-                'dokters' => $dokters
-            ];
-        } else {
-            return [
-                'dokter_terpilih' => null,
-                'dokters' => $dokters
-            ];
-        }
+        return [
+            'dokter_terpilih' => $selected_doctor_ids,
+            'dokters' => $dokters
+        ];
     }
     // Get Perawat
     public function getPerawats($id)
@@ -118,18 +105,24 @@ class ObservasiRepository
             );
         }
 
-        // Pastikan practitioner (dokter) sudah tercatat
-        $practitioner = \App\Models\Practitioner::where('encounter_id', $id)->first();
-        if (!$practitioner && $request->filled('dokter_id')) {
-            $dokter = \App\Models\User::find($request->dokter_id);
-            if ($dokter) {
-                \App\Models\Practitioner::create([
+        // [MODIFIED] Handle multiple doctors. Hapus yang lama, sisipkan yang baru.
+        if ($request->has('dokter_ids')) {
+            // Hapus semua practitioner yang ada untuk encounter ini
+            \App\Models\Practitioner::where('encounter_id', $id)->delete();
+
+            $doctorIds = $request->input('dokter_ids', []);
+            $dokters = \App\Models\User::whereIn('id', $doctorIds)->get();
+            $practitionersData = [];
+            foreach ($dokters as $dokter) {
+                $practitionersData[] = [
+                    'id'           => \Illuminate\Support\Str::uuid(),
                     'encounter_id' => $id,
                     'id_petugas'   => $dokter->id_petugas,
                     'satusehat_id' => $dokter->satusehat_id ?? '',
                     'name'         => $dokter->name,
-                ]);
+                ];
             }
+            \App\Models\Practitioner::insert($practitionersData);
         }
 
         // Ambil data riwayat penyakit terbaru (jika ada)
@@ -147,113 +140,122 @@ class ObservasiRepository
     // post tanda vital
     public function postTandaVital($request, $id)
     {
-        // Cek apakah tanda vital sudah ada
-        $tandaVital = \App\Models\TandaVital::where('encounter_id', $id)->first();
-        if ($tandaVital) {
-            // Jika sudah ada, update data
-            $tandaVital->nadi = $request->nadi;
-            $tandaVital->pernapasan = $request->pernapasan;
-            $tandaVital->sistolik = $request->sistolik;
-            $tandaVital->diastolik = $request->diastolik;
-            $tandaVital->suhu = $request->suhu;
-            $tandaVital->berat_badan = $request->berat_badan;
-            $tandaVital->tinggi_badan = $request->tinggi_badan;
-            $tandaVital->kesadaran = $request->kesadaran;
-            $tandaVital->save();
-        } else {
-            // Jika belum ada, buat data baru
-            $tandaVital = new \App\Models\TandaVital();
-            $tandaVital->encounter_id = $id;
-            $tandaVital->nadi = $request->nadi;
-            $tandaVital->pernapasan = $request->pernapasan;
-            $tandaVital->sistolik = $request->sistolik;
-            $tandaVital->diastolik = $request->diastolik;
-            $tandaVital->suhu = $request->suhu;
-            $tandaVital->berat_badan = $request->berat_badan;
-            $tandaVital->tinggi_badan = $request->tinggi_badan;
-            $tandaVital->kesadaran = $request->kesadaran;
-            $tandaVital->save();
-        }
+        // Gunakan updateOrCreate untuk menyederhanakan logika
+        $tandaVital = \App\Models\TandaVital::updateOrCreate(
+            ['encounter_id' => $id],
+            [
+                'nadi' => $request->nadi,
+                'pernapasan' => $request->pernapasan,
+                'sistolik' => $request->sistolik,
+                'diastolik' => $request->diastolik,
+                'suhu' => $request->suhu,
+                'berat_badan' => $request->berat_badan,
+                'tinggi_badan' => $request->tinggi_badan,
+                'kesadaran' => $request->kesadaran,
+            ]
+        );
         return $tandaVital;
     }
     public function pemeriksaanPenunjang($id)
     {
-        $pemeriksaanPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $id)->get();
-        if ($pemeriksaanPenunjang->isEmpty()) {
-            return null; // Jika tidak ada data pemeriksaan penunjang
-        }
-        // Jika ada dokumen pemeriksaan, ambil nama file
-        foreach ($pemeriksaanPenunjang as $item) {
-            if ($item->dokumen_pemeriksaan) {
-                $item->dokumen_pemeriksaan = url('uploads/' . $item->dokumen_pemeriksaan);
-            }
-        }
-        return $pemeriksaanPenunjang;
+        $labRequests = \App\Models\LabRequest::with('items.testType')
+            ->where('encounter_id', $id)
+            ->get()
+            ->flatMap(function ($request) {
+                return $request->items->map(function ($item) use ($request) {
+                    return [
+                        'id' => $item->id,
+                        'request_id' => $request->id,
+                        'jenis_pemeriksaan' => $item->test_name,
+                        'qty' => 1,
+                        'harga' => $item->price,
+                        'total_harga' => $item->price,
+                        'status' => $request->status,
+                        'type' => 'lab',
+                    ];
+                });
+            });
+
+        $radiologyRequests = \App\Models\RadiologyRequest::with('jenis')
+            ->where('encounter_id', $id)
+            ->get()
+            ->map(function ($request) {
+                return [
+                    'id' => $request->id, // Menggunakan ID request radiologi sebagai ID item
+                    'request_id' => $request->id,
+                    'jenis_pemeriksaan' => $request->jenis->name,
+                    'qty' => 1,
+                    'harga' => $request->price,
+                    'total_harga' => $request->price,
+                    'status' => $request->status,
+                    'type' => 'radiologi',
+                ];
+            });
+
+        return $labRequests->merge($radiologyRequests)->sortByDesc('created_at')->values();
     }
     public function postPemeriksaanPenunjang($request, $id)
     {
-        $jenisPemeriksaan = \App\Models\JenisPemeriksaanPenunjang::find($request->jenis_pemeriksaan_id);
-        if (!$jenisPemeriksaan) {
-            return null;
-        }
+        // Logika ini sekarang ditangani oleh LabRequestController@store
+        // Namun, kita bisa membuat LabRequest dari sini untuk menyatukan UI
+        $encounter = Encounter::findOrFail($id);
+        $test = \App\Models\JenisPemeriksaanPenunjang::findOrFail($request->jenis_pemeriksaan_id);
 
-        // Jika belum ada, buat data baru
-        $pemeriksaanPenunjang = new \App\Models\PemeriksaanPenunjang();
-        $pemeriksaanPenunjang->encounter_id = $id;
-        $pemeriksaanPenunjang->jenis_pemeriksaan_id = $jenisPemeriksaan->id;
-        $pemeriksaanPenunjang->jenis_pemeriksaan = $jenisPemeriksaan->name;
+        // Buat LabRequest baru
+        $labRequest = \App\Models\LabRequest::create([
+            'encounter_id' => $encounter->id,
+            'pasien_id' => $encounter->pasien->id,
+            'dokter_id' => Auth::id(),
+            'status' => 'requested',
+            'notes' => 'Permintaan dari observasi',
+        ]);
 
-        // [MODIFIED] Proses dynamic fields menjadi JSON atau format lain
-        $dynamicFieldsData = $request->input('dynamic_fields', []);
-        $hasil = [];
-        if (!empty($dynamicFieldsData)) {
-            // Ambil definisi field dari database untuk mendapatkan label
-            $templateFields = \App\Models\TemplateField::whereIn('id', array_keys($dynamicFieldsData))->get()->keyBy('id');
+        // Buat LabRequestItem
+        $labRequestItem = $labRequest->items()->create([
+            'test_id' => $test->id,
+            'test_name' => $test->name,
+            'price' => $test->harga,
+        ]);
 
-            foreach ($dynamicFieldsData as $fieldId => $value) {
-                // Pastikan field ada di database untuk menghindari data tak terduga
-                if (isset($templateFields[$fieldId])) {
-                    $hasil[] = [
-                        'label' => $templateFields[$fieldId]->field_label,
-                        'value' => $value,
-                        'field_id' => $fieldId // Simpan juga ID field untuk referensi
-                    ];
-                }
-            }
-        }
-        $pemeriksaanPenunjang->hasil_pemeriksaan = json_encode($hasil);
+        // [FIX] Panggil method untuk membuat insentif untuk dokter yang login
+        $dokterPerujuk = User::find(Auth::id());
+        $this->createPemeriksaanPenunjangIncentive($encounter, $dokterPerujuk, $test->name, (float)$test->harga);
 
-        $pemeriksaanPenunjang->recomendation = $request->recomendation;
-        $pemeriksaanPenunjang->harga = $jenisPemeriksaan->harga;
-        $pemeriksaanPenunjang->qty = 1; // Asumsi qty selalu 1 untuk pemeriksaan
-        $pemeriksaanPenunjang->total_harga = $jenisPemeriksaan->harga;
+        $this->updateEncounterTotalTindakan($encounter->id);
 
-        $pemeriksaanPenunjang->save();
-
-        // Update total_tindakan di encounter
-        $encounter = Encounter::find($id);
-        $totalTindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
-        $totalPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $id)->sum('total_harga');
-        $encounter->total_tindakan = $totalTindakan + $totalPenunjang;
-        $encounter->save();
-
-        return $pemeriksaanPenunjang;
+        return $labRequestItem;
     }
     public function deletePemeriksaanPenunjang($id)
     {
+        // Coba hapus sebagai LabRequestItem: jika ditemukan, hanya boleh dihapus jika status request/canceled
+        $item = \App\Models\LabRequestItem::with('request')->find($id);
+        if ($item && $item->request) {
+            $status = $item->request->status;
+            if (in_array($status, ['requested', 'canceled'])) {
+                // Hapus request parent (akan menghapus items juga, jika tidak cascade maka hapus items manual)
+                $request = $item->request;
+                $encounterId = $request->encounter_id;
+                // Hapus semua item terlebih dulu (jaga-jaga jika constraint tidak cascade)
+                foreach ($request->items as $it) {
+                    $it->delete();
+                }
+                $request->delete();
+                // Update total encounter
+                $this->updateEncounterTotalTindakan($encounterId);
+                return ['success' => true, 'message' => 'Permintaan laboratorium berhasil dihapus.'];
+            }
+            return ['success' => false, 'message' => 'Tidak bisa menghapus karena status bukan requested/canceled.'];
+        }
+
+        // Fallback ke model lokal jika memang masih ada data lama
         $pemeriksaanPenunjang = \App\Models\PemeriksaanPenunjang::find($id);
         if ($pemeriksaanPenunjang) {
+            $encounterId = $pemeriksaanPenunjang->encounter_id;
             $pemeriksaanPenunjang->delete();
-
-            // Update total_tindakan di encounter
-            $encounter = Encounter::find($pemeriksaanPenunjang->encounter_id);
-            $totalTindakan = \App\Models\TindakanEncounter::where('encounter_id', $pemeriksaanPenunjang->encounter_id)->sum('total_harga');
-            $totalPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $pemeriksaanPenunjang->encounter_id)->sum('total_harga');
-            $encounter->total_tindakan = $totalTindakan + $totalPenunjang;
-            $encounter->save();
-            return true;
+            $this->updateEncounterTotalTindakan($encounterId);
+            return ['success' => true, 'message' => 'Data pemeriksaan penunjang berhasil dihapus.'];
         }
-        return false;
+        return ['success' => false, 'message' => 'Data tidak ditemukan.'];
     }
     // Ambil data tindakan
     public function getTindakan($id)
@@ -317,10 +319,8 @@ class ObservasiRepository
         $tindakanEncounter->total_harga = max(0, $subtotal - $diskon);
         $tindakanEncounter->save();
 
-        // Update total_tindakan encounter (langsung sum di DB)
-        $encounter->total_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
-        $encounter->total_bayar_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
-        $encounter->save();
+        // Update total_tindakan encounter (gabungkan tindakan medis + pemeriksaan penunjang)
+        $this->updateEncounterTotalTindakan($id);
 
         // Proses bahan (jika ada)
         $tindakanBahans = \App\Models\TindakanBahan::where('tindakan_id', $tindakan->id)->with('bahan')->get();
@@ -380,13 +380,8 @@ class ObservasiRepository
         // Hapus tindakan
         $tindakan->delete();
 
-        // Update total_tindakan di encounter
-        $encounter = \App\Models\Encounter::find($tindakan->encounter_id);
-        if ($encounter) {
-            $encounter->total_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $tindakan->encounter_id)->sum('total_harga');
-            $encounter->total_bayar_tindakan = \App\Models\TindakanEncounter::where('encounter_id', $tindakan->encounter_id)->sum('total_harga');
-            $encounter->save();
-        }
+        // Update total_tindakan di encounter (gabungkan tindakan medis + pemeriksaan penunjang)
+        $this->updateEncounterTotalTindakan($tindakan->encounter_id);
 
         return [
             'success' => true,
@@ -577,13 +572,107 @@ class ObservasiRepository
     // ambbil data encounter bedasarkan id beserta tindakan dan resep
     public function getEncounterById($id)
     {
-        $encounter = \App\Models\Encounter::with(['tindakan', 'resep.details', 'pemeriksaanPenunjang'])
+        $encounter = \App\Models\Encounter::with(['tindakan', 'resep.details'])
             ->where('id', $id)
             ->first();
         if (!$encounter) {
             return null; // Jika tidak ada data encounter
         }
+
+        // Gabungkan Pemeriksaan Penunjang dari dua sumber:
+        // 1) Model lokal (jika masih ada data lama)
+        // 2) LabRequest + LabRequestItem (alur baru request-only)
+        $penunjang = [];
+        // Lokal
+        $localPenunjang = \App\Models\PemeriksaanPenunjang::where('encounter_id', $id)->get();
+        foreach ($localPenunjang as $it) {
+            $penunjang[] = [
+                'jenis_pemeriksaan' => $it->jenis_pemeriksaan,
+                'qty' => (int)($it->qty ?? 1),
+                'harga' => (int)($it->harga ?? 0),
+                'total_harga' => (int)($it->total_harga ?? 0),
+            ];
+        }
+        // Lab requests
+        $labRequests = \App\Models\LabRequest::with('items')
+            ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
+            ->get();
+        foreach ($labRequests as $req) {
+            foreach ($req->items as $it) {
+                $penunjang[] = [
+                    'jenis_pemeriksaan' => $it->test_name,
+                    'qty' => 1,
+                    'harga' => (int)($it->price ?? 0),
+                    'total_harga' => (int)($it->price ?? 0),
+                ];
+            }
+        }
+
+        // Sisipkan pemeriksaan_penunjang sebagai attribute dinamis pada model Encounter
+        $encounter->setAttribute('pemeriksaan_penunjang', $penunjang);
         return $encounter;
+    }
+
+    // Ringkasan encounter terakhir (sebelum encounter saat ini)
+    public function getLastEncounterSummary($encounterId)
+    {
+        $current = \App\Models\Encounter::find($encounterId);
+        if (!$current) {
+            return null;
+        }
+
+        $prev = \App\Models\Encounter::where('rekam_medis', $current->rekam_medis)
+            ->where('id', '!=', $encounterId)
+            ->orderByDesc('created_at')
+            ->first();
+        if (!$prev) {
+            return null;
+        }
+
+        // Diagnosis
+        $diagnosis = $this->getDiagnosis($prev->id);
+        // TTV
+        $ttv = \App\Models\TandaVital::where('encounter_id', $prev->id)->first();
+        // Resep ringkas
+        $resep = \App\Models\Resep::with('details')->where('encounter_id', $prev->id)->latest()->first();
+        $resepItems = [];
+        if ($resep && $resep->details) {
+            foreach ($resep->details as $d) {
+                $resepItems[] = ['nama_obat' => $d->nama_obat, 'qty' => $d->qty, 'aturan_pakai' => $d->aturan_pakai];
+            }
+        }
+        // Lab ringkas
+        $lab = \App\Models\LabRequest::with('items')->where('encounter_id', $prev->id)->latest()->first();
+        $labItems = [];
+        if ($lab && $lab->items) {
+            foreach ($lab->items as $it) {
+                $labItems[] = ['test_name' => $it->test_name];
+            }
+        }
+
+        return [
+            'encounter_id' => $prev->id,
+            'date' => optional($prev->created_at)->format('d M Y H:i'),
+            'type' => $prev->type,
+            'diagnosis' => $diagnosis ?? [],
+            'ttv' => $ttv ? [
+                'nadi' => $ttv->nadi,
+                'pernapasan' => $ttv->pernapasan,
+                'sistolik' => $ttv->sistolik,
+                'diastolik' => $ttv->diastolik,
+                'suhu' => $ttv->suhu,
+            ] : null,
+            'resep' => [
+                'count' => $resep ? $resep->details->count() : 0,
+                'items' => array_slice($resepItems, 0, 3),
+            ],
+            'lab' => [
+                'status' => $lab ? $lab->status : null,
+                'count' => $lab ? $lab->items->count() : 0,
+                'items' => array_slice($labItems, 0, 3),
+            ],
+        ];
     }
     // Buat diskon tindakan
     public function postDiskonTindakan($request, $id)
@@ -828,7 +917,7 @@ class ObservasiRepository
     {
         $description = "Insentif " . str_replace('_', ' ', $type) . ": " . $encounter->name_pasien . ' (No. Encounter: ' . $encounter->no_encounter . ')';
         return [
-            'id' => \Illuminate\Support\Str::uuid(), // Tambahkan UUID untuk setiap record
+            'id' => \Illuminate\Support\Str::uuid(),
             'user_id' => $userId,
             'year' => $timestamp->year,
             'month' => $timestamp->month,
@@ -1063,5 +1152,87 @@ class ObservasiRepository
             'success' => true,
             'message' => 'Obat berhasil dihapus.'
         ];
+    }
+
+    /**
+     * Update total_tindakan encounter dengan menggabungkan tindakan medis + pemeriksaan penunjang
+     * Method ini memastikan konsistensi kalkulasi di seluruh aplikasi
+     */
+    public function updateEncounterTotalTindakan($encounterId)
+    {
+        $encounter = \App\Models\Encounter::find($encounterId);
+        if (!$encounter) {
+            return;
+        }
+
+        // Hitung total tindakan medis
+        $totalTindakanMedis = \App\Models\TindakanEncounter::where('encounter_id', $encounterId)
+            ->sum('total_harga');
+
+        // Hitung total pemeriksaan penunjang (lokal)
+        $totalPemeriksaanPenunjangLokal = \App\Models\PemeriksaanPenunjang::where('encounter_id', $encounterId)
+            ->sum('total_harga');
+
+        // Hitung total permintaan lab (LabRequestItem) berdasarkan encounter
+        $totalLabRequests = \App\Models\LabRequestItem::whereHas('request', function ($q) use ($encounterId) {
+            $q->where('encounter_id', $encounterId);
+        })
+            ->sum('price');
+
+        // Hitung total permintaan radiologi
+        $totalRadiologyRequests = \App\Models\RadiologyRequest::where('encounter_id', $encounterId)
+            ->sum('price');
+
+        // Total gabungan (medis + penunjang lokal + lab requests + radiology requests)
+        $totalKeseluruhan = ($totalTindakanMedis ?? 0)
+            + ($totalPemeriksaanPenunjangLokal ?? 0)
+            + ($totalLabRequests ?? 0)
+            + ($totalRadiologyRequests ?? 0);
+        // Update encounter dengan total yang benar
+        $encounter->total_tindakan = $totalKeseluruhan;
+
+        // Jika belum ada diskon, total_bayar_tindakan sama dengan total_tindakan
+        if (is_null($encounter->diskon_persen_tindakan) || $encounter->diskon_persen_tindakan == 0) {
+            $encounter->total_bayar_tindakan = $totalKeseluruhan;
+        } else {
+            // Jika ada diskon, hitung ulang total bayar
+            $diskonAmount = $totalKeseluruhan * ($encounter->diskon_persen_tindakan / 100);
+            $encounter->diskon_tindakan = $diskonAmount;
+            $encounter->total_bayar_tindakan = $totalKeseluruhan - $diskonAmount;
+        }
+
+        $encounter->save();
+    }
+
+    /**
+     * Membuat insentif untuk dokter yang meminta pemeriksaan penunjang.
+     *
+     * @param \App\Models\Encounter $encounter
+     * @param \App\Models\User $dokter
+     * @param string $namaPemeriksaan
+     * @param float $hargaPemeriksaan
+     * @return void
+     */
+    public function createPemeriksaanPenunjangIncentive(\App\Models\Encounter $encounter, \App\Models\User $dokter, string $namaPemeriksaan, float $hargaPemeriksaan): void
+    {
+        $feePercentage = (float) \App\Models\IncentiveSetting::where('setting_key', 'fee_dokter_penunjang')->value('setting_value');
+
+        if ($feePercentage <= 0 || $hargaPemeriksaan <= 0) {
+            return;
+        }
+
+        $amount = $hargaPemeriksaan * ($feePercentage / 100);
+        $description = "Fee Penunjang ($namaPemeriksaan) untuk " . $encounter->name_pasien;
+
+        \App\Models\Incentive::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'user_id' => $dokter->id,
+            'amount' => $amount,
+            'type' => 'fee_penunjang',
+            'description' => $description,
+            'year' => now()->year,
+            'month' => now()->month,
+            'status' => 'pending',
+        ]);
     }
 }

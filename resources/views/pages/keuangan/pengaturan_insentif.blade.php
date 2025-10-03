@@ -59,6 +59,26 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="fee_dokter_penunjang" class="form-label">Fee Dokter Pemeriksaan Penunjang
+                                (%)</label>
+                            <div class="input-group">
+                                <input type="number"
+                                    class="form-control @error('fee_dokter_penunjang') is-invalid @enderror"
+                                    id="fee_dokter_penunjang" name="fee_dokter_penunjang"
+                                    value="{{ old('fee_dokter_penunjang', (int) ($settings['fee_dokter_penunjang'] ?? 0)) }}"
+                                    placeholder="Contoh: 10" min="0" max="100" step="1">
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <div class="form-text">Persentase fee dari total harga pemeriksaan (Lab/Radiologi) yang akan
+                                diberikan kepada dokter perujuk.</div>
+                            @error('fee_dokter_penunjang')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label for="cutoff_day" class="form-label">Tanggal Cut-off Gaji</label>
                             <input type="number" class="form-control @error('cutoff_day') is-invalid @enderror"
                                 id="cutoff_day" name="cutoff_day"

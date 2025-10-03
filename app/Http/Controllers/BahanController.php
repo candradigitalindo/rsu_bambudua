@@ -265,6 +265,32 @@ class BahanController extends Controller
         return view('pages.bahan.histori', compact('bahan'));
     }
 
+    // AJAX: daftar tindakan yang menggunakan bahan
+    public function tindakanJson($id)
+    {
+        $bahan = \App\Models\Bahan::with(['tindakan' => function ($q) {
+            $q->select('tindakans.id', 'name', 'harga');
+        }])->findOrFail($id);
+
+        $rows = $bahan->tindakan->map(function ($t) {
+            $harga = $t->harga ?? 0;
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'harga' => (float) $harga,
+                'harga_formatted' => 'Rp ' . number_format($harga, 0, ',', '.'),
+            ];
+        });
+
+        return response()->json([
+            'bahan' => [
+                'id' => $bahan->id,
+                'name' => $bahan->name,
+            ],
+            'tindakan' => $rows,
+        ]);
+    }
+
     // get RequestBahan
     public function getRequestBahan()
     {

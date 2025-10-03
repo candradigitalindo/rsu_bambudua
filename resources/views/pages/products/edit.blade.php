@@ -117,8 +117,14 @@
                         </div>
                         <div class="mb-3">
                             <label for="satuan" class="form-label">Satuan</label>
-                            <input type="text" class="form-control @error('satuan') is-invalid @enderror" id="satuan"
-                                name="satuan" value="{{ old('satuan', $product->satuan) }}" required>
+                            <select class="form-select @error('satuan') is-invalid @enderror" id="satuan" name="satuan" required>
+                                <option value="" disabled>Pilih Satuan</option>
+                                @foreach(($units ?? []) as $unit)
+                                    <option value="{{ $unit->name }}" {{ old('satuan', $product->satuan) == $unit->name ? 'selected' : '' }}>
+                                        {{ $unit->name }} @if($unit->abbrev) ({{ $unit->abbrev }}) @endif
+                                    </option>
+                                @endforeach
+                            </select>
                             @error('satuan')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

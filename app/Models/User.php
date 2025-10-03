@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<\\Database\\Factories\\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -24,6 +24,7 @@ class User extends Authenticatable
         'id_petugas',
         'id_satusehat',
         'password',
+        'is_active',
     ];
 
     /**
@@ -52,6 +53,17 @@ class User extends Authenticatable
     public function profile()
     {
         return $this->hasOne(Profile::class);
+    }
+
+    public function professionalLicenses()
+    {
+        return $this->hasMany(\App\Models\ProfessionalLicense::class);
+    }
+
+    // Gunakan email pada profile untuk notifikasi mail
+    public function routeNotificationForMail(): ?string
+    {
+        return optional($this->profile)->email;
     }
     public function clinics()
     {

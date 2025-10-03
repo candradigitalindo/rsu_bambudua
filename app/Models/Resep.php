@@ -12,10 +12,8 @@ class Resep extends Model
         'id',
         'encounter_id',
         'kode_resep',
-        'masa_pemakaian_hari',
         'dokter',
         'catatan',
-        'status', // Tambahkan status ke fillable
     ];
     // encounter
     public function encounter()

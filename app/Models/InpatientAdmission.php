@@ -19,6 +19,16 @@ class InpatientAdmission extends Model
         'admission_reason',
         'admission_date',
         'status',
+        'discharge_date',
+        'transfer_date',
+        'transfer_from',
+        'transfer_to',
+        'transfer_notes',
+    ];
+    protected $dates = [
+        'admission_date',
+        'discharge_date',
+        'transfer_date',
     ];
     public function encounter()
     {
@@ -26,7 +36,7 @@ class InpatientAdmission extends Model
     }
     public function patient()
     {
-        return $this->belongsTo(Pasien::class);
+        return $this->belongsTo(Pasien::class, 'pasien_id');
     }
     public function doctor()
     {

@@ -42,6 +42,8 @@
                                         <th>Hak Akses</th>
                                         <th>Spesialis</th>
                                         <th>Poliklinik</th>
+                                        <th>SIP</th>
+                                        <th>STR</th>
                                         <th class="text-center">Aksi</th>
                                     </tr>
                                 </thead>
@@ -64,6 +66,22 @@
                                                 @foreach ($u->clinics as $clinic)
                                                     <span class="badge border border-primary text-primary">{{ $clinic->nama }}</span>
                                                 @endforeach
+                                            </td>
+                                            <td>
+                                                @if(!empty($u->sip_number))
+                                                    <div><strong>{{ $u->sip_number }}</strong></div>
+                                                    <div class="text-muted small">Exp: {{ $u->sip_expiry }}</div>
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if(!empty($u->str_number))
+                                                    <div><strong>{{ $u->str_number }}</strong></div>
+                                                    <div class="text-muted small">Exp: {{ $u->str_expiry }}</div>
+                                                @else
+                                                    -
+                                                @endif
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('pengguna.edit', $u->id) }}"

@@ -20,18 +20,32 @@ class BahanRepository
         $name = request('name');
 
         // Query dasar
-        $query = Bahan::query();
+        $query = Bahan::query()
+            ->select(['id', 'name', 'is_expired', 'is_active', 'warning', 'updated_at'])
+            // Hitung stok dengan withCount agar efisien
+            ->withCount([
+                'stokbahan as available_count' => function ($q) {
+                    $q->where('is_available', 1);
+                },
+                'stokbahan as expired_count' => function ($q) {
+                    $q->where('is_available', 1)->where('expired_at', '<', now());
+                },
+                'stokbahan as warning_count' => function ($q) {
+                    // expired_at <= NOW() + INTERVAL bahans.warning DAY
+                    $q->where('is_available', 1)
+                      ->where('expired_at', '>=', now())
+                      ->whereRaw('expired_at <= DATE_ADD(NOW(), INTERVAL bahans.warning DAY)');
+                },
+            ]);
 
         // Filter pencarian jika ada
         if ($name) {
             $query->where('name', 'like', '%' . $name . '%');
         }
 
-        // Eager load relasi tindakan (sekali query, hindari N+1)
-        $query->with('tindakan');
-
+        // Hindari eager load tindakan di index (akan dimuat via AJAX saat diperlukan)
         // Urutkan dan paginate
-        return $query->orderBy('updated_at', 'DESC')->paginate(50);
+        return $query->orderBy('updated_at', 'DESC')->paginate(25);
     }
     public function show($id)
     {
@@ -80,7 +94,15 @@ class BahanRepository
     {
         $bahan = Bahan::findOrFail($id);
         $bahan->historibahan()->create($data);
-        $bahan->stokbahan()->where('is_available', 1)->orderBy('created_at', $data['created_at'] == null ? 'asc' : $data['created_at'])->take($data['quantity'])->delete();
+
+        $q = $bahan->stokbahan()->where('is_available', 1);
+        // Jika user memberikan tanggal, batasi stok yang dikeluarkan hingga tanggal tsb (opsional)
+        if (!empty($data['created_at'])) {
+            $q->whereDate('created_at', '<=', $data['created_at']);
+        }
+        // Gunakan FIFO berdasarkan created_at asc
+        $q->orderBy('created_at', 'asc')->take($data['quantity'])->delete();
+
         return $bahan;
     }
     public function getAllHistori()

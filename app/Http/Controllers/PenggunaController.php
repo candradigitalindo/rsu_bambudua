@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Repositories\PenggunaRepository;
 use Illuminate\Http\Request;
 use RealRashid\SweetAlert\Facades\Alert;
+use Illuminate\Support\Carbon;
 
 class PenggunaController extends Controller
 {
@@ -48,7 +49,9 @@ class PenggunaController extends Controller
             'username'  => 'required|string|unique:users',
             'role'      => 'required|string',
             'password'  => 'required|min:8',
-            'spesialis' => 'required|string'
+'spesialis' => 'required|string',
+            'sip_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'str_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ], [
             'name.required'         => 'Kolom masih kosong',
             'username.required'     => 'Kolom masih kosong',
@@ -96,7 +99,9 @@ class PenggunaController extends Controller
             'username'  => 'required|string|unique:users,username,' . $id,
             'role'      => 'required|string',
             'password'  => 'nullable|min:8',
-            'spesialis' => 'required|string'
+'spesialis' => 'required|string',
+            'sip_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'str_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ], [
             'name.required'         => 'Kolom masih kosong',
             'username.required'     => 'Kolom masih kosong',
@@ -150,5 +155,52 @@ class PenggunaController extends Controller
 
         Alert::success('Berhasil', 'Gaji pokok untuk ' . $user->name . ' berhasil disimpan.');
         return redirect()->route('pengguna.index');
+    }
+
+    // Aktifitas Pengguna - index
+    public function activityIndex(Request $request)
+    {
+        $query = \App\Models\ActivityLog::with('user')
+            ->latest();
+
+        if ($request->filled('user')) {
+            $query->where('user_id', $request->integer('user'));
+        }
+        if ($request->filled('method')) {
+            $query->where('method', strtoupper($request->string('method')));
+        }
+        if ($request->filled('q')) {
+            $q = $request->string('q');
+            $query->where(function ($sub) use ($q) {
+                $sub->where('subject', 'like', "%{$q}%")
+                    ->orWhere('url', 'like', "%{$q}%")
+                    ->orWhere('route_name', 'like', "%{$q}%")
+                    ->orWhere('ip', 'like', "%{$q}%");
+            });
+        }
+        // Default: tampilkan aktivitas HARI INI saja ketika filter tanggal tidak diisi
+        $from = $request->input('date_from');
+        $to   = $request->input('date_to');
+        if (empty($from) && empty($to)) {
+            $from = $to = now()->toDateString();
+        }
+        if (!empty($from)) {
+            $query->whereDate('created_at', '>=', $from);
+        }
+        if (!empty($to)) {
+            $query->whereDate('created_at', '<=', $to);
+        }
+
+        $logs = $query->paginate(20)->withQueryString();
+        $users = User::orderBy('name')->get(['id','name']);
+
+        return view('pages.pengguna.activity', compact('logs', 'users'));
+    }
+
+    // Aktifitas Pengguna - show detail
+    public function activityShow(\App\Models\ActivityLog $log)
+    {
+        $log->load('user');
+        return view('pages.pengguna.activity_show', compact('log'));
     }
 }

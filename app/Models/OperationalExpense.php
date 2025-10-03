@@ -17,6 +17,13 @@ class OperationalExpense extends Model
      */
     protected $fillable = [
         'description',
+        'category',
+        'expense_category_id',
+        'cost_center',
+        'cost_center_id',
+        'payment_method_code',
+        'payment_method_name',
+        'payment_reference',
         'amount',
         'expense_date',
     ];

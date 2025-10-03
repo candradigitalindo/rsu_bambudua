@@ -68,6 +68,9 @@ class DatabaseSeeder extends Seeder
             $categoryId = $category->id;
         }
 
+        // Payment Method Seeder
+        $this->call(PaymentMethodSeeder::class);
+
         // Product Apotek Seeder
         $products = [
             ['code' => 'OBT001', 'name' => 'Paracetamol', 'satuan' => 'tablet', 'harga' => 2000, 'stok' => 100, 'category_id' => $categoryId],
@@ -77,5 +80,8 @@ class DatabaseSeeder extends Seeder
         foreach ($products as $product) {
             ProductApotek::firstOrCreate(['code' => $product['code']], $product);
         }
+
+        // Incentive Setting Seeder
+        $this->call(IncentiveSettingSeeder::class);
     }
 }

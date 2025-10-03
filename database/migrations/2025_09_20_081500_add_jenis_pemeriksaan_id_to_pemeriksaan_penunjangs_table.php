@@ -12,4 +12,12 @@ return new class extends Migration
             $table->foreignUuid('jenis_pemeriksaan_id')->nullable()->after('encounter_id')->constrained('jenis_pemeriksaan_penunjangs')->onDelete('set null');
         });
     }
+
+    public function down(): void
+    {
+        Schema::table('pemeriksaan_penunjangs', function (Blueprint $table) {
+            $table->dropForeign(['jenis_pemeriksaan_id']);
+            $table->dropColumn('jenis_pemeriksaan_id');
+        });
+    }
 };

@@ -195,14 +195,12 @@
                                         '<span class="badge bg-success">Disiapkan</span>'
                                     );
 
-                                    // Jika semua item sudah disiapkan, sembunyikan tombol "Siapkan Semua"
-                                    if ($('#modalDetailBody').find('.btn-siapkan-item')
-                                        .length === 0) {
-                                        // Sembunyikan tombol dan muat ulang halaman setelah notifikasi ditutup
-                                        Swal.fire(
-                                            'Selesai!',
-                                            'Semua item dalam resep ini telah disiapkan.',
-                                            'info'
+                                    // Jika response menandakan semua item sudah siap
+                                    if (response.all_prepared) {
+                                        // Jika tidak ada, tampilkan notifikasi selesai dan muat ulang halaman
+                                        Swal.fire('Selesai!',
+                                            'Semua item resep telah disiapkan dan tagihan telah dikirim ke kasir.',
+                                            'success'
                                         ).then(() => location.reload());
                                     }
                                 }
@@ -212,7 +210,7 @@
                                 Swal.fire(
                                     'Gagal!',
                                     err ? err.message : 'Terjadi kesalahan.',
-                                    'error' // Perbaikan typo dari 'errror'
+                                    'error'
                                 );
                                 button.prop('disabled', false).html(
                                     '<i class="ri-check-line"></i> Siapkan'

@@ -33,10 +33,12 @@ class JenisPemeriksaanPenunjangController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:jenis_pemeriksaan_penunjangs,name',
+            'type' => 'required|in:lab,radiologi',
             'harga' => 'required|string',
         ], [
             'name.required' => 'Nama pemeriksaan harus diisi.',
             'name.unique' => 'Nama pemeriksaan sudah ada.',
+            'type.required' => 'Tipe pemeriksaan harus dipilih.',
             'harga.required' => 'Harga harus diisi.',
         ]);
 
@@ -56,10 +58,12 @@ class JenisPemeriksaanPenunjangController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:jenis_pemeriksaan_penunjangs,name,' . $id,
+            'type' => 'required|in:lab,radiologi',
             'harga' => 'required|string',
         ], [
             'name.required' => 'Nama pemeriksaan harus diisi.',
             'name.unique' => 'Nama pemeriksaan sudah ada.',
+            'type.required' => 'Tipe pemeriksaan harus dipilih.',
             'harga.required' => 'Harga harus diisi.',
         ]);
 

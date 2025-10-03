@@ -55,6 +55,60 @@
                 </li>
             @endif
 
+            @if (in_array(auth()->user()->role, [8, 4, 1]))
+                <li class="treeview {{ request()->is('laboratorium*') ? 'active current-page' : '' }}">
+                    <a href="#">
+                        <i class="ri-test-tube-line"></i>
+                        <span class="menu-text">Laboratorium</span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li>
+                            <a class="{{ request()->is('laboratorium/dashboard*') ? 'active-sub' : '' }}"
+                                href="{{ route('lab.dashboard') }}">Dashboard Lab</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('laboratorium/requests*') ? 'active-sub' : '' }}"
+                                href="{{ route('lab.requests.index') }}">Permintaan Pemeriksaan</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('laboratorium/results*') ? 'active-sub' : '' }}"
+                                href="{{ route('lab.results.index') }}">Input Hasil Lab</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('laboratorium/reagents*') ? 'active-sub' : '' }}"
+                                href="{{ route('lab.reagents.index') }}">Stok Reagensia</a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+
+            @if (in_array(auth()->user()->role, [9, 4, 1]))
+                <li class="treeview {{ request()->is('radiologi*') ? 'active current-page' : '' }}">
+                    <a href="#">
+                        <i class="ri-flask-line"></i>
+                        <span class="menu-text">Radiologi</span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li>
+                            <a class="{{ request()->is('radiologi/dashboard*') ? 'active-sub' : '' }}"
+                                href="{{ route('radiologi.dashboard') }}">Dashboard Radiologi</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('radiologi/permintaan*') ? 'active-sub' : '' }}"
+                                href="{{ route('radiologi.requests.index') }}">Permintaan Radiologi</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('radiologi/hasil*') ? 'active-sub' : '' }}"
+                                href="{{ route('radiologi.results.index') }}">Hasil Radiologi</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('radiologi/jadwal*') ? 'active-sub' : '' }}"
+                                href="{{ route('radiologi.schedule.index') }}">Jadwal Pemeriksaan</a>
+                        </li>
+                    </ul>
+                </li>
+            @endif
+
             @if (in_array(auth()->user()->role, [1, 4]))
                 <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">
                     <a href="#">
@@ -94,6 +148,7 @@
                             <a class="{{ request()->is('masterdata/ruangan*') || request()->is('masterdata/category*') ? 'active-sub' : '' }}"
                                 href="{{ route('ruangan.index') }}">Data Ruangan</a>
                         </li>
+
                         <li>
                             <a class="{{ request()->is('masterdata/tindakan*') ? 'active-sub' : '' }}"
                                 href="{{ route('tindakan.index') }}">Data Tindakan</a>
@@ -123,7 +178,7 @@
                 <li class="treeview {{ request()->is('kunjungan*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-dossier-line"></i>
-                        <span class="menu-text">Dokter / Perawat</span>
+                        <span class="menu-text">Layanan Medis</span>
                     </a>
                     <ul class="treeview-menu">
                         <li>
@@ -142,7 +197,41 @@
                             <a class="{{ request()->is('kunjungan/rawatDarurat*') ? 'active-sub' : '' }}"
                                 href="{{ route('kunjungan.rawatDarurat') }}">IGD</a>
                         </li>
+                        @if (in_array(auth()->user()->role, [3, 4, 1]))
+                            <li>
+                                <a class="{{ request()->is('kunjungan/dashboard-bed-perawat') ? 'active-sub' : '' }}"
+                                    href="{{ route('kunjungan.nurse-bed-dashboard') }}">
+                                    Dashboard Bed
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
 
+            @if (in_array(auth()->user()->role, [1, 4]))
+                <li class="treeview {{ request()->is('medical-records*') ? 'active current-page' : '' }}">
+                    <a href="#">
+                        <i class="ri-file-list-3-line"></i>
+                        <span class="menu-text">Rekam Medis</span>
+                    </a>
+                    <ul class="treeview-menu">
+                        <li>
+                            <a class="{{ request()->is('medical-records/dashboard*') ? 'active-sub' : '' }}"
+                                href="{{ route('medical-records.dashboard') }}">Dashboard</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('medical-records/riwayat*') ? 'active-sub' : '' }}"
+                                href="{{ route('medical-records.riwayat') }}">Riwayat Kunjungan</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('medical-records/arsip*') ? 'active-sub' : '' }}"
+                                href="{{ route('medical-records.arsip') }}">Arsip</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('medical-records/statistik*') ? 'active-sub' : '' }}"
+                                href="{{ route('medical-records.statistik') }}">Statistik</a>
+                        </li>
                     </ul>
                 </li>
             @endif
@@ -225,6 +314,10 @@
                             <a class="{{ request()->is('apotek/permintaan-inap*') ? 'active-sub' : '' }}"
                                 href="{{ route('apotek.permintaan-inap') }}">Permintaan Obat Inap</a>
                         </li>
+                        <li>
+                            <a class="{{ request()->is('apotek/penyiapan-resep/reorder-list*') ? 'active-sub' : '' }}"
+                                href="{{ route('apotek.penyiapan-resep.reorder.list') }}">Siapkan Ulang Resep</a>
+                        </li>
                     </ul>
                 </li>
             @endif
@@ -236,11 +329,26 @@
                         <span class="menu-text">Data Stok Perlengkapan</span>
                     </a>
                 </li>
-                <li class="{{ request()->is('pengguna*') ? 'active current-page' : '' }}">
-                    <a href="{{ route('pengguna.index') }}">
-                        <i class="ri-team-line"></i>
-                        <span class="menu-text">Pengguna</span>
+                <li class="treeview {{ request()->is('pengguna*') ? 'active current-page' : '' }}">
+                    <a href="#">
+                        <i class="ri-user-settings-line"></i>
+                        <span class="menu-text">Manajemen Pengguna</span>
                     </a>
+                    <ul class="treeview-menu">
+                        <li>
+                            <a class="{{ request()->is('pengguna') ? 'active-sub' : '' }}"
+                                href="{{ route('pengguna.index') }}">Data Pengguna</a>
+                        </li>
+                        <li>
+                            @if (Route::has('pengguna.activity.index'))
+                                <a class="{{ request()->is('pengguna/aktivitas*') ? 'active-sub' : '' }}"
+                                    href="{{ route('pengguna.activity.index') }}">Aktifitas Pengguna</a>
+                            @else
+                                <a class="disabled" href="#"
+                                    title="Route pengguna.activity.index belum tersedia">Aktifitas Pengguna</a>
+                            @endif
+                        </li>
+                    </ul>
                 </li>
                 <li class="treeview {{ request()->is('setting*') ? 'active current-page' : '' }}">
                     <a href="#">

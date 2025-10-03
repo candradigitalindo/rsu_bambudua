@@ -131,4 +131,14 @@ class Encounter extends Model
     {
         return $this->belongsTo(Pasien::class, 'rekam_medis', 'rekam_medis');
     }
+
+    public function labRequests()
+    {
+        return $this->hasMany(\App\Models\LabRequest::class, 'encounter_id', 'id');
+    }
+
+    public function radiologyRequests()
+    {
+        return $this->hasMany(\App\Models\RadiologyRequest::class, 'encounter_id', 'id');
+    }
 }

@@ -27,6 +27,19 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label for="type" class="form-label">Tipe Pemeriksaan <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
+                                required>
+                                <option value="lab" {{ old('type') == 'lab' ? 'selected' : '' }}>Laboratorium</option>
+                                <option value="radiologi" {{ old('type') == 'radiologi' ? 'selected' : '' }}>Radiologi
+                                </option>
+                            </select>
+                            @error('type')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
                             <label for="harga" class="form-label">Harga <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp.</span>

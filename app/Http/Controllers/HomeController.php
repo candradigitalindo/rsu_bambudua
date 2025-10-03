@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\Berita;
 use App\Models\Encounter;
 use App\Models\OperationalExpense;
@@ -10,6 +11,7 @@ use App\Models\SalaryPayment;
 use App\Models\User;
 use App\Repositories\HomeRepository; // Tetap digunakan untuk profile
 use App\Repositories\WilayahRepository;
+use App\Services\OwnerDashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,36 +19,34 @@ class HomeController extends Controller
 {
     public $homeRepository;
     public $wilayahRepository;
-    public function __construct(HomeRepository $homeRepository, WilayahRepository $wilayahRepository)
-    {
+    public $ownerDashboardService;
+    
+    public function __construct(
+        HomeRepository $homeRepository, 
+        WilayahRepository $wilayahRepository,
+        OwnerDashboardService $ownerDashboardService
+    ) {
         $this->homeRepository = $homeRepository;
         $this->wilayahRepository = $wilayahRepository;
+        $this->ownerDashboardService = $ownerDashboardService;
     }
     public function index()
     {
-        $userRole = Auth::user()->role;
-        switch ($userRole) {
-            case 1: // Owner
-            case 4: // Admin
-                // Lanjutkan untuk menampilkan dashboard owner
-                break;
-            case 2: // Dokter
-            case 3: // Perawat
-                return redirect()->route('dokter.index');
-            case 5: // Pendaftaran
-                return redirect()->route('loket.dashboard');
-            case 6: // Keuangan
-                return redirect()->route('keuangan.index');
-            case 7: // Apotek
-                return redirect()->route('apotek.dashboard');
-            case 10: // Kasir
-                return redirect()->route('kasir.index');
-            default:
-                // Arahkan ke halaman profil jika tidak ada dashboard khusus
-                return redirect()->route('home.profile', Auth::id());
+        $userRole = UserRole::fromValue(Auth::user()->role);
+        
+        // Redirect ke dashboard sesuai role
+        if ($userRole && !in_array($userRole, [UserRole::OWNER, UserRole::ADMIN])) {
+            return redirect()->route($userRole->dashboardRoute());
+        }
+        
+        // Jika bukan owner/admin atau role tidak dikenali, redirect ke profile
+        if (!$userRole || !in_array($userRole, [UserRole::OWNER, UserRole::ADMIN])) {
+            return redirect()->route('home.profile', Auth::id());
         }
 
-        $currentMonth = now()->month;
+        // Rentang tanggal bulan ini untuk optimasi query
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
         $currentYear = now()->year;
 
         // 1. Pendapatan Bulan Ini (Dipisahkan)
@@ -54,37 +54,32 @@ class HomeController extends Controller
             $query->where('status_bayar_tindakan', 1)
                 ->orWhere('status_bayar_resep', 1);
         })
-            ->whereMonth('updated_at', $currentMonth)
-            ->whereYear('updated_at', $currentYear)
+            ->whereBetween('updated_at', [$startOfMonth, $endOfMonth])
             ->selectRaw('SUM(total_bayar_tindakan) as pendapatan_tindakan, SUM(total_bayar_resep) as pendapatan_farmasi')
             ->first();
 
         $pendapatanTindakanBulanIni = $pendapatanOperasional->pendapatan_tindakan ?? 0;
         $pendapatanFarmasiBulanIni = $pendapatanOperasional->pendapatan_farmasi ?? 0;
 
-        $pendapatanLainnya = OtherIncome::whereMonth('income_date', $currentMonth)
-            ->whereYear('income_date', $currentYear)
+        $pendapatanLainnya = OtherIncome::whereBetween('income_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
         $pendapatanTindakanDanLainnya = $pendapatanTindakanBulanIni + $pendapatanLainnya;
         $totalPendapatanBulanIni = $pendapatanTindakanBulanIni + $pendapatanFarmasiBulanIni + $pendapatanLainnya;
 
         // 2. Pengeluaran Bulan Ini
-        $pengeluaranOperasional = OperationalExpense::whereMonth('expense_date', $currentMonth)
-            ->whereYear('expense_date', $currentYear)
+        $pengeluaranOperasional = OperationalExpense::whereBetween('expense_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
         $gajiInsentif = SalaryPayment::where('status', 'paid')
-            ->whereMonth('paid_at', $currentMonth)
-            ->whereYear('paid_at', $currentYear)
+            ->whereBetween('paid_at', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
         $totalPengeluaranBulanIni = $pengeluaranOperasional + $gajiInsentif;
 
         // 3. Laba/Rugi & Total Pasien
         $labaRugiBulanIni = $totalPendapatanBulanIni - $totalPengeluaranBulanIni;
-        $totalPasienBulanIni = Encounter::whereMonth('created_at', $currentMonth)
-            ->whereYear('created_at', $currentYear)
+        $totalPasienBulanIni = Encounter::whereBetween('created_at', [$startOfMonth, $endOfMonth])
             ->distinct('rekam_medis')
             ->count();
 
@@ -98,6 +93,15 @@ class HomeController extends Controller
             ->latest()
             ->take(5)->get();
 
+        // 6. Data Analisa Tambahan untuk Owner
+        $kpiData = $this->ownerDashboardService->getKPIData();
+        $operationalStatus = $this->ownerDashboardService->getOperationalStatus();
+        $alerts = $this->ownerDashboardService->getAlerts();
+        $topDiagnoses = $this->ownerDashboardService->getTopDiagnoses();
+        $departmentPerformance = $this->ownerDashboardService->getDepartmentPerformance();
+        $inventoryAlerts = $this->ownerDashboardService->getInventoryAlerts();
+        $financialHealth = $this->ownerDashboardService->getFinancialHealth();
+        $bedAnalytics = $this->ownerDashboardService->getBedAnalytics();
 
         return view('pages.dashboard.owner', compact(
             'totalPendapatanBulanIni',
@@ -109,7 +113,15 @@ class HomeController extends Controller
             'totalPasienBulanIni',
             'grafikData',
             'grafikKunjungan',
-            'beritaTerbaru'
+            'beritaTerbaru',
+            'kpiData',
+            'operationalStatus',
+            'alerts',
+            'topDiagnoses',
+            'departmentPerformance',
+            'inventoryAlerts',
+            'financialHealth',
+            'bedAnalytics'
         ));
     }
 
@@ -252,5 +264,25 @@ class HomeController extends Controller
         ];
 
         return ['bulanan' => $bulanan, 'harian' => $harian];
+    }
+
+    /**
+     * Get real-time dashboard data for AJAX refresh
+     */
+    public function getRealTimeData()
+    {
+        if (!in_array(auth()->user()->role, [1, 4])) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $data = [
+            'operational_status' => $this->ownerDashboardService->getOperationalStatus(),
+            'alerts' => $this->ownerDashboardService->getAlerts(),
+            'inventory_alerts' => $this->ownerDashboardService->getInventoryAlerts()->take(5),
+            'kpi_data' => $this->ownerDashboardService->getKPIData(),
+            'timestamp' => now()->format('H:i:s')
+        ];
+
+        return response()->json($data);
     }
 }

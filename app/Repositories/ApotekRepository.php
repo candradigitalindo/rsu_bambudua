@@ -192,12 +192,6 @@ class ApotekRepository
             // Cek apakah semua item sudah disiapkan
             // Reload relasi untuk mendapatkan data terbaru setelah update di loop
             $resep->load('details');
-            $remainingItems = $resep->details->where('status', 'Diajukan')->count();
-            // Jika tidak ada lagi item yang 'Diajukan', update status resep utama
-            if ($remainingItems === 0) {
-                $resep->status = 'Disiapkan';
-                $resep->save();
-            }
         });
 
         return ['success' => true, 'message' => 'Semua item resep berhasil disiapkan.'];
@@ -219,20 +213,20 @@ class ApotekRepository
         DB::transaction(function () use ($detail) {
             $this->processStockReduction($detail, $detail->resep);
             $detail->update(['status' => 'Disiapkan']);
-
-            // Cek apakah semua item lain dalam resep ini sudah disiapkan
-            $resep = $detail->resep;
-            // Reload relasi untuk mendapatkan data terbaru
-            $resep->load('details');
-            $remainingItems = $resep->details->where('status', 'Diajukan')->count();
-            // Jika tidak ada lagi item yang 'Diajukan', update status resep utama
-            if ($remainingItems === 0) {
-                $resep->status = 'Disiapkan';
-                $resep->save();
-            }
         });
 
-        return ['success' => true, 'message' => 'Item resep berhasil disiapkan.'];
+        // Cek di luar transaksi untuk memastikan data konsisten
+        $resep = $detail->resep;
+        $resep->refresh(); // Muat ulang model resep dari database
+
+        // Cek apakah masih ada item yang berstatus 'Diajukan'
+        $allPrepared = !$resep->details()->where('status', 'Diajukan')->exists();
+
+        return [
+            'success' => true,
+            'message' => 'Item resep berhasil disiapkan.',
+            'all_prepared' => $allPrepared
+        ];
     }
 
     private function processStockReduction(\App\Models\ResepDetail $detail, \App\Models\Resep $resep): void

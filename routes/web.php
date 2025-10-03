@@ -4,6 +4,8 @@ use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ApotekController;
+use App\Http\Controllers\SpecialistConsultationController;
+use App\Http\Controllers\NursingCareController;
 use App\Http\Controllers\BahanController;
 use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\CategoryRuanganController;
@@ -27,6 +29,26 @@ use App\Http\Controllers\SpesialisController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\TindakanController;
 use App\Http\Controllers\WilayahController;
+use App\Http\Controllers\LabRequestController;
+use App\Http\Controllers\LabReagentController;
+use App\Http\Controllers\LabDashboardController;
+use App\Http\Controllers\LabResultController;
+use App\Http\Controllers\FinanceReportController;
+use App\Http\Controllers\JenisPemeriksaanPenunjangController;
+use App\Http\Controllers\Icd10Controller;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\ClinicController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\ExpenseCategoryController;
+use App\Http\Controllers\RadiologiController;
+use App\Http\Controllers\MedicalRecordsController;
+use App\Http\Controllers\IncentiveController;
+use App\Http\Controllers\MedicalEquipmentController;
 use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +67,7 @@ Route::get('/antrian/{id}/monitor', [AntrianController::class, 'edit'])->name('a
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/home/realtime-data', [HomeController::class, 'getRealTimeData'])->name('owner.realtime-data');
     Route::get('/home/{id}/profile', [HomeController::class, 'getProfile'])->name('home.profile');
     Route::post('/home/{id}/profile', [HomeController::class, 'updateProfile'])->name('home.profile.update');
     Route::get('/public/profile/{filename}', [StorageController::class, 'profile'])->name('home.profile.filename');
@@ -67,29 +90,48 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/wilayah/kota/save/{code}', [WilayahController::class, 'saveCity'])->name('wilayah.saveCity');
         Route::get('/wilayah/kecamatan/save/{code}', [WilayahController::class, 'saveDistrict'])->name('wilayah.saveDistrict');
         Route::get('/wilayah/desa/save/{code}', [WilayahController::class, 'saveDesa'])->name('wilayah.saveDesa');
-        Route::resource('jenisjaminan', JaminanController::class)->only(['index', 'store', 'edit', 'destroy']);
+        Route::resource('jenisjaminan', JaminanController::class)->except(['show', 'create', 'update']);
         Route::resource('etnis', EtnisController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pendidikan', PendidikanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('agama', AgamaController::class)->only(['index', 'store', 'destroy']);
         Route::resource('pekerjaan', PekerjaanController::class)->only(['index', 'store', 'destroy']);
         Route::resource('spesialis', SpesialisController::class)->only(['index', 'store', 'destroy']);
-        Route::resource('ruangan', RuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
-        Route::resource('category', CategoryRuanganController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
-        Route::resource('tindakan', TindakanController::class)->only(['index', 'create', 'edit', 'store', 'update', 'destroy']);
+        Route::resource('ruangan', RuanganController::class)->except(['show']);
+        // Bed Availability routes
+        Route::get('ruangan/bed-availability/dashboard', [RuanganController::class, 'bedAvailabilityDashboard'])->name('ruangan.bed-availability.dashboard');
+        Route::get('ruangan/bed-availability/api', [RuanganController::class, 'getBedAvailability'])->name('ruangan.bed-availability.api');
+        Route::get('ruangan/bed-availability/summary', [RuanganController::class, 'getBedAvailabilitySummary'])->name('ruangan.bed-availability.summary');
+        Route::get('ruangan/occupied-patients', [RuanganController::class, 'getOccupiedPatients'])->name('ruangan.occupied-patients');
+        Route::get('ruangan/test-bed-logic', [RuanganController::class, 'testBedLogic'])->name('ruangan.test-bed-logic');
+        Route::post('ruangan/discharge-patient/{admissionId}', [RuanganController::class, 'dischargePatient'])->name('ruangan.discharge-patient');
+        Route::post('ruangan/readmit-patient/{admissionId}', [RuanganController::class, 'readmitPatient'])->name('ruangan.readmit-patient');
+        Route::post('ruangan/cleanup-admission-data', [RuanganController::class, 'cleanupAdmissionData'])->name('ruangan.cleanup-admission-data');
+        Route::get('ruangan/test-kpi-accuracy', [RuanganController::class, 'testKPIAccuracy'])->name('ruangan.test-kpi-accuracy');
+        Route::resource('category', CategoryRuanganController::class)->except(['show']);
+        Route::resource('tindakan', TindakanController::class)->except(['show']);
         Route::get('/tindakan/getBahan/{id}', [TindakanController::class, 'getBahan'])->name('tindakan.getBahan');
         Route::post('/tindakan/storeBahan/{id}', [TindakanController::class, 'storeBahan'])->name('tindakan.storeBahan');
         Route::delete('/tindakan/destroyBahan/{id}', [TindakanController::class, 'destroyBahan'])->name('tindakan.destroyBahan');
         // Route CRUD Jenis Pemeriksaan Penunjang
-        Route::get('jenis-pemeriksaan/{id}/fields', [\App\Http\Controllers\JenisPemeriksaanPenunjangController::class, 'showFields'])->name('jenis-pemeriksaan.fields.index');
-        Route::post('jenis-pemeriksaan/{id}/fields', [\App\Http\Controllers\JenisPemeriksaanPenunjangController::class, 'storeField'])->name('jenis-pemeriksaan.fields.store');
-        Route::delete('jenis-pemeriksaan/fields/{field_id}', [\App\Http\Controllers\JenisPemeriksaanPenunjangController::class, 'destroyField'])->name('jenis-pemeriksaan.fields.destroy');
-        Route::resource('jenis-pemeriksaan', \App\Http\Controllers\JenisPemeriksaanPenunjangController::class)->except(['show']);
-        Route::resource('icd10', \App\Http\Controllers\Icd10Controller::class);
+        Route::get('jenis-pemeriksaan/{id}/fields', [JenisPemeriksaanPenunjangController::class, 'showFields'])->name('jenis-pemeriksaan.fields.index');
+        Route::post('jenis-pemeriksaan/{id}/fields', [JenisPemeriksaanPenunjangController::class, 'storeField'])->name('jenis-pemeriksaan.fields.store');
+        Route::delete('jenis-pemeriksaan/fields/{field_id}', [JenisPemeriksaanPenunjangController::class, 'destroyField'])->name('jenis-pemeriksaan.fields.destroy');
+        Route::resource('jenis-pemeriksaan', JenisPemeriksaanPenunjangController::class)->except(['show']);
+        Route::resource('icd10', Icd10Controller::class);
         Route::post('icd10/import', [\App\Http\Controllers\Icd10Controller::class, 'import'])->name('icd10.import');
         // route discount
-        Route::get('/discount', [\App\Http\Controllers\DiscountController::class, 'index'])->name('discounts.index');
-        Route::post('/discount', [\App\Http\Controllers\DiscountController::class, 'update'])->name('discounts.update');
-        Route::resource('clinics', \App\Http\Controllers\ClinicController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+        Route::get('/discount', [DiscountController::class, 'index'])->name('discounts.index');
+        Route::post('/discount', [DiscountController::class, 'update'])->name('discounts.update');
+        Route::resource('clinics', ClinicController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
+        // Master baru
+        Route::resource('payment-methods', PaymentMethodController::class)->except(['show']);
+        Route::resource('units', UnitController::class)->except(['show']);
+        Route::resource('suppliers', SupplierController::class)->except(['show']);
+        // Master Cost Center & Expense Category
+        Route::resource('cost-centers', CostCenterController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->names('master.cost-centers');
+        Route::resource('expense-categories', ExpenseCategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->names('master.expense-categories');
+        // SIP / Professional Licenses
+        Route::resource('professional-licenses', \App\Http\Controllers\ProfessionalLicenseController::class)->except(['show'])->names('professional-licenses');
     });
 
     Route::prefix('pendaftaran')->group(function () {
@@ -126,7 +168,10 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/ajax/dokter-by-clinic/{clinic}', [PendaftaranController::class, 'getDokterByClinic'])->name('ajax.dokterByClinic');
     });
-    Route::resource('bahans', BahanController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('bahans', BahanController::class)->except(['show']);
+    // AJAX tindakan per bahan
+    Route::get('/bahans/{id}/tindakan-json', [BahanController::class, 'tindakanJson'])->name('bahans.tindakan.json');
+
     Route::get('/bahans/{id}/input', [BahanController::class, 'getBahan'])->name('bahan.getBahan');
     Route::post('/bahans/{id}/stok', [BahanController::class, 'stokBahan'])->name('bahan.stokBahan');
     Route::get('/bahans/{id}/getBahanKeluar', [BahanController::class, 'getBahanKeluar'])->name('bahan.getBahanKeluar');
@@ -135,7 +180,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/bahans/getRequestBahan', [BahanController::class, 'getRequestBahan'])->name('bahan.getRequestBahan');
     // bahan diserahkan
     Route::post('/bahans/diserahkan/{id}', [BahanController::class, 'bahanDiserahkan'])->name('bahan.bahanDiserahkan');
-    Route::resource('pengguna', PenggunaController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('pengguna', PenggunaController::class)->except(['show']);
+    // Aktivitas Pengguna
+    Route::get('/pengguna/aktivitas', [\App\Http\Controllers\PenggunaController::class, 'activityIndex'])->name('pengguna.activity.index');
+    Route::get('/pengguna/aktivitas/{log}', [\App\Http\Controllers\PenggunaController::class, 'activityShow'])->name('pengguna.activity.show');
     // route frefix kunjungan
     Route::get('/pengguna/{user}/gaji', [\App\Http\Controllers\PenggunaController::class, 'aturGaji'])->name('pengguna.gaji.atur');
     Route::post('/pengguna/{user}/gaji', [\App\Http\Controllers\PenggunaController::class, 'simpanGaji'])->name('pengguna.gaji.simpan');
@@ -143,10 +191,30 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/rawatJalan', [EncounterController::class, 'getAllRawatJalan'])->name('kunjungan.rawatJalan');
         Route::get('/rawatInap', [EncounterController::class, 'getAllRawatInap'])->name('kunjungan.rawatInap');
         Route::get('/rawatDarurat', [EncounterController::class, 'getAllRawatDarurat'])->name('kunjungan.rawatDarurat');
+
+        // Dashboard Bed untuk Perawat - moved from masterdata to kunjungan
+        Route::get('/dashboard-bed-perawat', [RuanganController::class, 'nurseBedDashboard'])->name('kunjungan.nurse-bed-dashboard');
+
+        // API endpoints untuk nurse dashboard
+        Route::get('/nurse-dashboard/refresh', [RuanganController::class, 'refreshNurseDashboard'])->name('api.nurse-dashboard.refresh');
+        Route::get('/nurse-dashboard/patient/{roomNumber}/{patientId?}', [RuanganController::class, 'getPatientDetail'])->name('api.nurse-dashboard.patient-detail');
+        Route::post('/nurse-dashboard/nursing-note', [RuanganController::class, 'addNursingNote'])->name('api.nurse-dashboard.add-nursing-note');
+        Route::post('/nurse-dashboard/emergency-call', [RuanganController::class, 'emergencyCall'])->name('api.nurse-dashboard.emergency-call');
+        Route::post('/nurse-dashboard/vital-signs', [RuanganController::class, 'recordVitalSigns'])->name('api.nurse-dashboard.vital-signs');
+        Route::post('/nurse-dashboard/complete-task', [RuanganController::class, 'completeTask'])->name('api.nurse-dashboard.complete-task');
+        Route::get('/nurse-dashboard/occupied-rooms', [RuanganController::class, 'getOccupiedRoomsForTransfer'])->name('api.nurse-dashboard.occupied-rooms');
+        Route::post('/nurse-dashboard/transfer-patient', [RuanganController::class, 'transferPatient'])->name('api.nurse-dashboard.transfer-patient');
+        Route::get('/nurse-dashboard/nursing-notes', [RuanganController::class, 'getTodayNursingNotes'])->name('api.nurse-dashboard.nursing-notes');
+
+        // Legacy endpoints (keep for compatibility)
+        Route::get('/nurse-assignments', [RuanganController::class, 'getNurseAssignments'])->name('kunjungan.nurse-assignments');
+        Route::get('/urgent-tasks', [RuanganController::class, 'getUrgentTasks'])->name('kunjungan.urgent-tasks');
+        Route::post('/complete-task/{taskId}', [RuanganController::class, 'completeTask'])->name('kunjungan.complete-task');
         Route::get('/observasi/{id}', [ObservasiController::class, 'index'])->name('observasi.index');
         Route::get('/observasi/{id}/riwayatPenyakit', [ObservasiController::class, 'riwayatPenyakit'])->name('observasi.riwayatPenyakit');
         Route::post('/observasi/{id}/postAnemnesis', [ObservasiController::class, 'postAnemnesis'])->name('observasi.postAnemnesis');
         Route::get('/observasi/{id}/tandaVital', [ObservasiController::class, 'tandaVital'])->name('observasi.tandaVital');
+        Route::get('/observasi/{id}/lastEncounterSummary', [ObservasiController::class, 'lastEncounterSummary'])->name('observasi.lastEncounterSummary');
         Route::post('/observasi/{id}/postTandaVital', [ObservasiController::class, 'postTandaVital'])->name('observasi.postTandaVital');
         Route::get('/observasi/{id}/pemeriksaanPenunjang', [ObservasiController::class, 'pemeriksaanPenunjang'])->name('observasi.pemeriksaanPenunjang');
         Route::post('/observasi/{id}/postPemeriksaanPenunjang', [ObservasiController::class, 'postPemeriksaanPenunjang'])->name('observasi.postPemeriksaanPenunjang');
@@ -157,6 +225,8 @@ Route::middleware(['auth'])->group(function () {
         // [FIX] Pindahkan rute cetak ke dalam grup kunjungan
         Route::get('/observasi/pemeriksaan-penunjang/print/{id}', [ObservasiController::class, 'printPemeriksaanPenunjang'])->name('observasi.printPemeriksaanPenunjang');
         Route::get('/observasi/pemeriksaan-penunjang/download/{id}', [ObservasiController::class, 'downloadPemeriksaanPenunjang'])->name('observasi.downloadPemeriksaanPenunjang');
+        // AJAX Hasil Lab (untuk realtime render)
+        Route::get('/observasi/{id}/labRequests', [ObservasiController::class, 'labRequests'])->name('observasi.labRequests');
 
         // route untuk tindakan counter
         Route::get('/observasi/getTindakan/{id}', [ObservasiController::class, 'getTindakan'])->name('observasi.getTindakan');
@@ -209,15 +279,53 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/updateInpatientDailyMedicationStatus', [ObservasiController::class, 'updateInpatientDailyMedicationStatus'])->name('observasi.updateInpatientDailyMedicationStatus');
 
         Route::get('/dashboard-dokter', [DokterController::class, 'index'])->name('dokter.index');
+
+        // Konsultasi Spesialis
+        Route::resource('konsultasi', SpecialistConsultationController::class)->only(['index', 'create', 'store', 'edit', 'update', 'show']);
+        Route::get('konsultasi/{id}/cetak', [SpecialistConsultationController::class, 'print'])->name('konsultasi.print');
+        Route::get('konsultasi/encounters/search', [SpecialistConsultationController::class, 'searchEncounters'])->name('konsultasi.encounters.search');
+
+        // Asuhan Keperawatan
+        Route::resource('keperawatan', NursingCareController::class)->only(['index', 'create', 'store', 'edit', 'update', 'show']);
+        Route::get('keperawatan/{id}/cetak', [NursingCareController::class, 'print'])->name('keperawatan.print');
+    });
+
+    // Inventory - Alat Medis
+    Route::prefix('inventory')->name('inventory.')->group(function () {
+        Route::get('/alat-medis', [MedicalEquipmentController::class, 'index'])->name('equipment.index');
+        Route::get('/alat-medis/create', [MedicalEquipmentController::class, 'create'])->name('equipment.create');
+        Route::post('/alat-medis', [MedicalEquipmentController::class, 'store'])->name('equipment.store');
+        Route::get('/alat-medis/{id}', [MedicalEquipmentController::class, 'show'])->name('equipment.show');
+        Route::get('/alat-medis/{id}/edit', [MedicalEquipmentController::class, 'edit'])->name('equipment.edit');
+        Route::put('/alat-medis/{id}', [MedicalEquipmentController::class, 'update'])->name('equipment.update');
+        Route::delete('/alat-medis/{id}', [MedicalEquipmentController::class, 'destroy'])->name('equipment.destroy');
+        // Maintenance log (gabungan - legacy)
+        Route::get('/alat-medis/{id}/maintenance', [MedicalEquipmentController::class, 'maintenance'])->name('equipment.maintenance');
+        Route::post('/alat-medis/{id}/maintenance', [MedicalEquipmentController::class, 'maintenanceStore'])->name('equipment.maintenance.store');
+        // Perawatan terpisah
+        Route::get('/alat-medis/{id}/perawatan', [MedicalEquipmentController::class, 'perawatan'])->name('equipment.perawatan');
+        Route::post('/alat-medis/{id}/perawatan', [MedicalEquipmentController::class, 'perawatanStore'])->name('equipment.perawatan.store');
+        // Kalibrasi terpisah
+        Route::get('/alat-medis/{id}/kalibrasi', [MedicalEquipmentController::class, 'kalibrasi'])->name('equipment.kalibrasi');
+        Route::post('/alat-medis/{id}/kalibrasi', [MedicalEquipmentController::class, 'kalibrasiStore'])->name('equipment.kalibrasi.store');
+        // Download lampiran
+        Route::get('/alat-medis/maintenance/{log}/download', [MedicalEquipmentController::class, 'maintenanceDownload'])->name('equipment.maintenance.download');
+        // Edit/Update/Delete maintenance
+        Route::get('/alat-medis/maintenance/{log}/edit', [MedicalEquipmentController::class, 'maintenanceEdit'])->name('equipment.maintenance.edit');
+        Route::put('/alat-medis/maintenance/{log}', [MedicalEquipmentController::class, 'maintenanceUpdate'])->name('equipment.maintenance.update');
+        Route::delete('/alat-medis/maintenance/{log}', [MedicalEquipmentController::class, 'maintenanceDestroy'])->name('equipment.maintenance.destroy');
+        // Exports
+        Route::get('/alat-medis/export/pdf', [MedicalEquipmentController::class, 'exportPdf'])->name('equipment.export.pdf');
+        Route::get('/alat-medis/export/excel', [MedicalEquipmentController::class, 'exportExcel'])->name('equipment.export.excel');
     });
 
     Route::prefix('apotek')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\ApotekController::class, 'dashboard'])->name('apotek.dashboard');
-        Route::resource('categories', \App\Http\Controllers\CategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-        Route::resource('products', \App\Http\Controllers\ProductController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
-        Route::get('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'addStock'])->name('product.addStock');
-        Route::post('/products/{id}/stok', [\App\Http\Controllers\ProductController::class, 'storeStock'])->name('product.storeStock');
-        Route::get('/products/getAllHistori', [\App\Http\Controllers\ProductController::class, 'getHistori'])->name('product.getAllHistori');
+        Route::resource('categories', CategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::resource('products', ProductController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::get('/products/{id}/stok', [ProductController::class, 'addStock'])->name('product.addStock');
+        Route::post('/products/{id}/stok', [ProductController::class, 'storeStock'])->name('product.storeStock');
+        Route::get('/products/getAllHistori', [ProductController::class, 'getHistori'])->name('product.getAllHistori');
         // Permintaan Obat Inap
         Route::get('/permintaan-inap', [ApotekController::class, 'permintaanObatInap'])->name('apotek.permintaan-inap');
         Route::get('/permintaan-inap/detail/{id}', [ApotekController::class, 'permintaanObatInapDetail'])->name('apotek.permintaan-inap.detail');
@@ -228,29 +336,84 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/penyiapan-resep/detail/{id}', [ApotekController::class, 'penyiapanResepDetail'])->name('apotek.penyiapan-resep.detail');
         Route::post('/penyiapan-resep/siapkan/{id}', [ApotekController::class, 'siapkanResep'])->name('apotek.penyiapan-resep.siapkan');
         Route::post('/penyiapan-resep/siapkan-item/{id}', [ApotekController::class, 'siapkanItemResep'])->name('apotek.penyiapan-resep.siapkan-item');
+        Route::get('/penyiapan-resep/reorder-list', [ApotekController::class, 'reorderList'])->name('apotek.penyiapan-resep.reorder.list');
+        Route::post('/penyiapan-resep/{id}/reorder', [ApotekController::class, 'reorder'])->name('apotek.penyiapan-resep.reorder.action');
         Route::post('/penyiapan-resep/batalkan/{id}', [ApotekController::class, 'batalkanResep'])->name('apotek.penyiapan-resep.batalkan');
 
 
-        Route::get('transaksi-resep/pdf', [\App\Http\Controllers\ApotekController::class, 'exportPdf'])->name('apotek.transaksi-resep.pdf');
-        Route::get('transaksi-resep/excel', [\App\Http\Controllers\ApotekController::class, 'exportExcel'])->name('apotek.transaksi-resep.excel');
+        Route::get('transaksi-resep/pdf', [ApotekController::class, 'exportPdf'])->name('apotek.transaksi-resep.pdf');
+        Route::get('transaksi-resep/excel', [ApotekController::class, 'exportExcel'])->name('apotek.transaksi-resep.excel');
     });
     Route::prefix('loket')->group(function () {
-        Route::get('/dashboard', [\App\Http\Controllers\LoketController::class, 'dashboard'])->name('loket.dashboard');
-        Route::get('/encounter', [\App\Http\Controllers\LoketController::class, 'getEncounter'])->name('loket.getEncounter');
-        Route::get('tindakan-detail/{id}', [\App\Http\Controllers\LoketController::class, 'tindakanAjax']);
-        Route::get('/encounter/{id}/cetak', [\App\Http\Controllers\LoketController::class, 'cetakEncounter'])->name('loket.cetakEncounter');
+        Route::get('/dashboard', [LoketController::class, 'dashboard'])->name('loket.dashboard');
+        Route::get('/encounter', [LoketController::class, 'getEncounter'])->name('loket.getEncounter');
+        Route::get('tindakan-detail/{id}', [LoketController::class, 'tindakanAjax']);
+        Route::get('/encounter/{id}/cetak', [LoketController::class, 'cetakEncounter'])->name('loket.cetakEncounter');
         // PDF
-        Route::get('transaksi-tindakan/pdf', [\App\Http\Controllers\LoketController::class, 'exportPdf'])->name('loket.transaksi-tindakan.pdf');
-        Route::get('transaksi-tindakan/excel', [\App\Http\Controllers\LoketController::class, 'exportExcel'])->name('loket.transaksi-tindakan.excel');
+        Route::get('transaksi-tindakan/pdf', [LoketController::class, 'exportPdf'])->name('loket.transaksi-tindakan.pdf');
+        Route::get('transaksi-tindakan/excel', [LoketController::class, 'exportExcel'])->name('loket.transaksi-tindakan.excel');
 
         // getReminderEncounter
         Route::get('/reminder/getReminderEncounter', [\App\Http\Controllers\LoketController::class, 'getReminderEncounter'])->name('loket.getReminderEncounter');
+    });
+
+    // Radiologi
+    Route::prefix('radiologi')->as('radiologi.')->group(function () {
+        Route::get('/dashboard', [RadiologiController::class, 'dashboard'])->name('dashboard');
+        Route::get('/permintaan', [RadiologiController::class, 'requestsIndex'])->name('requests.index');
+        Route::get('/permintaan/create', [RadiologiController::class, 'requestsCreate'])->name('requests.create');
+        Route::post('/permintaan', [RadiologiController::class, 'requestsStore'])->name('requests.store');
+        Route::get('/permintaan/{id}', [RadiologiController::class, 'requestsShow'])->name('requests.show');
+        Route::get('/permintaan/{id}/hasil', [RadiologiController::class, 'resultsEdit'])->name('requests.results.edit');
+        Route::post('/permintaan/{id}/hasil', [RadiologiController::class, 'resultsStore'])->name('requests.results.store');
+        Route::post('/permintaan/{id}/status', [RadiologiController::class, 'requestsUpdateStatus'])->name('requests.status');
+        Route::get('/hasil', [RadiologiController::class, 'resultsIndex'])->name('results.index');
+        Route::get('/jadwal', [RadiologiController::class, 'scheduleIndex'])->name('schedule.index');
+        Route::get('/permintaan/{id}/jadwal/create', [RadiologiController::class, 'scheduleCreate'])->name('requests.schedule.create');
+        Route::post('/permintaan/{id}/jadwal', [RadiologiController::class, 'scheduleStore'])->name('requests.schedule.store');
+        Route::post('/jadwal/{schedule}/start', [RadiologiController::class, 'scheduleStart'])->name('schedule.start');
+        Route::post('/jadwal/{schedule}/cancel', [RadiologiController::class, 'scheduleCancel'])->name('schedule.cancel');
+        Route::post('/jadwal/{schedule}/no-show', [RadiologiController::class, 'scheduleNoShow'])->name('schedule.no_show');
+        // AJAX search pasien untuk Radiologi
+        Route::get('/pasien/search', [RadiologiController::class, 'searchPatients'])->name('patients.search');
+        // AJAX search dokter pengirim
+        Route::get('/dokter/search', [RadiologiController::class, 'searchDoctors'])->name('doctors.search');
     });
 
     Route::prefix('kasir')->group(function () {
         Route::get('/', [KasirController::class, 'index'])->name('kasir.index');
         Route::get('/pembayaran/{pasien_id}', [KasirController::class, 'show'])->name('kasir.show');
         Route::post('/pembayaran/{pasien_id}', [KasirController::class, 'processPayment'])->name('kasir.processPayment');
+        Route::get('/cetak-terakhir', [KasirController::class, 'cetakStrukTerakhir'])->name('kasir.cetakStrukTerakhir');
+    });
+
+    Route::prefix('laboratorium')->as('lab.')->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [LabDashboardController::class, 'index'])->name('dashboard');
+
+        // Search endpoints
+        Route::get('/tests/search', [LabRequestController::class, 'searchTests'])->name('tests.search');
+        Route::get('/encounters/search', [LabRequestController::class, 'searchEncounters'])->name('encounters.search');
+        // Results (input hasil)
+        Route::get('/results', [LabResultController::class, 'index'])->name('results.index');
+
+        // Requests
+        Route::resource('requests', LabRequestController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+        Route::get('requests/{id}/print', [LabRequestController::class, 'print'])->name('requests.print');
+        // Reagents
+        Route::resource('reagents', LabReagentController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+        Route::post('reagents/{id}/stock', [LabReagentController::class, 'stock'])->name('reagents.stock');
+    });
+
+    Route::prefix('medical-records')->as('medical-records.')->group(function () {
+        Route::get('/dashboard', [MedicalRecordsController::class, 'dashboard'])->name('dashboard');
+        Route::get('/riwayat', [MedicalRecordsController::class, 'riwayat'])->name('riwayat');
+        Route::get('/riwayat/data', [MedicalRecordsController::class, 'riwayatData'])->name('riwayat.data');
+        Route::get('/statistik', [MedicalRecordsController::class, 'statistik'])->name('statistik');
+        Route::get('/arsip', [MedicalRecordsController::class, 'arsip'])->name('arsip');
+        Route::post('/arsip/upload', [MedicalRecordsController::class, 'arsipUpload'])->name('arsip.upload');
+        Route::get('/arsip/list', [MedicalRecordsController::class, 'arsipList'])->name('arsip.list');
+        Route::delete('/arsip/{filename}', [MedicalRecordsController::class, 'arsipDelete'])->name('arsip.delete');
     });
 
     Route::prefix('keuangan')->group(function () {
@@ -267,8 +430,52 @@ Route::middleware(['auth'])->group(function () {
         // Route untuk Pendapatan Lainnya
         Route::resource('pendapatan-lain', OtherIncomeController::class)->except(['show']);
         // Route untuk Manajemen Insentif Manual
-        Route::resource('insentif-manual', \App\Http\Controllers\IncentiveController::class)
+        Route::resource('insentif-manual', IncentiveController::class)
             ->except(['show'])->names('keuangan.insentif');
+
+        // Laporan Keuangan (placeholder)
+        Route::prefix('laporan')->name('keuangan.laporan.')->group(function () {
+            Route::get('/kas-bank', [FinanceReportController::class, 'kasBank'])->name('kas-bank');
+            Route::get('/kas-bank/export/pdf', [FinanceReportController::class, 'kasBankExportPdf'])->name('kas-bank.pdf');
+            Route::get('/kas-bank/export/excel', [FinanceReportController::class, 'kasBankExportExcel'])->name('kas-bank.excel');
+
+            Route::get('/ar-claim-bpjs', [FinanceReportController::class, 'arBpjs'])->name('ar-bpjs');
+            Route::get('/ar-claim-bpjs/export/pdf', [FinanceReportController::class, 'arBpjsExportPdf'])->name('ar-bpjs.pdf');
+            Route::get('/ar-claim-bpjs/export/excel', [FinanceReportController::class, 'arBpjsExportExcel'])->name('ar-bpjs.excel');
+
+            Route::get('/ap-supplier', [FinanceReportController::class, 'apSupplier'])->name('ap-supplier');
+            Route::get('/ap-supplier/export/pdf', [FinanceReportController::class, 'apSupplierExportPdf'])->name('ap-supplier.pdf');
+            Route::get('/ap-supplier/export/excel', [FinanceReportController::class, 'apSupplierExportExcel'])->name('ap-supplier.excel');
+
+            Route::get('/laba-rugi', [FinanceReportController::class, 'labaRugi'])->name('laba-rugi');
+            Route::get('/laba-rugi/export/pdf', [FinanceReportController::class, 'labaRugiExportPdf'])->name('laba-rugi.pdf');
+            Route::get('/laba-rugi/export/excel', [FinanceReportController::class, 'labaRugiExportExcel'])->name('laba-rugi.excel');
+
+            // Tambahan sesuai standar RS
+            Route::get('/ar-aging', [FinanceReportController::class, 'arAging'])->name('ar-aging');
+            Route::get('/ar-aging/export/pdf', [FinanceReportController::class, 'arAgingExportPdf'])->name('ar-aging.pdf');
+            Route::get('/ar-aging/export/excel', [FinanceReportController::class, 'arAgingExportExcel'])->name('ar-aging.excel');
+
+            Route::get('/ap-aging', [FinanceReportController::class, 'apAging'])->name('ap-aging');
+            Route::get('/ap-aging/export/pdf', [FinanceReportController::class, 'apAgingExportPdf'])->name('ap-aging.pdf');
+            Route::get('/ap-aging/export/excel', [FinanceReportController::class, 'apAgingExportExcel'])->name('ap-aging.excel');
+
+            Route::get('/payor-mix', [FinanceReportController::class, 'payorMix'])->name('payor-mix');
+            Route::get('/payor-mix/export/pdf', [FinanceReportController::class, 'payorMixExportPdf'])->name('payor-mix.pdf');
+            Route::get('/payor-mix/export/excel', [FinanceReportController::class, 'payorMixExportExcel'])->name('payor-mix.excel');
+
+            Route::get('/pnl-cost-center', [FinanceReportController::class, 'pnlCostCenter'])->name('pnl-cost-center');
+            Route::get('/pnl-cost-center/export/pdf', [FinanceReportController::class, 'pnlCostCenterExportPdf'])->name('pnl-cost-center.pdf');
+            Route::get('/pnl-cost-center/export/excel', [FinanceReportController::class, 'pnlCostCenterExportExcel'])->name('pnl-cost-center.excel');
+
+            Route::get('/cash-flow', [FinanceReportController::class, 'cashFlow'])->name('cash-flow');
+            Route::get('/cash-flow/export/pdf', [FinanceReportController::class, 'cashFlowExportPdf'])->name('cash-flow.pdf');
+            Route::get('/cash-flow/export/excel', [FinanceReportController::class, 'cashFlowExportExcel'])->name('cash-flow.excel');
+
+            Route::get('/inventory', [FinanceReportController::class, 'inventory'])->name('inventory');
+            Route::get('/inventory/export/pdf', [FinanceReportController::class, 'inventoryExportPdf'])->name('inventory.pdf');
+            Route::get('/inventory/export/excel', [FinanceReportController::class, 'inventoryExportExcel'])->name('inventory.excel');
+        });
     });
 
     // Route untuk Berita

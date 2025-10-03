@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pasien extends Model
 {
     use HasUuids;
+    
     protected $fillable = [
         'rekam_medis',
         'name',
@@ -35,7 +36,15 @@ class Pasien extends Model
         'satusehat_id',
         'status'
     ];
-    public function riwayatPenyakits()
+    
+    protected $casts = [
+        'tgl_lahir' => 'date',
+        'is_identitas' => 'boolean',
+        'status' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+    public function riwayatPenyakit()
     {
         return $this->hasOne(RiwayatPenyakit::class);
     }

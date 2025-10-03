@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Repositories\ProductRepository;
+use App\Models\Unit;
 
 class ProductController extends Controller
 {
@@ -26,7 +27,8 @@ class ProductController extends Controller
     public function create()
     {
         $categories = $this->productRepo->getAllCategories();
-        return view('pages.products.create', compact('categories'));
+        $units = Unit::orderBy('name')->get();
+        return view('pages.products.create', compact('categories', 'units'));
     }
 
     // Store new product
@@ -65,7 +67,8 @@ class ProductController extends Controller
     {
         $product = $this->productRepo->getById($id);
         $categories = $this->productRepo->getAllCategories();
-        return view('pages.products.edit', compact('product', 'categories'));
+        $units = Unit::orderBy('name')->get();
+        return view('pages.products.edit', compact('product', 'categories', 'units'));
     }
 
     // Update product

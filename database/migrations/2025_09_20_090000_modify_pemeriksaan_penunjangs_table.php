@@ -13,4 +13,12 @@ return new class extends Migration
             $table->longText('recomendation')->nullable()->after('hasil_pemeriksaan');
         });
     }
+
+    public function down(): void
+    {
+        Schema::table('pemeriksaan_penunjangs', function (Blueprint $table) {
+            $table->dropColumn('recomendation');
+            $table->string('dokumen_pemeriksaan')->nullable();
+        });
+    }
 };

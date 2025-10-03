@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\LogsActivity;
+
 use App\Models\User;
 use App\Repositories\PendaftaranRepository;
 use Illuminate\Http\Request;
@@ -9,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 
 class PendaftaranController extends Controller
 {
+    use LogsActivity;
     public $pendaftaranRepository;
     public function __construct(PendaftaranRepository $pendaftaranRepository)
     {
@@ -55,43 +58,77 @@ class PendaftaranController extends Controller
 
         return response()->json($output);
     }
-    // showRawatDarurat
-    public function showRawatDarurat()
+    // showRawatDarurat - Handle both AJAX and direct URL requests
+    public function showRawatDarurat(Request $request)
     {
-        $data = $this->pendaftaranRepository->showRawatDarurat();
-        $total_row = $data->count();
-        if ($total_row > 0) {
-            $output = [];
-            foreach ($data as $d) {
-                $output[] = view('components.pendaftaran.rawat_darurat_row', compact('d'))->render();
+        // If this is an AJAX request, return JSON data for table
+        if ($request->ajax() || $request->expectsJson()) {
+            $data = $this->pendaftaranRepository->showRawatDarurat();
+            $total_row = $data->count();
+            if ($total_row > 0) {
+                $output = [];
+                foreach ($data as $d) {
+                    $output[] = view('components.pendaftaran.rawat_darurat_row', compact('d'))->render();
+                }
+                $output = implode('', $output);
+            } else {
+                $output = '<tr>
+                            <td colspan="6" class="text-center">Data tidak ada</td>
+                        </tr>';
             }
-            $output = implode('', $output);
-        } else {
-            $output = '<tr>
-                        <td colspan="6" class="text-center">Data tidak ada</td>
-                    </tr>';
+            return response()->json($output);
         }
-        return response()->json($output);
+
+        // If this is a direct URL request, show main page with rawat darurat focus
+        $transferToRoom = $request->input('transfer_to_room');
+
+        // Get necessary data for the main pendaftaran page
+        $antrian    = $this->pendaftaranRepository->index();
+        $pekerjaan  = $this->pendaftaranRepository->pekerjaan();
+        $agama      = $this->pendaftaranRepository->agama();
+        $provinsi  = $this->pendaftaranRepository->provinsi();
+        $clinics     = $this->pendaftaranRepository->showClinic();
+        $ruangan   = $this->pendaftaranRepository->ruangan();
+        $doctors = User::where('role', 2)->get(); // 2 = dokter
+
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'doctors', 'transferToRoom'));
     }
-    // showRawatDarurat
-    public function showRawatInap()
+    // showRawatInap - Handle both AJAX and direct URL requests
+    public function showRawatInap(Request $request)
     {
-        $data = $this->pendaftaranRepository->showRawatInap();
-        $total_row = $data->count();
+        // If this is an AJAX request, return JSON data for table
+        if ($request->ajax() || $request->expectsJson()) {
+            $data = $this->pendaftaranRepository->showRawatInap();
+            $total_row = $data->count();
 
-        if ($total_row > 0) {
-            $output = [];
-            foreach ($data as $d) {
-                $output[] = view('components.pendaftaran.rawat_inap_row', compact('d'))->render();
+            if ($total_row > 0) {
+                $output = [];
+                foreach ($data as $d) {
+                    $output[] = view('components.pendaftaran.rawat_inap_row', compact('d'))->render();
+                }
+                $output = implode('', $output);
+            } else {
+                $output = '<tr>
+                            <td colspan="6" class="text-center">Data tidak ada</td>
+                        </tr>';
             }
-            $output = implode('', $output);
-        } else {
-            $output = '<tr>
-                        <td colspan="6" class="text-center">Data tidak ada</td>
-                    </tr>';
+
+            return response()->json($output);
         }
 
-        return response()->json($output);
+        // If this is a direct URL request (e.g., from nurse dashboard), redirect to main page
+        $selectedRoom = $request->input('room');
+
+        // Get necessary data for the main pendaftaran page
+        $antrian    = $this->pendaftaranRepository->index();
+        $pekerjaan  = $this->pendaftaranRepository->pekerjaan();
+        $agama      = $this->pendaftaranRepository->agama();
+        $provinsi  = $this->pendaftaranRepository->provinsi();
+        $clinics     = $this->pendaftaranRepository->showClinic();
+        $ruangan   = $this->pendaftaranRepository->ruangan();
+        $doctors = User::where('role', 2)->get(); // 2 = dokter
+
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'doctors', 'selectedRoom'));
     }
 
     public function editEncounterRajal($id)
@@ -149,6 +186,10 @@ class PendaftaranController extends Controller
 
         if ($validator->passes()) {
             $pasien = $this->pendaftaranRepository->store_pasien($request);
+            $this->activity('Menambahkan Pasien Baru', [
+                'pasien_id' => $pasien->id ?? null,
+                'nama' => $pasien->name ?? $request->input('name_pasien'),
+            ], 'pendaftaran');
             return response()->json(['status' => true, 'text' => 'Data Pasien Baru ' . $pasien->name . ' berhasil ditambahkan']);
         }
 
@@ -191,6 +232,11 @@ class PendaftaranController extends Controller
 
         if ($validator->passes()) {
             $pasien = $this->pendaftaranRepository->updatePasien($request, $id);
+            $subject = $request->has('tgl_lahir') ? 'Merubah Tanggal Lahir Pasien' : 'Mengubah Data Pasien';
+            $this->activity($subject, [
+                'pasien_id' => $id,
+                'fields' => array_keys($request->except(['_token']))
+            ], 'pendaftaran');
             return response()->json(['status' => true, 'text' => 'Data Pasien ' . $pasien->name . ' berhasil diubah.']);
         }
 
@@ -207,17 +253,22 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'required|string',
+            'dokter'            => 'required|array',
             'tujuan_kunjungan'  => 'required|string',
 
         ], [
             'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
-            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'dokter.required'           => 'Kolom Dokter harus dipilih',
             'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
         ]);
 
         if ($validator->passes()) {
             $encounter = $this->pendaftaranRepository->postRawatJalan($request, $id);
+            $this->activity('Mendaftarkan Rawat Jalan', [
+                'encounter_id' => $encounter->id ?? null,
+                'pasien' => $encounter->name_pasien ?? null,
+                'dokter' => $request->input('dokter')
+            ], 'pendaftaran');
             return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Jalan Pasien ' . $encounter->name_pasien . ' berhasil'], 200);
         }
 
@@ -227,17 +278,22 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'required|string',
+            'dokter'            => 'required|array',
             'tujuan_kunjungan'  => 'required|string',
 
         ], [
             'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
-            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'dokter.required'           => 'Kolom Dokter harus dipilih',
             'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
         ]);
 
         if ($validator->passes()) {
             $encounter = $this->pendaftaranRepository->updateRawatJalan($request, $id);
+            $this->activity('Mengubah Pendaftaran Rawat Jalan', [
+                'encounter_id' => $encounter->id ?? null,
+                'pasien' => $encounter->name_pasien ?? null,
+                'dokter' => $request->input('dokter')
+            ], 'pendaftaran');
             return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Jalan Pasien ' . $encounter->name_pasien . ' berhasil diubah'], 200);
         }
 
@@ -252,12 +308,11 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'nullable|string',
+            'dokter'            => 'nullable|array',
             'tujuan_kunjungan'  => 'required|string',
 
         ], [
             'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
-            'dokter.required'           => 'Kolom Dokter masih kosong',
             'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
         ]);
 
@@ -278,12 +333,12 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'required|string',
+            'dokter'            => 'required|array',
             'tujuan_kunjungan'  => 'required|string',
 
         ], [
             'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
-            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'dokter.required'           => 'Kolom Dokter harus dipilih',
             'tujuan_kunjungan.required' => 'Kolom Tujuan Kunjungan masih kosong',
         ]);
 
@@ -309,7 +364,7 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'required|string',
+            'dokter'            => 'required|array',
             'name_companion'   => 'required|string',
             'nik_companion'     => 'nullable|string',
             'phone_companion'   => 'required|string',
@@ -318,7 +373,7 @@ class PendaftaranController extends Controller
 
         ], [
             'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
-            'dokter.required'           => 'Kolom Dokter masih kosong',
+            'dokter.required'           => 'Kolom Dokter harus dipilih',
             'phone_companion.required'  => 'Kolom Telepon Pendamping masih kosong',
             'relation_companion.required' => 'Kolom Hubungan Pendamping masih kosong',
             'name_companion.required'   => 'Kolom Nama Pendamping masih kosong',

@@ -125,10 +125,11 @@
                                         <label for="payment_method" class="form-label">Metode Pembayaran</label>
                                         <select class="form-select" id="payment_method" name="payment_method" required>
                                             <option value="" disabled selected>Pilih Metode</option>
-                                            <option value="Tunai">Tunai</option>
-                                            <option value="Debit">Debit</option>
-                                            <option value="QRIS">QRIS</option>
-                                            <option value="Transfer Bank">Transfer Bank</option>
+                                            @forelse(($paymentMethods ?? []) as $pm)
+                                                <option value="{{ $pm->code }}">{{ $pm->name }}</option>
+                                            @empty
+                                                <option value="" disabled>Belum ada metode pembayaran. Tambahkan di Master Data.</option>
+                                            @endforelse
                                         </select>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mb-3">

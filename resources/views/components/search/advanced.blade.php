@@ -271,7 +271,13 @@ $(document).ready(function() {
             if (typeof {{ $onResults ?? 'null' }} === 'function') {
                 {{ $onResults }}(response);
             } else {
-                displayResults(response);
+                // Check if response is HTML string (from controller)
+                if (typeof response === 'string') {
+                    $('#{{ $resultContainer }}').html(response);
+                    $('#{{ $searchId }}-no-results').addClass('d-none');
+                } else {
+                    displayResults(response);
+                }
             }
         })
         .fail(function(xhr) {

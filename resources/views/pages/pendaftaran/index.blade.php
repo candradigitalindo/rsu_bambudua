@@ -50,13 +50,15 @@
                         
                         {{-- Advanced Search Component --}}
                         <x-search.advanced 
-                            name="name"
+                            name="q"
                             placeholder="Cari Nama, RM, RM Lama, No HP, KTP..."
                             ajax-url="{{ route('pendaftaran.caripasien') }}"
                             result-container="data"
                             :show-button="false"
                             debounce="300"
                             min-length="2"
+                            input-class="form-control-lg"
+                            container-class="mb-4"
                         />
                         
                         {{-- Search Results --}}

@@ -247,14 +247,9 @@ class PendaftaranRepository
             };
             $pasien['jenis_identitas'] = $jenis_identitas;
 
-            // Status pasien
-            $status = match ($pasien->status) {
-                1 => 'Rawat Jalan',
-                2 => 'Rawat Inap',
-                3 => 'IGD',
-                default => '-',
-            };
-            $pasien['status'] = $status;
+            // Status pasien - tidak perlu digunakan untuk display, akan dihandle di view
+            // Field status di tabel pasien berbeda dengan status kunjungan
+            $pasien['status'] = null; // Reset status field
 
             // Encounter terbaru
             $encounter = $encounterMap[$pasien->rekam_medis] ?? null;

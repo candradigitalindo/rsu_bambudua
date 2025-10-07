@@ -147,173 +147,117 @@
                                     />
                                 </div>
                             </div>
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Kewarganegaraan
 
-                                                    </label>
-                                                    <div class="input-group">
-
-                                                        <select class="form-select" name="kewarganegaraan"
-                                                            id="kewarganegaraan_edit">
-
-                                                            <option value="1">
-                                                                WNI</option>
-                                                            <option value="2">
-                                                                WNA</option>
-
-
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Pekerjaan</label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" name="pekerjaan" id="pekerjaan_edit">
-                                                            <option value="">-- Pilih Pekerjaan --</option>
-                                                            @foreach ($pekerjaan as $p)
-                                                                <option value="{{ $p->name }}">{{ $p->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Status Menikah
-
-                                                    </label>
-                                                    <div class="input-group">
-
-                                                        <select class="form-select" name="status_menikah"
-                                                            id="status_menikah_edit">
-                                                            <option value="">-- Pilih Status --</option>
-                                                            <option value="1">
-                                                                Belum Menikah</option>
-                                                            <option value="2">
-                                                                Menikah</option>
-                                                            <option value="3">
-                                                                Cerai Hidup</option>
-                                                            <option value="4">
-                                                                Cerai Mati</option>
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-
-                                        </div>
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Agama</label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" name="agama" id="agama_edit">
-                                                            <option value="">-- Pilih Agama --</option>
-                                                            @foreach ($agama as $a)
-                                                                <option value="{{ $a->name }}">{{ $a->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">No Handphone
-                                                        <span class="text-danger">*</span>
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="no_hp_edit"
-                                                            name="no_hp">
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">No Telp
-
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="no_telepon_edit"
-                                                            name="no_telepon">
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">Alamat
-                                                        <span class="text-danger">*</span>
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="alamat_edit"
-                                                            name="alamat">
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Provinsi</label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" name="province" id="province_edit">
-                                                            <option value="">-- Pilih Provinsi --</option>
-                                                            @foreach ($provinsi as $p)
-                                                                <option value="{{ $p->code }}">{{ $p->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">Kota / Kabupaten
-
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" name="city" id="city_edit">
-                                                            <option value="">-- Pilih Provinsi dulu --</option>
-
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <input type="text" style="visibility: hidden" id="id">
+                            {{-- Continue with remaining form fields --}}
+                            <div class="row gx-3">
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="kewarganegaraan"
+                                        label="Kewarganegaraan"
+                                        :options="[
+                                            '1' => 'WNI',
+                                            '2' => 'WNA'
+                                        ]"
+                                        id="kewarganegaraan_edit"
+                                    />
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-target="#modal-pasien"
-                                        data-bs-toggle="modal" id="btn-edit-kembali">
-                                        Kembali
-                                    </button>
-                                    <button type="button" class="btn btn-primary" id="btn-edit">
-                                        Simpan
-                                    </button>
-
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="pekerjaan"
+                                        label="Pekerjaan"
+                                        placeholder="-- Pilih Pekerjaan --"
+                                        :options="$pekerjaan->pluck('name', 'name')"
+                                        id="pekerjaan_edit"
+                                    />
                                 </div>
-                                </form>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="status_menikah"
+                                        label="Status Menikah"
+                                        placeholder="-- Pilih Status --"
+                                        :options="[
+                                            '1' => 'Belum Menikah',
+                                            '2' => 'Menikah',
+                                            '3' => 'Cerai Hidup',
+                                            '4' => 'Cerai Mati'
+                                        ]"
+                                        id="status_menikah_edit"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                    </div>
+
+                            <div class="row gx-3">
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="agama"
+                                        label="Agama"
+                                        placeholder="-- Pilih Agama --"
+                                        :options="$agama->pluck('name', 'name')"
+                                        id="agama_edit"
+                                    />
+                                </div>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.input 
+                                        name="no_hp"
+                                        type="tel"
+                                        label="No Handphone"
+                                        required
+                                        id="no_hp_edit"
+                                    />
+                                </div>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.input 
+                                        name="no_telepon"
+                                        type="tel"
+                                        label="No Telepon"
+                                        id="no_telepon_edit"
+                                    />
+                                </div>
+                            </div>
+
+                            <div class="row gx-3">
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.input 
+                                        name="alamat"
+                                        label="Alamat"
+                                        required
+                                        id="alamat_edit"
+                                    />
+                                </div>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="province"
+                                        label="Provinsi"
+                                        placeholder="-- Pilih Provinsi --"
+                                        :options="$provinsi->pluck('name', 'code')"
+                                        id="province_edit"
+                                    />
+                                </div>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="city"
+                                        label="Kota / Kabupaten"
+                                        placeholder="-- Pilih Provinsi dulu --"
+                                        :options="[]"
+                                        id="city_edit"
+                                    />
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="id">
+                        </form>
+
+                        <x-slot name="footerButtons">
+                            <button type="button" class="btn btn-secondary" data-bs-target="#modal-pasien"
+                                data-bs-toggle="modal" id="btn-edit-kembali">
+                                Kembali
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btn-edit">
+                                <span class="btn-text">Simpan</span>
+                                <span class="spinner-border spinner-border-sm d-none"></span>
+                            </button>
+                        </x-slot>
+                    </x-modal>
                     <div class="modal fade" id="form-pasien" tabindex="-1"
                         aria-labelledby="exampleModalScrollableTitle" aria-hidden="true" data-bs-backdrop="static"
                         data-bs-keyboard="false">

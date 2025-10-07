@@ -1516,9 +1516,17 @@
                     console.log('Setting jenis_kelamin to:', data.jenis_kelamin);
                     console.log('jenis_kelamin_edit value after set:', $("#jenis_kelamin_edit").val());
                     console.log('jenis_kelamin_edit select element:', $('#jenis_kelamin_edit')[0]);
-                    // Set tanggal lahir (server sudah format YYYY-MM-DD)
+                    // Set tanggal lahir dengan fallback untuk format ISO
                     console.log('tgl_lahir dari server:', data.tgl_lahir);
-                    $("#tgl_lahir_edit").val(data.tgl_lahir || '');
+                    let tglLahir = data.tgl_lahir || '';
+                    
+                    // Fallback: jika masih format ISO, convert ke YYYY-MM-DD
+                    if (tglLahir && tglLahir.includes('T')) {
+                        tglLahir = tglLahir.split('T')[0]; // Ambil bagian tanggal saja
+                        console.log('Converted ISO date to:', tglLahir);
+                    }
+                    
+                    $("#tgl_lahir_edit").val(tglLahir);
                     console.log('tgl_lahir_edit value after set:', $("#tgl_lahir_edit").val());
                     $("#golongan_darah_edit").val(data.golongan_darah || '');
                     console.log('Setting golongan_darah to:', data.golongan_darah);
@@ -1569,11 +1577,15 @@
                         $("#golongan_darah_edit").val(data.golongan_darah || '');
                         $("#status_menikah_edit").val(data.status_menikah);
                         
-                        // Also re-set date in fallback (server sudah format YYYY-MM-DD)
-                        $("#tgl_lahir_edit").val(data.tgl_lahir || '');
+                        // Also re-set date in fallback dengan convert ISO jika perlu
+                        let fallbackTglLahir = data.tgl_lahir || '';
+                        if (fallbackTglLahir && fallbackTglLahir.includes('T')) {
+                            fallbackTglLahir = fallbackTglLahir.split('T')[0];
+                        }
+                        $("#tgl_lahir_edit").val(fallbackTglLahir);
                         
                         console.log('Fallback: Re-setting values after timeout');
-                        console.log('Fallback tgl_lahir:', data.tgl_lahir);
+                        console.log('Fallback tgl_lahir:', fallbackTglLahir);
                     }, 100);
                 }
             })

@@ -322,12 +322,15 @@ class PendaftaranRepository
     {
         $pasien = Pasien::findOrFail($id);
         
+        // Convert to array to prevent automatic JSON casting
+        $pasienData = $pasien->toArray();
+        
         // Format tanggal lahir untuk input type="date" (YYYY-MM-DD)
         if ($pasien->tgl_lahir) {
-            $pasien->tgl_lahir = $pasien->tgl_lahir->format('Y-m-d');
+            $pasienData['tgl_lahir'] = $pasien->tgl_lahir->format('Y-m-d');
         }
         
-        return $pasien;
+        return (object) $pasienData;
     }
 
     public function updatePasien($request, $id)

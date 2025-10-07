@@ -1,5 +1,29 @@
-<div class="card border-0 shadow-sm mt-3" style="border-left: 4px solid #17a2b8 !important;">
+<div class="card border-0 shadow-sm mt-3 patient-card" style="border-left: 4px solid #17a2b8 !important;">
     <div class="card-body py-3">
+        <style>
+        .patient-card .btn {
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .patient-card .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+        }
+        .patient-card .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .patient-card .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .patient-card .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        .patient-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        </style>
         @php
             // Status berdasarkan encounter terakhir atau kunjungan terakhir
             $hasEncounter = !empty($d->no_encounter) && $d->no_encounter !== '-';
@@ -107,25 +131,25 @@
     </div>
     <div class="card-footer bg-light border-0 py-2">
         <div class="d-flex gap-2 flex-wrap justify-content-end">
-            <button type="button" class="btn rawatJalan btn-primary btn-sm" data-bs-toggle="modal"
+            <button type="button" class="btn rawatJalan btn-primary btn-sm shadow-sm" data-bs-toggle="modal"
                 data-bs-target="#modal-rawatJalan" id="{{ $d->id }}">
                 <i class="ri-stethoscope-line me-1"></i>
                 Rawat Jalan
             </button>
-            {{-- <button type="button" class="btn rawatInap btn-info btn-sm" data-bs-toggle="modal"
+            {{-- <button type="button" class="btn rawatInap btn-info btn-sm shadow-sm" data-bs-toggle="modal"
                 data-bs-target="#modal-rawatInap" id="{{ $d->id }}">
                 <i class="ri-hotel-bed-fill me-1"></i>
                 Rawat Inap
             </button> --}}
-            <button type="button" class="btn igd btn-danger btn-sm" data-bs-toggle="modal"
+            <button type="button" class="btn igd btn-danger btn-sm shadow-sm" data-bs-toggle="modal"
                 data-bs-target="#modal-rawatDarurat" id="{{ $d->id }}">
-                <i class="ri-dossier-fill me-1"></i>
+                <i class="ri-first-aid-kit-line me-1"></i>
                 IGD
             </button>
-            <button type="button" class="btn edit btn-outline-secondary btn-sm" data-bs-toggle="modal"
+            <button type="button" class="btn edit btn-warning btn-sm shadow-sm" data-bs-toggle="modal"
                 data-bs-target="#form-edit-pasien" id="{{ $d->id }}">
-                <i class="ri-edit-2-fill me-1"></i>
-                Edit
+                <i class="ri-edit-box-line me-1"></i>
+                Edit Data
             </button>
         </div>
     </div>

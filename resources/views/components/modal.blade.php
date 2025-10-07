@@ -3,8 +3,8 @@
      tabindex="-1" 
      aria-labelledby="{{ $id }}Label" 
      aria-hidden="true"
-     @if($backdrop ?? true) data-bs-backdrop="{{ $backdrop === true ? 'static' : $backdrop }}" @endif
-     @if($keyboard ?? true) data-bs-keyboard="{{ $keyboard }}" @endif>
+     @if(isset($backdrop)) data-bs-backdrop="{{ $backdrop }}" @endif
+     @if(isset($keyboard)) data-bs-keyboard="{{ $keyboard ? 'true' : 'false' }}" @endif>
     <div class="modal-dialog {{ $size ?? 'modal-lg' }} {{ $scrollable ?? false ? 'modal-dialog-scrollable' : '' }} {{ $centered ?? false ? 'modal-dialog-centered' : '' }}">
         <div class="modal-content">
             @if(isset($title) || isset($headerButtons))

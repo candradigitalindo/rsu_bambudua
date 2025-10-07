@@ -11,6 +11,16 @@
     body:not(.modal-open) .modal-backdrop {
         display: none !important;
     }
+    
+    /* Modal tanpa backdrop - make it more prominent */
+    .modal[data-bs-backdrop="false"] {
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    /* Prevent clicks outside modal from closing it when backdrop=false */
+    .modal[data-bs-backdrop="false"] .modal-dialog {
+        pointer-events: auto;
+    }
     </style>
 @endpush
 @section('content')
@@ -35,7 +45,7 @@
                              icon="ri-folder-user-fill"
                              size="modal-xl" 
                              scrollable 
-                             backdrop="static" 
+                             backdrop="false" 
                              keyboard="false">
                         
                         {{-- Advanced Search Component --}}
@@ -77,7 +87,7 @@
                              icon="ri-user-edit-line"
                              size="modal-xl" 
                              scrollable 
-                             backdrop="static" 
+                             backdrop="false" 
                              keyboard="false">
                         
                         {{-- Error Alert Component --}}
@@ -1193,6 +1203,19 @@
             $('.modal').on('hidden.bs.modal', function () {
                 $('.modal-backdrop').remove();
                 $('body').removeClass('modal-open').css('padding-right', '').css('overflow', '');
+            });
+            
+            // Handle modal without backdrop - add manual overlay
+            $('.modal[data-bs-backdrop="false"]').on('show.bs.modal', function() {
+                const modal = $(this);
+                modal.css('display', 'block');
+                $('body').addClass('modal-open');
+            });
+            
+            $('.modal[data-bs-backdrop="false"]').on('hide.bs.modal', function() {
+                const modal = $(this);
+                modal.css('display', 'none');
+                $('body').removeClass('modal-open');
             });
 
             // Initialize Select2 untuk single select

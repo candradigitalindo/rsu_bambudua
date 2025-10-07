@@ -6,6 +6,12 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
+    <style>
+    /* Simple fix for modal backdrop issue */
+    body:not(.modal-open) .modal-backdrop {
+        display: none !important;
+    }
+    </style>
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -1179,8 +1185,15 @@
     <script src="{{ asset('js/validations.js') }}"></script>
     <script src="https://code.responsivevoice.org/responsivevoice.js?key=Pqiovi6G"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    @include('components.scripts.utils')
     <script>
         $(document).ready(function() {
+            
+            // Simple modal backdrop cleanup
+            $('.modal').on('hidden.bs.modal', function () {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '').css('overflow', '');
+            });
 
             // Initialize Select2 untuk single select
             $('#dokter_rawatRinap').select2({

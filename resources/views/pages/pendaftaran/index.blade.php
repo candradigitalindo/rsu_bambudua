@@ -1834,4 +1834,7 @@
             }
         });
     </script>
+    
+    {{-- Include BambuduaUtils for component functionality --}}
+    @include('components.scripts.utils')
 @endpush

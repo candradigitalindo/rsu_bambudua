@@ -167,17 +167,44 @@ $(document).ready(function() {
     let searchTimeout;
     let currentRequest;
     
-    // Debounced search function
-    const debouncedSearch = BambuduaUtils.debounce(function() {
-        const query = searchInput.val().trim();
-        const minLength = parseInt(searchInput.data('min-length'));
-        
-        if (query.length >= minLength) {
-            performSearch(query);
-        } else if (query.length === 0) {
-            clearResults();
-        }
-    }, {{ $debounce }});
+    // Debounced search function with fallback
+    const debounce = function(func, wait, immediate) {
+        let timeout;
+        return function executedFunction() {
+            const context = this;
+            const args = arguments;
+            const later = function() {
+                timeout = null;
+                if (!immediate) func.apply(context, args);
+            };
+            const callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func.apply(context, args);
+        };
+    };
+    
+    const debouncedSearch = (typeof BambuduaUtils !== 'undefined' && BambuduaUtils.debounce) 
+        ? BambuduaUtils.debounce(function() {
+            const query = searchInput.val().trim();
+            const minLength = parseInt(searchInput.data('min-length'));
+            
+            if (query.length >= minLength) {
+                performSearch(query);
+            } else if (query.length === 0) {
+                clearResults();
+            }
+        }, {{ $debounce }})
+        : debounce(function() {
+            const query = searchInput.val().trim();
+            const minLength = parseInt(searchInput.data('min-length'));
+            
+            if (query.length >= minLength) {
+                performSearch(query);
+            } else if (query.length === 0) {
+                clearResults();
+            }
+        }, {{ $debounce }});
     
     // Search input event
     searchInput.on('input', function() {
@@ -253,7 +280,15 @@ $(document).ready(function() {
             
             if (xhr.statusText !== 'abort') {
                 console.error('Search failed:', xhr);
-                BambuduaUtils.showToast('Gagal melakukan pencarian', 'error');
+                if (typeof BambuduaUtils !== 'undefined' && BambuduaUtils.showToast) {
+                    BambuduaUtils.showToast('Gagal melakukan pencarian', 'error');
+                } else {
+                    // Fallback toast notification
+                    const toast = $('<div class="alert alert-danger alert-dismissible fade show position-fixed" style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;" role="alert">')
+                        .html('Gagal melakukan pencarian <button type="button" class="btn-close" data-bs-dismiss="alert"></button>');
+                    $('body').append(toast);
+                    setTimeout(() => toast.alert('close'), 5000);
+                }
             }
         });
     }

@@ -1563,6 +1563,15 @@
 
                     // Set province and trigger change to load cities
                     provinceDropdown.val(data.province_code || '').trigger('change');
+                    
+                    // Add small timeout to ensure DOM is ready for value setting
+                    setTimeout(function() {
+                        $("#jenis_identitas_edit").val(data.jenis_identitas);
+                        $("#jenis_kelamin_edit").val(data.jenis_kelamin);
+                        $("#golongan_darah_edit").val(data.golongan_darah || '');
+                        $("#status_menikah_edit").val(data.status_menikah);
+                        console.log('Fallback: Re-setting select values after timeout');
+                    }, 100);
                 }
             })
         });

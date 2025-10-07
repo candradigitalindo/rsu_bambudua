@@ -321,6 +321,12 @@ class PendaftaranRepository
     public function editPasien($id)
     {
         $pasien = Pasien::findOrFail($id);
+        
+        // Format tanggal lahir untuk input type="date" (YYYY-MM-DD)
+        if ($pasien->tgl_lahir) {
+            $pasien->tgl_lahir = $pasien->tgl_lahir->format('Y-m-d');
+        }
+        
         return $pasien;
     }
 

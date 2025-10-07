@@ -1471,13 +1471,20 @@
                 .then(response => response.json())
                 .then(data => {
                     var cityDropdown = document.getElementById('city_edit');
-                    cityDropdown.innerHTML = '';
+                    var selectedCity = cityDropdown.dataset.selectedCity;
+                    
+                    cityDropdown.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
                     data.forEach(function(city) {
                         var option = document.createElement('option');
                         option.value = city.code;
                         option.textContent = city.name;
+                        if (selectedCity && city.code === selectedCity) {
+                            option.selected = true;
+                        }
                         cityDropdown.appendChild(option);
                     });
+                    // Clear the selected city data after use
+                    cityDropdown.dataset.selectedCity = '';
                 });
         });
         $(document).on('click', '.edit', function() {
@@ -1494,31 +1501,33 @@
                 },
                 success: function(res) {
                     const data = res.data;
+                    console.log('Data pasien:', data); // Debug log
+                    
                     $("#id").val(data.id);
                     $("#jenis_identitas_edit").val(data.jenis_identitas);
                     $("#no_identitas_edit").val(data.no_identitas);
                     $("#name_pasien_edit").val(data.name);
                     $("#jenis_kelamin_edit").val(data.jenis_kelamin);
                     $("#tgl_lahir_edit").val(data.tgl_lahir);
-                    $("#golongan_darah_edit").val(data.golongan_darah);
-                    $("#kewarganegaraan_edit").val(data.kewarganegaraan);
-                    $("#pekerjaan_edit").val(data.pekerjaan);
+                    $("#golongan_darah_edit").val(data.golongan_darah || '');
+                    $("#kewarganegaraan_edit").val(data.kewarganegaraan || '1');
+                    $("#pekerjaan_edit").val(data.pekerjaan || '');
                     $("#status_menikah_edit").val(data.status_menikah);
-                    $("#agama_edit").val(data.agama);
+                    $("#agama_edit").val(data.agama || '');
                     $("#no_hp_edit").val(data.no_hp);
-                    $("#no_telepon_edit").val(data.no_telepon);
-                    $("#mr_lama_edit").val(data.mr_lama);
+                    $("#no_telepon_edit").val(data.no_telepon || '');
+                    $("#mr_lama_edit").val(data.mr_lama || '');
                     $("#alamat_edit").val(data.alamat);
 
                     // [FIX] Logic for province and city dropdowns
                     const provinceDropdown = $('#province_edit');
                     const cityDropdown = $('#city_edit');
 
-                    // Store the target city code
-                    cityDropdown.data('selected-city', data.city_code);
+                    // Store the target city code in dataset
+                    document.getElementById('city_edit').dataset.selectedCity = data.city_code || '';
 
                     // Set province and trigger change to load cities
-                    provinceDropdown.val(data.province_code).trigger('change');
+                    provinceDropdown.val(data.province_code || '').trigger('change');
                 }
             })
         });

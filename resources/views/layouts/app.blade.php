@@ -12,12 +12,48 @@
     <meta property="og:description" content="Dashboard SIMRS Bambudua">
     <meta property="og:type" content="Website">
     <link rel="shortcut icon" href="{{ asset('images/logo.png') }}">
-
     <!-- *************
   ************ CSS Files *************
- ************* -->
-    <link rel="stylesheet" href="{{ asset('fonts/remix/remixicon.css') }}">
+| ************* -->
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="{{ asset('fonts/remix/remixicon.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="{{ asset('fonts/remix/remixicon.css') }}"></noscript>
+    
+    <!-- Critical CSS -->
     <link rel="stylesheet" href="{{ asset('css/main.min.css') }}">
+    
+    <!-- Custom Stack Styles -->
+    @stack('style')
+    
+    <!-- Performance CSS -->
+    <style>
+        /* Loading skeleton */
+        .skeleton {
+            animation: skeleton-loading 1s linear infinite alternate;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 37%, #f0f0f0 63%);
+            background-size: 400% 100%;
+        }
+        
+        @keyframes skeleton-loading {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        
+        /* Smooth transitions */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Optimize rendering */
+        .main-container {
+            contain: layout style;
+        }
+    </style>
     @stack('style')
 </head>
 
@@ -149,11 +185,49 @@
     <!-- *************
    ************ JavaScript Files *************
   ************* -->
+    <!-- Critical JavaScript - Load First -->
+    <script>
+        // Performance monitoring
+        if ('performance' in window) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    const perfData = performance.getEntriesByType('navigation')[0];
+                    console.log('Page Load Time:', perfData.loadEventEnd - perfData.fetchStart + 'ms');
+                }, 0);
+            });
+        }
+        
+        // Basic error handler
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript Error:', e.error);
+        });
+    </script>
+    
     <!-- Required jQuery first, then Bootstrap Bundle JS -->
     <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('js/moment.min.js') }}"></script>
+    
+    <!-- Page specific scripts -->
     @stack('scripts')
+    
+    <!-- Global Utils & Error Handler - Load Last -->
+    @include('components.scripts.utils')
+    @include('components.error-handler')
+    
+    <!-- Page Ready -->
+    <script>
+        // Set current user ID for error logging
+        @auth
+        window.currentUserId = {{ auth()->id() }};
+        @endauth
+        
+        // Page loaded indicator
+        document.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('fade-in');
+            console.log('🚀 Bambudua SIMRS loaded successfully');
+        });
+    </script>
 </body>
 
 </html>

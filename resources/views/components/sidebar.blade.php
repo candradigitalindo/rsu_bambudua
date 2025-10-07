@@ -17,11 +17,21 @@
     <!-- Sidebar menu starts -->
     <div class="sidebarMenuScroll" style="flex:1 1 auto;min-height:0;overflow-y:auto;padding-bottom:0;margin-bottom:0;">
         <ul class="sidebar-menu" style="margin-bottom:0;padding-bottom:0;">
-            @if (in_array(auth()->user()->role, [1, 4]))
+            @if (auth()->user()->role == 1)
                 <li class="{{ request()->is('home*') ? 'active current-page' : '' }}">
                     <a href="{{ route('home') }}">
                         <i class="ri-home-6-line"></i>
                         <span class="menu-text">Dashboard Owner</span>
+                    </a>
+                </li>
+            @endif
+
+            @if (auth()->user()->role == 4)
+                {{-- Admin Dashboard --}}
+                <li class="{{ request()->is('admin/dashboard*') ? 'active current-page' : '' }}">
+                    <a href="{{ route('admin.dashboard') }}">
+                        <i class="ri-shield-user-line"></i>
+                        <span class="menu-text">Dashboard Admin</span>
                     </a>
                 </li>
             @endif
@@ -110,6 +120,7 @@
             @endif
 
             @if (in_array(auth()->user()->role, [1, 4]))
+                {{-- Admin & Owner --}}
                 <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-archive-drawer-line"></i>
@@ -209,7 +220,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [1, 4]))
+            @if (auth()->user()->role == 1)
+                {{-- Owner Only --}}
                 <li class="treeview {{ request()->is('medical-records*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-file-list-3-line"></i>
@@ -236,7 +248,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [6, 1, 4]))
+            @if (in_array(auth()->user()->role, [6, 1]))
+                {{-- Keuangan & Owner Only --}}
                 <li class="treeview {{ request()->is('keuangan*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-funds-line"></i>
@@ -271,7 +284,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [10, 4, 1]))
+            @if (in_array(auth()->user()->role, [10, 1]))
+                {{-- Kasir & Owner Only --}}
                 <li class="treeview {{ request()->is('kasir*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-bank-card-line"></i>
@@ -288,6 +302,7 @@
             @endif
 
             @if (in_array(auth()->user()->role, [7, 4, 1]))
+                {{-- Apotek, Admin, Owner --}}
                 <li class="treeview {{ request()->is('apotek*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-medicine-bottle-line"></i>
@@ -322,7 +337,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [1, 4]))
+            @if (in_array(auth()->user()->role, [1, 4])) {{-- Admin & Owner --}}
                 <li class="{{ request()->is('bahans*') ? 'active current-page' : '' }}">
                     <a href="{{ route('bahans.index') }}">
                         <i class="ri-archive-line"></i>

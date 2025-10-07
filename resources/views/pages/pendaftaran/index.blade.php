@@ -1505,14 +1505,49 @@
                     
                     $("#id").val(data.id);
                     $("#jenis_identitas_edit").val(data.jenis_identitas);
+                    console.log('Setting jenis_identitas to:', data.jenis_identitas);
+                    console.log('jenis_identitas_edit value after set:', $("#jenis_identitas_edit").val());
+                    console.log('jenis_identitas_edit select element:', $('#jenis_identitas_edit')[0]);
+                    
                     $("#no_identitas_edit").val(data.no_identitas);
                     $("#name_pasien_edit").val(data.name);
+                    
                     $("#jenis_kelamin_edit").val(data.jenis_kelamin);
-                    $("#tgl_lahir_edit").val(data.tgl_lahir);
+                    console.log('Setting jenis_kelamin to:', data.jenis_kelamin);
+                    console.log('jenis_kelamin_edit value after set:', $("#jenis_kelamin_edit").val());
+                    console.log('jenis_kelamin_edit select element:', $('#jenis_kelamin_edit')[0]);
+                    // Format tanggal dari datetime ke date (YYYY-MM-DD)
+                    let tglLahir = data.tgl_lahir;
+                    if (tglLahir) {
+                        tglLahir = tglLahir.split(' ')[0]; // Ambil bagian tanggal saja
+                    }
+                    $("#tgl_lahir_edit").val(tglLahir);
                     $("#golongan_darah_edit").val(data.golongan_darah || '');
+                    console.log('Setting golongan_darah to:', data.golongan_darah);
+                    console.log('golongan_darah_edit value after set:', $("#golongan_darah_edit").val());
+                    console.log('golongan_darah_edit select element:', $('#golongan_darah_edit')[0]);
+                    
                     $("#kewarganegaraan_edit").val(data.kewarganegaraan || '1');
                     $("#pekerjaan_edit").val(data.pekerjaan || '');
+                    
                     $("#status_menikah_edit").val(data.status_menikah);
+                    console.log('Setting status_menikah to:', data.status_menikah);
+                    console.log('status_menikah_edit value after set:', $("#status_menikah_edit").val());
+                    console.log('status_menikah_edit select element:', $('#status_menikah_edit')[0]);
+                    
+                    // Debug: Check all options in select
+                    $('#jenis_identitas_edit option').each(function(i, option) {
+                        console.log('jenis_identitas option', i, ':', option.value, '=', option.text, 'selected:', option.selected);
+                    });
+                    $('#jenis_kelamin_edit option').each(function(i, option) {
+                        console.log('jenis_kelamin option', i, ':', option.value, '=', option.text, 'selected:', option.selected);
+                    });
+                    $('#golongan_darah_edit option').each(function(i, option) {
+                        console.log('golongan_darah option', i, ':', option.value, '=', option.text, 'selected:', option.selected);
+                    });
+                    $('#status_menikah_edit option').each(function(i, option) {
+                        console.log('status_menikah option', i, ':', option.value, '=', option.text, 'selected:', option.selected);
+                    });
                     $("#agama_edit").val(data.agama || '');
                     $("#no_hp_edit").val(data.no_hp);
                     $("#no_telepon_edit").val(data.no_telepon || '');

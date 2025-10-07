@@ -365,14 +365,21 @@ class PendaftaranRepository
         // Hitung umur
         $pasien['umur'] = Carbon::parse($pasien->tgl_lahir)->diff(Carbon::now())->format('%y tahun, %m bulan, %d hari');
 
-        // Status pasien
+        // Status pasien berdasarkan encounter terbaru atau status default
         $statusList = [
-            0 => "-",
-            1 => "Rawat Jalan",
+            0 => "Pasien Baru",
+            1 => "Rawat Jalan", 
             2 => "Rawat Inap",
             3 => "IGD"
         ];
-        $pasien['status'] = $statusList[$pasien->status] ?? "-";
+        
+        // Jika status adalah boolean true/false, convert ke integer
+        $statusValue = $pasien->status;
+        if (is_bool($statusValue)) {
+            $statusValue = $statusValue ? 1 : 0;
+        }
+        
+        $pasien['status'] = $statusList[$statusValue] ?? "Pasien Baru";
 
         // Encounter terbaru
         $encounter = Encounter::where('rekam_medis', $pasien->rekam_medis)

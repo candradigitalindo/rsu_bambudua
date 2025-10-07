@@ -628,7 +628,7 @@
                                     </div>
                                     <hr>
                                     <div class="row gx-3 mt-3">
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a7">Jenis Jaminan</label>
                                                 <div class="input-group">
@@ -643,7 +643,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Poliklinik</label>
                                                 <div class="input-group">
@@ -658,7 +658,7 @@
 
                                             </div>
                                         </div>
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="dokter">Dokter</label>
                                                 <div class="input-group">
@@ -669,7 +669,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-xxl-3 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Tujuan Kunjungan
 

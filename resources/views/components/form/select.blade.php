@@ -48,7 +48,7 @@ $selectedValue = old($name, $selected);
         @endif
 
         @if(is_array($options) || $options instanceof \Illuminate\Support\Collection)
-            @foreach($options as $option)
+            @foreach($options as $key => $option)
                 @if(is_object($option))
                     @php
                         $value = $optionValue ? $option->{$optionValue} : $option->id;
@@ -67,9 +67,14 @@ $selectedValue = old($name, $selected);
                         {{ $option['label'] ?? $option['text'] ?? $option[1] ?? $option[0] }}
                     </option>
                 @else
-                    <option value="{{ is_numeric($loop->index) ? $loop->index : $option }}" 
-                            @if(($multiple && is_array($selectedValue) && in_array($option, $selectedValue)) || 
-                                (!$multiple && $selectedValue == $option)) selected @endif>
+                    @php
+                        // For associative array, use the key as value, otherwise use index or option itself
+                        $optionValue = is_string($key) ? $key : (is_numeric($key) && $key !== $loop->index ? $key : $option);
+                        $isSelected = $multiple 
+                            ? (is_array($selectedValue) && in_array($optionValue, $selectedValue))
+                            : ($selectedValue == $optionValue);
+                    @endphp
+                    <option value="{{ $optionValue }}" @if($isSelected) selected @endif>
                         {{ $option }}
                     </option>
                 @endif

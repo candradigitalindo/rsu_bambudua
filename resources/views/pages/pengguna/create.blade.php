@@ -61,7 +61,8 @@
         <div class="col-xl-12">
             <div class="card">
                 <div class="card-body">
-<form action="{{ route('pengguna.store') }}" method="POST" id="submit" enctype="multipart/form-data">
+                    <form action="{{ route('pengguna.store') }}" method="POST" id="submit"
+                        enctype="multipart/form-data">
                         @csrf
                         <!-- Custom tabs starts -->
                         <div class="custom-tabs-container">
@@ -136,9 +137,9 @@
                                                         <option value="7" {{ old('role') == '7' ? 'selected' : '' }}>
                                                             Apotek</option>
                                                         <option value="8" {{ old('role') == '8' ? 'selected' : '' }}>
-                                                            Gudang</option>
+                                                            Laboratorium</option>
                                                         <option value="9" {{ old('role') == '9' ? 'selected' : '' }}>
-                                                            Teknisi</option>
+                                                            Radiologi</option>
                                                         <option value="10" {{ old('role') == '10' ? 'selected' : '' }}>
                                                             Kasir</option>
                                                     </select>
@@ -222,25 +223,29 @@
                                         <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Nomor SIP</label>
-                                                <input type="text" name="sip_number" class="form-control" placeholder="SIP-xxx/.." value="{{ old('sip_number') }}">
+                                                <input type="text" name="sip_number" class="form-control"
+                                                    placeholder="SIP-xxx/.." value="{{ old('sip_number') }}">
                                             </div>
                                         </div>
                                         <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Kadaluarsa SIP</label>
-                                                <input type="date" name="sip_expiry_date" class="form-control" value="{{ old('sip_expiry_date') }}">
+                                                <input type="date" name="sip_expiry_date" class="form-control"
+                                                    value="{{ old('sip_expiry_date') }}">
                                             </div>
                                         </div>
                                         <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Nomor STR</label>
-                                                <input type="text" name="str_number" class="form-control" placeholder="STR-xxx/.." value="{{ old('str_number') }}">
+                                                <input type="text" name="str_number" class="form-control"
+                                                    placeholder="STR-xxx/.." value="{{ old('str_number') }}">
                                             </div>
                                         </div>
                                         <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Kadaluarsa STR</label>
-                                                <input type="date" name="str_expiry_date" class="form-control" value="{{ old('str_expiry_date') }}">
+                                                <input type="date" name="str_expiry_date" class="form-control"
+                                                    value="{{ old('str_expiry_date') }}">
                                             </div>
                                         </div>
                                     </div>
@@ -249,13 +254,15 @@
                                         <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Upload Berkas SIP (PDF/JPG/PNG, maks 2MB)</label>
-                                                <input type="file" name="sip_file" class="form-control" accept="application/pdf,image/*">
+                                                <input type="file" name="sip_file" class="form-control"
+                                                    accept="application/pdf,image/*">
                                             </div>
                                         </div>
                                         <div class="col-xxl-3 col-lg-4 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label">Upload Berkas STR (PDF/JPG/PNG, maks 2MB)</label>
-                                                <input type="file" name="str_file" class="form-control" accept="application/pdf,image/*">
+                                                <input type="file" name="str_file" class="form-control"
+                                                    accept="application/pdf,image/*">
                                             </div>
                                         </div>
                                     </div>
@@ -302,19 +309,24 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            function mapRoleToProfession(role){
-                switch(parseInt(role)){
-                    case 2: return 'dokter';
-                    case 3: return 'perawat';
-                    case 7: return 'apoteker';
-                    default: return '';
+            function mapRoleToProfession(role) {
+                switch (parseInt(role)) {
+                    case 2:
+                        return 'dokter';
+                    case 3:
+                        return 'perawat';
+                    case 7:
+                        return 'apoteker';
+                    default:
+                        return '';
                 }
             }
             const roleSelect = $("select[name='role']");
             const profSelect = $("select[name='profession']");
-            function syncProfession(){
+
+            function syncProfession() {
                 const mapped = mapRoleToProfession(roleSelect.val());
-                if(mapped){
+                if (mapped) {
                     profSelect.val(mapped).prop('disabled', true);
                 } else {
                     profSelect.prop('disabled', false);

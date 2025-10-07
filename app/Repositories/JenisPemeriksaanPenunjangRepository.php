@@ -41,10 +41,12 @@ class JenisPemeriksaanPenunjangRepository
     public function delete($id)
     {
         $item = $this->findById($id);
-        // Tambahkan pengecekan jika relasi sudah digunakan
-        // if ($item->pemeriksaanPenunjang()->exists()) {
-        //     return false;
-        // }
+
+        // Cek apakah jenis pemeriksaan sudah digunakan di LabRequestItem atau RadiologyRequest
+        if ($item->labRequestItems()->exists() || $item->radiologyRequests()->exists()) {
+            return false;
+        }
+
         $item->delete();
         return true;
     }

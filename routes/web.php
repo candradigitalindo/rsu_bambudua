@@ -480,4 +480,11 @@ Route::middleware(['auth'])->group(function () {
 
     // Route untuk Berita
     Route::resource('berita', BeritaController::class);
+    
+    // Development Testing Routes (REMOVE IN PRODUCTION)
+    if (config('app.debug')) {
+        Route::get('/test-components', function () {
+            return view('test-components');
+        })->name('test.components');
+    }
 });

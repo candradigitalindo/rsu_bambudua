@@ -23,179 +23,130 @@
 
                         </button>
                     </div>
-                    <!-- Modal XL -->
-                    <div class="modal fade" id="modal-pasien" data-bs-backdrop="static" data-bs-keyboard="false"
-                        tabindex="-1" aria-labelledby="exampleModalXlLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalXlLabel">
-                                        Data Pasien
-                                    </h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                        aria-label="Close"></button>
+                    {{-- Modal Pencarian Pasien dengan Komponen Baru --}}
+                    <x-modal id="modal-pasien" 
+                             title="Data Pasien" 
+                             icon="ri-folder-user-fill"
+                             size="modal-xl" 
+                             scrollable 
+                             backdrop="static" 
+                             keyboard="false">
+                        
+                        {{-- Advanced Search Component --}}
+                        <x-search.advanced 
+                            name="name"
+                            placeholder="Cari Nama, RM, RM Lama, No HP, KTP..."
+                            ajax-url="{{ route('pendaftaran.caripasien') }}"
+                            result-container="data"
+                            :show-button="false"
+                            debounce="300"
+                            min-length="2"
+                        />
+                        
+                        {{-- Search Results --}}
+                        <div id="data" class="search-results">
+                            {{-- Results will be populated via AJAX --}}
+                        </div>
+                        
+                        {{-- Loading Component --}}
+                        @include('components.loading', [
+                            'id' => 'search-loading',
+                            'message' => 'Mencari data pasien...',
+                            'style' => 'display: none;'
+                        ])
+
+                        <x-slot name="footerButtons">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                data-bs-target="#form-pasien" id="btn-buatPasienBaru">
+                                <i class="ri-user-add-fill"></i>
+                                <span class="btn-text">Buat Data Pasien Baru</span>
+                                <span class="spinner-border spinner-border-sm d-none"></span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                        </x-slot>
+                    </x-modal>
+                    {{-- Modal Edit Pasien dengan Komponen Baru --}}
+                    <x-modal id="form-edit-pasien" 
+                             title="Form Edit Data Pasien" 
+                             icon="ri-user-edit-line"
+                             size="modal-xl" 
+                             scrollable 
+                             backdrop="static" 
+                             keyboard="false">
+                        
+                        {{-- Error Alert Component --}}
+                        <div id="error-edit-container"></div>
+                        
+                        <form id="formpasien">
+                            <div class="row gx-3">
+                                <div class="col-xxl-2 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="jenis_identitas"
+                                        label="Jenis Identitas"
+                                        placeholder="Pilih Jenis Identitas"
+                                        :options="[
+                                            '1' => 'KTP',
+                                            '2' => 'SIM', 
+                                            '3' => 'Paspor'
+                                        ]"
+                                        id="jenis_identitas_edit"
+                                    />
                                 </div>
-                                <div class="modal-body">
-                                    <div class="row gx-3">
-                                        <div class="col-md-12">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="a5">Cari Pasien <span
-                                                        class="text-danger">*</span></label>
-                                                <div class="input-group">
-                                                    <input name="name" type="text" class="form-control" id="search"
-                                                        placeholder="Cari Nama, RM, RM Lama, No HP, KTP">
-                                                </div>
-                                                <p class="text-danger">{{ $errors->first('name') }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="" id="data">
-
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="d-grid gap-1">
-                                        </div>
-                                    </div>
-                                    <div id="loading">
-                                        <div class="card border mb-3">
-                                            <div class="card-body">
-                                                <div class="d-flex align-items-center text-center">
-                                                    <div class="spinner-border text-success me-2" role="status"
-                                                        aria-hidden="true"></div>
-                                                    <strong>Loading...</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                <div class="col-xxl-5 col-lg-4 col-sm-6">
+                                    <x-form.input 
+                                        name="no_identitas"
+                                        label="Nomor Identitas"
+                                        id="no_identitas_edit"
+                                    />
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#form-pasien" id="btn-buatPasienBaru">
-                                        <i class="ri-user-add-fill"></i>
-                                        Buat Data Pasien Baru
-                                    </button>
-
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                        Tutup
-                                    </button>
+                                <div class="col-xxl-5 col-lg-4 col-sm-6">
+                                    <x-form.input 
+                                        name="name_pasien"
+                                        label="Nama Pasien"
+                                        required
+                                        id="name_pasien_edit"
+                                    />
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="modal fade" id="form-edit-pasien" tabindex="-1"
-                        aria-labelledby="exampleModalScrollableTitle" aria-hidden="true" data-bs-backdrop="static"
-                        data-bs-keyboard="false">
-                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalScrollableTitle">
-                                        Form Edit Data Pasien
-                                    </h5>
 
+                            <div class="row gx-3">
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="jenis_kelamin"
+                                        label="Jenis Kelamin"
+                                        placeholder="Pilih Jenis Kelamin"
+                                        :options="[
+                                            '1' => 'Pria',
+                                            '2' => 'Wanita'
+                                        ]"
+                                        id="jenis_kelamin_edit"
+                                        required
+                                    />
                                 </div>
-                                <div class="modal-body">
-                                    <div class="alert alert-danger print-error-msg" style="display:none" id="error-edit">
-                                        <ul></ul>
-                                    </div>
-                                    <form id="formpasien">
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-2 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Jenis Identitas</label>
-                                                    <div class="input-group">
-
-                                                        <select class="form-select" name="jenis_identitas"
-                                                            id="jenis_identitas_edit">
-                                                            <option value="">Pilih Jenis Identitas</option>
-                                                            <option value="1">
-                                                                KTP</option>
-                                                            <option value="2">
-                                                                SIM</option>
-                                                            <option value="3">
-                                                                Paspor</option>
-
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-5 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">Nomor Identitas</label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="no_identitas_edit"
-                                                            name="no_identitas">
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-5 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">Nama Pasien
-                                                        <span class="text-danger">*</span>
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <input type="text" class="form-control" id="name_pasien_edit"
-                                                            name="name_pasien">
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row gx-3">
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Jenis Kelamin
-                                                        <span class="text-danger">*</span>
-                                                    </label>
-                                                    <div class="input-group">
-
-                                                        <select class="form-select" name="jenis_kelamin"
-                                                            id="jenis_kelamin_edit">
-                                                            <option value="">Pilih Jenis Kelamin</option>
-                                                            <option value="1">
-                                                                Pria</option>
-                                                            <option value="2">
-                                                                Wanita</option>
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a1">Tanggal Lahir
-                                                        <span class="text-danger">*</span>
-                                                    </label>
-                                                    <div class="input-group">
-                                                        <input type="date" class="form-control" id="tgl_lahir_edit"
-                                                            name="tgl_lahir">
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-xxl-4 col-lg-4 col-sm-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="a7">Gol Darah</label>
-                                                    <div class="input-group">
-                                                        <select class="form-select" name="golongan_darah"
-                                                            id="golongan_darah_edit">
-                                                            <option value="">-- Pilih Gol Darah --</option>
-                                                            <option value="A">A</option>
-                                                            <option value="B">B</option>
-                                                            <option value="AB">AB</option>
-                                                            <option value="O">O</option>
-                                                        </select>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-
-
-                                        </div>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.input 
+                                        name="tgl_lahir"
+                                        type="date"
+                                        label="Tanggal Lahir"
+                                        id="tgl_lahir_edit"
+                                        required
+                                    />
+                                </div>
+                                <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                    <x-form.select 
+                                        name="golongan_darah"
+                                        label="Golongan Darah"
+                                        placeholder="-- Pilih Gol Darah --"
+                                        :options="[
+                                            'A' => 'A',
+                                            'B' => 'B',
+                                            'AB' => 'AB',
+                                            'O' => 'O'
+                                        ]"
+                                        id="golongan_darah_edit"
+                                    />
+                                </div>
+                            </div>
                                         <div class="row gx-3">
                                             <div class="col-xxl-4 col-lg-4 col-sm-6">
                                                 <div class="mb-3">

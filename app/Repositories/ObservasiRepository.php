@@ -56,7 +56,7 @@ class ObservasiRepository
         $selected_doctor_ids = $practitioners->pluck('user.id')->filter()->toArray();
 
         // Ambil semua user role dokter
-        $dokters = \App\Models\User::whereIn('role', [1, 2, 4])->get(); // Owner, Dokter, Admin
+        $dokters = \App\Models\User::whereIn('role', [1, 2])->get(); // Hanya Owner dan Dokter
 
         return [
             'dokter_terpilih' => $selected_doctor_ids,

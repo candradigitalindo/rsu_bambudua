@@ -32,10 +32,8 @@ class Resep extends Model
      */
     public function getStatusAttribute()
     {
-        // Pastikan relasi 'details' sudah dimuat untuk menghindari N+1 query
-        if (!$this->relationLoaded('details')) {
-            $this->load('details');
-        }
+        // Gunakan loadMissing untuk efisiensi, hanya load jika belum ada.
+        $this->loadMissing('details');
 
         // Cek apakah ada detail yang masih 'Diajukan'
         if ($this->details->contains('status', 'Diajukan')) {

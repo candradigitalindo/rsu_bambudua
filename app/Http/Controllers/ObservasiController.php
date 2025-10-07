@@ -120,39 +120,55 @@ class ObservasiController extends Controller
             'jenis_pemeriksaan_id' => 'required|exists:jenis_pemeriksaan_penunjangs,id',
         ]);
 
-        // Buat Permintaan Laboratorium dari Pelayanan Medis (request-only)
         $jp = JenisPemeriksaanPenunjang::findOrFail($validated['jenis_pemeriksaan_id']);
+        $message = '';
 
         DB::transaction(function () use ($id, $jp, $request) {
             $encounter = \App\Models\Encounter::findOrFail($id);
             $dokter = Auth::user();
-            $req = LabRequest::create([
-                'encounter_id' => $id,
-                'requested_by' => $dokter->id,
-                'status' => 'requested',
-                'requested_at' => now(),
-                'notes' => null,
-                'total_charge' => (int)$jp->harga,
-                'charged' => false,
-            ]);
-            LabRequestItem::create([
-                'lab_request_id' => $req->id,
-                'test_id' => $jp->id,
-                'test_name' => $jp->name,
-                'price' => (int)$jp->harga,
-            ]);
+
+            // Asumsi: Model JenisPemeriksaanPenunjang memiliki kolom 'tipe' ('lab' atau 'radiologi')
+            if (strtolower($jp->tipe) === 'radiologi') {
+                \App\Models\RadiologyRequest::create([
+                    'encounter_id' => $id,
+                    'pasien_id' => $encounter->pasien->id,
+                    'jenis_pemeriksaan_id' => $jp->id,
+                    'dokter_id' => $dokter->id,
+                    'status' => 'requested',
+                    'price' => (float) $jp->harga,
+                    'created_by' => $dokter->id,
+                ]);
+                $message = 'Permintaan Radiologi berhasil dibuat.';
+            } else { // Default ke Lab
+                $req = LabRequest::create([
+                    'encounter_id' => $id,
+                    'requested_by' => $dokter->id,
+                    'status' => 'requested',
+                    'requested_at' => now(),
+                    'notes' => null,
+                    'total_charge' => (int)$jp->harga,
+                    'charged' => false,
+                ]);
+                LabRequestItem::create([
+                    'lab_request_id' => $req->id,
+                    'test_id' => $jp->id,
+                    'test_name' => $jp->name,
+                    'price' => (int)$jp->harga,
+                ]);
+                $message = 'Permintaan Laboratorium berhasil dibuat.';
+            }
 
             // Buat insentif untuk dokter
             $this->observasiRepository->createPemeriksaanPenunjangIncentive($encounter, $dokter, $jp->name, (float)$jp->harga);
         });
 
-        // Recalculate encounter totals to include LabRequest items
+        // Recalculate encounter totals to include LabRequest/RadiologyRequest items
         $this->observasiRepository->updateEncounterTotalTindakan($id);
 
         $this->activity('Membuat Permintaan Laboratorium', ['encounter_id' => $id, 'pemeriksaan' => $jp->name], 'kunjungan');
         return response()->json([
             'status' => 200,
-            'message' => 'Permintaan Laboratorium berhasil dibuat.',
+            'message' => $message,
         ]);
     }
     public function deletePemeriksaanPenunjang($id)

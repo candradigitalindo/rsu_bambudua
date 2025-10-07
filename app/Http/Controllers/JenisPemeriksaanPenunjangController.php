@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreJenisPemeriksaanRequest;
+use App\Http\Requests\UpdateJenisPemeriksaanRequest;
+
 use App\Models\JenisPemeriksaanPenunjang;
 use App\Models\TemplateField;
 use Illuminate\Http\Request;
@@ -29,19 +32,8 @@ class JenisPemeriksaanPenunjangController extends Controller
         return view('pages.master.jenis_pemeriksaan.create');
     }
 
-    public function store(Request $request)
+    public function store(StoreJenisPemeriksaanRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:jenis_pemeriksaan_penunjangs,name',
-            'type' => 'required|in:lab,radiologi',
-            'harga' => 'required|string',
-        ], [
-            'name.required' => 'Nama pemeriksaan harus diisi.',
-            'name.unique' => 'Nama pemeriksaan sudah ada.',
-            'type.required' => 'Tipe pemeriksaan harus dipilih.',
-            'harga.required' => 'Harga harus diisi.',
-        ]);
-
         $this->repository->create($request->all());
 
         Alert::success('Berhasil', 'Data berhasil ditambahkan.');
@@ -54,19 +46,8 @@ class JenisPemeriksaanPenunjangController extends Controller
         return view('pages.master.jenis_pemeriksaan.edit', compact('item'));
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateJenisPemeriksaanRequest $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:jenis_pemeriksaan_penunjangs,name,' . $id,
-            'type' => 'required|in:lab,radiologi',
-            'harga' => 'required|string',
-        ], [
-            'name.required' => 'Nama pemeriksaan harus diisi.',
-            'name.unique' => 'Nama pemeriksaan sudah ada.',
-            'type.required' => 'Tipe pemeriksaan harus dipilih.',
-            'harga.required' => 'Harga harus diisi.',
-        ]);
-
         $this->repository->update($id, $request->all());
 
         Alert::success('Berhasil', 'Data berhasil diperbarui.');

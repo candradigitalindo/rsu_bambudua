@@ -15,8 +15,8 @@ Artisan::command('inspire', function () {
 // Cek SIP kedaluwarsa 6 bulan lagi dan kirim reminder ke Admin & Superadmin
 Artisan::command('sip:remind-expiring', function () {
     $today = now();
-    $targetStart = $today->copy()->addMonthsNoOverflow(6)->startOfDay();
-    $targetEnd = $today->copy()->addMonthsNoOverflow(6)->endOfDay();
+    $targetStart = $today->copy()->addMonthsNoOverflow(6)->startOfMonth()->startOfDay();
+    $targetEnd = $today->copy()->addMonthsNoOverflow(6)->endOfMonth()->endOfDay();
 
     $licenses = ProfessionalLicense::with('user.profile')
         ->whereNull('six_month_reminder_sent_at')
@@ -24,7 +24,7 @@ Artisan::command('sip:remind-expiring', function () {
         ->get();
 
     if ($licenses->isEmpty()) {
-        $this->info('No SIP expiring exactly 6 months from now.');
+        $this->info('No new SIPs found expiring in the next 6-month window.');
         return 0;
     }
 
@@ -43,8 +43,11 @@ Artisan::command('sip:remind-expiring', function () {
     if ($admins->isNotEmpty()) {
         Notification::send($admins, new SipExpirySixMonthNotification($items));
         // tandai sudah dikirim agar tidak berulang setiap hari
-        $licenses->each(function ($lic) { $lic->six_month_reminder_sent_at = now(); $lic->save(); });
-        $this->info('Reminder sent to '. $admins->count() .' admin(s).');
+        $licenses->each(function ($lic) {
+            $lic->six_month_reminder_sent_at = now();
+            $lic->save();
+        });
+        $this->info('Reminder sent to ' . $admins->count() . ' admin(s).');
     } else {
         $this->warn('No admins found to notify.');
     }

@@ -20,37 +20,33 @@ class KeuanganController extends Controller
 {
     public function index()
     {
-        $currentMonth = now()->month;
         $currentYear = now()->year;
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
 
         // 1. Pendapatan Bulan Ini (Optimized Query)
         $pendapatan = Encounter::where(function ($query) {
             $query->where('status_bayar_tindakan', 1)
                 ->orWhere('status_bayar_resep', 1);
         })
-            ->whereMonth('updated_at', $currentMonth)
-            ->whereYear('updated_at', $currentYear)
+            ->whereBetween('updated_at', [$startOfMonth, $endOfMonth])
             ->selectRaw('SUM(total_bayar_tindakan) as total_tindakan, SUM(total_bayar_resep) as total_resep')
             ->first();
 
         $pendapatanOperasionalBulanIni = ($pendapatan->total_tindakan ?? 0) + ($pendapatan->total_resep ?? 0);
 
         // Ambil pendapatan lainnya bulan ini
-        $pendapatanLainnyaBulanIni = OtherIncome::whereMonth('income_date', $currentMonth)
-            ->whereYear('income_date', $currentYear)
+        $pendapatanLainnyaBulanIni = OtherIncome::whereBetween('income_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
         $totalPendapatanBulanIni = $pendapatanOperasionalBulanIni + $pendapatanLainnyaBulanIni;
 
         // 2. Pengeluaran, Gaji, Laba/Rugi
-        $pengeluaranOperasionalBulanIni = OperationalExpense::whereMonth('expense_date', $currentMonth)
-            ->whereYear('expense_date', $currentYear)
+        $pengeluaranOperasionalBulanIni = OperationalExpense::whereBetween('expense_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
         // Mengembalikan perhitungan Gaji & Insentif hanya untuk yang sudah dibayar bulan ini.
-        $gajiInsentifBulanIni = SalaryPayment::where('status', 'paid')
-            ->whereMonth('paid_at', $currentMonth)
-            ->whereYear('paid_at', $currentYear)
+        $gajiInsentifBulanIni = SalaryPayment::where('status', 'paid')->whereBetween('paid_at', [$startOfMonth, $endOfMonth])
             ->sum('amount');
         $totalPengeluaranBulanIni = $pengeluaranOperasionalBulanIni + $gajiInsentifBulanIni;
 

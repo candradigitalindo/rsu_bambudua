@@ -34,11 +34,8 @@
                                         <td>{{ $jenisPemeriksaan->firstItem() + $key }}</td>
                                         <td>{{ $item->name }}</td>
                                         <td>
-                                            @if ($item->type == 'lab')
-                                                <span class="badge bg-info">Laboratorium</span>
-                                            @else
-                                                <span class="badge bg-primary">Radiologi</span>
-                                            @endif
+                                            <span
+                                                class="badge bg-{{ $item->type == 'lab' ? 'info' : 'primary' }}">{{ ucfirst($item->type) }}</span>
                                         </td>
                                         <td>Rp {{ number_format($item->harga, 0, ',', '.') }}</td>
                                         <td class="text-center">

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\RadiologyRequest;
 use App\Models\RadiologyResult;
 use App\Models\RadiologySchedule;
+use Illuminate\Support\Facades\Auth;
 
 class RadiologiController extends Controller
 {
@@ -25,8 +26,12 @@ class RadiologiController extends Controller
 
     public function resultsIndex()
     {
-        // Placeholder list page for Radiology Results
-        return view('pages.radiologi.hasil.index');
+        $results = RadiologyResult::with(['request.pasien', 'request.jenis', 'reporter'])
+            ->whereHas('request', function ($query) {
+                $query->where('status', 'completed');
+            })
+            ->orderByDesc('reported_at')->paginate(15);
+        return view('pages.radiologi.hasil.index', compact('results'));
     }
 
     public function scheduleIndex()
@@ -84,7 +89,7 @@ class RadiologiController extends Controller
         $result->impression = $data['impression'];
         $result->payload = null; // future: dynamic fields
         $result->files = $files ?: null;
-        $result->reported_by = auth()->id();
+        $result->reported_by = Auth::id();
         $result->reported_at = now();
         $result->save();
 
@@ -158,7 +163,7 @@ class RadiologiController extends Controller
             $req->notes = $data['catatan'] ?? null;
             $req->status = 'requested';
             $req->price = (float) $jenisPemeriksaan->harga;
-            $req->created_by = auth()->id();
+            $req->created_by = Auth::id();
             $req->save();
 
             // Buat insentif untuk dokter yang merujuk
@@ -268,7 +273,7 @@ class RadiologiController extends Controller
         $sched->priority = $data['priority'];
         $sched->status = 'scheduled';
         $sched->notes = $data['notes'] ?? null;
-        $sched->created_by = auth()->id();
+        $sched->created_by = Auth::id();
         $sched->save();
 
         return redirect()->route('radiologi.requests.show', $req->id)->with('success', 'Jadwal radiologi berhasil dibuat.');

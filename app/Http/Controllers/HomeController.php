@@ -20,9 +20,9 @@ class HomeController extends Controller
     public $homeRepository;
     public $wilayahRepository;
     public $ownerDashboardService;
-    
+
     public function __construct(
-        HomeRepository $homeRepository, 
+        HomeRepository $homeRepository,
         WilayahRepository $wilayahRepository,
         OwnerDashboardService $ownerDashboardService
     ) {
@@ -33,15 +33,14 @@ class HomeController extends Controller
     public function index()
     {
         $userRole = UserRole::fromValue(Auth::user()->role);
-        
-        // Redirect ke dashboard sesuai role
-        if ($userRole && !in_array($userRole, [UserRole::OWNER, UserRole::ADMIN])) {
-            return redirect()->route($userRole->dashboardRoute());
+
+        // Jika role adalah ADMIN, langsung redirect ke dashboard admin
+        if ($userRole == UserRole::ADMIN) {
+            return redirect()->route('admin.dashboard');
         }
-        
-        // Jika bukan owner/admin atau role tidak dikenali, redirect ke profile
-        if (!$userRole || !in_array($userRole, [UserRole::OWNER, UserRole::ADMIN])) {
-            return redirect()->route('home.profile', Auth::id());
+        // Redirect role lain (selain Owner) ke dashboard masing-masing
+        if ($userRole != UserRole::OWNER) {
+            return redirect()->route($userRole->dashboardRoute());
         }
 
         // Rentang tanggal bulan ini untuk optimasi query
@@ -271,7 +270,7 @@ class HomeController extends Controller
      */
     public function getRealTimeData()
     {
-        if (!in_array(auth()->user()->role, [1, 4])) {
+        if (!in_array(Auth::user()->role, [1, 4])) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 

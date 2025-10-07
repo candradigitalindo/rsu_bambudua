@@ -1573,7 +1573,7 @@
                         $("#tgl_lahir_edit").val(data.tgl_lahir || '');
                         
                         console.log('Fallback: Re-setting values after timeout');
-                        console.log('Fallback tgl_lahir:', fallbackTglLahir);
+                        console.log('Fallback tgl_lahir:', data.tgl_lahir);
                     }, 100);
                 }
             })

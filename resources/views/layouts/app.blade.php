@@ -4,6 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title> @yield('title') &mdash; Bambudua</title>
 
     <!-- Meta -->
@@ -52,6 +53,19 @@
         /* Optimize rendering */
         .main-container {
             contain: layout style;
+        }
+        
+        /* Print: hide chrome (sidebar/header) and use full width for content */
+        @media print {
+            #sidebar, .sidebar-wrapper, .app-header, .brand-container-sm, .header-actions, .toggle-sidebar, .pin-sidebar {
+                display: none !important;
+            }
+            .page-wrapper, .main-container, .app-container, .app-body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
         }
     </style>
     @stack('style')

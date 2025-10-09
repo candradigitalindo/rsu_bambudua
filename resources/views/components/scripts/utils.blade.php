@@ -191,6 +191,19 @@ window.BambuduaUtils = {
                 $table.addClass('table-scroll-indicator');
             }
         });
+    },
+
+    /**
+     * Format status untuk menampilkan Aktif/Non-Aktif instead of true/false
+     */
+    formatStatus: function(status) {
+        if (status === true || status === 'true' || status === '1' || status === 1) {
+            return 'Aktif';
+        } else if (status === false || status === 'false' || status === '0' || status === 0) {
+            return 'Non-Aktif';
+        } else {
+            return status || 'Aktif';
+        }
     }
 };
 

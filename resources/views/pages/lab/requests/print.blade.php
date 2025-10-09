@@ -10,6 +10,15 @@
   .table td, .table th { vertical-align: top; }
 </style>
 @endpush
+@push('scripts')
+@if(request()->get('auto'))
+<script>
+  window.addEventListener('load', function(){
+    setTimeout(function(){ window.print(); }, 100);
+  });
+</script>
+@endif
+@endpush
 @section('content')
 <div class="row gx-3">
   <div class="col-12 col-lg-10">
@@ -19,7 +28,6 @@
         <div class="small-text">Tanggal: {{ $req->completed_at?->format('d M Y H:i') ?? $req->created_at->format('d M Y H:i') }}</div>
       </div>
       <div class="no-print">
-        <a href="{{ route('lab.requests.show', $req->id) }}" class="btn btn-sm btn-secondary">Kembali</a>
         <button class="btn btn-sm btn-primary" onclick="window.print()"><i class="ri-printer-line"></i> Cetak</button>
       </div>
     </div>

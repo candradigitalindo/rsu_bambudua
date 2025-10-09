@@ -65,6 +65,9 @@ Route::get('/antrian/{id}', [AntrianController::class, 'show'])->name('antrian.s
 Route::get('/antrian/{id}/cetak', [AntrianController::class, 'store'])->name('antrian.store');
 Route::get('/antrian/{id}/monitor', [AntrianController::class, 'edit'])->name('antrian.monitor');
 
+// [FIX] AJAX route untuk dokter-by-clinic - perlu accessible tanpa full auth
+Route::get('/pendaftaran/ajax/dokter-by-clinic/{clinic}', [PendaftaranController::class, 'getDokterByClinic'])->name('ajax.dokterByClinic');
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/home/realtime-data', [HomeController::class, 'getRealTimeData'])->name('owner.realtime-data');
@@ -161,12 +164,18 @@ Route::middleware(['auth'])->group(function () {
 
         // Rawat Darurat
         Route::get('/rawatDarurat', [PendaftaranController::class, 'showRawatDarurat'])->name('pendaftaran.showRawatDarurat');
+        Route::get('/rawatDarurat/doctors', [PendaftaranController::class, 'getAllDoctors'])->name('pendaftaran.getAllDoctors');
         Route::post('/rawatDarurat/{id}/postRawatDarurat', [PendaftaranController::class, 'postRawatDarurat'])->name('pendaftaran.postRawatDarurat');
         Route::post('/rawatDarurat/{id}/update', [PendaftaranController::class, 'updateRawatDarurat'])->name('pendaftaran.updateRawatDarurat');
         Route::get('/rawatDarurat/{id}/editEncounter', [PendaftaranController::class, 'editEncounterRdarurat'])->name('pendaftaran.editEncounterRdarurat');
         Route::delete('/rawatDarurat/{id}/destroy', [PendaftaranController::class, 'destroyEncounterRdarurat'])->name('pendaftaran.destroyEncounterRdarurat');
 
-        Route::get('/ajax/dokter-by-clinic/{clinic}', [PendaftaranController::class, 'getDokterByClinic'])->name('ajax.dokterByClinic');
+        // Export routes
+        Route::get('/rawatJalan/export', [PendaftaranController::class, 'exportRawatJalan'])->name('pendaftaran.exportRawatJalan');
+        Route::get('/rawatDarurat/export', [PendaftaranController::class, 'exportRawatDarurat'])->name('pendaftaran.exportRawatDarurat');
+        Route::get('/rawatInap/export', [PendaftaranController::class, 'exportRawatInap'])->name('pendaftaran.exportRawatInap');
+
+        // Route moved outside auth middleware - see line 67
     });
     Route::resource('bahans', BahanController::class)->except(['show']);
     // AJAX tindakan per bahan
@@ -227,6 +236,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/observasi/pemeriksaan-penunjang/download/{id}', [ObservasiController::class, 'downloadPemeriksaanPenunjang'])->name('observasi.downloadPemeriksaanPenunjang');
         // AJAX Hasil Lab (untuk realtime render)
         Route::get('/observasi/{id}/labRequests', [ObservasiController::class, 'labRequests'])->name('observasi.labRequests');
+        Route::get('/observasi/{id}/radiologyRequests', [ObservasiController::class, 'radiologyRequests'])->name('observasi.radiologyRequests');
+        Route::post('/observasi/radiologi/{id}/cancel', [ObservasiController::class, 'cancelRadiologyRequest'])->name('observasi.radiologi.cancel');
+        Route::delete('/observasi/radiologi/{id}', [ObservasiController::class, 'destroyRadiologyRequest'])->name('observasi.radiologi.destroy');
 
         // route untuk tindakan counter
         Route::get('/observasi/getTindakan/{id}', [ObservasiController::class, 'getTindakan'])->name('observasi.getTindakan');
@@ -364,6 +376,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/permintaan/create', [RadiologiController::class, 'requestsCreate'])->name('requests.create');
         Route::post('/permintaan', [RadiologiController::class, 'requestsStore'])->name('requests.store');
         Route::get('/permintaan/{id}', [RadiologiController::class, 'requestsShow'])->name('requests.show');
+        Route::get('/permintaan/{id}/print', [RadiologiController::class, 'print'])->name('requests.print');
         Route::get('/permintaan/{id}/hasil', [RadiologiController::class, 'resultsEdit'])->name('requests.results.edit');
         Route::post('/permintaan/{id}/hasil', [RadiologiController::class, 'resultsStore'])->name('requests.results.store');
         Route::post('/permintaan/{id}/status', [RadiologiController::class, 'requestsUpdateStatus'])->name('requests.status');
@@ -400,6 +413,7 @@ Route::middleware(['auth'])->group(function () {
         // Requests
         Route::resource('requests', LabRequestController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::get('requests/{id}/print', [LabRequestController::class, 'print'])->name('requests.print');
+        Route::get('requests/{id}/print-pdf', [LabRequestController::class, 'printPdf'])->name('requests.print.pdf');
         // Reagents
         Route::resource('reagents', LabReagentController::class)->only(['index', 'create', 'store', 'edit', 'update']);
         Route::post('reagents/{id}/stock', [LabReagentController::class, 'stock'])->name('reagents.stock');

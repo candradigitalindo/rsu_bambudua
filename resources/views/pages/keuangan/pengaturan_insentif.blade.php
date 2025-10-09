@@ -59,23 +59,58 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="fee_dokter_penunjang" class="form-label">Fee Dokter Pemeriksaan Penunjang
-                                (%)</label>
-                            <div class="input-group">
-                                <input type="number"
-                                    class="form-control @error('fee_dokter_penunjang') is-invalid @enderror"
-                                    id="fee_dokter_penunjang" name="fee_dokter_penunjang"
-                                    value="{{ old('fee_dokter_penunjang', (int) ($settings['fee_dokter_penunjang'] ?? 0)) }}"
-                                    placeholder="Contoh: 10" min="0" max="100" step="1">
-                                <span class="input-group-text">%</span>
-                            </div>
-                            <div class="form-text">Persentase fee dari total harga pemeriksaan (Lab/Radiologi) yang akan
-                                diberikan kepada dokter perujuk.</div>
-                            @error('fee_dokter_penunjang')
-                                <div class="invalid-feedback">
-                                    {{ $message }}
+                            <label class="form-label">Fee Lab</label>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <select class="form-select" name="fee_lab_mode">
+                                        <option value="0" {{ (old('fee_lab_mode', $settings['fee_lab_mode'] ?? 1) == 0) ? 'selected' : '' }}>Flat (Rp)</option>
+                                        <option value="1" {{ (old('fee_lab_mode', $settings['fee_lab_mode'] ?? 1) == 1) ? 'selected' : '' }}>% Persen</option>
+                                    </select>
                                 </div>
-                            @enderror
+                                <div class="col-md-8">
+                                    <input type="number" step="0.01" min="0" class="form-control" name="fee_lab_value" value="{{ old('fee_lab_value', $settings['fee_lab_value'] ?? 10) }}" />
+                                </div>
+                            </div>
+                            <div class="form-text">Fee untuk pemeriksaan Lab. Jika mode persen dipilih, nilai diinterpretasi sebagai persentase.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fee Radiologi</label>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <select class="form-select" name="fee_radiologi_mode">
+                                        <option value="0" {{ (old('fee_radiologi_mode', $settings['fee_radiologi_mode'] ?? 1) == 0) ? 'selected' : '' }}>Flat (Rp)</option>
+                                        <option value="1" {{ (old('fee_radiologi_mode', $settings['fee_radiologi_mode'] ?? 1) == 1) ? 'selected' : '' }}>% Persen</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="number" step="0.01" min="0" class="form-control" name="fee_radiologi_value" value="{{ old('fee_radiologi_value', $settings['fee_radiologi_value'] ?? 10) }}" />
+                                </div>
+                            </div>
+                            <div class="form-text">Fee untuk pemeriksaan radiologi.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fee Obat (Farmasi)</label>
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-4">
+                                    <select class="form-select" name="fee_obat_mode">
+                                        <option value="0" {{ (old('fee_obat_mode', $settings['fee_obat_mode'] ?? 1) == 0) ? 'selected' : '' }}>Flat (Rp)</option>
+                                        <option value="1" {{ (old('fee_obat_mode', $settings['fee_obat_mode'] ?? 1) == 1) ? 'selected' : '' }}>% Persen</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="number" step="0.01" min="0" class="form-control" name="fee_obat_value" value="{{ old('fee_obat_value', $settings['fee_obat_value'] ?? 5) }}" />
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">Target Fee Obat</label>
+                                    <select class="form-select" name="fee_obat_target_mode">
+                                        <option value="0" {{ (old('fee_obat_target_mode', $settings['fee_obat_target_mode'] ?? 0) == 0) ? 'selected' : '' }}>DPJP (practitioner pertama)</option>
+                                        <option value="1" {{ (old('fee_obat_target_mode', $settings['fee_obat_target_mode'] ?? 0) == 1) ? 'selected' : '' }}>Dokter Prescriber (jika tersedia)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-text">Fee obat diberikan ke DPJP atau prescriber sesuai pilihan. Jika prescriber tidak terdeteksi, fallback ke DPJP.</div>
                         </div>
 
                         <div class="mb-3">

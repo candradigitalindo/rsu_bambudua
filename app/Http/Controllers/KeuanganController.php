@@ -224,6 +224,14 @@ class KeuanganController extends Controller
             'perawat_per_encounter' => 'required|numeric|min:0',
             'dokter_per_encounter' => 'required|numeric|min:0',
             'cutoff_day' => 'required|integer|min:1|max:28',
+            'fee_lab_mode' => 'nullable|in:0,1',
+            'fee_lab_value' => 'nullable|numeric|min:0',
+            'fee_radiologi_mode' => 'nullable|in:0,1',
+            'fee_radiologi_value' => 'nullable|numeric|min:0',
+            'fee_obat_mode' => 'nullable|in:0,1',
+            'fee_obat_value' => 'nullable|numeric|min:0',
+            'fee_obat_target_mode' => 'nullable|in:0,1',
+            'fee_dokter_penunjang' => 'nullable|numeric|min:0',
         ], [
             'perawat_per_encounter.required' => 'Nilai insentif perawat harus diisi.',
             'perawat_per_encounter.numeric' => 'Nilai insentif harus berupa angka.',
@@ -258,6 +266,22 @@ class KeuanganController extends Controller
                 'description' => 'Tanggal batas (cut-off) untuk perhitungan gaji dan insentif bulanan.'
             ]
         );
+
+        // Simpan pengaturan fee penunjang & obat
+        $keys = [
+            'fee_lab_mode','fee_lab_value','fee_radiologi_mode','fee_radiologi_value','fee_obat_mode','fee_obat_value','fee_obat_target_mode','fee_dokter_penunjang'
+        ];
+        foreach ($keys as $key) {
+            if (!is_null($request->$key)) {
+                IncentiveSetting::updateOrCreate(
+                    ['setting_key' => $key],
+                    [
+                        'setting_value' => $request->$key,
+                        'description' => 'Pengaturan otomatis: ' . $key,
+                    ]
+                );
+            }
+        }
 
         Alert::success('Berhasil', 'Pengaturan insentif berhasil disimpan.');
         return redirect()->route('keuangan.incentive.settings');

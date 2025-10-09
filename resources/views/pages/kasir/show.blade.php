@@ -40,6 +40,7 @@
                                 Tidak ada tagihan yang perlu dibayar untuk pasien ini.
                             </div>
                         @else
+                            {{-- Belum Dibayar --}}
                             @foreach ($unpaidEncounters as $encounter)
                                 <div class="card mb-3 border">
                                     <div class="card-header bg-light">
@@ -69,9 +70,18 @@
                                                                 <strong>Tagihan Tindakan</strong>
                                                                 <ul class="list-unstyled small text-muted mb-0">
                                                                     @foreach ($encounter->tindakan as $tindakan)
-                                                                        <li>- {{ $tindakan->tindakan_name }} (Qty:
-                                                                            {{ $tindakan->qty }})</li>
+                                                                        <li>- {{ $tindakan->tindakan_name }} (Qty: {{ $tindakan->qty }})</li>
                                                                     @endforeach
+                                                                    @php
+                                                                        $labItems = ($encounter->labRequests ?? collect())->flatMap(function($lr){ return $lr->items ?? collect(); })->pluck('test_name')->filter()->values()->all();
+                                                                        $radItems = ($encounter->radiologyRequests ?? collect())->map(function($rq){ return optional($rq->jenis)->name; })->filter()->values()->all();
+                                                                    @endphp
+                                                                    @if (!empty($labItems))
+                                                                        <li>- Pemeriksaan Lab: {{ implode(', ', $labItems) }}</li>
+                                                                    @endif
+                                                                    @if (!empty($radItems))
+                                                                        <li>- Radiologi: {{ implode(', ', $radItems) }}</li>
+                                                                    @endif
                                                                 </ul>
                                                             </label>
                                                         </td>
@@ -116,6 +126,69 @@
                                     </div>
                                 </div>
                             @endforeach
+
+                            {{-- Sudah Dibayar (Riwayat) --}}
+                            @if (isset($paidEncounters) && $paidEncounters->isNotEmpty())
+                                <div class="alert alert-success">Riwayat Tagihan yang sudah dibayar</div>
+                                @foreach ($paidEncounters as $encounter)
+                                    <div class="card mb-3 border border-success">
+                                        <div class="card-header bg-success-subtle">
+                                            <strong>No. Encounter: {{ $encounter->no_encounter }}</strong>
+                                            <span class="ms-3">Tanggal: {{ \Carbon\Carbon::parse($encounter->updated_at)->format('d M Y H:i') }}</span>
+                                        </div>
+                                        <div class="card-body p-0">
+                                            <table class="table table-sm m-0">
+                                                <tbody>
+                                                    @if ($encounter->total_bayar_tindakan > 0 && $encounter->status_bayar_tindakan)
+                                                        <tr>
+                                                            <td style="width:5%"><i class="ri-check-double-line text-success" title="Lunas"></i></td>
+                                                            <td>
+                                                                <strong>Tagihan Tindakan</strong>
+                                                                <span class="badge bg-success ms-2">Lunas</span>
+                                                                <ul class="list-unstyled small text-muted mb-0">
+                                                                    @foreach ($encounter->tindakan as $tindakan)
+                                                                        <li>- {{ $tindakan->tindakan_name }} (Qty: {{ $tindakan->qty }})</li>
+                                                                    @endforeach
+                                                                    @php
+                                                                        $labItems = ($encounter->labRequests ?? collect())->flatMap(function($lr){ return $lr->items ?? collect(); })->pluck('test_name')->filter()->values()->all();
+                                                                        $radItems = ($encounter->radiologyRequests ?? collect())->map(function($rq){ return optional($rq->jenis)->name; })->filter()->values()->all();
+                                                                    @endphp
+                                                                    @if (!empty($labItems))
+                                                                        <li>- Pemeriksaan Lab: {{ implode(', ', $labItems) }}</li>
+                                                                    @endif
+                                                                    @if (!empty($radItems))
+                                                                        <li>- Radiologi: {{ implode(', ', $radItems) }}</li>
+                                                                    @endif
+                                                                </ul>
+                                                            </td>
+                                                            <td class="text-end" style="width:20%">
+                                                                {{ 'Rp ' . number_format($encounter->total_bayar_tindakan, 0, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                    @if ($encounter->total_bayar_resep > 0 && $encounter->status_bayar_resep)
+                                                        <tr>
+                                                            <td style="width:5%"><i class="ri-check-double-line text-success" title="Lunas"></i></td>
+                                                            <td>
+                                                                <strong>Tagihan Resep ({{ $encounter->resep->kode_resep ?? '' }})</strong>
+                                                                <span class="badge bg-success ms-2">Lunas</span>
+                                                                <ul class="list-unstyled small text-muted mb-0">
+                                                                    @foreach ($encounter->resep->details as $detail)
+                                                                        <li>- {{ $detail->nama_obat }} (Qty: {{ $detail->qty }})</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </td>
+                                                            <td class="text-end" style="width:20%">
+                                                                {{ 'Rp ' . number_format($encounter->total_bayar_resep, 0, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
 
                             <hr>
 

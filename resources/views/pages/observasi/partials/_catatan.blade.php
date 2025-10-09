@@ -33,16 +33,24 @@
               <tbody id="tbody-catatan-tindakan"></tbody>
               <tfoot>
                 <tr>
-                  <td colspan="3" class="text-end fw-bold">Nominal</td>
+                  <td colspan="3" class="text-end fw-bold">Nominal Tindakan Medis</td>
                   <td class="text-end"><span id="total-tindakan" class="fw-bold">0</span></td>
                 </tr>
                 <tr>
-                  <td colspan="3" class="text-end fw-bold">Diskon</td>
+                  <td colspan="3" class="text-end fw-bold">Diskon Tindakan Medis</td>
                   <td class="text-end"><span id="total-tindakan-diskon" class="fw-bold">0</span></td>
                 </tr>
                 <tr>
-                  <td colspan="3" class="text-end fw-bold">Total</td>
+                  <td colspan="3" class="text-end fw-bold">Subtotal Tindakan Medis</td>
                   <td class="text-end"><span id="total-tindakan-harga" class="fw-bold">0</span></td>
+                </tr>
+                <tr>
+                  <td colspan="3" class="text-end fw-bold">Nominal Penunjang (Lab + Radiologi)</td>
+                  <td class="text-end"><span id="total-penunjang" class="fw-bold">0</span></td>
+                </tr>
+                <tr>
+                  <td colspan="3" class="text-end fw-bold">Total Keseluruhan</td>
+                  <td class="text-end"><span id="total-tindakan-akhir" class="fw-bold">0</span></td>
                 </tr>
               </tfoot>
             </table>
@@ -198,14 +206,38 @@
             <tr>
               <td>${item.nama}</td>
               <td>${item.qty}</td>
-              <td class="text-end">${formatRupiah(item.harga)}</td>
-              <td class="text-end">${formatRupiah(item.total)}</td>
+              <td class=\"text-end\">${formatRupiah(item.harga)}</td>
+              <td class=\"text-end\">${formatRupiah(item.total)}</td>
             </tr>
           `);
         });
-        $('#total-tindakan').text(formatRupiah(data.total_tindakan || 0));
-        $('#total-tindakan-diskon').text(formatRupiah(data.diskon_tindakan || 0) + (data.diskon_tindakan ? ' (' + (data.diskon_persen_tindakan || 0) + '%)' : ''));
-        $('#total-tindakan-harga').text(formatRupiah(data.total_bayar_tindakan || 0));
+        // Hitung footer berdasarkan Tindakan Medis saja (tanpa penunjang)
+        let medisNominal = 0;
+        if (data.tindakan && Array.isArray(data.tindakan)) {
+          data.tindakan.forEach(function(it){
+            const qty = parseInt(it.qty) || 0;
+            const harga = parseFloat(it.tindakan_harga) || 0;
+            const total = parseFloat(it.total_harga);
+            medisNominal += (isNaN(total) ? (harga * qty) : total);
+          });
+        }
+        const persen = parseFloat(data.diskon_persen_tindakan || 0) || 0;
+        const diskonNominal = Math.round(medisNominal * (persen / 100.0));
+        const subtotalMedis = Math.max(0, medisNominal - diskonNominal);
+        $('#total-tindakan').text(formatRupiah(medisNominal));
+        $('#total-tindakan-diskon').text(formatRupiah(diskonNominal) + (diskonNominal ? ' (' + persen + '%)' : ''));
+        $('#total-tindakan-harga').text(formatRupiah(subtotalMedis));
+        // Penunjang (Lab + Radiologi)
+        let penunjangNominal = 0;
+        if (data.pemeriksaan_penunjang && Array.isArray(data.pemeriksaan_penunjang)){
+          data.pemeriksaan_penunjang.forEach(function(it){
+            const harga = parseFloat(it.harga) || 0;
+            const total = parseFloat(it.total_harga);
+            penunjangNominal += (isNaN(total) ? harga : total);
+          });
+        }
+        $('#total-penunjang').text(formatRupiah(penunjangNominal));
+        $('#total-tindakan-akhir').text(formatRupiah(subtotalMedis + penunjangNominal));
 
         // Resep
         const tbodyResep = $('#tbody-catatan-resep');

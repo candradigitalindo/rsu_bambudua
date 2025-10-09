@@ -47,14 +47,10 @@
                                                 class="btn btn-warning btn-sm">
                                                 <i class="bi bi-pencil-square"></i> Edit
                                             </a>
-                                            <form action="{{ route('jenis-pemeriksaan.destroy', $item->id) }}"
-                                                method="POST" class="d-inline" data-confirm-delete="true">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="bi bi-trash"></i> Hapus
-                                                </button>
-                                            </form>
+                                            <a href="{{ route('jenis-pemeriksaan.destroy', $item->id) }}"
+                                               class="btn btn-danger btn-sm" data-confirm-delete="true">
+                                                <i class="bi bi-trash"></i> Hapus
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty

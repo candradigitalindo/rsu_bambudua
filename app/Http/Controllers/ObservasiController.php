@@ -92,27 +92,9 @@ class ObservasiController extends Controller
     }
     public function pemeriksaanPenunjang($id)
     {
-        // Kembalikan daftar permintaan LAB (LabRequest + items) untuk encounter ini dengan status
-        $rows = \App\Models\LabRequest::with('items')
-            ->where('encounter_id', $id)
-            ->orderByDesc('created_at')
-            ->get();
-        $flat = [];
-        foreach ($rows as $req) {
-            foreach ($req->items as $it) {
-                $flat[] = [
-                    'id' => $it->id,            // LabRequestItem id (untuk delete)
-                    'request_id' => $req->id,   // LabRequest id (untuk print)
-                    'jenis_pemeriksaan' => $it->test_name,
-                    'qty' => 1,
-                    'harga' => (int)$it->price,
-                    'total_harga' => (int)$it->price,
-                    'status' => $req->status,
-                    'created_at' => optional($req->created_at)->toDateTimeString(),
-                ];
-            }
-        }
-        return response()->json($flat);
+        // Gunakan repository agar termasuk Lab dan Radiologi serta memiliki field 'type'
+        $items = $this->observasiRepository->pemeriksaanPenunjang($id);
+        return response()->json($items);
     }
     public function postPemeriksaanPenunjang(Request $request, $id)
     {
@@ -127,8 +109,8 @@ class ObservasiController extends Controller
             $encounter = \App\Models\Encounter::findOrFail($id);
             $dokter = Auth::user();
 
-            // Asumsi: Model JenisPemeriksaanPenunjang memiliki kolom 'tipe' ('lab' atau 'radiologi')
-            if (strtolower($jp->tipe) === 'radiologi') {
+            // Cek tipe pemeriksaan dari kolom 'type' ('lab' atau 'radiologi')
+            if (strtolower($jp->type) === 'radiologi') {
                 \App\Models\RadiologyRequest::create([
                     'encounter_id' => $id,
                     'pasien_id' => $encounter->pasien->id,
@@ -159,7 +141,7 @@ class ObservasiController extends Controller
             }
 
             // Buat insentif untuk dokter
-            $this->observasiRepository->createPemeriksaanPenunjangIncentive($encounter, $dokter, $jp->name, (float)$jp->harga);
+            $this->observasiRepository->createPemeriksaanPenunjangIncentive($encounter, $dokter, $jp->name, (float)$jp->harga, strtolower($jp->type) === 'radiologi' ? 'radiologi' : 'lab');
         });
 
         // Recalculate encounter totals to include LabRequest/RadiologyRequest items
@@ -229,6 +211,83 @@ class ObservasiController extends Controller
                 })->toArray(),
             ];
         })->toArray());
+    }
+
+    // AJAX: Ambil semua RadiologyRequest beserta ringkas hasil terakhir untuk encounter
+    public function radiologyRequests($id)
+    {
+        $rows = \App\Models\RadiologyRequest::with(['jenis', 'results' => function ($q) {
+            $q->orderByDesc('created_at');
+        }])
+            ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
+            ->get();
+        return response()->json($rows->map(function ($req) {
+            $latest = $req->results->first();
+            return [
+                'id' => $req->id,
+                'status' => $req->status,
+                'created_at' => optional($req->created_at)->format('d M Y H:i'),
+                'jenis_name' => optional($req->jenis)->name,
+                'price' => (int)($req->price ?? 0),
+                'latest' => $latest ? [
+                    'findings' => $latest->findings,
+                    'impression' => $latest->impression,
+                ] : null,
+            ];
+        })->toArray());
+    }
+
+    // Batalkan permintaan radiologi dari halaman Observasi (requested -> canceled)
+    public function cancelRadiologyRequest($id)
+    {
+        try {
+            $req = \App\Models\RadiologyRequest::findOrFail($id);
+            $from = $req->status ?? 'requested';
+            if (!in_array($from, ['requested','processing'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Permintaan tidak bisa dibatalkan pada status ' . ucfirst($from) . '.',
+                ], 422);
+            }
+            $req->status = 'canceled';
+            $req->save();
+            return response()->json([
+                'success' => true,
+                'message' => 'Permintaan radiologi dibatalkan.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membatalkan permintaan radiologi.',
+            ], 500);
+        }
+    }
+
+    // Hapus permintaan radiologi (hapus total seperti Lab)
+    public function destroyRadiologyRequest($id)
+    {
+        try {
+            $req = \App\Models\RadiologyRequest::find($id);
+            if (!$req) {
+                return response()->json(['success' => false, 'message' => 'Permintaan radiologi tidak ditemukan.'], 404);
+            }
+            // Boleh hapus jika masih requested/canceled (belum selesai)
+            if (!in_array($req->status, ['requested', 'canceled'])) {
+                return response()->json(['success' => false, 'message' => 'Tidak bisa menghapus permintaan pada status ' . ucfirst($req->status) . '.'], 422);
+            }
+            $encounterId = $req->encounter_id;
+            // Hapus relasi
+            \App\Models\RadiologyResult::where('radiology_request_id', $req->id)->delete();
+            \App\Models\RadiologySchedule::where('radiology_request_id', $req->id)->delete();
+            // Hapus request
+            $req->delete();
+            // Update total encounter
+            $this->observasiRepository->updateEncounterTotalTindakan($encounterId);
+            return response()->json(['success' => true, 'message' => 'Permintaan radiologi berhasil dihapus.']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal menghapus permintaan radiologi.'], 500);
+        }
     }
 
     public function getTemplateFields($id)

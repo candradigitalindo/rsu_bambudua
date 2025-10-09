@@ -7,6 +7,7 @@ use App\Models\Encounter;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Pasien;
 use Illuminate\Support\Facades\DB;
+use App\Models\PaymentMethod;
 use Illuminate\Http\Request;
 
 class KasirController extends Controller
@@ -123,8 +124,24 @@ class KasirController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $paymentMethods = \App\Models\PaymentMethod::where('active', true)->orderBy('name')->get();
-        return view('pages.kasir.show', compact('pasien', 'unpaidEncounters', 'paymentMethods'));
+        // Ambil juga encounter yang sudah dibayar (riwayat) untuk ditampilkan
+        $paidEncounters = Encounter::with([
+            'tindakan',
+            'resep.details',
+            'labRequests.items',
+            'radiologyRequests'
+        ])
+            ->where('rekam_medis', $pasien->rekam_medis)
+            ->where('status', 2)
+            ->where(function ($query) {
+                $query->where(fn($q) => $q->where('total_bayar_tindakan', '>', 0)->where('status_bayar_tindakan', 1))
+                    ->orWhere(fn($q) => $q->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 1));
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+$paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
+        return view('pages.kasir.show', compact('pasien', 'unpaidEncounters', 'paymentMethods', 'paidEncounters'));
     }
 
     public function processPayment(Request $request, $pasien_id)
@@ -179,6 +196,38 @@ class KasirController extends Controller
                     $encounter->metode_pembayaran_resep = $paymentMethod;
                     $totalPaidAmount += $encounter->total_bayar_resep;
                     $paidItemsInfo[$encounterId]['resep'] = $encounter->total_bayar_resep;
+
+                    // Buat insentif farmasi (obat) saat resep dibayar
+                    try {
+                        $mode = (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_mode')->value('setting_value') ?? 1);
+                        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_value')->value('setting_value') ?? 0);
+                        $target= (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_target_mode')->value('setting_value') ?? 0);
+                        $base = (float)($encounter->total_bayar_resep ?? 0);
+                        if ($base > 0 && $val > 0) {
+                            $amount = $mode === 1 ? ($base * ($val/100.0)) : $val;
+                            $userId = null;
+                            if ($target === 1) {
+                                // Prescriber tidak terekam dengan id user pada model Resep, fallback ke DPJP
+                                $userId = optional(optional($encounter->practitioner()->with('user')->first())->user)->id;
+                            } else {
+                                $userId = optional(optional($encounter->practitioner()->with('user')->first())->user)->id;
+                            }
+                            if ($userId) {
+                                \App\Models\Incentive::create([
+                                    'id' => \Illuminate\Support\Str::uuid(),
+                                    'user_id' => $userId,
+                                    'amount' => $amount,
+                                    'type' => 'fee_obat_rj',
+                                    'description' => 'Fee Obat (RJ/IGD) pasien '.$encounter->name_pasien,
+                                    'year' => now()->year,
+                                    'month' => now()->month,
+                                    'status' => 'pending',
+                                ]);
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        \Illuminate\Support\Facades\Log::warning('Gagal membuat insentif obat RJ: '.$e->getMessage());
+                    }
                 }
 
                 $encounter->save();

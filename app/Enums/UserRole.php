@@ -45,9 +45,12 @@ enum UserRole: int
         };
     }
 
-    public static function fromValue(int $value): ?self
+    public static function fromValue(int|string $value): ?self
     {
-        return match ($value) {
+        // Konversi string ke integer jika perlu
+        $intValue = is_string($value) ? (int) $value : $value;
+        
+        return match ($intValue) {
             1 => self::OWNER,
             2 => self::DOKTER,
             3 => self::PERAWAT,

@@ -43,7 +43,8 @@ class PenggunaRepository
         $users->getCollection()->transform(function ($user) use ($roleMap) {
             $spesialis = Spesialis::where('kode', $user->profile->spesialis ?? null)->first();
             $user->spesialis = $spesialis ? ucwords($spesialis->name) : null;
-            $user->role = $roleMap[$user->role] ?? $user->role;
+            // Jangan ubah nilai role asli, buat atribut baru untuk label
+            $user->role_label = $roleMap[$user->role] ?? $user->role;
             // Ambil license terakhir
             $lic = $user->professionalLicenses->sortByDesc('sip_expiry_date')->first();
             if ($lic) {

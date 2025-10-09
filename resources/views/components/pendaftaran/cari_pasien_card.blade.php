@@ -141,9 +141,9 @@
                 <i class="ri-hotel-bed-fill me-1"></i>
                 Rawat Inap
             </button> --}}
-            <button type="button" class="btn igd btn-danger btn-sm shadow-sm" data-bs-toggle="modal"
+            <button type="button" class="btn rawatDarurat btn-danger btn-sm shadow-sm" data-bs-toggle="modal"
                 data-bs-target="#modal-rawatDarurat" id="{{ $d->id }}">
-                <i class="ri-first-aid-kit-line me-1"></i>
+                <i class="ri-alarm-warning-line me-1"></i>
                 IGD
             </button>
             <button type="button" class="btn edit btn-warning btn-sm shadow-sm" data-bs-toggle="modal"

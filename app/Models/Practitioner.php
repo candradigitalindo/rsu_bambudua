@@ -19,6 +19,6 @@ class Practitioner extends Model
 
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'id_petugas', 'id_petugas');
+        return $this->belongsTo(\App\Models\User::class, 'id_petugas', 'id');
     }
 }

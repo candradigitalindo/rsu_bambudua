@@ -12,9 +12,19 @@
                 <td>{{ $d->rekam_medis }}</td>
             </tr>
             <tr>
+                <td>Waktu</td>
+                <td>:</td>
+                <td>{{ $d->created_at_fmt ?? '-' }}</td>
+            </tr>
+            <tr>
                 <td>
-                    <span class="badge bg-primary-subtle rounded-pill text-primary">
-                        <i class="ri-circle-fill me-1"></i>Status : {{ $d->status }}
+                    @php
+                        $isActive = in_array($d->status, [1, '1', true, 'true'], true);
+                        $statusText = $isActive ? 'Aktif' : 'Non-Aktif';
+                        $badgeClass = $isActive ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
+                    @endphp
+                    <span class="badge {{ $badgeClass }} rounded-pill">
+                        <i class="ri-circle-fill me-1"></i>Status : {{ $statusText }}
                     </span>
                 </td>
             </tr>
@@ -50,11 +60,11 @@
     </td>
     <td>
         <button type="button" class="btn editrawatInap btn-outline-primary btn-sm" data-bs-toggle="modal"
-            data-bs-target="#modal-rawatInap" id="{{ $d->id }}">
+            data-bs-target="#modal-rawatInap" id="{{ $d->id }}" title="Edit pendaftaran Rawat Inap">
             <i class="ri-edit-2-fill"></i>
             Edit
         </button>
-        <button type="button" class="btn destroyEncounterRinap btn-outline-danger btn-sm" id="{{ $d->id }}">
+        <button type="button" class="btn destroyEncounterRinap btn-outline-danger btn-sm" id="{{ $d->id }}" title="Hapus pendaftaran Rawat Inap">
             <i class="ri-delete-bin-5-fill"></i>
             Hapus
         </button>

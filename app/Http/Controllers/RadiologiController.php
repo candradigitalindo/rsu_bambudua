@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 use Illuminate\Http\Request;
 use App\Models\JenisPemeriksaanPenunjang;
 use App\Models\Pasien;
@@ -15,7 +17,15 @@ class RadiologiController extends Controller
 {
     public function dashboard()
     {
-        return view('pages.radiologi.dashboard');
+        $stats = [
+            'today' => \App\Models\RadiologyRequest::whereDate('created_at', now()->toDateString())->count(),
+            'processing' => \App\Models\RadiologyRequest::where('status', 'processing')->count(),
+            'completed'  => \App\Models\RadiologyRequest::where('status', 'completed')->count(),
+            'requested'  => \App\Models\RadiologyRequest::where('status', 'requested')->count(),
+        ];
+        $recent = \App\Models\RadiologyRequest::with(['pasien','jenis','dokter'])
+            ->orderByDesc('created_at')->limit(10)->get();
+        return view('pages.radiologi.dashboard', compact('stats','recent'));
     }
 
     public function requestsIndex()
@@ -125,6 +135,12 @@ class RadiologiController extends Controller
         $req->status = $to;
         $req->save();
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Status permintaan radiologi diperbarui menjadi ' . ucfirst($to) . '.',
+            ]);
+        }
         return back()->with('success', 'Status permintaan radiologi diperbarui menjadi ' . ucfirst($to) . '.');
     }
 
@@ -140,27 +156,34 @@ class RadiologiController extends Controller
 
     public function requestsStore(Request $request)
     {
-        // Validasi input minimal
-        $data = $request->validate([
+        // Validasi dasar: encounter wajib, lainnya fleksibel (agar bisa dipanggil dari Observasi)
+        $request->validate([
             'encounter_id' => 'required|uuid|exists:encounters,id',
-            'dokter_id' => 'required|exists:users,id',
-            'pemeriksaan' => 'required|uuid|exists:jenis_pemeriksaan_penunjangs,id',
             'catatan' => 'nullable|string',
         ]);
 
-        // Ambil harga dari master jenis pemeriksaan
-        $jenisPemeriksaan = \App\Models\JenisPemeriksaanPenunjang::findOrFail($data['pemeriksaan']);
-        $encounter = \App\Models\Encounter::findOrFail($data['encounter_id']);
-        $dokterPerujuk = \App\Models\User::findOrFail($data['dokter_id']);
+        $encounter = \App\Models\Encounter::findOrFail($request->input('encounter_id'));
+        $jenisId = $request->input('pemeriksaan') ?: $request->input('jenis_pemeriksaan_id');
+        if (!$jenisId) {
+            $msg = 'Jenis pemeriksaan radiologi wajib dipilih.';
+            return $request->wantsJson() || $request->ajax()
+                ? response()->json(['status' => false, 'message' => $msg], 422)
+                : back()->withErrors(['pemeriksaan' => $msg]);
+        }
+        $jenisPemeriksaan = \App\Models\JenisPemeriksaanPenunjang::findOrFail($jenisId);
+
+        // Dokter: gunakan input jika ada, atau default dokter yang login
+        $dokterId = $request->input('dokter_id') ?: Auth::id();
+        $dokterPerujuk = \App\Models\User::findOrFail($dokterId);
 
         // Simpan permintaan radiologi
-        \Illuminate\Support\Facades\DB::transaction(function () use ($data, $jenisPemeriksaan, $encounter, $dokterPerujuk) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $jenisPemeriksaan, $encounter, $dokterPerujuk, $dokterId) {
             $req = new \App\Models\RadiologyRequest();
-            $req->encounter_id = $data['encounter_id'];
+            $req->encounter_id = $encounter->id;
             $req->pasien_id = $encounter->pasien->id; // Ambil dari encounter
-            $req->jenis_pemeriksaan_id = $data['pemeriksaan'];
-            $req->dokter_id = $data['dokter_id'];
-            $req->notes = $data['catatan'] ?? null;
+            $req->jenis_pemeriksaan_id = $jenisPemeriksaan->id;
+            $req->dokter_id = $dokterId;
+            $req->notes = $request->input('catatan');
             $req->status = 'requested';
             $req->price = (float) $jenisPemeriksaan->harga;
             $req->created_by = Auth::id();
@@ -168,13 +191,31 @@ class RadiologiController extends Controller
 
             // Buat insentif untuk dokter yang merujuk
             $observasiRepo = new \App\Repositories\ObservasiRepository();
-            $observasiRepo->createPemeriksaanPenunjangIncentive($encounter, $dokterPerujuk, $jenisPemeriksaan->name, (float)$jenisPemeriksaan->harga);
+            $observasiRepo->createPemeriksaanPenunjangIncentive($encounter, $dokterPerujuk, $jenisPemeriksaan->name, (float)$jenisPemeriksaan->harga, 'radiologi');
 
             // Update total tagihan di encounter
             $observasiRepo->updateEncounterTotalTindakan($encounter->id);
         });
 
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'status' => 200,
+                'message' => 'Permintaan Radiologi berhasil dibuat.'
+            ]);
+        }
         return redirect()->route('radiologi.requests.index')->with('success', 'Permintaan radiologi berhasil dibuat dan insentif telah dicatat.');
+    }
+
+    public function print($id)
+    {
+        $req = \App\Models\RadiologyRequest::with(['pasien', 'jenis', 'dokter', 'results' => function ($q) {
+            $q->orderByDesc('created_at');
+        }])->findOrFail($id);
+        $latest = $req->results->first();
+        return view('pages.radiologi.permintaan.print', [
+            'req' => $req,
+            'latest' => $latest,
+        ]);
     }
 
     public function searchPatients(Request $request)

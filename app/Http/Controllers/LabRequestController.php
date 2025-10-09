@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Encounter;
 use App\Models\LabRequest;
 use App\Models\LabRequestItem;
@@ -88,6 +89,18 @@ class LabRequestController extends Controller
             return redirect()->route('lab.requests.show', $id)->with('error','Hasil hanya dapat dicetak jika status Completed.');
         }
         return view('pages.lab.requests.print', compact('req'));
+    }
+
+    // Stream PDF langsung ke browser viewer
+    public function printPdf(string $id)
+    {
+        $req = LabRequest::with(['encounter','items'])->findOrFail($id);
+        if ($req->status !== 'completed') {
+            return redirect()->route('lab.requests.show', $id)->with('error','Hasil hanya dapat dicetak jika status Completed.');
+        }
+        $pdf = Pdf::loadView('pages.lab.requests.print', compact('req'));
+        $filename = 'hasil-lab-' . ($req->encounter->rekam_medis ?? 'pasien') . '.pdf';
+        return $pdf->stream($filename);
     }
 
     public function edit(string $id)

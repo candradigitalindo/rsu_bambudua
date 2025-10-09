@@ -89,16 +89,10 @@
                                         <td><code>{{ $field->field_name }}</code></td>
                                         <td><span class="badge bg-info">{{ $field->field_type }}</span></td>
                                         <td class="text-center">
-                                            {{-- Tombol Edit bisa ditambahkan di sini nanti --}}
-                                            <form
-                                                action="{{ route('jenis-pemeriksaan.fields.destroy', ['field_id' => $field->id]) }}"
-                                                method="POST" class="d-inline" data-confirm-delete="true">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger btn-sm">
-                                                    <i class="bi bi-trash"></i> Hapus
-                                                </button>
-                                            </form>
+                                            <a href="{{ route('jenis-pemeriksaan.fields.destroy', ['field_id' => $field->id]) }}"
+                                               class="btn btn-danger btn-sm" data-confirm-delete="true">
+                                                <i class="bi bi-trash"></i> Hapus
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty

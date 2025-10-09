@@ -105,24 +105,21 @@ class ObservasiRepository
             );
         }
 
-        // [MODIFIED] Handle multiple doctors. Hapus yang lama, sisipkan yang baru.
+        // [MODIFIED] Handle multiple doctors with proper UUID generation. Hapus yang lama, sisipkan yang baru.
         if ($request->has('dokter_ids')) {
             // Hapus semua practitioner yang ada untuk encounter ini
             \App\Models\Practitioner::where('encounter_id', $id)->delete();
 
             $doctorIds = $request->input('dokter_ids', []);
             $dokters = \App\Models\User::whereIn('id', $doctorIds)->get();
-            $practitionersData = [];
             foreach ($dokters as $dokter) {
-                $practitionersData[] = [
-                    'id'           => \Illuminate\Support\Str::uuid(),
+                \App\Models\Practitioner::create([
                     'encounter_id' => $id,
-                    'id_petugas'   => $dokter->id_petugas,
+                    'id_petugas'   => $dokter->id, // Use user.id for consistency
                     'satusehat_id' => $dokter->satusehat_id ?? '',
                     'name'         => $dokter->name,
-                ];
+                ]);
             }
-            \App\Models\Practitioner::insert($practitionersData);
         }
 
         // Ambil data riwayat penyakit terbaru (jika ada)
@@ -158,8 +155,9 @@ class ObservasiRepository
     }
     public function pemeriksaanPenunjang($id)
     {
-        $labRequests = \App\Models\LabRequest::with('items.testType')
+        $labRequests = \App\Models\LabRequest::with('items')
             ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
             ->get()
             ->flatMap(function ($request) {
                 return $request->items->map(function ($item) use ($request) {
@@ -168,27 +166,30 @@ class ObservasiRepository
                         'request_id' => $request->id,
                         'jenis_pemeriksaan' => $item->test_name,
                         'qty' => 1,
-                        'harga' => $item->price,
-                        'total_harga' => $item->price,
+                        'harga' => (int) $item->price,
+                        'total_harga' => (int) $item->price,
                         'status' => $request->status,
                         'type' => 'lab',
+                        'created_at' => optional($request->created_at)->toDateTimeString(),
                     ];
                 });
             });
 
         $radiologyRequests = \App\Models\RadiologyRequest::with('jenis')
             ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
             ->get()
             ->map(function ($request) {
                 return [
                     'id' => $request->id, // Menggunakan ID request radiologi sebagai ID item
                     'request_id' => $request->id,
-                    'jenis_pemeriksaan' => $request->jenis->name,
+                    'jenis_pemeriksaan' => optional($request->jenis)->name,
                     'qty' => 1,
-                    'harga' => $request->price,
-                    'total_harga' => $request->price,
+                    'harga' => (int) $request->price,
+                    'total_harga' => (int) $request->price,
                     'status' => $request->status,
                     'type' => 'radiologi',
+                    'created_at' => optional($request->created_at)->toDateTimeString(),
                 ];
             });
 
@@ -608,6 +609,19 @@ class ObservasiRepository
                 ];
             }
         }
+        // Radiology requests
+        $radiologyRequests = \App\Models\RadiologyRequest::with('jenis')
+            ->where('encounter_id', $id)
+            ->orderByDesc('created_at')
+            ->get();
+        foreach ($radiologyRequests as $rq) {
+            $penunjang[] = [
+                'jenis_pemeriksaan' => optional($rq->jenis)->name,
+                'qty' => 1,
+                'harga' => (int)($rq->price ?? 0),
+                'total_harga' => (int)($rq->price ?? 0),
+            ];
+        }
 
         // Sisipkan pemeriksaan_penunjang sebagai attribute dinamis pada model Encounter
         $encounter->setAttribute('pemeriksaan_penunjang', $penunjang);
@@ -700,13 +714,14 @@ class ObservasiRepository
             ];
         }
 
-        // nominal diskon dari request
+        // nominal diskon dari request (hanya untuk tindakan medis)
         $diskonTindakan = $request->diskon_tindakan;
-        $encounter->diskon_tindakan = $encounter->total_tindakan * ($diskonTindakan / 100);
+        $medisNominal = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
+        $encounter->diskon_tindakan = $medisNominal * ($diskonTindakan / 100);
         $encounter->diskon_persen_tindakan = $diskonTindakan;
 
-        // Jika ingin return total setelah diskon:
-        $totalSetelahDiskon = $encounter->total_tindakan - ($encounter->total_tindakan * ($encounter->diskon_persen_tindakan / 100));
+        // Total bayar tindakan medis saja = medisNominal - diskon
+        $totalSetelahDiskon = $medisNominal - ($medisNominal * ($encounter->diskon_persen_tindakan / 100));
         $encounter->total_bayar_tindakan = $totalSetelahDiskon;
         $encounter->save();
 
@@ -1079,6 +1094,9 @@ class ObservasiRepository
         $inpatientDailyMedication->is_billing = 'Ya'; // Tandai untuk penagihan
         $inpatientDailyMedication->save();
 
+        // Jika diberikan, catat insentif farmasi (opsional, biasanya saat input sudah dibuat)
+        $this->createPharmacyIncentiveForInpatient($inpatientDailyMedication);
+
         return [
             'success' => true,
             'message' => 'Status obat berhasil diperbarui.'
@@ -1123,6 +1141,9 @@ class ObservasiRepository
         $inpatientDailyMedication->authorized_name = \Illuminate\Support\Facades\Auth::user()->name;
         $inpatientDailyMedication->medicine_date = $request->medicine_date ? \Carbon\Carbon::parse($request->medicine_date)->format('Y-m-d') : now()->format('Y-m-d');
         $inpatientDailyMedication->save();
+
+        // Buat insentif obat (farmasi) berdasarkan setting
+        $this->createPharmacyIncentiveForInpatient($inpatientDailyMedication);
 
         return [
             'success' => true,
@@ -1213,16 +1234,26 @@ class ObservasiRepository
      * @param float $hargaPemeriksaan
      * @return void
      */
-    public function createPemeriksaanPenunjangIncentive(\App\Models\Encounter $encounter, \App\Models\User $dokter, string $namaPemeriksaan, float $hargaPemeriksaan): void
+    private function computeFeeAmount(float $base, int $mode, float $value): float
     {
-        $feePercentage = (float) \App\Models\IncentiveSetting::where('setting_key', 'fee_dokter_penunjang')->value('setting_value');
+        if ($base <= 0 || $value <= 0) return 0.0;
+        return $mode === 1 ? ($base * ($value / 100.0)) : $value;
+    }
 
-        if ($feePercentage <= 0 || $hargaPemeriksaan <= 0) {
+    public function createPemeriksaanPenunjangIncentive(\App\Models\Encounter $encounter, \App\Models\User $dokter, string $namaPemeriksaan, float $hargaPemeriksaan, string $tipe = 'lab'): void
+    {
+        $tipe = strtolower($tipe);
+        $modeKey = $tipe === 'radiologi' ? 'fee_radiologi_mode' : 'fee_lab_mode';
+        $valKey  = $tipe === 'radiologi' ? 'fee_radiologi_value' : 'fee_lab_value';
+        $mode = (int) (\App\Models\IncentiveSetting::where('setting_key', $modeKey)->value('setting_value') ?? 1);
+        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', $valKey)->value('setting_value') ?? 0);
+
+        $amount = $this->computeFeeAmount($hargaPemeriksaan, $mode, $val);
+        if ($amount <= 0) {
             return;
         }
 
-        $amount = $hargaPemeriksaan * ($feePercentage / 100);
-        $description = "Fee Penunjang ($namaPemeriksaan) untuk " . $encounter->name_pasien;
+        $description = "Fee Penunjang ($tipe: $namaPemeriksaan) untuk " . $encounter->name_pasien;
 
         \App\Models\Incentive::create([
             'id' => \Illuminate\Support\Str::uuid(),
@@ -1234,5 +1265,43 @@ class ObservasiRepository
             'month' => now()->month,
             'status' => 'pending',
         ]);
+    }
+
+    private function createPharmacyIncentiveForInpatient(\App\Models\InpatientDailyMedication $medication): void
+    {
+        try {
+            $mode = (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_mode')->value('setting_value') ?? 1);
+            $val  = (float)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_value')->value('setting_value') ?? 0);
+            $target= (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_target_mode')->value('setting_value') ?? 0);
+            $base = (float)($medication->total ?? 0);
+            if ($base <= 0 || $val <= 0) return;
+
+            $amount = $this->computeFeeAmount($base, $mode, $val);
+            if ($amount <= 0) return;
+
+            // Tentukan penerima: 0=DPJP (practitioner pertama), 1=prescriber (authorized_by)
+            $encounter = optional($medication->admission)->encounter;
+            $userId = null;
+            if ($target === 1 && $medication->authorized_by) {
+                $userId = $medication->authorized_by;
+            } else if ($encounter) {
+                $pr = $encounter->practitioner()->with('user')->first();
+                $userId = optional(optional($pr)->user)->id;
+            }
+            if (!$userId) return;
+
+            \App\Models\Incentive::create([
+                'id' => \Illuminate\Support\Str::uuid(),
+                'user_id' => $userId,
+                'amount' => $amount,
+                'type' => 'fee_obat_inap',
+                'description' => 'Fee Obat (Inap) pasien ' . (optional($encounter)->name_pasien ?? ''),
+                'year' => now()->year,
+                'month' => now()->month,
+                'status' => 'pending',
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal membuat insentif obat inap: '.$e->getMessage());
+        }
     }
 }

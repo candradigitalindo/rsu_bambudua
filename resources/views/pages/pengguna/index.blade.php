@@ -56,7 +56,7 @@
 
                                             <td>
                                                 <span
-                                                    class="badge border border-primary text-primary">{{ \App\Enums\UserRole::fromValue((int) $u->role)?->label() ?? 'Tidak Diketahui' }}</span>
+                                                    class="badge border border-primary text-primary">{{ \App\Enums\UserRole::fromValue($u->role)?->label() ?? 'Tidak Diketahui' }}</span>
                                             </td>
                                             <td>
                                                 <span

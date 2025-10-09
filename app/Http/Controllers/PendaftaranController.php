@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Concerns\LogsActivity;
 
 use App\Models\User;
+use App\Models\Clinic;
 use App\Repositories\PendaftaranRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -25,8 +26,16 @@ class PendaftaranController extends Controller
         $provinsi  = $this->pendaftaranRepository->provinsi();
         $clinics     = $this->pendaftaranRepository->showClinic();
         $ruangan   = $this->pendaftaranRepository->ruangan();
-        $doctors = User::where('role', 2)->get(); // 2 = dokter
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'doctors'));
+        $jenisjaminan = $this->pendaftaranRepository->jenisjaminan();
+        // Load doctors robustly (role = 2). Fallback: doctors attached to any clinic
+        $doctors = User::where('role', 2)->orderBy('name')->get(['id', 'name']);
+        if ($doctors->isEmpty()) {
+            $doctors = Clinic::with(['users' => function ($q) {
+                $q->where('role', 2);
+            }])
+                ->get()->pluck('users')->flatten()->unique('id')->sortBy('name')->values();
+        }
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'jenisjaminan', 'doctors'));
     }
 
     public function update_antrian()
@@ -39,44 +48,46 @@ class PendaftaranController extends Controller
         }
     }
 
-    public function showRawatJalan()
+    public function showRawatJalan(Request $request)
     {
-        $data = $this->pendaftaranRepository->showRawatJalan();
-        $total_row = $data->count();
+        $data = $this->pendaftaranRepository->showRawatJalan($request);
+        $total_row = method_exists($data, 'total') ? $data->total() : (is_countable($data) ? count($data) : 0);
 
         if ($total_row > 0) {
-            $output = [];
+            $rows = [];
             foreach ($data as $d) {
-                $output[] = view('components.pendaftaran.rawat_jalan_row', compact('d'))->render();
+                $rows[] = view('components.pendaftaran.rawat_jalan_row', compact('d'))->render();
             }
-            $output = implode('', $output);
+            $rows = implode('', $rows);
         } else {
-            $output = '<tr>
+            $rows = '<tr>
                         <td colspan="6" class="text-center">Data tidak ada</td>
                     </tr>';
         }
 
-        return response()->json($output);
+        $pagination = method_exists($data, 'links') ? $data->links()->render() : '';
+        return response()->json(['rows' => $rows, 'pagination' => $pagination]);
     }
     // showRawatDarurat - Handle both AJAX and direct URL requests
     public function showRawatDarurat(Request $request)
     {
         // If this is an AJAX request, return JSON data for table
         if ($request->ajax() || $request->expectsJson()) {
-            $data = $this->pendaftaranRepository->showRawatDarurat();
-            $total_row = $data->count();
+            $data = $this->pendaftaranRepository->showRawatDarurat($request);
+            $total_row = method_exists($data, 'total') ? $data->total() : (is_countable($data) ? count($data) : 0);
             if ($total_row > 0) {
-                $output = [];
+                $rows = [];
                 foreach ($data as $d) {
-                    $output[] = view('components.pendaftaran.rawat_darurat_row', compact('d'))->render();
+                    $rows[] = view('components.pendaftaran.rawat_darurat_row', compact('d'))->render();
                 }
-                $output = implode('', $output);
+                $rows = implode('', $rows);
             } else {
-                $output = '<tr>
+                $rows = '<tr>
                             <td colspan="6" class="text-center">Data tidak ada</td>
                         </tr>';
             }
-            return response()->json($output);
+            $pagination = method_exists($data, 'links') ? $data->links()->render() : '';
+            return response()->json(['rows' => $rows, 'pagination' => $pagination]);
         }
 
         // If this is a direct URL request, show main page with rawat darurat focus
@@ -89,31 +100,39 @@ class PendaftaranController extends Controller
         $provinsi  = $this->pendaftaranRepository->provinsi();
         $clinics     = $this->pendaftaranRepository->showClinic();
         $ruangan   = $this->pendaftaranRepository->ruangan();
-        $doctors = User::where('role', 2)->get(); // 2 = dokter
+        $jenisjaminan = $this->pendaftaranRepository->jenisjaminan();
+        $doctors = User::where('role', 2)->orderBy('name')->get(['id', 'name']);
+        if ($doctors->isEmpty()) {
+            $doctors = Clinic::with(['users' => function ($q) {
+                $q->where('role', 2);
+            }])
+                ->get()->pluck('users')->flatten()->unique('id')->sortBy('name')->values();
+        }
 
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'doctors', 'transferToRoom'));
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'jenisjaminan', 'doctors', 'transferToRoom'));
     }
     // showRawatInap - Handle both AJAX and direct URL requests
     public function showRawatInap(Request $request)
     {
         // If this is an AJAX request, return JSON data for table
         if ($request->ajax() || $request->expectsJson()) {
-            $data = $this->pendaftaranRepository->showRawatInap();
-            $total_row = $data->count();
+            $data = $this->pendaftaranRepository->showRawatInap($request);
+            $total_row = method_exists($data, 'total') ? $data->total() : (is_countable($data) ? count($data) : 0);
 
             if ($total_row > 0) {
-                $output = [];
+                $rows = [];
                 foreach ($data as $d) {
-                    $output[] = view('components.pendaftaran.rawat_inap_row', compact('d'))->render();
+                    $rows[] = view('components.pendaftaran.rawat_inap_row', compact('d'))->render();
                 }
-                $output = implode('', $output);
+                $rows = implode('', $rows);
             } else {
-                $output = '<tr>
+                $rows = '<tr>
                             <td colspan="6" class="text-center">Data tidak ada</td>
                         </tr>';
             }
 
-            return response()->json($output);
+            $pagination = method_exists($data, 'links') ? $data->links()->render() : '';
+            return response()->json(['rows' => $rows, 'pagination' => $pagination]);
         }
 
         // If this is a direct URL request (e.g., from nurse dashboard), redirect to main page
@@ -126,9 +145,16 @@ class PendaftaranController extends Controller
         $provinsi  = $this->pendaftaranRepository->provinsi();
         $clinics     = $this->pendaftaranRepository->showClinic();
         $ruangan   = $this->pendaftaranRepository->ruangan();
-        $doctors = User::where('role', 2)->get(); // 2 = dokter
+        $jenisjaminan = $this->pendaftaranRepository->jenisjaminan();
+        $doctors = User::where('role', 2)->orderBy('name')->get(['id', 'name']);
+        if ($doctors->isEmpty()) {
+            $doctors = Clinic::with(['users' => function ($q) {
+                $q->where('role', 2);
+            }])
+                ->get()->pluck('users')->flatten()->unique('id')->sortBy('name')->values();
+        }
 
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'doctors', 'selectedRoom'));
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'jenisjaminan', 'doctors', 'selectedRoom'));
     }
 
     public function editEncounterRajal($id)
@@ -318,6 +344,13 @@ class PendaftaranController extends Controller
 
         if ($validator->passes()) {
             $encounter = $this->pendaftaranRepository->postRawatDarurat($request, $id);
+            $this->activity('Mendaftarkan Rawat Darurat (IGD)', [
+                'encounter_id' => $encounter->id ?? null,
+                'pasien' => $encounter->name_pasien ?? null,
+                'dokter' => $request->input('dokter'),
+                'tingkat_kegawatan' => $request->input('tingkat_kegawatan'),
+                'keluhan_utama' => $request->input('keluhan_utama')
+            ], 'pendaftaran');
             return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Darurat Pasien ' . $encounter->name_pasien . ' berhasil'], 200);
         }
 
@@ -344,6 +377,13 @@ class PendaftaranController extends Controller
 
         if ($validator->passes()) {
             $encounter = $this->pendaftaranRepository->updateRawatDarurat($request, $id);
+            $this->activity('Mengubah Pendaftaran Rawat Darurat (IGD)', [
+                'encounter_id' => $encounter->id ?? null,
+                'pasien' => $encounter->name_pasien ?? null,
+                'dokter' => $request->input('dokter'),
+                'tingkat_kegawatan' => $request->input('tingkat_kegawatan'),
+                'keluhan_utama' => $request->input('keluhan_utama')
+            ], 'pendaftaran');
             return response()->json(['status' => true, 'text' => 'Pendaftaran Rawat Darurat Pasien ' . $encounter->name_pasien . ' berhasil diubah'], 200);
         }
 
@@ -397,16 +437,221 @@ class PendaftaranController extends Controller
         $dokters = $clinic->users->map(function ($user) {
             return [
                 'id' => $user->id,
-                'name' => $user->name
+                'name' => $user->name,
             ];
         });
 
         return response()->json($dokters);
     }
+
+    // Fallback endpoint to fetch all doctors for IGD modal
+    public function getAllDoctors()
+    {
+        $doctors = User::where('role', 2)->orderBy('name')->get(['id','name']);
+        if ($doctors->isEmpty()) {
+            $doctors = Clinic::with(['users' => function ($q) { $q->where('role', 2); }])
+                ->get()->pluck('users')->flatten()->unique('id')->sortBy('name')->values();
+        }
+        return response()->json($doctors->map(function($u){
+            return ['id' => $u->id, 'name' => $u->name];
+        }));
+    }
+
     // destroyEncounterRinap
     public function destroyRawatInap($id)
     {
         $result = $this->pendaftaranRepository->destroyEncounterRinap($id);
         return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
+    }
+
+    // EXPORTS CSV
+    public function exportRawatJalan(Request $request)
+    {
+        $q = $request->q;
+        $orderBy = in_array($request->order_by ?? '', ['created_at', 'no_encounter', 'name_pasien']) ? $request->order_by : 'created_at';
+        $orderDir = in_array(strtolower($request->order_dir ?? ''), ['asc', 'desc']) ? strtolower($request->order_dir) : 'desc';
+
+        $rows = \App\Models\Encounter::with(['practitioner', 'clinic'])
+            ->where('type', 1)
+            ->where(function ($query) {
+                $query->where('status', 1)
+                    ->orWhere(function ($query) {
+                        $query->where('status', 2)->whereDate('updated_at', now()->toDateString());
+                    });
+            })
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('no_encounter', 'like', "%{$q}%")
+                        ->orWhere('rekam_medis', 'like', "%{$q}%")
+                        ->orWhere('name_pasien', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy($orderBy, $orderDir)
+            ->get();
+
+        $filename = 'rawat_jalan_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        return response()->stream(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['No Kunjungan', 'No RM', 'Nama', 'Dokter', 'Klinik', 'Jaminan', 'Tujuan', 'Waktu', 'Status']);
+            foreach ($rows as $e) {
+                $dokter = optional($e->practitioner->first())->name ?: '-';
+                $klinik = optional($e->clinic)->nama ?: '-';
+                $jaminan = $e->jenis_jaminan == 1 ? 'Umum' : 'Lainnya';
+                $tujuan = match ($e->tujuan_kunjungan) {
+                    1 => 'Kunjungan Sehat',
+                    2 => 'Rehabilitatif',
+                    3 => 'Kunjungan Sakit',
+                    4 => 'Darurat',
+                    5 => 'Kontrol',
+                    6 => 'Treatment',
+                    7 => 'Konsultasi',
+                    default => '-',
+                };
+                $status = $e->status == 1 ? 'Aktif' : 'Non-Aktif';
+                fputcsv($out, [
+                    $e->no_encounter,
+                    $e->rekam_medis,
+                    $e->name_pasien,
+                    $dokter,
+                    $klinik,
+                    $jaminan,
+                    $tujuan,
+                    optional($e->created_at)->format('d M Y H:i'),
+                    $status
+                ]);
+            }
+            fclose($out);
+        }, 200, $headers);
+    }
+
+    public function exportRawatDarurat(Request $request)
+    {
+        $q = $request->q;
+        $orderBy = in_array($request->order_by ?? '', ['created_at', 'no_encounter', 'name_pasien']) ? $request->order_by : 'updated_at';
+        $orderDir = in_array(strtolower($request->order_dir ?? ''), ['asc', 'desc']) ? strtolower($request->order_dir) : 'asc';
+
+        $rows = \App\Models\Encounter::with(['practitioner'])
+            ->where('type', 3)
+            ->where(function ($query) {
+                $query->where('status', 1)
+                    ->orWhere(function ($query) {
+                        $query->where('status', 2)->whereDate('updated_at', now()->toDateString());
+                    });
+            })
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('no_encounter', 'like', "%{$q}%")
+                        ->orWhere('rekam_medis', 'like', "%{$q}%")
+                        ->orWhere('name_pasien', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy($orderBy, $orderDir)
+            ->get();
+
+        $filename = 'igd_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        return response()->stream(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['No Kunjungan', 'No RM', 'Nama', 'Dokter', 'Jaminan', 'Tujuan', 'Waktu', 'Status']);
+            foreach ($rows as $e) {
+                $dokter = optional($e->practitioner->first())->name ?: '-';
+                $jaminan = $e->jenis_jaminan == 1 ? 'Umum' : 'Lainnya';
+                $tujuan = match ($e->tujuan_kunjungan) {
+                    1 => 'Kunjungan Sehat',
+                    2 => 'Rehabilitatif',
+                    3 => 'Kunjungan Sakit',
+                    4 => 'Darurat',
+                    5 => 'Kontrol',
+                    6 => 'Treatment',
+                    7 => 'Konsultasi',
+                    default => '-'
+                };
+                $status = $e->status == 1 ? 'Aktif' : 'Non-Aktif';
+                fputcsv($out, [
+                    $e->no_encounter,
+                    $e->rekam_medis,
+                    $e->name_pasien,
+                    $dokter,
+                    $jaminan,
+                    $tujuan,
+                    optional($e->created_at)->format('d M Y H:i'),
+                    $status
+                ]);
+            }
+            fclose($out);
+        }, 200, $headers);
+    }
+
+    public function exportRawatInap(Request $request)
+    {
+        $q = $request->q;
+        $orderBy = in_array($request->order_by ?? '', ['created_at', 'no_encounter', 'name_pasien']) ? $request->order_by : 'updated_at';
+        $orderDir = in_array(strtolower($request->order_dir ?? ''), ['asc', 'desc']) ? strtolower($request->order_dir) : 'desc';
+
+        $rows = \App\Models\Encounter::with(['admission'])
+            ->where('type', 2)
+            ->where(function ($query) {
+                $query->where('status', 1)
+                    ->orWhere(function ($query) {
+                        $query->where('status', 2)->whereDate('updated_at', now()->toDateString());
+                    });
+            })
+            ->when($q, function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('no_encounter', 'like', "%{$q}%")
+                        ->orWhere('rekam_medis', 'like', "%{$q}%")
+                        ->orWhere('name_pasien', 'like', "%{$q}%");
+                });
+            })
+            ->orderBy($orderBy, $orderDir)
+            ->get();
+
+        $filename = 'rawat_inap_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        return response()->stream(function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['No Kunjungan', 'No RM', 'Nama', 'Dokter', 'No Kamar', 'Jaminan', 'Tujuan', 'Waktu', 'Status']);
+            foreach ($rows as $e) {
+                $dokter = $e->admission->nama_dokter ?? '-';
+                $noKamar = optional(optional($e->admission)->room)->no_kamar ?? '-';
+                $jaminan = $e->jenis_jaminan == 1 ? 'Umum' : 'Lainnya';
+                $tujuan = match ($e->tujuan_kunjungan) {
+                    1 => 'Kunjungan Sehat',
+                    2 => 'Rehabilitatif',
+                    3 => 'Kunjungan Sakit',
+                    4 => 'Darurat',
+                    5 => 'Kontrol',
+                    6 => 'Treatment',
+                    7 => 'Konsultasi',
+                    default => '-'
+                };
+                $status = $e->status == 1 ? 'Aktif' : 'Non-Aktif';
+                fputcsv($out, [
+                    $e->no_encounter,
+                    $e->rekam_medis,
+                    $e->name_pasien,
+                    $dokter,
+                    $noKamar,
+                    $jaminan,
+                    $tujuan,
+                    optional($e->created_at)->format('d M Y H:i'),
+                    $status
+                ]);
+            }
+            fclose($out);
+        }, 200, $headers);
     }
 }

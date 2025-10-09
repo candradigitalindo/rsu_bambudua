@@ -50,15 +50,16 @@
                         </div>
                     </div>
                 </div>
+                <button type="submit" class="btn btn-primary" id="btn-pemeriksaan">
+                    <span class="btn-txt" id="text-pemeriksaan">Simpan Permintaan</span>
+                    <span class="spinner-border spinner-border-sm d-none" id="spinner-pemeriksaan"></span>
+                </button>
             </div>
         </div>
     </div>
     <div class="col-xxl-6 col-sm-12">
         <div class="card mb-3">
-            <button type="submit" class="btn btn-primary" id="btn-pemeriksaan">
-                <span class="btn-txt" id="text-pemeriksaan">Simpan Permintaan</span>
-                <span class="spinner-border spinner-border-sm d-none" id="spinner-pemeriksaan"></span>
-            </button>
+
             <div class="card-header">
                 <h5 class="card-title">Data Pemeriksaan Penunjang</h5>
                 <hr class="mb-2">
@@ -172,6 +173,20 @@
     </div>
 </div>
 
+<!-- [RAD] Hasil Radiologi -->
+<div class="row gx-3 mt-3">
+    <div class="col-xxl-12 col-sm-12">
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Hasil Radiologi</h5>
+            </div>
+            <div class="card-body">
+                <div id="radiology-requests-container"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
     <script>
         (function() {
@@ -217,10 +232,10 @@
                             const canDelete = (item.status === 'requested' || item.status === 'canceled');
                             const canPrint = item.status === 'completed';
                             const printUrl = item.type === 'lab' ?
-                                `/laboratorium/requests/${item.request_id}/print` :
-                                `/radiologi/permintaan/${item.request_id}`; // Link to show page for radiology
+                                `/laboratorium/requests/${item.request_id}/print?auto=1` :
+                                `/radiologi/permintaan/${item.request_id}/print?auto=1`;
                             const printBtn = canPrint ?
-                                `<a class="btn btn-sm btn-success" href="${printUrl}" target="_blank"><i class="ri-printer-line"></i> Cetak/Lihat</a>` :
+                                `<a class="btn btn-sm btn-success" href="${printUrl}" target="_blank"><i class="ri-printer-line"></i> Cetak</a>` :
                                 '';
                             const deleteBtn = canDelete ?
                                 `<button class="btn btn-sm btn-danger btn-hapus-pemeriksaan" data-id="${item.id}" data-type="${item.type}"><i class="ri-delete-bin-6-line"></i> Hapus</button>` :
@@ -246,6 +261,7 @@
                 $(document).on('click', '#tab-pemeriksaan-penunjang', function() {
                     loadPenunjangList();
                     loadLabRequests();
+                    loadRadiologyRequests();
                 });
 
                 $(document).on('click', '#btn-pemeriksaan', function() {
@@ -291,6 +307,7 @@
                             });
                             loadPenunjangList();
                             loadLabRequests(); // Refresh lab results too
+                            loadRadiologyRequests();
                             $(selectId).val('').trigger('change');
                         })
                         .fail(function() {
@@ -311,7 +328,7 @@
                                 if (!rows || rows.length === 0) {
                                     $container.html(
                                         '<div class="text-muted">Belum ada permintaan/hasil laboratorium untuk encounter ini.</div>'
-                                        );
+                                    );
                                     return;
                                 }
                                 let html = '';
@@ -324,7 +341,7 @@
                               <span class="badge bg-secondary ms-2">${(lr.status||'').charAt(0).toUpperCase()+ (lr.status||'').slice(1)}</span>
                             </div>
                             <div class="d-flex gap-2">
-                              ${(lr.status === 'completed') ? `<a href="/laboratorium/requests/${lr.id}/print" target="_blank" class="btn btn-sm btn-success">Cetak Hasil</a>` : ''}
+                              ${(lr.status === 'completed') ? `<a href="/laboratorium/requests/${lr.id}/print?auto=1" target="_blank" class="btn btn-sm btn-success">Cetak Hasil</a>` : ''}
                             </div>
                           </div>
                           <div class="table-responsive">
@@ -368,62 +385,226 @@
                                             /div>`;
                                 }
                                 return `
+                                              <tr>
+                                                <td><div class="fw-semibold">${it.test_name || ''}</div></td>
+                                                <td>${hasilHtml}${it.result_notes ? `<div class="mt-1"><small class="text-muted">Catatan:</small> ${it.result_notes}</div>` : ''}</td>
+                                                <td class="text-end">${formatRupiah(it.price)}</td>
+                                              </tr>`;
+                            }).join('')
+                    } <
+                    /tbody> < /
+                    table > <
+                    /div> < /
+                    div > `;
+                    }); $container.html(html);
+            });
+            }
+
+            $(document).on('click', '.btn-hapus-pemeriksaan', function() {
+            const id = $(this).data('id');
+            const type = $(this).data('type');
+            const deleteUrl = (type === 'lab') ?
+                "{{ route('observasi.deletePemeriksaanPenunjang', ':id') }}".replace(':id', id) :
+                ` / radiologi / permintaan / $ {
+                        id
+                    }
+                `; // Assuming DELETE method for radiology
+            swal({
+                title: "Apakah Anda yakin?",
+                text: "Data ini akan dihapus!",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    $.ajax({
+                        url: deleteUrl,
+                        type: 'DELETE',
+                        data: {
+                            _token: '{{ csrf_token() }}'
+                        }
+                    }).done(function(resp) {
+                        if (resp && (resp.success || resp.status)) {
+                            swal(resp.message || 'Data telah dihapus', {
+                                icon: 'success'
+                            });
+                            // Re-render tabel penunjang dan hasil lab secara realtime
+                            loadPenunjangList();
+                            loadLabRequests();
+                        } else {
+                            swal(resp.message || 'Gagal menghapus data.', {
+                                icon: 'error'
+                            });
+                        }
+                    }).fail(function() {
+                        swal('Terjadi kesalahan saat menghapus data.', {
+                            icon: 'error'
+                        });
+                    });
+                }
+            });
+            });
+
+            // Override with clean renderer and fixed delete handler
+            function loadLabRequests() {
+                const url = "{{ route('observasi.labRequests', ':id') }}".replace(':id', ENCOUNTER_ID);
+                $.get(url).done(function(rows) {
+                    const $container = $('#lab-requests-container');
+                    if (!rows || rows.length === 0) {
+                        $container.html('<div class="text-muted">Belum ada permintaan/hasil laboratorium untuk encounter ini.</div>');
+                        return;
+                    }
+                    let html = '';
+                    rows.forEach(function(lr) {
+                        html += `
+                            <div class="mb-3 border rounded p-2">
+                              <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                  <strong>${lr.created_at || ''}</strong>
+                                  <span class="badge bg-secondary ms-2">${(lr.status||'').charAt(0).toUpperCase()+ (lr.status||'').slice(1)}</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                  ${(lr.status === 'completed') ? `<a href="/laboratorium/requests/${lr.id}/print" target="_blank" class="btn btn-sm btn-success">Cetak Hasil</a>` : ''}
+                                </div>
+                              </div>
+                              <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                  <thead>
+                                    <tr>
+                                      <th style="width:25%">Pemeriksaan</th>
+                                      <th>Hasil</th>
+                                      <th class="text-end" style="width:10%">Harga</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    ${(lr.items||[]).map(function(it){
+                                        const hasilPayload = (it.result_payload && typeof it.result_payload === 'object' && Object.keys(it.result_payload).length>0);
+                                        let hasilHtml = '';
+                                        if (hasilPayload){
+                                            hasilHtml = '<dl class="row mb-0">' + Object.keys(it.result_payload).map(function(k){
+                                                const label = k.replace(/_/g,' ');
+                                                const v = it.result_payload[k];
+                                                return `<dt class="col-sm-4 text-muted small">${label.charAt(0).toUpperCase()+label.slice(1)}</dt><dd class="col-sm-8">${v??''}</dd>`;
+                                            }).join('') + '</dl>';
+                                        } else {
+                                            hasilHtml = `
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <div><small class="text-muted">Nilai</small></div>
+                                                        <div>${it.result_value ?? '-'}</div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div><small class="text-muted">Satuan</small></div>
+                                                        <div>${it.result_unit ?? '-'}</div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div><small class="text-muted">Rujukan</small></div>
+                                                        <div>${it.result_reference ?? '-'}</div>
+                                                    </div>
+                                                </div>`;
+                                        }
+                                        return `
                                           <tr>
                                             <td><div class="fw-semibold">${it.test_name || ''}</div></td>
                                             <td>${hasilHtml}${it.result_notes ? `<div class="mt-1"><small class="text-muted">Catatan:</small> ${it.result_notes}</div>` : ''}</td>
                                             <td class="text-end">${formatRupiah(it.price)}</td>
                                           </tr>`;
-                            }).join('')
-                    } <
-                    /tbody> <
-                    /table> <
-                    /div> <
-                    /div>`;
-                }); $container.html(html);
-        });
-        }
-
-        $(document).on('click', '.btn-hapus-pemeriksaan', function() {
-        const id = $(this).data('id');
-        const type = $(this).data('type');
-        const deleteUrl = (type === 'lab') ?
-            "{{ route('observasi.deletePemeriksaanPenunjang', ':id') }}".replace(':id', id) :
-            `/radiologi/permintaan/${id}`; // Assuming DELETE method for radiology
-        swal({
-            title: "Apakah Anda yakin?",
-            text: "Data ini akan dihapus!",
-            icon: "warning",
-            buttons: true,
-            dangerMode: true,
-        }).then((willDelete) => {
-            if (willDelete) {
-                $.ajax({
-                    url: deleteUrl,
-                    type: 'DELETE',
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    }
-                }).done(function(resp) {
-                    if (resp && (resp.success || resp.status)) {
-                        swal(resp.message || 'Data telah dihapus', {
-                            icon: 'success'
-                        });
-                        // Re-render tabel penunjang dan hasil lab secara realtime
-                        loadPenunjangList();
-                        loadLabRequests();
-                    } else {
-                        swal(resp.message || 'Gagal menghapus data.', {
-                            icon: 'error'
-                        });
-                    }
-                }).fail(function() {
-                    swal('Terjadi kesalahan saat menghapus data.', {
-                        icon: 'error'
+                                    }).join('')}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>`;
                     });
+                    $container.html(html);
                 });
             }
-        });
-        });
-        })();
+
+            // Load Radiology requests into its own section
+            function loadRadiologyRequests() {
+                const url = "{{ route('observasi.radiologyRequests', ':id') }}".replace(':id', ENCOUNTER_ID);
+                $.get(url).done(function(rows) {
+                    const $container = $('#radiology-requests-container');
+                    if (!rows || rows.length === 0) {
+                        $container.html('<div class="text-muted">Belum ada permintaan/hasil radiologi untuk encounter ini.</div>');
+                        return;
+                    }
+                    let html = '';
+                    rows.forEach(function(r) {
+                        html += `
+                        <div class="mb-3 border rounded p-2">
+                          <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div>
+                              <strong>${r.created_at || ''}</strong>
+                              <span class="badge bg-secondary ms-2">${(r.status||'').charAt(0).toUpperCase()+ (r.status||'').slice(1)}</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                              ${(r.status === 'completed') ? `<a href="/radiologi/permintaan/${r.id}/print" target="_blank" class="btn btn-sm btn-success">Cetak Hasil</a>` : ''}
+                            </div>
+                          </div>
+                          <div>
+                            <div class="fw-semibold mb-1">${r.jenis_name || ''}</div>
+                            ${r.latest ? `<div class="small"><div><span class="text-muted">Findings:</span> ${r.latest.findings}</div><div><span class="text-muted">Impression:</span> ${r.latest.impression}</div></div>` : '<div class="text-muted small">Belum ada hasil.</div>'}
+                          </div>
+                        </div>`;
+                    });
+                    $container.html(html);
+                });
+            }
+
+            // Rebind delete handler with radiology cancellation support
+            $(document).off('click', '.btn-hapus-pemeriksaan');
+            $(document).on('click', '.btn-hapus-pemeriksaan', function() {
+                const id = $(this).data('id');
+                const type = $(this).data('type');
+                let deleteUrl, method, payload;
+                if (type === 'radiologi') {
+                    deleteUrl = "{{ route('observasi.radiologi.destroy', ':id') }}".replace(':id', id);
+                    method = 'DELETE';
+                    payload = { _token: '{{ csrf_token() }}' };
+                } else {
+                    deleteUrl = "{{ route('observasi.deletePemeriksaanPenunjang', ':id') }}".replace(':id', id);
+                    method = 'DELETE';
+                    payload = { _token: '{{ csrf_token() }}' };
+                }
+                swal({
+                    title: "Apakah Anda yakin?",
+                    text: "Data ini akan dihapus!",
+                    icon: "warning",
+                    buttons: true,
+                    dangerMode: true,
+                }).then((willDelete) => {
+                    if (willDelete) {
+                        $.ajax({
+                            url: deleteUrl,
+                            type: method,
+                            data: payload,
+                            dataType: 'json',
+                            headers: { 'Accept': 'application/json' }
+                        })
+                            .done(function(resp){
+                                if (resp && (resp.success === true || resp.status === true)) {
+                                    swal((resp && resp.message) ? resp.message : 'Data telah dihapus', { icon: 'success' });
+                                    loadPenunjangList();
+                                    loadLabRequests();
+                                    loadRadiologyRequests();
+                                } else {
+                                    swal((resp && resp.message) ? resp.message : 'Gagal menghapus data.', { icon: 'error' });
+                                }
+                            })
+                            .fail(function(xhr){
+                                let msg = 'Terjadi kesalahan saat menghapus data.';
+                                if (xhr && xhr.responseJSON && xhr.responseJSON.message) { msg = xhr.responseJSON.message; }
+                                swal(msg, { icon: 'error' });
+                            });
+                    }
+                });
+            });
+
+            // Initial load on page open
+            loadPenunjangList();
+            loadLabRequests();
+            loadRadiologyRequests();
+
+            })();
     </script>
 @endpush

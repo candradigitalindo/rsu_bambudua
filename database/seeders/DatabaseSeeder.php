@@ -83,5 +83,18 @@ class DatabaseSeeder extends Seeder
 
         // Incentive Setting Seeder
         $this->call(IncentiveSettingSeeder::class);
+
+        // Master Data Seeders
+        $this->call([
+            WilayahSeeder::class,
+            JenisJaminanSeeder::class,
+            PendidikanSeeder::class,
+            PekerjaanSeeder::class,
+            SpesialisSeeder::class,
+            CategoryRuanganSeeder::class,
+            RuanganSeeder::class,
+            ClinicSeeder::class,
+            DoctorSeeder::class,
+        ]);
     }
 }

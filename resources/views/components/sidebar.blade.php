@@ -173,7 +173,7 @@
                                 href="{{ route('icd10.index') }}">Data ICD10</a>
                         </li>
                         <li>
-                            <a class="{{ request()->is('masterdata/discounts*') ? 'active-sub' : '' }}"
+                            <a class="{{ request()->is('masterdata/discount*') ? 'active-sub' : '' }}"
                                 href="{{ route('discounts.index') }}">Data Diskon</a>
                         </li>
                         <li>

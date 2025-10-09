@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('vital_signs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('admission_id')->constrained('inpatient_admissions')->onDelete('cascade');
-            $table->foreignUuid('recorded_by_id')->constrained('users')->onDelete('restrict');
+            $table->unsignedBigInteger('recorded_by_id'); // Explicitly define as unsigned big integer
+            $table->foreign('recorded_by_id')->references('id')->on('users')->onDelete('restrict');
             $table->timestamp('measurement_time');
             $table->integer('blood_pressure_systolic')->nullable();
             $table->integer('blood_pressure_diastolic')->nullable();

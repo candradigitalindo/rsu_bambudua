@@ -70,6 +70,9 @@ class DatabaseSeeder extends Seeder
 
         // Payment Method Seeder
         $this->call(PaymentMethodSeeder::class);
+        
+        // Unit Seeder
+        $this->call(UnitSeeder::class);
 
         // Product Apotek Seeder
         $products = [

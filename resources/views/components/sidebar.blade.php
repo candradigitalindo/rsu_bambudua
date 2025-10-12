@@ -180,6 +180,10 @@
                             <a class="{{ request()->is('masterdata/clinics*') ? 'active-sub' : '' }}"
                                 href="{{ route('clinics.index') }}">Data Poliklinik</a>
                         </li>
+                        <li>
+                            <a class="{{ request()->is('masterdata/units*') ? 'active-sub' : '' }}"
+                                href="{{ route('units.index') }}">Data Satuan</a>
+                        </li>
 
                     </ul>
                 </li>

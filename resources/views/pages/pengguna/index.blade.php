@@ -111,7 +111,8 @@
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-sm"
-                                                        data-confirm-delete="true">Hapus</button>
+                                                        data-confirm-delete="true"
+                                                        onclick="return confirm('Apakah Anda yakin ingin menghapus pengguna {{ $u->name }}?')">Hapus</button>
                                                 </form>
 
                                             </td>

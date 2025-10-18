@@ -22,10 +22,6 @@ class PenggunaController extends Controller
     public function index()
     {
         $users = $this->penggunaRepository->index();
-
-        $title = 'Delete Data!';
-        $text = "Apakah yakin hapus data Pengguna ?";
-        confirmDelete($title, $text);
         return view('pages.pengguna.index', compact('users'));
     }
 
@@ -49,7 +45,7 @@ class PenggunaController extends Controller
             'username'  => 'required|string|unique:users',
             'role'      => 'required|string',
             'password'  => 'required|min:8',
-'spesialis' => 'required|string',
+            'spesialis' => 'required|string',
             'sip_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'str_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ], [
@@ -99,7 +95,7 @@ class PenggunaController extends Controller
             'username'  => 'required|string|unique:users,username,' . $id,
             'role'      => 'required|string',
             'password'  => 'nullable|min:8',
-'spesialis' => 'required|string',
+            'spesialis' => 'required|string',
             'sip_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'str_file'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
         ], [
@@ -125,9 +121,8 @@ class PenggunaController extends Controller
      */
     public function destroy(string $id)
     {
-        $this->penggunaRepository->destroy($id);
-        Alert::info('Berhasil', 'Data Pengguna
-         dihapus!');
+        $user = $this->penggunaRepository->destroy($id);
+        Alert::info('Berhasil', 'Data Pengguna ' . $user->name . ' berhasil dihapus!');
         return back();
     }
 
@@ -192,7 +187,7 @@ class PenggunaController extends Controller
         }
 
         $logs = $query->paginate(20)->withQueryString();
-        $users = User::orderBy('name')->get(['id','name']);
+        $users = User::orderBy('name')->get(['id', 'name']);
 
         return view('pages.pengguna.activity', compact('logs', 'users'));
     }

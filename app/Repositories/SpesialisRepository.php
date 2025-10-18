@@ -22,12 +22,19 @@ class SpesialisRepository
 
     public function store($request)
     {
-        if (ucfirst($request->name) == "Owner") {
-            $kode = 1;
-        }else {
-            $cek       = Spesialis::max('kode');
-            $kode      = $cek == 0 ? 2 : $cek + 1;
+        // Ambil 3 huruf pertama dari nama dan ubah menjadi uppercase
+        $baseKode = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $request->name), 0, 3));
+
+        // Cek apakah kode sudah ada
+        $counter = 0;
+        $kode = $baseKode;
+        while (Spesialis::where('kode', $kode)->exists()) {
+            $counter++;
+            // Jika 'PEN' sudah ada, coba 'PE1', 'PE2', dst.
+            $nextKode = substr($baseKode, 0, 2) . $counter;
+            $kode = $nextKode;
         }
+
         $spesialis = Spesialis::create([
             'name' => ucfirst($request->name),
             'kode' => $kode

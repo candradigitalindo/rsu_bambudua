@@ -4,8 +4,8 @@
 @endsection
 @push('style')
     <!-- *************
-                          ************ Vendor Css Files *************
-                         ************ -->
+                                      ************ Vendor Css Files *************
+                                     ************ -->
 
     <!-- Scrollbar CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
@@ -39,17 +39,7 @@
                                     <p class="m-0">Pendapatan</p>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-end justify-content-between mt-1">
-                                <a class="text-primary" href="javascript:void(0);">
-                                    <span>View All</span>
-                                    <i class="ri-arrow-right-line text-primary ms-1"></i>
-                                </a>
-                                <div class="text-end">
-                                    <p class="mb-0 text-primary">+40%</p>
-                                    <span class="badge bg-primary-light text-primary small">this
-                                        month</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -67,17 +57,7 @@
                                     <p class="m-0">Pengeluaran Operasional</p>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-end justify-content-between mt-1">
-                                <a class="text-primary" href="javascript:void(0);">
-                                    <span>View All</span>
-                                    <i class="ri-arrow-right-line ms-1"></i>
-                                </a>
-                                <div class="text-end">
-                                    <p class="mb-0 text-primary">+30%</p>
-                                    <span class="badge bg-primary-light text-primary small">this
-                                        month</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -95,17 +75,7 @@
                                     <p class="m-0">Gaji & Isentif</p>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-end justify-content-between mt-1">
-                                <a class="text-primary" href="javascript:void(0);">
-                                    <span>View All</span>
-                                    <i class="ri-arrow-right-line ms-1"></i>
-                                </a>
-                                <div class="text-end">
-                                    <p class="mb-0 text-primary">+30%</p>
-                                    <span class="badge bg-primary-light text-primary small">this
-                                        month</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -123,17 +93,7 @@
                                     <p class="m-0">Laba Rugi</p>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-end justify-content-between mt-1">
-                                <a class="text-primary" href="{{ route('operasional.index') }}">
-                                    <span>View All</span>
-                                    <i class="ri-arrow-right-line ms-1"></i>
-                                </a>
-                                <div class="text-end">
-                                    <p class="mb-0 text-primary">+20%</p>
-                                    <span class="badge bg-primary-light text-primary small">this
-                                        month</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -150,7 +110,11 @@
         <div class="col-lg-8 col-12">
             <div class="card mb-3">
                 <div class="card-header pb-0">
-                    <h5 class="card-title">Grafik Tahun {{ date('Y') }}</h5>
+                    @if (auth()->user()->role == \App\Enums\UserRole::OWNER->value)
+                        <h5 class="card-title">Grafik Keuangan Tahunan</h5>
+                    @else
+                        <h5 class="card-title">Grafik Keuangan (3 Bulan Terakhir)</h5>
+                    @endif
                 </div>
                 <div class="card-body pt-0">
                     <div id="grafikTahunan"></div>
@@ -189,8 +153,8 @@
 @endsection
 @push('scripts')
     <!-- *************
-                           ************ Vendor Js Files *************
-                          ************* -->
+                                       ************ Vendor Js Files *************
+                                      ************* -->
 
     <!-- Overlay Scroll JS -->
     <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>

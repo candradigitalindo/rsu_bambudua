@@ -13,8 +13,18 @@ class ReagentTransaction extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = [ 'reagent_id', 'type', 'qty', 'notes', 'lab_request_item_id' ];
+    protected $fillable = ['reagent_id', 'user_id', 'type', 'qty', 'notes', 'lab_request_item_id', 'expiry_date'];
 
-    public function reagent(): BelongsTo { return $this->belongsTo(Reagent::class); }
-    public function labItem(): BelongsTo { return $this->belongsTo(LabRequestItem::class, 'lab_request_item_id'); }
+    public function reagent(): BelongsTo
+    {
+        return $this->belongsTo(Reagent::class);
+    }
+    public function labItem(): BelongsTo
+    {
+        return $this->belongsTo(LabRequestItem::class, 'lab_request_item_id');
+    }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

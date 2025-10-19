@@ -105,18 +105,18 @@
                         <div class="d-flex flex-wrap gap-2">
                             <div>
                                 <label for="start_date" class="form-label mb-0">Start Date</label>
-                                <input type="date" name="start_date" id="start_date"
-                                    value="{{ request('start_date') }}" class="form-control form-control-sm">
+                                <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
+                                    class="form-control form-control-sm">
                             </div>
                             <div>
                                 <label for="end_date" class="form-label mb-0">End Date</label>
-                                <input type="date" name="end_date" id="end_date"
-                                    value="{{ request('end_date') }}" class="form-control form-control-sm">
+                                <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}"
+                                    class="form-control form-control-sm">
                             </div>
                             <div class="align-self-end">
                                 <button type="submit" class="btn btn-sm btn-primary" id="btnFilter">
-                                    <span id="spinnerFilter" class="spinner-border spinner-border-sm d-none"
-                                        role="status" aria-hidden="true"></span>
+                                    <span id="spinnerFilter" class="spinner-border spinner-border-sm d-none" role="status"
+                                        aria-hidden="true"></span>
                                     <span id="textFilter">Filter</span>
                                 </button>
                             </div>
@@ -176,7 +176,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center">Data tidak ada</td>
+                                            <td colspan="9" class="text-center">Data tidak ada</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -202,16 +202,30 @@
     <script>
         // Grafik Nominal Transaksi
         const ctxNominal = document.getElementById('grafikNominalTransaksi').getContext('2d');
-        const dataNominal = @json(array_values($data['nominal_transaksi_per_bulan']));
-        const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const rawData = @json($data['nominal_transaksi_per_bulan']);
+        const isOwner = {{ auth()->user()->role == 1 ? 'true' : 'false' }};
+
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const monthCount = isOwner ? 12 : 3;
+        const labels = [];
+        const chartData = [];
+
+        for (let i = monthCount - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            labels.push(monthNames[month - 1]);
+            chartData.push(rawData[`${year}-${month}`] || 0);
+        }
 
         new Chart(ctxNominal, {
             type: 'bar',
             data: {
-                labels: bulan,
+                labels: labels,
                 datasets: [{
                     label: 'Total Pendapatan Obat (Rp)',
-                    data: dataNominal,
+                    data: chartData,
                     backgroundColor: 'rgba(54, 162, 235, 0.7)',
                     borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1,

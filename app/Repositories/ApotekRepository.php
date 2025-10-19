@@ -23,48 +23,52 @@ class ApotekRepository
             SUM(CASE WHEN stok = 0 THEN 1 ELSE 0 END) as habis
         ")->first();
 
-        // Obat Kadaluarsa (status 0 = stok aktif)
+        // Obat Kadaluarsa (status 0 = stok aktif, bukan terpakai)
         $obatKadaluarsa = \App\Models\ApotekStok::where('expired_at', '<=', now())
             ->where('status', 0)
             ->count();
 
-        // Statistik transaksi encounter per bulan (resep sudah terbayar) dalam 1 tahun
-        $year = date('Y');
-        $transaksiPerBulan = \App\Models\Encounter::selectRaw('MONTH(updated_at) as bulan, COUNT(*) as total')
-            ->whereYear('updated_at', $year)
+        // Tentukan rentang waktu berdasarkan role
+        $userRole = auth()->user()->role;
+        $isOwner = ($userRole == 1);
+        $defaultStartDate = $isOwner ? now()->subYear()->startOfDay() : now()->subMonths(3)->startOfDay();
+
+        // Statistik transaksi encounter per bulan (resep sudah terbayar)
+        $transaksiPerBulan = \App\Models\Encounter::selectRaw('YEAR(updated_at) as tahun, MONTH(updated_at) as bulan, COUNT(*) as total')
+            ->where('updated_at', '>=', $defaultStartDate)
             ->where('status_bayar_resep', 1)
-            ->groupBy('bulan')
-            ->orderBy('bulan')
-            ->pluck('total', 'bulan')
+            ->groupBy('tahun', 'bulan')
+            ->orderBy('tahun', 'asc')->orderBy('bulan', 'asc')
+            ->get()
+            ->keyBy(fn($item) => $item->tahun . '-' . $item->bulan)
+            ->map(fn($item) => $item->total)
             ->toArray();
 
-        $dataBulan = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $dataBulan[$i] = $transaksiPerBulan[$i] ?? 0;
-        }
-
-        // Statistik nominal encounter per bulan (resep sudah terbayar) dalam 1 tahun
-        $nominalResep = \App\Models\Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
-            ->whereYear('updated_at', $year)
+        // Statistik nominal encounter per bulan (resep sudah terbayar)
+        $nominalResep = \App\Models\Encounter::selectRaw('YEAR(updated_at) as tahun, MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
+            ->where('updated_at', '>=', $defaultStartDate)
             ->where('status_bayar_resep', 1)
-            ->groupBy('bulan')
-            ->pluck('total', 'bulan')
+            ->groupBy('tahun', 'bulan')
+            ->get()
+            ->keyBy(fn($item) => $item->tahun . '-' . $item->bulan)
+            ->map(fn($item) => $item->total)
             ->toArray();
 
-        // Statistik nominal dari InpatientBilling (Obat) per bulan dalam 1 tahun
-        $nominalInap = \App\Models\InpatientBilling::selectRaw('MONTH(paid_at) as bulan, SUM(amount) as total')
-            ->whereYear('paid_at', $year)
+        // Statistik nominal dari InpatientBilling (Obat) per bulan
+        $nominalInap = \App\Models\InpatientBilling::selectRaw('YEAR(paid_at) as tahun, MONTH(paid_at) as bulan, SUM(amount) as total')
+            ->where('paid_at', '>=', $defaultStartDate)
             ->where('billing_type', 'Obat')
-            ->groupBy('bulan')
-            ->pluck('total', 'bulan')
+            ->groupBy('tahun', 'bulan')
+            ->get()
+            ->keyBy(fn($item) => $item->tahun . '-' . $item->bulan)
+            ->map(fn($item) => $item->total)
             ->toArray();
 
         // Gabungkan kedua nominal
         $dataNominalBulan = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $totalResep = $nominalResep[$i] ?? 0;
-            $totalInap = $nominalInap[$i] ?? 0;
-            $dataNominalBulan[$i] = $totalResep + $totalInap;
+        $allKeys = array_unique(array_merge(array_keys($nominalResep), array_keys($nominalInap)));
+        foreach ($allKeys as $key) {
+            $dataNominalBulan[$key] = ($nominalResep[$key] ?? 0) + ($nominalInap[$key] ?? 0);
         }
 
         // Encounter resep terbayar (paginate 50, filter tanggal, warning jika > 1 tahun)
@@ -81,8 +85,8 @@ class ApotekRepository
             'obat_tersedia' => $stokSummary->tersedia ?? 0,
             'obat_habis' => $stokSummary->habis ?? 0,
             'obat_kadaluarsa' => $obatKadaluarsa,
-            'transaksi_per_bulan' => $dataBulan,
-            'nominal_transaksi_per_bulan' => $dataNominalBulan,
+            'transaksi_per_bulan' => $transaksiPerBulan, // Kirim data mentah
+            'nominal_transaksi_per_bulan' => $dataNominalBulan, // Kirim data mentah
             'encounter_terbayar' => $paginatedData,
             'warning' => $warning,
         ];
@@ -101,13 +105,16 @@ class ApotekRepository
     public function getPaidPrescriptionQuery($start, $end)
     {
         $warning = null;
-        $startDate = null;
-        $endDate = null;
+        $userRole = auth()->user()->role;
+        $isOwner = ($userRole == 1);
 
         if ($start && $end) {
             $startDate = \Carbon\Carbon::parse($start)->startOfDay();
             $endDate = \Carbon\Carbon::parse($end)->endOfDay();
-            if ($startDate->diffInDays($endDate) > 366) {
+            if (!$isOwner && $startDate->diffInMonths($endDate) > 3) {
+                $warning = 'Rentang tanggal maksimal 3 bulan!';
+                $endDate = $startDate->copy()->addMonths(3);
+            } elseif ($isOwner && $startDate->diffInDays($endDate) > 366) {
                 $warning = 'Rentang tanggal maksimal 1 tahun!';
                 $endDate = $startDate->copy()->addYear();
             }

@@ -34,7 +34,8 @@ enum UserRole: int
     public function dashboardRoute(): string
     {
         return match ($this) {
-            self::OWNER, self::ADMIN => 'home',
+            self::OWNER => 'home',
+            self::ADMIN => 'admin.dashboard',
             self::DOKTER, self::PERAWAT => 'dokter.index',
             self::PENDAFTARAN => 'loket.dashboard',
             self::KEUANGAN => 'keuangan.index',
@@ -42,26 +43,6 @@ enum UserRole: int
             self::LABORATORIUM => 'lab.dashboard',
             self::RADIOLOGI => 'radiologi.dashboard',
             self::KASIR => 'kasir.index',
-        };
-    }
-
-    public static function fromValue(int|string $value): ?self
-    {
-        // Konversi string ke integer jika perlu
-        $intValue = is_string($value) ? (int) $value : $value;
-        
-        return match ($intValue) {
-            1 => self::OWNER,
-            2 => self::DOKTER,
-            3 => self::PERAWAT,
-            4 => self::ADMIN,
-            5 => self::PENDAFTARAN,
-            6 => self::KEUANGAN,
-            7 => self::APOTEK,
-            8 => self::LABORATORIUM,
-            9 => self::RADIOLOGI,
-            10 => self::KASIR,
-            default => null,
         };
     }
 }

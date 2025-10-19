@@ -32,14 +32,10 @@ class HomeController extends Controller
     }
     public function index()
     {
-        $userRole = UserRole::fromValue(Auth::user()->role);
+        $userRole = UserRole::from(Auth::user()->role);
 
-        // Jika role adalah ADMIN, langsung redirect ke dashboard admin
-        if ($userRole == UserRole::ADMIN) {
-            return redirect()->route('admin.dashboard');
-        }
-        // Redirect role lain (selain Owner) ke dashboard masing-masing
-        if ($userRole != UserRole::OWNER) {
+        // Redirect all roles except OWNER to their respective dashboards.
+        if ($userRole !== UserRole::OWNER) {
             return redirect()->route($userRole->dashboardRoute());
         }
 

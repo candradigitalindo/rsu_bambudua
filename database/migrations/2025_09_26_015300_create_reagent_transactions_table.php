@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('reagent_transactions', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('reagent_id');
-            $table->enum('type', ['in','out']);
+            $table->enum('type', ['in', 'out']); // Initial types
             $table->integer('qty');
             $table->uuid('lab_request_item_id')->nullable();
             $table->text('notes')->nullable();

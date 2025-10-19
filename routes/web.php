@@ -4,6 +4,7 @@ use App\Http\Controllers\AgamaController;
 use App\Http\Controllers\KasirController;
 use App\Http\Controllers\AntrianController;
 use App\Http\Controllers\ApotekController;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\SpecialistConsultationController;
 use App\Http\Controllers\NursingCareController;
 use App\Http\Controllers\BahanController;
@@ -72,6 +73,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     Route::get('/home/realtime-data', [HomeController::class, 'getRealTimeData'])->name('owner.realtime-data');
     Route::get('/home/{id}/profile', [HomeController::class, 'getProfile'])->name('home.profile');
+    // Admin Dashboard Route
+    Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
     Route::post('/home/{id}/profile', [HomeController::class, 'updateProfile'])->name('home.profile.update');
     Route::get('/public/profile/{filename}', [StorageController::class, 'profile'])->name('home.profile.filename');
 
@@ -415,8 +419,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('requests/{id}/print', [LabRequestController::class, 'print'])->name('requests.print');
         Route::get('requests/{id}/print-pdf', [LabRequestController::class, 'printPdf'])->name('requests.print.pdf');
         // Reagents
-        Route::resource('reagents', LabReagentController::class)->only(['index', 'create', 'store', 'edit', 'update']);
-        Route::post('reagents/{id}/stock', [LabReagentController::class, 'stock'])->name('reagents.stock');
+        Route::resource('reagents', LabReagentController::class)->except(['show', 'destroy']);
+        Route::get('reagents/history', [LabReagentController::class, 'history'])->name('reagents.history');
+        Route::get('reagents/{reagent}/stock', [LabReagentController::class, 'showStockForm'])->name('reagents.stock.form');
+        Route::post('reagents/{reagent}/stock', [LabReagentController::class, 'storeStock'])->name('reagents.stock.store');
     });
 
     Route::prefix('medical-records')->as('medical-records.')->group(function () {
@@ -494,7 +500,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Route untuk Berita
     Route::resource('berita', BeritaController::class);
-    
+
     // Development Testing Routes (REMOVE IN PRODUCTION)
     if (config('app.debug')) {
         Route::get('/test-components', function () {

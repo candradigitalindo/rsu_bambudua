@@ -13,9 +13,17 @@ class Reagent extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = [ 'name', 'unit', 'stock', 'warning_stock' ];
+    protected $fillable = ['name', 'unit', 'stock', 'warning_stock'];
 
-    protected $casts = [ 'stock' => 'integer', 'warning_stock' => 'integer' ];
+    protected $casts = ['stock' => 'integer', 'warning_stock' => 'integer'];
 
-    public function transactions(): HasMany { return $this->hasMany(ReagentTransaction::class); }
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(ReagentTransaction::class);
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(ReagentBatch::class);
+    }
 }

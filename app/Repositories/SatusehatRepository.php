@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Satusehat;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SatusehatRepository
 {
@@ -46,6 +47,12 @@ class SatusehatRepository
     public function accesstoken()
     {
         $satusehat = Satusehat::first();
+
+        if (!$satusehat) {
+            Log::error('SatusehatRepository: Konfigurasi Satu Sehat tidak ditemukan di database');
+            return false;
+        }
+
         switch ($satusehat->status) {
             case '1':
                 $payload = ['client_id' => $satusehat->client_id, 'client_secret' => $satusehat->client_secret];
@@ -57,7 +64,7 @@ class SatusehatRepository
                 ];
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
-                curl_setopt($ch, CURLOPT_URL, env("URL_SANDBOX"). "/oauth2/v1/accesstoken?grant_type=client_credentials");
+                curl_setopt($ch, CURLOPT_URL, env("URL_SANDBOX") . "/oauth2/v1/accesstoken?grant_type=client_credentials");
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($payload));
@@ -90,7 +97,7 @@ class SatusehatRepository
                 ];
                 $ch = curl_init();
                 curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
-                curl_setopt($ch, CURLOPT_URL, env("URL_PRODUCTION"). "/oauth2/v1/accesstoken?grant_type=client_credentials");
+                curl_setopt($ch, CURLOPT_URL, env("URL_PRODUCTION") . "/oauth2/v1/accesstoken?grant_type=client_credentials");
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
                 curl_setopt($ch, CURLOPT_POST, 1);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($payload));

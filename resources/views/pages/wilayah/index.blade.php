@@ -22,7 +22,7 @@
 
             <!-- Row starts -->
             <div class="row gx-3">
-                <div class="col-sm-3 col-12">
+                <div class="col-sm-4 col-12">
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
@@ -40,7 +40,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-3 col-12">
+                <div class="col-sm-4 col-12">
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
@@ -58,7 +58,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-3 col-12">
+                <div class="col-sm-4 col-12">
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
@@ -76,24 +76,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-3 col-12">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="p-2 border border-primary rounded-circle me-3">
-                                    <div class="icon-box md bg-primary-lighten rounded-5">
-                                        <i class="ri-map-pin-range-line fs-4 text-primary"></i>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-column">
-                                    <h1 class="lh-1">{{ formatPrice($wilayah['desa']) }}</h1>
-                                    <p class="m-0">Desa / Kelurahan</p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- Row ends -->
             <div class="card mb-3">
@@ -102,9 +84,10 @@
                 </div>
                 <div class="card-body">
                     <div class="card-info rounded-1 small lh-1">
-                        <a href="{{ route('wilayah.saveProvince') }}" class="btn btn-outline-primary btn-sm" id="provinsi">
-                            <span class="btn-text" id="text-provinsi">Tambah Data Provinsi</span>
-                            <span class="spinner-border spinner-border-sm d-none" id="spiner-provinsi"></span>
+                        <a href="{{ route('wilayah.saveProvince') }}" class="btn btn-outline-primary btn-sm btn-sync"
+                            data-type="provinsi">
+                            <span class="btn-text">Tambah Data Provinsi</span>
+                            <span class="spinner-border spinner-border-sm d-none ms-1"></span>
                             <i class="ri-download-cloud-line text-primary ms-1"></i>
                         </a>
                     </div>
@@ -116,7 +99,6 @@
                                         <th rowspan="2">Nama Provinsi</th>
                                         <th colspan="2">Kabupaten / Kota</th>
                                         <th colspan="2">Kecamatan</th>
-                                        <th colspan="2">Desa / Kelurahan</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -130,43 +112,27 @@
                                             </td>
                                             <td class="ms-2 text-center">
                                                 <a href="{{ route('wilayah.saveCity', $provinsi->code) }}"
-                                                    class="btn btn-outline-primary btn-sm" id="kota">
-                                                    <span class="btn-text" id="text-kota">Update
-                                                        Data Kota</span>
-                                                    <span class="spinner-border spinner-border-sm d-none"
-                                                        id="spiner-kota"></span>
+                                                    class="btn btn-outline-primary btn-sm btn-sync" data-type="kota">
+                                                    <span class="btn-text">Update Data Kota</span>
+                                                    <span class="spinner-border spinner-border-sm d-none ms-1"></span>
                                                     <i class="ri-download-cloud-line text-primary ms-1"></i>
                                                 </a>
-
                                             </td>
                                             <td class="text-center">
                                                 {{ formatPrice($provinsi->kecamatan) }}
                                             </td>
                                             <td class="ms-2 text-center">
                                                 <a href="{{ route('wilayah.saveDistrict', $provinsi->code) }}"
-                                                    class="btn btn-outline-primary btn-sm" id="kota">
-                                                    <span class="btn-text" id="text-kota">Update Data Kecamatan</span>
-                                                    <span class="spinner-border spinner-border-sm d-none"
-                                                        id="spiner-kota"></span>
-                                                    <i class="ri-download-cloud-line text-primary ms-1"></i>
-                                                </a>
-                                            </td>
-                                            <td class="text-center">
-                                                {{ formatPrice($provinsi->desa) }}
-                                            </td>
-                                            <td class="ms-2 text-center">
-                                                <a href="{{ route('wilayah.saveDesa', $provinsi->code) }}"
-                                                    class="btn btn-outline-primary btn-sm" id="kota">
-                                                    <span class="btn-text" id="text-kota">Update Data Desa</span>
-                                                    <span class="spinner-border spinner-border-sm d-none"
-                                                        id="spiner-kota"></span>
+                                                    class="btn btn-outline-primary btn-sm btn-sync" data-type="kecamatan">
+                                                    <span class="btn-text">Update Data Kecamatan</span>
+                                                    <span class="spinner-border spinner-border-sm d-none ms-1"></span>
                                                     <i class="ri-download-cloud-line text-primary ms-1"></i>
                                                 </a>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center">Data tidak ada</td>
+                                            <td colspan="5" class="text-center">Data tidak ada</td>
                                         </tr>
                                     @endforelse
 
@@ -189,33 +155,57 @@
     <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         $(document).ready(function() {
+            // Handle click pada semua button sync
+            $('.btn-sync').click(function(e) {
+                const $btn = $(this);
+                const type = $btn.data('type');
+                const $spinner = $btn.find('.spinner-border');
+                const $text = $btn.find('.btn-text');
+                const $icon = $btn.find('i');
+                const originalText = $text.text();
 
-            // $("#kota").click(function() {
-            //     $("#spiner-kota").removeClass("d-none");
-            //     $("#provinsi").addClass("disabled", true);
-            //     $("#kota").addClass("disabled", true);
-            //     $("#kecamatan").addClass("disabled", true);
-            //     $("#desa").addClass("disabled", true);
-            //     $("#text-kota").text("Mohon Tunggu ...");
-            // });
+                // Tampilkan loading
+                $spinner.removeClass('d-none');
+                $icon.addClass('d-none');
+                $text.text('Mohon Tunggu...');
 
-            // $("#kecamatan").click(function() {
-            //     $("#spiner-kecamatan").removeClass("d-none");
-            //     $("#provinsi").addClass("disabled", true);
-            //     $("#kota").addClass("disabled", true);
-            //     $("#kecamatan").addClass("disabled", true);
-            //     $("#desa").addClass("disabled", true);
-            //     $("#text-kecamatan").text("Mohon Tunggu ...");
-            // });
+                // Disable semua button sync
+                $('.btn-sync').each(function() {
+                    $(this).addClass('disabled');
+                    $(this).css('pointer-events', 'none');
+                    $(this).css('opacity', '0.6');
+                });
 
-            // $("#desa").click(function() {
-            //     $("#spiner-desa").removeClass("d-none");
-            //     $("#provinsi").addClass("disabled", true);
-            //     $("#kota").addClass("disabled", true);
-            //     $("#kecamatan").addClass("disabled", true);
-            //     $("#desa").addClass("disabled", true);
-            //     $("#text-desa").text("Mohon Tunggu ...");
-            // });
+                // Tampilkan notifikasi
+                let message = '';
+                switch (type) {
+                    case 'provinsi':
+                        message = 'Sedang mengambil data provinsi dari Satu Sehat...';
+                        break;
+                    case 'kota':
+                        message = 'Sedang mengambil data kota/kabupaten dari Satu Sehat...';
+                        break;
+                    case 'kecamatan':
+                        message = 'Sedang mengambil data kecamatan dari Satu Sehat...';
+                        break;
+                }
+
+                // Tampilkan toast notification
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Proses Sinkronisasi',
+                        html: message +
+                            '<br><small class="text-muted">Proses ini memerlukan waktu beberapa saat, mohon jangan tutup halaman ini.</small>',
+                        icon: 'info',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                }
+            });
         });
     </script>
 @endpush

@@ -37,7 +37,7 @@ class WilayahController extends Controller
 
         if ($province == true) {
             Alert::success('Berhasil', 'Data Provinsi sudah di Update!');
-        }else {
+        } else {
             Alert::error('Error', 'Data Provinsi Gagal Terupdate, silahkan coba secara berkala atau hubungi Developer');
         }
 
@@ -49,7 +49,7 @@ class WilayahController extends Controller
         $kota = $this->wilayahRepository->saveKota($kode);
         if ($kota == true) {
             Alert::success('Berhasil', 'Data Kota sudah di Update!');
-        }else {
+        } else {
             Alert::error('Error', 'Data Kota Gagal Terupdate, silahkan coba secara berkala atau hubungi Developer');
         }
 
@@ -61,20 +61,8 @@ class WilayahController extends Controller
         $kecamatan = $this->wilayahRepository->saveKecamatan($code);
         if ($kecamatan == true) {
             Alert::success('Berhasil', 'Data Kecamatan sudah di Update!');
-        }else {
+        } else {
             Alert::error('Error', 'Data Kecamatan Gagal Terupdate, silahkan coba secara berkala atau hubungi Developer');
-        }
-
-        return redirect()->route('wilayah.index');
-    }
-
-    public function saveDesa($code)
-    {
-        $desa = $this->wilayahRepository->saveDesa($code);
-        if ($desa == true) {
-            Alert::success('Berhasil', 'Data Desa / Kelurahan sudah di Update!');
-        }else {
-            Alert::error('Error', 'Data Desa / Kelurahan Gagal Terupdate, silahkan coba secara berkala atau hubungi Developer');
         }
 
         return redirect()->route('wilayah.index');

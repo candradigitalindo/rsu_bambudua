@@ -8,50 +8,124 @@ use App\Models\Province;
 use App\Models\Satusehat;
 use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Promise\Promise;
 
 
 class WilayahRepository
 {
+    private $satusehatRepository;
+
     /**
      * Create a new class instance.
      */
     public function __construct(SatusehatRepository $satusehatRepository)
     {
-        // $satusehat = Satusehat::first();
-        // if ($satusehat->expired_in <= date('Y-m-d H:i:s')) {
-        //     return $satusehatRepository->accesstoken();
-        // }
+        $this->satusehatRepository = $satusehatRepository;
     }
 
     /**
-     * Fungsi untuk menyimpan / update data Wialayah
+     * Helper method untuk request ke Satu Sehat API dengan error handling
+     */
+    private function satusehatRequest($endpoint, $params = [])
+    {
+        try {
+            $satusehat = Satusehat::first();
+
+            if (!$satusehat) {
+                Log::warning('WilayahRepository: Konfigurasi Satu Sehat tidak tersedia');
+                return null;
+            }
+
+            // Auto refresh token jika expired atau tidak ada
+            if (!$satusehat->access_token || $satusehat->expired_in <= date('Y-m-d H:i:s')) {
+                Log::info('WilayahRepository: Token expired, melakukan refresh...');
+                $this->satusehatRepository->accesstoken();
+                $satusehat = Satusehat::first(); // Reload data setelah refresh
+
+                if (!$satusehat || !$satusehat->access_token) {
+                    Log::error('WilayahRepository: Gagal refresh token Satu Sehat');
+                    return null;
+                }
+            }
+
+            $baseUrl = $satusehat->status == 1 ? env("URL_SANDBOX") : env("URL_PRODUCTION");
+            $url = $baseUrl . $endpoint;
+
+            $response = Http::timeout(30)
+                ->retry(2, 1000)
+                ->withHeaders(['Authorization' => 'Bearer ' . $satusehat->access_token])
+                ->get($url, $params);
+
+            if (!$response->successful()) {
+                Log::error("WilayahRepository: API request gagal - {$endpoint}", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return null;
+            }
+
+            $data = $response->json();
+
+            if (!isset($data['data']) || $data['data'] === null) {
+                Log::warning("WilayahRepository: Tidak ada data dari API - {$endpoint}", [
+                    'message' => $data['message'] ?? 'Unknown',
+                    'params' => $params
+                ]);
+                return null;
+            }
+
+            return $data['data'];
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error("WilayahRepository: Koneksi timeout - {$endpoint}", [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        } catch (\Throwable $th) {
+            Log::error("WilayahRepository: Error tidak terduga - {$endpoint}", [
+                'error' => $th->getMessage()
+            ]);
+            return null;
+        }
+    }
+
+    /**
+     * Fungsi untuk menyimpan / update data Wilayah
      */
 
     public function saveProvince()
     {
         ini_set('max_execution_time', 10000);
-        $satusehat = Satusehat::first();
-        $url       = $satusehat->status == 1 ? env("URL_SANDBOX") . "/masterdata/v1/provinces" : env("URL_PRODUCTION") . "/masterdata/v1/provinces";
+
         try {
-            $reqProvinsi = Http::withHeaders([
-                'Authorization'     => 'Bearer ' . $satusehat->access_token
-            ])->get($url);
-            $resProvinsi = json_decode($reqProvinsi, true)['data'];
-            foreach ($resProvinsi as $provinsi) {
-                $cekProvinsi = Province::where('code', $provinsi['code'])->first();
-                if (!$cekProvinsi) {
-                    Province::create([
-                        'code'          => $provinsi['code'],
-                        'parent_code'   => $provinsi['parent_code'],
-                        'bps_code'      => $provinsi['bps_code'],
-                        'name'          => $provinsi['name']
-                    ]);
-                }
+            $resProvinsi = $this->satusehatRequest("/masterdata/v1/provinces");
+
+            if ($resProvinsi === null) {
+                return false;
             }
+
+            // Hapus semua data provinsi lama beserta relasi city dan district
+            Log::info('WilayahRepository: Menghapus semua data wilayah lama...');
+            District::truncate();
+            City::truncate();
+            Province::truncate();
+
+            // Insert data provinsi baru dari Satu Sehat
+            foreach ($resProvinsi as $provinsi) {
+                Province::create([
+                    'code'        => $provinsi['code'],
+                    'parent_code' => $provinsi['parent_code'],
+                    'bps_code'    => $provinsi['bps_code'],
+                    'name'        => $provinsi['name']
+                ]);
+            }
+
+            Log::info('WilayahRepository: Berhasil sync ' . count($resProvinsi) . ' provinsi');
             return true;
         } catch (\Throwable $th) {
-            //throw $th;
+            Log::error('WilayahRepository: Error saat sync provinsi', [
+                'error' => $th->getMessage()
+            ]);
             return false;
         }
     }
@@ -59,30 +133,48 @@ class WilayahRepository
     public function saveKota($code)
     {
         ini_set('max_execution_time', 10000);
-        $satusehat = Satusehat::first();
-        $url       = $satusehat->status == 1 ? env("URL_SANDBOX") . "/masterdata/v1/cities?province_codes" : env("URL_PRODUCTION") . "/masterdata/v1/cities?province_codes";
+
         try {
             $province = Province::where('code', $code)->first();
 
-                $reqCity = Http::withHeaders([
-                    'Authorization'     => 'Bearer ' . $satusehat->access_token
-                ])->get($url, ['province_codes' => $province->code]);
-                $resCities = json_decode($reqCity, true)['data'];
-                foreach ($resCities as $city) {
-                    $cekCity = City::where('code', $city['code'])->first();
-                    if (!$cekCity) {
-                        City::create([
-                            'code'          => $city['code'],
-                            'parent_code'   => $city['parent_code'],
-                            'bps_code'      => $city['bps_code'],
-                            'name'          => $city['name']
-                        ]);
-                    }
-                }
+            if (!$province) {
+                Log::warning("WilayahRepository: Provinsi tidak ditemukan - {$code}");
+                return false;
+            }
 
+            $resCities = $this->satusehatRequest("/masterdata/v1/cities", [
+                'province_codes' => $province->bps_code
+            ]);
+
+            if ($resCities === null) {
+                return false;
+            }
+
+            // Hapus semua kota/kabupaten di provinsi ini beserta district
+            Log::info("WilayahRepository: Menghapus data kota lama di provinsi {$province->name}...");
+
+            // Hapus district di provinsi ini
+            District::where('province_code', $code)->delete();
+            // Hapus city di provinsi ini
+            City::where('parent_code', $code)->delete();
+
+            // Insert data kota baru dari Satu Sehat
+            foreach ($resCities as $city) {
+                City::create([
+                    'code'        => $city['code'],
+                    'parent_code' => $city['parent_code'],
+                    'bps_code'    => $city['bps_code'],
+                    'name'        => $city['name']
+                ]);
+            }
+
+            Log::info("WilayahRepository: Berhasil sync " . count($resCities) . " kota/kabupaten untuk provinsi {$province->name}");
             return true;
         } catch (\Throwable $th) {
-            //throw $th;
+            Log::error('WilayahRepository: Error saat sync kota', [
+                'error' => $th->getMessage(),
+                'code' => $code
+            ]);
             return false;
         }
     }
@@ -90,87 +182,119 @@ class WilayahRepository
     public function saveKecamatan($code)
     {
         ini_set('max_execution_time', 20000);
-        $satusehat = Satusehat::first();
-        $url       = $satusehat->status == 1 ? env("URL_SANDBOX") . "/masterdata/v1/districts?city_codes" : env("URL_PRODUCTION") . "/masterdata/v1/districts?city_codes";
+
         try {
             $kotas = City::where('parent_code', $code)->get();
+
+            if ($kotas->isEmpty()) {
+                Log::warning("WilayahRepository: Tidak ada kota untuk provinsi - {$code}");
+                return false;
+            }
+
+            // Hapus semua kecamatan di provinsi ini
+            Log::info("WilayahRepository: Menghapus data kecamatan lama di provinsi {$code}...");
+            District::where('province_code', $code)->delete();
+
+            $totalSynced = 0;
+
             foreach ($kotas as $kota) {
-                $reqDistrict = Http::withHeaders([
-                    'Authorization'     => 'Bearer ' . $satusehat->access_token
-                ])->get($url, ['city_codes' => $kota->code]);
-                $resDistrict = json_decode($reqDistrict, true);
-                if ($resDistrict['data']) {
-                    foreach ($resDistrict['data'] as $district) {
-                        $cekDistrict = District::where('code', $district['code'])->first();
-                        if (!$cekDistrict) {
-                            District::create([
-                                'province_code' => $code,
-                                'code'          => $district['code'],
-                                'parent_code'   => $district['parent_code'],
-                                'bps_code'      => $district['bps_code'],
-                                'name'          => $district['name']
-                            ]);
-                        }
-                    }
+                $resDistricts = $this->satusehatRequest("/masterdata/v1/districts", [
+                    'city_codes' => $kota->bps_code
+                ]);
+
+                if ($resDistricts === null) {
+                    continue; // Skip jika request gagal
+                }
+
+                foreach ($resDistricts as $district) {
+                    District::create([
+                        'code'          => $district['code'],
+                        'province_code' => $code,
+                        'parent_code'   => $district['parent_code'],
+                        'bps_code'      => $district['bps_code'],
+                        'name'          => $district['name']
+                    ]);
+                    $totalSynced++;
                 }
             }
+
+            Log::info("WilayahRepository: Berhasil sync {$totalSynced} kecamatan");
             return true;
         } catch (\Throwable $th) {
-            //throw $th;
+            Log::error('WilayahRepository: Error saat sync kecamatan', [
+                'error' => $th->getMessage(),
+                'code' => $code
+            ]);
             return false;
         }
     }
 
-    public function saveDesa($code)
-    {
-        ini_set('max_execution_time', 20000);
-        $satusehat = Satusehat::first();
-        $url       = $satusehat->status == 1 ? env("URL_SANDBOX") . "/masterdata/v1/sub-districts?district_codes" : env("URL_PRODUCTION") . "/masterdata/v1/sub-districts?district_codes";
-        try {
-            $kecamatans = District::where('province_code', $code)->get();
-            foreach ($kecamatans as $kecamatan) {
-                $reqDesa = Http::withHeaders([
-                    'Authorization'     => 'Bearer ' . $satusehat->access_token
-                ])->get($url, ['district_codes' => $kecamatan->code]);
-                $resDesa = json_decode($reqDesa, true);
-                if ($resDesa['data']) {
-                    foreach ($resDesa['data'] as $desa) {
-                        $cekDesa = Subdistrict::where('code', $desa['code'])->first();
-                        if (!$cekDesa) {
-                            Subdistrict::create([
-                                'province_code' => $code,
-                                'code'          => $desa['code'],
-                                'parent_code'   => $desa['parent_code'],
-                                'bps_code'      => $desa['bps_code'],
-                                'name'          => $desa['name']
-                            ]);
-                        }
-                    }
-                }
-
-            }
-            return true;
-        } catch (\Throwable $th) {
-            //throw $th;
-            return false;
-        }
-    }
+    /**
+     * Method saveDesa dihapus karena data desa/kelurahan sulit didapatkan dari Satu Sehat API
+     * Data wilayah hanya sampai tingkat Kecamatan
+     */
+    // public function saveDesa($code)
+    // {
+    //     ini_set('max_execution_time', 20000);
+    //
+    //     try {
+    //         $kecamatans = District::where('province_code', $code)->get();
+    //
+    //         if ($kecamatans->isEmpty()) {
+    //             Log::warning("WilayahRepository: Tidak ada kecamatan untuk provinsi - {$code}");
+    //             return false;
+    //         }
+    //
+    //         // Hapus semua desa/kelurahan di provinsi ini
+    //         Log::info("WilayahRepository: Menghapus data desa lama di provinsi {$code}...");
+    //         Subdistrict::where('province_code', $code)->delete();
+    //
+    //         $totalSynced = 0;
+    //
+    //         foreach ($kecamatans as $kecamatan) {
+    //             $resDesa = $this->satusehatRequest("/masterdata/v1/sub-districts", [
+    //                 'district_codes' => $kecamatan->bps_code
+    //             ]);
+    //
+    //             if ($resDesa === null) {
+    //                 continue; // Skip jika request gagal
+    //             }
+    //
+    //             foreach ($resDesa as $desa) {
+    //                 Subdistrict::create([
+    //                     'code'          => $desa['code'],
+    //                     'province_code' => $code,
+    //                     'parent_code'   => $desa['parent_code'],
+    //                     'bps_code'      => $desa['bps_code'],
+    //                     'name'          => $desa['name']
+    //                 ]);
+    //                 $totalSynced++;
+    //             }
+    //         }
+    //
+    //         Log::info("WilayahRepository: Berhasil sync {$totalSynced} desa/kelurahan");
+    //         return true;
+    //     } catch (\Throwable $th) {
+    //         Log::error('WilayahRepository: Error saat sync desa/kelurahan', [
+    //             'error' => $th->getMessage(),
+    //             'code' => $code
+    //         ]);
+    //         return false;
+    //     }
+    // }
 
     public function getWilayah()
     {
         $province       = Province::count();
         $city           = City::count();
         $district       = District::count();
-        $subdistrict    = Subdistrict::count();
         $dataProvince   = Province::orderBy('name', 'ASC')->get();
         $dataProvince->map(function ($provinsi) {
             $provinsi['kota']       = City::where('parent_code', $provinsi->code)->count();
             $provinsi['kecamatan']  = District::where('province_code', $provinsi->code)->count();
-            $provinsi['desa']       = Subdistrict::where('province_code', $provinsi->code)->count();
         });
 
-
-        return ['provinsi' => $province, 'kota' => $city, 'kecamatan' => $district, 'desa' => $subdistrict, 'dataProvinces' => $dataProvince];
+        return ['provinsi' => $province, 'kota' => $city, 'kecamatan' => $district, 'dataProvinces' => $dataProvince];
     }
 
     public function getProvinces()

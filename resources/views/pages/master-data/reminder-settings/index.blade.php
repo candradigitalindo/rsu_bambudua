@@ -21,11 +21,10 @@
     <div class="row gx-3">
         <div class="col-xxl-12">
             <div class="card mb-3">
-                <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="card-header">
                     <h5 class="card-title">Pengaturan Reminder Pasien</h5>
-                    <a href="{{ route('reminder-settings.create') }}" class="btn btn-primary btn-sm">
-                        <i class="ri-add-line"></i> Tambah Reminder
-                    </a>
+                    <p class="text-muted small mb-0">Kelola template pesan reminder untuk pasien. Terdapat 2 jenis reminder:
+                        Beli Obat dan Check Up.</p>
                 </div>
                 <div class="card-body">
                     @if (session('success'))
@@ -49,10 +48,10 @@
                                     <th width="5%" class="text-center">No</th>
                                     <th>Nama Reminder</th>
                                     <th width="15%" class="text-center">Tipe</th>
-                                    <th width="15%" class="text-center">Hari Sebelum</th>
-                                    <th width="30%">Template Pesan</th>
+                                    <th width="20%" class="text-center">Waktu Reminder</th>
+                                    <th width="25%">Template Pesan</th>
                                     <th width="10%" class="text-center">Status</th>
-                                    <th width="15%" class="text-center">Aksi</th>
+                                    <th width="10%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -67,7 +66,13 @@
                                                 <span class="badge bg-success">Check Up</span>
                                             @endif
                                         </td>
-                                        <td class="text-center">{{ $reminder->days_before }} hari</td>
+                                        <td class="text-center">
+                                            @if ($reminder->type === 'obat')
+                                                {{ $reminder->days_before }} hari setelah obat habis
+                                            @else
+                                                {{ $reminder->days_before }} hari dari kunjungan
+                                            @endif
+                                        </td>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-outline-info btn-preview-template"
                                                 data-template="{{ htmlspecialchars($reminder->message_template) }}"
@@ -83,23 +88,17 @@
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ route('reminder-settings.edit', $reminder->id) }}"
-                                                    class="btn btn-warning">
-                                                    <i class="ri-edit-line"></i>
-                                                </a>
-                                                <button type="button" class="btn btn-danger btn-delete"
-                                                    data-id="{{ $reminder->id }}">
-                                                    <i class="ri-delete-bin-line"></i>
-                                                </button>
-                                            </div>
+                                            <a href="{{ route('reminder-settings.edit', $reminder->id) }}"
+                                                class="btn btn-warning btn-sm" title="Edit Template">
+                                                <i class="ri-edit-line"></i> Edit
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center text-muted">
-                                            Belum ada pengaturan reminder.
-                                            <a href="{{ route('reminder-settings.create') }}">Tambah sekarang</a>
+                                            Belum ada pengaturan reminder. Jalankan seeder: <code>php artisan db:seed
+                                                --class=ReminderSettingSeeder</code>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -188,46 +187,6 @@
                             title: 'Gagal!',
                             text: 'Terjadi kesalahan saat mengubah status.'
                         });
-                    }
-                });
-            });
-
-            // Delete reminder
-            $('.btn-delete').on('click', function() {
-                const reminderId = $(this).data('id');
-
-                Swal.fire({
-                    title: 'Anda yakin?',
-                    text: "Reminder akan dihapus permanen!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: 'Ya, hapus!',
-                    cancelButtonText: 'Batal'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        const deleteUrl = '{{ route('reminder-settings.destroy', ':id') }}'
-                            .replace(':id', reminderId);
-                        const form = $('<form>', {
-                            method: 'POST',
-                            action: deleteUrl
-                        });
-
-                        form.append($('<input>', {
-                            type: 'hidden',
-                            name: '_token',
-                            value: '{{ csrf_token() }}'
-                        }));
-
-                        form.append($('<input>', {
-                            type: 'hidden',
-                            name: '_method',
-                            value: 'DELETE'
-                        }));
-
-                        $('body').append(form);
-                        form.submit();
                     }
                 });
             });

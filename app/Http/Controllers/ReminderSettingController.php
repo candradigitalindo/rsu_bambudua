@@ -14,6 +14,11 @@ class ReminderSettingController extends Controller
         return view('pages.master-data.reminder-settings.index', compact('reminders'));
     }
 
+    // Method create, store, destroy di-comment karena reminder settings sudah di-seed
+    // Hanya ada 2 jenis reminder yang fixed: obat dan checkup
+    // User hanya bisa edit, tidak bisa create/delete
+
+    /*
     public function create()
     {
         return view('pages.master-data.reminder-settings.create');
@@ -37,6 +42,7 @@ class ReminderSettingController extends Controller
         return redirect()->route('reminder-settings.index')
             ->with('success', 'Reminder berhasil ditambahkan.');
     }
+    */
 
     public function edit(ReminderSetting $reminder_setting)
     {
@@ -72,6 +78,7 @@ class ReminderSettingController extends Controller
             ->with('success', 'Reminder berhasil diperbarui.');
     }
 
+    /*
     public function destroy(ReminderSetting $reminder_setting)
     {
         try {
@@ -84,6 +91,7 @@ class ReminderSettingController extends Controller
                 ->with('error', 'Gagal menghapus reminder.');
         }
     }
+    */
 
     public function toggleStatus(ReminderSetting $reminder_setting)
     {

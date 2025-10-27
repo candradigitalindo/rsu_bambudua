@@ -112,7 +112,7 @@ class KasirController extends Controller
             'tindakan',
             'resep.details',
             'labRequests.items',
-            'radiologyRequests'
+            'radiologyRequests.jenis'
         ])
             ->where('rekam_medis', $pasien->rekam_medis)
             ->where('status', 2) // Selesai diperiksa
@@ -129,7 +129,7 @@ class KasirController extends Controller
             'tindakan',
             'resep.details',
             'labRequests.items',
-            'radiologyRequests'
+            'radiologyRequests.jenis'
         ])
             ->where('rekam_medis', $pasien->rekam_medis)
             ->where('status', 2)
@@ -140,71 +140,169 @@ class KasirController extends Controller
             ->orderBy('updated_at', 'desc')
             ->get();
 
-$paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
+        $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
         return view('pages.kasir.show', compact('pasien', 'unpaidEncounters', 'paymentMethods', 'paidEncounters'));
     }
 
     public function processPayment(Request $request, $pasien_id)
     {
-        $request->validate([
-            'payment_method' => 'required|string|exists:payment_methods,code',
-            'items_to_pay'   => 'required|array|min:1',
-            'items_to_pay.*' => 'string',
-        ], [
-            'items_to_pay.required' => 'Pilih setidaknya satu item untuk dibayar.',
-            'items_to_pay.*.regex'  => 'Format item pembayaran tidak valid.',
-            'payment_method.exists' => 'Metode pembayaran tidak valid.',
+        \Illuminate\Support\Facades\Log::info('=== START PROCESS PAYMENT ===', [
+            'pasien_id' => $pasien_id,
+            'items_to_pay' => $request->input('items_to_pay'),
+            'payment_methods' => $request->input('payment_methods'),
         ]);
 
+        $request->validate([
+            'items_to_pay'   => 'required|array|min:1',
+            'items_to_pay.*' => 'string',
+            'payment_methods' => 'required|array|min:1',
+            'payment_methods.*.method' => 'required|string|exists:payment_methods,code',
+            'payment_methods.*.amount_raw' => 'required|numeric|min:0',
+            'encounter_ids' => 'required|array|min:1', // Tambahkan validasi untuk encounter_ids
+            'encounter_ids.*' => 'required|string',
+        ], [
+            'items_to_pay.required' => 'Pilih setidaknya satu item untuk dibayar.',
+            'payment_methods.required' => 'Pilih minimal satu metode pembayaran.',
+            'payment_methods.*.method.exists' => 'Metode pembayaran tidak valid.',
+            'payment_methods.*.amount_raw.required' => 'Jumlah pembayaran harus diisi.',
+        ]);
+
+        \Illuminate\Support\Facades\Log::info('Validation passed');
+
         $itemsToPay       = $request->input('items_to_pay');
-        $paymentMethod    = $request->input('payment_method');
+        $paymentMethods   = $request->input('payment_methods');
+        $encounterIds     = $request->input('encounter_ids', []); // Ambil dari request langsung
         $totalPaidAmount  = 0;
         $paidItemsInfo    = [];
 
-        // Ekstrak semua ID encounter dari input untuk di-query sekaligus
-        $encounterIds = collect($itemsToPay)->map(function ($item) {
-            // Ambil bagian UUID dari string 'tipe-uuid'
-            $parts = explode('-', $item, 2);
-            return $parts[1] ?? null;
-        })->filter()->unique()->all();
+        // Hitung total pembayaran dari semua metode
+        $totalPaymentReceived = collect($paymentMethods)->sum('amount_raw');
+
+        \Illuminate\Support\Facades\Log::info('Total payment received', ['total' => $totalPaymentReceived]);
+
+        // Ekstrak encounter IDs yang unique
+        $encounterIds = collect($encounterIds)->unique()->values()->all();
 
         // Ambil semua encounter yang relevan dalam satu query
         $encounters = Encounter::whereIn('id', $encounterIds)->get()->keyBy('id');
 
-        DB::transaction(function () use ($itemsToPay, $paymentMethod, $encounters, &$totalPaidAmount, &$paidItemsInfo) {
-            foreach ($itemsToPay as $item) {
-                $parts = explode('-', $item, 2);
-                if (count($parts) !== 2) {
-                    continue; // Lewati item dengan format tidak valid
-                }
-                [$type, $encounterId] = $parts;
+        \Illuminate\Support\Facades\Log::info('Encounters loaded', [
+            'encounterIds' => $encounterIds,
+            'encounters_count' => $encounters->count(),
+            'encounters_keys' => $encounters->keys()->toArray()
+        ]);
 
-                // Gunakan encounter yang sudah di-load
-                $encounter = $encounters->get($encounterId);
+        // Hitung total tagihan dari encounter yang dipilih
+        // Group items by type untuk menentukan apakah ada tindakan atau resep
+        $totalBill = 0;
+        $itemsByType = collect($itemsToPay)->map(function ($item) {
+            // Ambil type saja (bagian pertama sebelum dash pertama)
+            $firstDash = strpos($item, '-');
+            return $firstDash !== false ? substr($item, 0, $firstDash) : $item;
+        });
 
-                if (!$encounter) {
-                    continue; // Lewati jika encounter tidak ditemukan
-                }
+        foreach ($encounters as $encounterId => $encounter) {
+            $hasTindakan = $itemsByType->contains(function ($type) {
+                return in_array($type, ['tindakan', 'lab', 'radiologi']);
+            });
 
-                if ($type === 'tindakan' && !$encounter->status_bayar_tindakan) {
+            $hasResep = $itemsByType->contains('resep');
+
+            \Illuminate\Support\Facades\Log::info('Encounter check', [
+                'encounter_id' => $encounterId,
+                'hasTindakan' => $hasTindakan,
+                'hasResep' => $hasResep,
+                'status_bayar_tindakan' => $encounter->status_bayar_tindakan,
+                'status_bayar_resep' => $encounter->status_bayar_resep,
+                'total_bayar_tindakan' => $encounter->total_bayar_tindakan,
+                'total_bayar_resep' => $encounter->total_bayar_resep,
+            ]);
+
+            if ($hasTindakan && !$encounter->status_bayar_tindakan) {
+                $totalBill += $encounter->total_bayar_tindakan;
+            }
+            if ($hasResep && !$encounter->status_bayar_resep) {
+                $totalBill += $encounter->total_bayar_resep;
+            }
+        }
+
+        \Illuminate\Support\Facades\Log::info('Total bill calculated', [
+            'totalBill' => $totalBill,
+            'totalPaymentReceived' => $totalPaymentReceived
+        ]);
+
+        // Validasi: Pembayaran harus >= total tagihan
+        if ($totalPaymentReceived < $totalBill) {
+            \Illuminate\Support\Facades\Log::warning('Payment insufficient', [
+                'totalBill' => $totalBill,
+                'totalPaymentReceived' => $totalPaymentReceived
+            ]);
+            return redirect()->back()->with('error', 'Total pembayaran (Rp ' . number_format($totalPaymentReceived, 0, ',', '.') . ') kurang dari total tagihan (Rp ' . number_format($totalBill, 0, ',', '.') . ')')->withInput();
+        }
+
+        // Gabungkan metode pembayaran untuk disimpan
+        $paymentMethodsCombined = collect($paymentMethods)
+            ->filter(fn($pm) => isset($pm['method']) && $pm['amount_raw'] > 0)
+            ->map(fn($pm) => $pm['method'] . ':' . number_format($pm['amount_raw'], 0, ',', '.'))
+            ->implode('; ');
+
+        \Illuminate\Support\Facades\Log::info('Starting DB transaction');
+
+        DB::transaction(function () use ($itemsToPay, $paymentMethodsCombined, $encounterIds, &$totalPaidAmount, &$paidItemsInfo) {
+            \Illuminate\Support\Facades\Log::info('Inside DB transaction');
+
+            // Get types from items
+            $itemsByType = collect($itemsToPay)->map(function ($item) {
+                $firstDash = strpos($item, '-');
+                return $firstDash !== false ? substr($item, 0, $firstDash) : $item;
+            });
+
+            $hasTindakan = $itemsByType->contains(function ($type) {
+                return in_array($type, ['tindakan', 'lab', 'radiologi']);
+            });
+
+            $hasResep = $itemsByType->contains('resep');
+
+            foreach ($encounterIds as $encounterId) {
+                // Re-fetch encounter dalam transaction untuk memastikan data fresh
+                $encounter = Encounter::find($encounterId);
+                if (!$encounter) continue;
+
+                // Process tindakan payment (includes lab & radiologi)
+                if ($hasTindakan && !$encounter->status_bayar_tindakan) {
                     $encounter->status_bayar_tindakan      = 1;
-                    $encounter->metode_pembayaran_tindakan = $paymentMethod;
+                    $encounter->metode_pembayaran_tindakan = $paymentMethodsCombined;
                     $totalPaidAmount += $encounter->total_bayar_tindakan;
                     $paidItemsInfo[$encounterId]['tindakan'] = $encounter->total_bayar_tindakan;
-                } elseif ($type === 'resep' && !$encounter->status_bayar_resep) {
+
+                    \Illuminate\Support\Facades\Log::info('Updating tindakan payment', [
+                        'encounter_id' => $encounterId,
+                        'status_bayar_tindakan' => 1,
+                        'total' => $encounter->total_bayar_tindakan
+                    ]);
+                }
+
+                // Process resep payment
+                if ($hasResep && !$encounter->status_bayar_resep) {
                     $encounter->status_bayar_resep      = 1;
-                    $encounter->metode_pembayaran_resep = $paymentMethod;
+                    $encounter->metode_pembayaran_resep = $paymentMethodsCombined;
                     $totalPaidAmount += $encounter->total_bayar_resep;
                     $paidItemsInfo[$encounterId]['resep'] = $encounter->total_bayar_resep;
 
+                    \Illuminate\Support\Facades\Log::info('Updating resep payment', [
+                        'encounter_id' => $encounterId,
+                        'status_bayar_resep' => 1,
+                        'total' => $encounter->total_bayar_resep
+                    ]);
+
                     // Buat insentif farmasi (obat) saat resep dibayar
                     try {
-                        $mode = (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_mode')->value('setting_value') ?? 1);
-                        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_value')->value('setting_value') ?? 0);
-                        $target= (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_target_mode')->value('setting_value') ?? 0);
+                        $mode = (int)(\App\Models\IncentiveSetting::where('setting_key', 'fee_obat_mode')->value('setting_value') ?? 1);
+                        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', 'fee_obat_value')->value('setting_value') ?? 0);
+                        $target = (int)(\App\Models\IncentiveSetting::where('setting_key', 'fee_obat_target_mode')->value('setting_value') ?? 0);
                         $base = (float)($encounter->total_bayar_resep ?? 0);
                         if ($base > 0 && $val > 0) {
-                            $amount = $mode === 1 ? ($base * ($val/100.0)) : $val;
+                            $amount = $mode === 1 ? ($base * ($val / 100.0)) : $val;
                             $userId = null;
                             if ($target === 1) {
                                 // Prescriber tidak terekam dengan id user pada model Resep, fallback ke DPJP
@@ -218,7 +316,7 @@ $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
                                     'user_id' => $userId,
                                     'amount' => $amount,
                                     'type' => 'fee_obat_rj',
-                                    'description' => 'Fee Obat (RJ/IGD) pasien '.$encounter->name_pasien,
+                                    'description' => 'Fee Obat (RJ/IGD) pasien ' . $encounter->name_pasien,
                                     'year' => now()->year,
                                     'month' => now()->month,
                                     'status' => 'pending',
@@ -226,11 +324,17 @@ $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
                             }
                         }
                     } catch (\Exception $e) {
-                        \Illuminate\Support\Facades\Log::warning('Gagal membuat insentif obat RJ: '.$e->getMessage());
+                        \Illuminate\Support\Facades\Log::warning('Gagal membuat insentif obat RJ: ' . $e->getMessage());
                     }
                 }
 
                 $encounter->save();
+
+                \Illuminate\Support\Facades\Log::info('Encounter saved', [
+                    'encounter_id' => $encounterId,
+                    'status_bayar_tindakan' => $encounter->status_bayar_tindakan,
+                    'status_bayar_resep' => $encounter->status_bayar_resep,
+                ]);
             }
         });
 
@@ -242,20 +346,24 @@ $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
         session(['last_paid_patient_id' => $pasien_id]);
         session(['last_paid_patient_name' => $pasien->name]);
 
-        $successMessage = 'Pembayaran sebesar ' . 'Rp ' . number_format($totalPaidAmount, 0, ',', '.') . ' berhasil diproses.';
-
-        $pasien = \App\Models\Pasien::find($pasien_id);
         $this->activity(
             'Memproses Pembayaran — ' . ($pasien->name ?? '-') . ' (RM ' . ($pasien->rekam_medis ?? '-') . ')',
             [
                 'pasien_id'   => $pasien_id,
                 'rekam_medis' => $pasien->rekam_medis ?? null,
-                'metode'      => $paymentMethod,
-                'total'       => $totalPaidAmount,
+                'metode'      => $paymentMethodsCombined,
+                'total_tagihan' => $totalBill,
+                'total_bayar' => $totalPaymentReceived,
+                'kembalian'   => $totalPaymentReceived - $totalBill,
                 'items'       => $paidItemsInfo,
             ],
             'kasir'
         );
+
+        $successMessage = 'Pembayaran berhasil diproses. Total tagihan: Rp ' . number_format($totalBill, 0, ',', '.') . ', Total dibayar: Rp ' . number_format($totalPaymentReceived, 0, ',', '.');
+        if ($totalPaymentReceived > $totalBill) {
+            $successMessage .= ' Kembalian: Rp ' . number_format($totalPaymentReceived - $totalBill, 0, ',', '.');
+        }
 
         return redirect()->route('kasir.index')->with('success', $successMessage)->with('show_print_button', true);
     }
@@ -279,18 +387,196 @@ $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
 
         // Jika mencetak dari halaman index, ambil semua encounter lunas terakhir pasien
         if (empty($paid)) {
-            $encounters = Encounter::where('rekam_medis', $pasien->rekam_medis)->where('status', 2)->where(fn($q) => $q->where('status_bayar_tindakan', 1)->orWhere('status_bayar_resep', 1))->orderByDesc('updated_at')->get();
+            $encounters = Encounter::where('rekam_medis', $pasien->rekam_medis)
+                ->where('status', 2)
+                ->where(fn($q) => $q->where('status_bayar_tindakan', 1)->orWhere('status_bayar_resep', 1))
+                ->orderByDesc('updated_at')
+                ->get();
         } else {
             $encounterIds = array_keys($paid);
-            $encounters = Encounter::whereIn('id', $encounterIds)->get();
+            $encounters = Encounter::whereIn('id', $encounterIds)
+                ->with(['tindakan', 'labRequests.items', 'radiologyRequests.jenis', 'resep.details'])
+                ->get();
         }
 
+        // Hitung total dan ambil semua encounter yang belum lunas
         $total = 0;
         foreach ($paid as $eid => $items) {
             foreach ($items as $type => $amount) {
                 $total += (float)$amount;
             }
         }
-        return view('pages.kasir.struk', compact('encounters', 'paid', 'pasien', 'total'));
+
+        // Ambil tagihan yang belum terbayar untuk pasien ini
+        $unpaidEncounters = Encounter::where('rekam_medis', $pasien->rekam_medis)
+            ->where('status', 2)
+            ->where(function ($q) {
+                $q->where(function ($sq) {
+                    $sq->where('total_bayar_tindakan', '>', 0)->where('status_bayar_tindakan', 0);
+                })->orWhere(function ($sq) {
+                    $sq->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 0);
+                });
+            })
+            ->with(['tindakan', 'labRequests.items', 'radiologyRequests.jenis', 'resep.details'])
+            ->get();
+
+        return view('pages.kasir.struk', compact('encounters', 'paid', 'pasien', 'total', 'unpaidEncounters'));
+    }
+
+    /**
+     * Halaman histori transaksi pembayaran
+     */
+    public function histori(Request $request)
+    {
+        $query = Encounter::where('status', 2)
+            ->where(function ($q) {
+                $q->where('status_bayar_tindakan', 1)
+                    ->orWhere('status_bayar_resep', 1);
+            });
+
+        // Filter berdasarkan tanggal
+        if ($request->filled('tanggal_dari')) {
+            $query->whereDate('updated_at', '>=', $request->tanggal_dari);
+        }
+        if ($request->filled('tanggal_sampai')) {
+            $query->whereDate('updated_at', '<=', $request->tanggal_sampai);
+        }
+
+        // Filter berdasarkan pencarian pasien
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name_pasien', 'like', "%{$search}%")
+                    ->orWhere('no_encounter', 'like', "%{$search}%")
+                    ->orWhereHas('pasien', function ($pq) use ($search) {
+                        $pq->where('rekam_medis', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $encounters = $query->with(['pasien'])
+            ->orderByDesc('updated_at')
+            ->paginate(20);
+
+        return view('pages.kasir.histori', compact('encounters'));
+    }
+
+    /**
+     * Halaman laporan pembayaran
+     */
+    public function laporan(Request $request)
+    {
+        $tanggalDari = $request->input('tanggal_dari', now()->startOfMonth()->format('Y-m-d'));
+        $tanggalSampai = $request->input('tanggal_sampai', now()->format('Y-m-d'));
+
+        $query = Encounter::where('status', 2)
+            ->where(function ($q) {
+                $q->where('status_bayar_tindakan', 1)
+                    ->orWhere('status_bayar_resep', 1);
+            })
+            ->whereDate('updated_at', '>=', $tanggalDari)
+            ->whereDate('updated_at', '<=', $tanggalSampai);
+
+        $encounters = $query->with(['pasien'])
+            ->orderByDesc('updated_at')
+            ->get();
+
+        // Hitung statistik
+        $totalTindakan = $encounters->sum(function ($enc) {
+            return $enc->status_bayar_tindakan ? $enc->total_bayar_tindakan : 0;
+        });
+
+        $totalResep = $encounters->sum(function ($enc) {
+            return $enc->status_bayar_resep ? $enc->total_bayar_resep : 0;
+        });
+
+        $totalPembayaran = $totalTindakan + $totalResep;
+        $jumlahTransaksi = $encounters->count();
+
+        // Group by payment method
+        $byPaymentMethod = [];
+        foreach ($encounters as $enc) {
+            if ($enc->status_bayar_tindakan && $enc->metode_pembayaran_tindakan) {
+                $methods = explode(';', $enc->metode_pembayaran_tindakan);
+                foreach ($methods as $method) {
+                    $parts = explode(':', trim($method));
+                    if (count($parts) === 2) {
+                        $methodName = trim($parts[0]);
+                        $amount = (float) str_replace(['.', ','], ['', '.'], trim($parts[1]));
+                        if (!isset($byPaymentMethod[$methodName])) {
+                            $byPaymentMethod[$methodName] = 0;
+                        }
+                        $byPaymentMethod[$methodName] += $amount;
+                    }
+                }
+            }
+            if ($enc->status_bayar_resep && $enc->metode_pembayaran_resep) {
+                $methods = explode(';', $enc->metode_pembayaran_resep);
+                foreach ($methods as $method) {
+                    $parts = explode(':', trim($method));
+                    if (count($parts) === 2) {
+                        $methodName = trim($parts[0]);
+                        $amount = (float) str_replace(['.', ','], ['', '.'], trim($parts[1]));
+                        if (!isset($byPaymentMethod[$methodName])) {
+                            $byPaymentMethod[$methodName] = 0;
+                        }
+                        $byPaymentMethod[$methodName] += $amount;
+                    }
+                }
+            }
+        }
+
+        return view('pages.kasir.laporan', compact(
+            'encounters',
+            'tanggalDari',
+            'tanggalSampai',
+            'totalPembayaran',
+            'totalTindakan',
+            'totalResep',
+            'jumlahTransaksi',
+            'byPaymentMethod'
+        ));
+    }
+
+    /**
+     * Cetak struk untuk encounter tertentu
+     */
+    public function cetakStruk($encounter_id)
+    {
+        $encounter = Encounter::with(['pasien', 'tindakan', 'labRequests.items', 'radiologyRequests.jenis', 'resep.details'])
+            ->findOrFail($encounter_id);
+
+        $pasien = $encounter->pasien;
+
+        // Build paid items info
+        $paidItemsInfo = [];
+        if ($encounter->status_bayar_tindakan) {
+            $paidItemsInfo[$encounter->id]['tindakan'] = $encounter->total_bayar_tindakan;
+        }
+        if ($encounter->status_bayar_resep) {
+            $paidItemsInfo[$encounter->id]['resep'] = $encounter->total_bayar_resep;
+        }
+
+        $total = ($encounter->status_bayar_tindakan ? $encounter->total_bayar_tindakan : 0) +
+            ($encounter->status_bayar_resep ? $encounter->total_bayar_resep : 0);
+
+        $encounters = collect([$encounter]);
+        $paid = $paidItemsInfo;
+
+        // Get unpaid encounters for this patient
+        $unpaidEncounters = Encounter::where('rekam_medis', $pasien->rekam_medis)
+            ->where('status', 2)
+            ->where('id', '!=', $encounter_id)
+            ->where(function ($q) {
+                $q->where(function ($sq) {
+                    $sq->where('total_bayar_tindakan', '>', 0)->where('status_bayar_tindakan', 0);
+                })->orWhere(function ($sq) {
+                    $sq->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 0);
+                });
+            })
+            ->with(['tindakan', 'labRequests.items', 'radiologyRequests.jenis', 'resep.details'])
+            ->get();
+
+        return view('pages.kasir.struk', compact('encounters', 'paid', 'pasien', 'total', 'unpaidEncounters'));
     }
 }

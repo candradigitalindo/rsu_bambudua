@@ -305,22 +305,24 @@ class ApotekController extends Controller
     {
         $search = request('search');
 
-        if ($search) {
-            $query = \App\Models\Resep::with(['encounter.patient', 'encounter.clinic'])
-                // Hanya ambil resep yang statusnya 'Disiapkan'
-                ->where('status', 'Disiapkan');
+        // Query base untuk resep yang sudah disiapkan
+        $query = \App\Models\Resep::with(['encounter.patient', 'encounter.clinic'])
+            ->where('status', 'Disiapkan');
 
+        // Jika ada pencarian, tambahkan filter
+        if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('kode_resep', 'like', '%' . $search . '%')
                     ->orWhereHas('encounter', function ($encounterQuery) use ($search) {
-                        $encounterQuery->where('name_pasien', 'like', '%' . $search . '%');
+                        $encounterQuery->where(function ($eq) use ($search) {
+                            $eq->where('name_pasien', 'like', '%' . $search . '%')
+                                ->orWhere('rekam_medis', 'like', '%' . $search . '%');
+                        });
                     });
             });
-            $reseps = $query->orderByDesc('created_at')->paginate(15);
-        } else {
-            // Jika tidak ada pencarian, kirim paginator kosong
-            $reseps = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
         }
+
+        $reseps = $query->orderByDesc('created_at')->paginate(15);
 
         return view('pages.apotek.reorder_resep_list', compact('reseps'));
     }
@@ -329,13 +331,22 @@ class ApotekController extends Controller
     public function reorder(Request $request, $id)
     {
         try {
-            $resep = \App\Models\Resep::with('details')->findOrFail($id);
+            $resep = \App\Models\Resep::with('details', 'encounter')->findOrFail($id);
 
             // Ubah status semua detail yang 'Disiapkan' menjadi 'Diajukan'
             $resep->details()->where('status', 'Disiapkan')->update(['status' => 'Diajukan']);
 
             // Ubah status resep utama menjadi 'Diajukan'
             $resep->update(['status' => 'Diajukan', 'updated_at' => now()]);
+
+            // Reset tagihan resep di encounter (karena akan disiapkan ulang)
+            if ($resep->encounter) {
+                $resep->encounter->update([
+                    'total_resep' => 0,
+                    'total_bayar_resep' => 0,
+                    'status_bayar_resep' => false
+                ]);
+            }
 
             $this->activity('Mengajukan Ulang Resep', ['resep_id' => $id], 'apotek');
             return redirect()->route('apotek.penyiapan-resep')->with('success', 'Resep berhasil diajukan ulang untuk penyiapan.');
@@ -345,6 +356,64 @@ class ApotekController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return back()->with('error', 'Terjadi kesalahan saat mengajukan ulang resep.');
+        }
+    }
+
+    // Detail Resep untuk Reminder (AJAX)
+    public function resepDetail($encounterId)
+    {
+        try {
+            $encounter = \App\Models\Encounter::with(['resep.details.productApotek'])->findOrFail($encounterId);
+
+            if (!$encounter->resep) {
+                return '<div class="alert alert-warning">Resep tidak ditemukan untuk pasien ini</div>';
+            }
+
+            $resep = $encounter->resep;
+
+            if ($resep->details->isEmpty()) {
+                return '<div class="alert alert-info">Detail resep belum tersedia</div>';
+            }
+
+            $html = '<div class="mb-3">';
+            $html .= '<h6 class="mb-2">Informasi Resep</h6>';
+            $html .= '<div class="row">';
+            $html .= '<div class="col-md-6"><strong>Tanggal Resep:</strong> ' . \Carbon\Carbon::parse($resep->created_at)->format('d-m-Y H:i') . '</div>';
+            $html .= '<div class="col-md-6"><strong>Masa Pemakaian:</strong> ' . ($resep->masa_pemakaian_hari ?? 0) . ' hari</div>';
+            $tanggalHabis = \Carbon\Carbon::parse($resep->created_at)->addDays($resep->masa_pemakaian_hari ?? 0)->format('d-m-Y');
+            $html .= '<div class="col-md-12 mt-2"><strong>Perkiraan Habis:</strong> <span class="badge bg-warning">' . $tanggalHabis . '</span></div>';
+            $html .= '</div>';
+            $html .= '</div>';
+
+            $html .= '<hr>';
+
+            $html .= '<div class="table-responsive">';
+            $html .= '<table class="table table-bordered table-sm table-hover">';
+            $html .= '<thead class="table-light"><tr><th width="5%">No</th><th>Nama Obat</th><th width="10%">Qty</th><th>Aturan Pakai</th></tr></thead>';
+            $html .= '<tbody>';
+
+            foreach ($resep->details as $index => $detail) {
+                // Ambil nama obat
+                $namaObat = $detail->nama_obat ?? ($detail->productApotek->produk_nama ?? '-');
+                $qty = $detail->qty ?? 0;
+                $aturanPakai = $detail->aturan_pakai ?? '-';
+
+                $html .= '<tr>';
+                $html .= '<td class="text-center">' . ($index + 1) . '</td>';
+                $html .= '<td>' . $namaObat . '</td>';
+                $html .= '<td class="text-center">' . $qty . '</td>';
+                $html .= '<td>' . $aturanPakai . '</td>';
+                $html .= '</tr>';
+            }
+
+            $html .= '</tbody>';
+            $html .= '</table>';
+            $html .= '</div>';
+
+            return $html;
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error resep detail: ' . $e->getMessage());
+            return '<div class="alert alert-danger">Terjadi kesalahan saat memuat data: ' . $e->getMessage() . '</div>';
         }
     }
 }

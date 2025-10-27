@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\LokasiLoket;
 use App\Models\Loket;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class LoketRepository
 {
@@ -43,7 +44,7 @@ class LoketRepository
     }
     public function dashboard()
     {
-        $userRole = auth()->user()->role;
+        $userRole = Auth::user()->role;
         $isOwner = ($userRole == 1);
 
         // Tentukan rentang waktu default berdasarkan role
@@ -154,32 +155,116 @@ class LoketRepository
             ->findOrFail($id);
         return $encounter;
     }
-    public function getReminderEncounter($condition = 2)
+    public function getReminderEncounter()
     {
         $today = now()->toDateString();
 
-        // Ambil encounter yang masa resepnya akan habis dalam 7 hari
-        $encounters = \App\Models\Encounter::with('resep')
-            ->where('condition', $condition)
-            ->whereHas('resep', function ($q) use ($today) {
-                $q->whereRaw("DATE_SUB(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL 2 DAY) = ?", [$today]);
-            })
-            ->orderByDesc('created_at')
-            ->get();
+        // Ambil semua reminder settings yang aktif
+        $reminderSettings = \App\Models\ReminderSetting::where('is_active', true)->get();
 
-        // Ambil semua no_hp pasien sekaligus (hindari query di dalam loop)
+        if ($reminderSettings->isEmpty()) {
+            return collect();
+        }
+
+        $encounters = collect();
+
+        foreach ($reminderSettings as $setting) {
+            $daysAfter = $setting->days_before; // Rename untuk clarity
+            $reminderEncounters = collect(); // Inisialisasi di awal
+
+            if ($setting->type === 'obat') {
+                // REMINDER BELI OBAT: X hari SETELAH resep habis
+                // Formula: created_at + masa_pemakaian_hari + days_after = today
+                $reminderEncounters = \App\Models\Encounter::with('resep')
+                    ->whereHas('resep', function ($q) use ($today, $daysAfter) {
+                        // Tanggal resep + masa pemakaian + X hari setelah habis = hari ini
+                        $q->whereRaw("DATE_ADD(DATE_ADD(DATE(created_at), INTERVAL masa_pemakaian_hari DAY), INTERVAL ? DAY) = ?", [$daysAfter, $today]);
+                    })
+                    ->orderByDesc('created_at')
+                    ->get();
+
+                foreach ($reminderEncounters as $encounter) {
+                    $encounter->reminder_setting = $setting;
+                    $encounter->days_after_empty = $daysAfter;
+                    $encounter->reminder_type = 'obat';
+
+                    // Hitung tanggal habis dan tanggal reminder
+                    if ($encounter->resep) {
+                        $tanggalResep = \Carbon\Carbon::parse($encounter->resep->created_at);
+                        $tanggalHabis = $tanggalResep->copy()->addDays($encounter->resep->masa_pemakaian_hari);
+                        $encounter->tanggal_habis = $tanggalHabis->format('d-m-Y');
+                        $encounter->tanggal_reminder = $tanggalHabis->copy()->addDays($daysAfter)->format('d-m-Y');
+                    }
+                }
+            } elseif ($setting->type === 'checkup') {
+                // REMINDER CHECK UP: X hari DARI tanggal kunjungan terakhir
+                // Formula: created_at + days_after = today
+                $reminderEncounters = \App\Models\Encounter::query()
+                    ->whereRaw("DATE_ADD(DATE(created_at), INTERVAL ? DAY) = ?", [$daysAfter, $today])
+                    ->orderByDesc('created_at')
+                    ->get();
+
+                foreach ($reminderEncounters as $encounter) {
+                    $encounter->reminder_setting = $setting;
+                    $encounter->days_after_visit = $daysAfter;
+                    $encounter->reminder_type = 'checkup';
+
+                    $tanggalKunjungan = \Carbon\Carbon::parse($encounter->created_at);
+                    $encounter->tanggal_kunjungan = $tanggalKunjungan->format('d-m-Y');
+                    $encounter->tanggal_reminder = $tanggalKunjungan->copy()->addDays($daysAfter)->format('d-m-Y');
+                }
+            }
+
+            $encounters = $encounters->merge($reminderEncounters);
+        }
+
+        // Ambil semua no_hp pasien
         $rekamMedisList = $encounters->pluck('rekam_medis')->unique()->toArray();
         $pasienHp = \App\Models\Pasien::whereIn('rekam_medis', $rekamMedisList)
             ->pluck('no_hp', 'rekam_medis');
 
-        // Tambahkan no_hp ke setiap encounter
+        // Generate message untuk setiap encounter
         foreach ($encounters as $encounter) {
             $encounter->no_hp = $pasienHp[$encounter->rekam_medis] ?? null;
+
+            if ($encounter->reminder_setting && $encounter->reminder_setting->message_template) {
+                $message = $encounter->reminder_setting->message_template;
+
+                // Replace variables
+                $message = str_replace('{nama_pasien}', $encounter->name_pasien, $message);
+                $message = str_replace('{rekam_medis}', $encounter->rekam_medis, $message);
+
+                if ($encounter->reminder_type === 'obat') {
+                    $message = str_replace('{hari}', $encounter->days_after_empty, $message);
+                    $message = str_replace('{tanggal}', $encounter->tanggal_habis ?? '-', $message);
+                } elseif ($encounter->reminder_type === 'checkup') {
+                    $message = str_replace('{hari}', $encounter->days_after_visit, $message);
+                    $message = str_replace('{tanggal}', $encounter->tanggal_kunjungan ?? '-', $message);
+                }
+
+                $encounter->reminder_message = $message;
+
+                // Generate WhatsApp URL
+                if ($encounter->no_hp) {
+                    $phoneNumber = preg_replace('/[^0-9]/', '', $encounter->no_hp);
+                    if (substr($phoneNumber, 0, 1) === '0') {
+                        $phoneNumber = '62' . substr($phoneNumber, 1);
+                    }
+                    $encodedMessage = urlencode($message);
+                    $encounter->whatsapp_url = "https://wa.me/{$phoneNumber}?text={$encodedMessage}";
+                } else {
+                    $encounter->whatsapp_url = null;
+                }
+            } else {
+                $encounter->reminder_message = null;
+                $encounter->whatsapp_url = null;
+            }
         }
 
-        // Encounter terbaru per rekam_medis
-        $uniqueEncounters = $encounters->unique('rekam_medis')->values();
-
-        return $uniqueEncounters;
+        // Return unique encounters per rekam_medis + reminder_type
+        // Pasien bisa punya 2 reminder: obat DAN checkup
+        return $encounters->unique(function ($item) {
+            return $item->rekam_medis . '-' . $item->reminder_type;
+        })->values();
     }
 }

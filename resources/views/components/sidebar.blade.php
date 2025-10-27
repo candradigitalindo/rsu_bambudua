@@ -111,10 +111,6 @@
                             <a class="{{ request()->is('radiologi/hasil*') ? 'active-sub' : '' }}"
                                 href="{{ route('radiologi.results.index') }}">Hasil Radiologi</a>
                         </li>
-                        <li>
-                            <a class="{{ request()->is('radiologi/jadwal*') ? 'active-sub' : '' }}"
-                                href="{{ route('radiologi.schedule.index') }}">Jadwal Pemeriksaan</a>
-                        </li>
                     </ul>
                 </li>
             @endif
@@ -183,6 +179,10 @@
                         <li>
                             <a class="{{ request()->is('masterdata/units*') ? 'active-sub' : '' }}"
                                 href="{{ route('units.index') }}">Data Satuan</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('masterdata/reminder-settings*') ? 'active-sub' : '' }}"
+                                href="{{ route('reminder-settings.index') }}">Pengaturan Reminder</a>
                         </li>
 
                     </ul>

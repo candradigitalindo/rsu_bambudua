@@ -6,6 +6,29 @@
     <!-- CSS Libraries -->
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        /* Hapus backdrop, buat modal dengan shadow saja */
+        .modal-backdrop {
+            display: none !important;
+        }
+
+        #modalDetail {
+            background-color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #modalDetail .modal-dialog {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #modalDetail .modal-content {
+            pointer-events: auto !important;
+        }
+
+        /* Pastikan SweetAlert muncul di atas modal */
+        .swal2-container {
+            z-index: 9999 !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -69,7 +92,7 @@
                                                 @if (!$allPrepared)
                                                     <span class="badge bg-warning">Menunggu Penyiapan</span>
                                                 @else
-                                                    <span class="badge bg-secondary">{{ $resep->status }}</span>
+                                                    <span class="badge bg-primary">{{ $resep->status }}</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -136,34 +159,53 @@
         $(document).ready(function() {
             // Handle klik tombol detail
             $('.btn-detail').on('click', function() {
-                var resepId = $(this).data('id');
-                var namaPasien = $(this).data('pasien');
-                var url = "{{ url('apotek/penyiapan-resep/detail') }}/" + resepId;
+                const resepId = $(this).data('id');
+                const namaPasien = $(this).data('pasien');
+                const url = `{{ url('apotek/penyiapan-resep/detail') }}/${resepId}`;
 
-                $('#modalDetailLabel').text('Detail Resep untuk: ' + namaPasien);
-                $('#modalDetailBody').html('<div class="text-center text-muted">Memuat data...</div>');
-                $('#modalDetail').modal('show');
+                const modalDetailEl = document.getElementById('modalDetail');
+                const modalDetailLabel = document.getElementById('modalDetailLabel');
+                const modalDetailBody = document.getElementById('modalDetailBody');
+
+                modalDetailLabel.textContent = 'Detail Resep untuk: ' + namaPasien;
+                modalDetailBody.innerHTML = '<div class="text-center text-muted">Memuat data...</div>';
+
+                // Tampilkan modal tanpa backdrop
+                $(modalDetailEl).modal({
+                    backdrop: false,
+                    keyboard: true
+                });
+                $(modalDetailEl).modal('show');
 
                 $.get(url, function(data) {
-                    $('#modalDetailBody').html(data);
-                    // Tampilkan tombol "Siapkan Semua" jika ada item yang bisa disiapkan
+                    modalDetailBody.innerHTML = data;
                     if ($('#modalDetailBody').find('.btn-siapkan-item').length > 0) {
                         $('#btnSiapkanSemua').removeClass('d-none').data('id', resepId);
                     } else {
                         $('#btnSiapkanSemua').addClass('d-none');
                     }
                 }).fail(function() {
-                    $('#modalDetailBody').html(
-                        '<div class="text-center text-danger">Gagal memuat detail.</div>');
+                    modalDetailBody.innerHTML =
+                        '<div class="text-center text-danger">Gagal memuat detail.</div>';
+                });
+            });
+
+            // Cleanup saat modal ditutup
+            $('#modalDetail').on('hidden.bs.modal', function() {
+                // Hapus backdrop jika ada yang tertinggal
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css({
+                    'overflow': '',
+                    'padding-right': ''
                 });
             });
 
             // Event delegation untuk tombol 'Siapkan' di dalam modal
             $('#modalDetailBody').on('click', '.btn-siapkan-item', function(e) {
                 e.preventDefault();
-                var resepDetailId = $(this).data('id');
-                var url = "{{ url('apotek/penyiapan-resep/siapkan-item') }}/" + resepDetailId;
-                var button = $(this);
+                const resepDetailId = $(this).data('id');
+                const url = `{{ url('apotek/penyiapan-resep/siapkan-item') }}/${resepDetailId}`;
+                const button = $(this);
 
                 Swal.fire({
                     title: 'Anda yakin?',
@@ -185,11 +227,11 @@
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
-                                    Swal.fire(
-                                        'Berhasil!',
-                                        response.message,
-                                        'success'
-                                    );
+                                    Swal.fire({
+                                        title: 'Berhasil!',
+                                        text: response.message,
+                                        icon: 'success'
+                                    });
                                     // Update UI di dalam modal
                                     button.closest('td').html(
                                         '<span class="badge bg-success">Disiapkan</span>'
@@ -198,23 +240,24 @@
                                     // Jika response menandakan semua item sudah siap
                                     if (response.all_prepared) {
                                         // Jika tidak ada, tampilkan notifikasi selesai dan muat ulang halaman
-                                        Swal.fire('Selesai!',
-                                            'Semua item resep telah disiapkan dan tagihan telah dikirim ke kasir.',
-                                            'success'
-                                        ).then(() => location.reload());
+                                        Swal.fire({
+                                            title: 'Selesai!',
+                                            text: 'Semua item resep telah disiapkan dan tagihan telah dikirim ke kasir.',
+                                            icon: 'success'
+                                        }).then(() => location.reload());
                                     }
                                 }
                             },
                             error: function(xhr) {
-                                var err = xhr.responseJSON;
-                                Swal.fire(
-                                    'Gagal!',
-                                    err ? err.message : 'Terjadi kesalahan.',
-                                    'error'
-                                );
+                                const err = xhr.responseJSON;
+                                Swal.fire({
+                                    title: 'Gagal!',
+                                    text: err ? err.message :
+                                        'Terjadi kesalahan.',
+                                    icon: 'error'
+                                });
                                 button.prop('disabled', false).html(
-                                    '<i class="ri-check-line"></i> Siapkan'
-                                );
+                                    '<i class="ri-check-line"></i> Siapkan');
                             }
                         });
                     }
@@ -224,9 +267,9 @@
             // Event untuk tombol "Siapkan Semua"
             $('#btnSiapkanSemua').on('click', function(e) {
                 e.preventDefault();
-                var resepId = $(this).data('id');
-                var url = "{{ url('apotek/penyiapan-resep/siapkan') }}/" + resepId;
-                var button = $(this);
+                const resepId = $(this).data('id');
+                const url = `{{ url('apotek/penyiapan-resep/siapkan') }}/${resepId}`;
+                const button = $(this);
 
                 Swal.fire({
                     title: 'Anda yakin?',
@@ -248,23 +291,24 @@
                             },
                             success: function(response) {
                                 if (response.status === 'success') {
-                                    Swal.fire(
-                                        'Berhasil!',
-                                        response.message,
-                                        'success'
-                                    ).then(() => {
+                                    Swal.fire({
+                                        title: 'Berhasil!',
+                                        text: response.message,
+                                        icon: 'success'
+                                    }).then(() => {
                                         $('#modalDetail').modal('hide');
                                         location.reload(); // Muat ulang halaman
                                     });
                                 }
                             },
                             error: function(xhr) {
-                                var err = xhr.responseJSON;
-                                Swal.fire(
-                                    'Gagal!',
-                                    err ? err.message : 'Terjadi kesalahan.',
-                                    'error'
-                                );
+                                const err = xhr.responseJSON;
+                                Swal.fire({
+                                    title: 'Gagal!',
+                                    text: err ? err.message :
+                                        'Terjadi kesalahan.',
+                                    icon: 'error'
+                                });
                                 button.prop('disabled', false).html(
                                     '<i class="ri-check-double-line"></i> Siapkan Semua'
                                 );

@@ -116,7 +116,7 @@ class ObservasiController extends Controller
                     'pasien_id' => $encounter->pasien->id,
                     'jenis_pemeriksaan_id' => $jp->id,
                     'dokter_id' => $dokter->id,
-                    'status' => 'requested',
+                    'status' => 'processing', // Langsung processing, tidak perlu dijadwalkan
                     'price' => (float) $jp->harga,
                     'created_by' => $dokter->id,
                 ]);
@@ -217,7 +217,7 @@ class ObservasiController extends Controller
     public function radiologyRequests($id)
     {
         $rows = \App\Models\RadiologyRequest::with(['jenis', 'results' => function ($q) {
-            $q->orderByDesc('created_at');
+            $q->with('radiologist')->orderByDesc('created_at');
         }])
             ->where('encounter_id', $id)
             ->orderByDesc('created_at')
@@ -233,6 +233,8 @@ class ObservasiController extends Controller
                 'latest' => $latest ? [
                     'findings' => $latest->findings,
                     'impression' => $latest->impression,
+                    'payload' => $latest->payload, // Include custom fields data
+                    'radiologist_name' => optional($latest->radiologist)->name,
                 ] : null,
             ];
         })->toArray());
@@ -244,7 +246,7 @@ class ObservasiController extends Controller
         try {
             $req = \App\Models\RadiologyRequest::findOrFail($id);
             $from = $req->status ?? 'requested';
-            if (!in_array($from, ['requested','processing'])) {
+            if (!in_array($from, ['requested', 'processing'])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Permintaan tidak bisa dibatalkan pada status ' . ucfirst($from) . '.',

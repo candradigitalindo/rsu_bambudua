@@ -10,7 +10,6 @@ use App\Models\Pasien;
 use App\Models\User;
 use App\Models\RadiologyRequest;
 use App\Models\RadiologyResult;
-use App\Models\RadiologySchedule;
 use Illuminate\Support\Facades\Auth;
 
 class RadiologiController extends Controller
@@ -23,9 +22,9 @@ class RadiologiController extends Controller
             'completed'  => \App\Models\RadiologyRequest::where('status', 'completed')->count(),
             'requested'  => \App\Models\RadiologyRequest::where('status', 'requested')->count(),
         ];
-        $recent = \App\Models\RadiologyRequest::with(['pasien','jenis','dokter'])
+        $recent = \App\Models\RadiologyRequest::with(['pasien', 'jenis', 'dokter'])
             ->orderByDesc('created_at')->limit(10)->get();
-        return view('pages.radiologi.dashboard', compact('stats','recent'));
+        return view('pages.radiologi.dashboard', compact('stats', 'recent'));
     }
 
     public function requestsIndex()
@@ -36,7 +35,7 @@ class RadiologiController extends Controller
 
     public function resultsIndex()
     {
-        $results = RadiologyResult::with(['request.pasien', 'request.jenis', 'reporter'])
+        $results = RadiologyResult::with(['request.pasien', 'request.jenis', 'radiologist', 'reporter'])
             ->whereHas('request', function ($query) {
                 $query->where('status', 'completed');
             })
@@ -44,24 +43,10 @@ class RadiologiController extends Controller
         return view('pages.radiologi.hasil.index', compact('results'));
     }
 
-    public function scheduleIndex()
-    {
-        $date = request('date');
-        $query = RadiologySchedule::with(['request.pasien', 'request.jenis', 'radiographer'])
-            ->orderBy('scheduled_start');
-        if ($date) {
-            $query->whereDate('scheduled_start', $date);
-        } else {
-            $query->whereDate('scheduled_start', now()->toDateString());
-        }
-        $schedules = $query->paginate(20);
-        return view('pages.radiologi.jadwal.index', compact('schedules', 'date'));
-    }
-
     public function requestsShow($id)
     {
         $req = RadiologyRequest::with(['pasien', 'jenis', 'dokter', 'results' => function ($q) {
-            $q->orderByDesc('created_at');
+            $q->with(['radiologist', 'reporter'])->orderByDesc('created_at');
         }])->findOrFail($id);
         $latestResult = $req->results->first();
         return view('pages.radiologi.permintaan.show', compact('req', 'latestResult'));
@@ -69,21 +54,45 @@ class RadiologiController extends Controller
 
     public function resultsEdit($id)
     {
-        $req = RadiologyRequest::with(['pasien', 'jenis', 'dokter'])->findOrFail($id);
-        abort_unless($req->status === 'processing', 403, 'Hasil hanya bisa diisi saat status processing.');
+        $req = RadiologyRequest::with(['pasien', 'jenis.templateFields', 'dokter'])->findOrFail($id);
+
+        // Auto-update status to processing if currently requested
+        if ($req->status === 'requested') {
+            $req->update(['status' => 'processing']);
+        }
+
+        if ($req->status !== 'processing') {
+            return redirect()->route('radiologi.requests.show', $id)
+                ->with('error', 'Hasil hanya bisa diisi saat status processing. Status saat ini: ' . ucfirst($req->status));
+        }
+
         return view('pages.radiologi.permintaan.results', compact('req'));
     }
 
     public function resultsStore(Request $request, $id)
     {
-        $req = RadiologyRequest::findOrFail($id);
-        abort_unless($req->status === 'processing', 403, 'Hasil hanya bisa diisi saat status processing.');
+        $req = RadiologyRequest::with('jenis.templateFields')->findOrFail($id);
 
-        $data = $request->validate([
+        if ($req->status !== 'processing') {
+            return redirect()->route('radiologi.requests.show', $id)
+                ->with('error', 'Hasil hanya bisa diisi saat status processing. Status saat ini: ' . ucfirst($req->status));
+        }
+
+        $rules = [
+            'radiologist_id' => 'required|exists:users,id',
             'findings'   => 'required|string',
             'impression' => 'required|string',
             'attachments.*' => 'nullable|file|max:10240',
-        ]);
+        ];
+
+        // Build validation rules for custom fields
+        if ($req->jenis && $req->jenis->templateFields->isNotEmpty()) {
+            foreach ($req->jenis->templateFields as $field) {
+                $rules['payload.' . $field->field_name] = 'nullable';
+            }
+        }
+
+        $data = $request->validate($rules);
 
         $files = [];
         if ($request->hasFile('attachments')) {
@@ -93,11 +102,18 @@ class RadiologiController extends Controller
             }
         }
 
+        // Collect custom field values from payload
+        $payload = [];
+        if ($request->has('payload')) {
+            $payload = $request->input('payload', []);
+        }
+
         $result = new RadiologyResult();
         $result->radiology_request_id = $req->id;
+        $result->radiologist_id = $data['radiologist_id'];
         $result->findings = $data['findings'];
         $result->impression = $data['impression'];
-        $result->payload = null; // future: dynamic fields
+        $result->payload = !empty($payload) ? $payload : null;
         $result->files = $files ?: null;
         $result->reported_by = Auth::id();
         $result->reported_at = now();
@@ -209,7 +225,7 @@ class RadiologiController extends Controller
     public function print($id)
     {
         $req = \App\Models\RadiologyRequest::with(['pasien', 'jenis', 'dokter', 'results' => function ($q) {
-            $q->orderByDesc('created_at');
+            $q->with(['radiologist', 'reporter'])->orderByDesc('created_at');
         }])->findOrFail($id);
         $latest = $req->results->first();
         return view('pages.radiologi.permintaan.print', [
@@ -272,90 +288,5 @@ class RadiologiController extends Controller
             ];
         });
         return response()->json(['results' => $results]);
-    }
-
-    public function scheduleCreate($id)
-    {
-        $req = RadiologyRequest::with(['pasien', 'jenis', 'dokter', 'schedule'])->findOrFail($id);
-        abort_if($req->status !== 'requested', 403, 'Jadwal hanya bisa dibuat saat status requested.');
-        $radiographers = User::where('role', 3)->orderBy('name')->get(['id', 'name']); // asumsikan role 3 = perawat/radiografer
-        return view('pages.radiologi.permintaan.schedule', compact('req', 'radiographers'));
-    }
-
-    public function scheduleStore(Request $request, $id)
-    {
-        $req = RadiologyRequest::with('schedule')->findOrFail($id);
-        abort_if($req->status !== 'requested', 403, 'Jadwal hanya bisa dibuat saat status requested.');
-
-        $data = $request->validate([
-            'scheduled_start' => 'required|date',
-            'scheduled_end'   => 'nullable|date|after:scheduled_start',
-            'modality'        => 'nullable|string|max:100',
-            'room'            => 'nullable|string|max:100',
-            'radiographer_id' => 'nullable|exists:users,id',
-            'preparation'     => 'nullable|string',
-            'priority'        => 'required|string|in:routine,urgent,stat',
-            'notes'           => 'nullable|string',
-        ]);
-
-        // Cegah double schedule pada request
-        if ($req->schedule) {
-            return back()->with('error', 'Permintaan ini sudah memiliki jadwal.');
-        }
-
-        $sched = new RadiologySchedule();
-        $sched->radiology_request_id = $req->id;
-        $sched->scheduled_start = $data['scheduled_start'];
-        $sched->scheduled_end = $data['scheduled_end'] ?? null;
-        $sched->modality = $data['modality'] ?? null;
-        $sched->room = $data['room'] ?? null;
-        $sched->radiographer_id = $data['radiographer_id'] ?? null;
-        $sched->preparation = $data['preparation'] ?? null;
-        $sched->priority = $data['priority'];
-        $sched->status = 'scheduled';
-        $sched->notes = $data['notes'] ?? null;
-        $sched->created_by = Auth::id();
-        $sched->save();
-
-        return redirect()->route('radiologi.requests.show', $req->id)->with('success', 'Jadwal radiologi berhasil dibuat.');
-    }
-
-    public function scheduleStart($scheduleId)
-    {
-        $sched = RadiologySchedule::with('request')->findOrFail($scheduleId);
-        if ($sched->status !== 'scheduled') {
-            return back()->with('error', 'Hanya jadwal berstatus scheduled yang bisa dimulai.');
-        }
-        $sched->status = 'in_progress';
-        $sched->save();
-        // Update request ke processing
-        $req = $sched->request;
-        if ($req && $req->status === 'requested') {
-            $req->status = 'processing';
-            $req->save();
-        }
-        return back()->with('success', 'Pemeriksaan radiologi dimulai.');
-    }
-
-    public function scheduleCancel($scheduleId)
-    {
-        $sched = RadiologySchedule::findOrFail($scheduleId);
-        if (!in_array($sched->status, ['scheduled', 'in_progress'])) {
-            return back()->with('error', 'Jadwal tidak dapat dibatalkan pada status saat ini.');
-        }
-        $sched->status = 'canceled';
-        $sched->save();
-        return back()->with('success', 'Jadwal radiologi dibatalkan.');
-    }
-
-    public function scheduleNoShow($scheduleId)
-    {
-        $sched = RadiologySchedule::findOrFail($scheduleId);
-        if ($sched->status !== 'scheduled') {
-            return back()->with('error', 'No-show hanya untuk jadwal berstatus scheduled.');
-        }
-        $sched->status = 'no_show';
-        $sched->save();
-        return back()->with('success', 'Jadwal ditandai sebagai no-show.');
     }
 }

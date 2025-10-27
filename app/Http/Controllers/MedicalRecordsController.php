@@ -31,12 +31,14 @@ class MedicalRecordsController extends Controller
             ->whereYear('created_at', $year)
             ->groupBy('m')
             ->pluck('c', 'm');
-        $categories = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $categories = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $seriesData = [];
-        for ($i=1; $i<=12; $i++) { $seriesData[] = (int)($raw[$i] ?? 0); }
+        for ($i = 1; $i <= 12; $i++) {
+            $seriesData[] = (int)($raw[$i] ?? 0);
+        }
         $grafikData = [
             'categories' => $categories,
-            'series' => [ ['name' => 'Kunjungan', 'data' => $seriesData] ],
+            'series' => [['name' => 'Kunjungan', 'data' => $seriesData]],
         ];
 
         // Top 5 diagnosis (code + description)
@@ -48,25 +50,211 @@ class MedicalRecordsController extends Controller
             ->get();
         $topDiag = [
             'labels' => $topDiagnosis->map(fn($d) => trim(($d->diagnosis_code ?: '') . ($d->diagnosis_code && $d->diagnosis_description ? ' - ' : '') . ($d->diagnosis_description ?: '')))->toArray(),
-            'data' => $topDiagnosis->pluck('total')->map(fn($v)=>(int)$v)->toArray(),
+            'data' => $topDiagnosis->pluck('total')->map(fn($v) => (int)$v)->toArray(),
         ];
 
         return view('pages.medical-records.dashboard', compact(
-            'totalPasien','totalEncounter','bulanIniEncounter','rawatJalan','rawatInap','igd','grafikData','topDiag'
+            'totalPasien',
+            'totalEncounter',
+            'bulanIniEncounter',
+            'rawatJalan',
+            'rawatInap',
+            'igd',
+            'grafikData',
+            'topDiag'
         ));
     }
 
-    public function riwayat()
+    public function riwayat(Request $request)
     {
-        return view('pages.medical-records.riwayat');
+        $q = trim((string)$request->get('q'));
+        $patients = Pasien::query()
+            ->when($q, function ($qq) use ($q) {
+                $qq->where(function ($sub) use ($q) {
+                    $sub->where('name', 'like', "%{$q}%")
+                        ->orWhere('rekam_medis', 'like', "%{$q}%")
+                        ->orWhere('mr_lama', 'like', "%{$q}%")
+                        ->orWhere('no_hp', 'like', "%{$q}%");
+                });
+            })
+            ->withCount('encounters')
+            ->orderBy('updated_at', 'desc')
+            ->paginate(20);
+
+        return view('pages.medical-records.riwayat', compact('patients'));
+    }
+
+    public function riwayatPasien($rekam_medis)
+    {
+        $pasien = Pasien::where('rekam_medis', $rekam_medis)->first();
+
+        if (!$pasien) {
+            return response()->json(['status' => false, 'message' => 'Pasien tidak ditemukan'], 404);
+        }
+
+        // Ambil encounters dengan detail lengkap
+        $encounters = Encounter::with([
+            'practitioner',
+            'tandaVital',
+            'resep.details',
+            'diagnosis',
+            'clinic',
+            'nurses',
+            'tindakan',
+            'labRequests.items',
+            'radiologyRequests.jenis',
+            'radiologyRequests.results'
+        ])
+            ->where('rekam_medis', $pasien->rekam_medis)
+            ->orderByDesc('created_at')
+            ->paginate(10);
+
+        $data = $encounters->map(function ($e) {
+            // Diagnosis
+            $diagnoses = ($e->diagnosis ?? collect())->map(function ($d) {
+                $code = $d->diagnosis_code ?: '';
+                $desc = $d->diagnosis_description ?: '';
+                $type = $d->diagnosis_type ?: '';
+                return trim($code . ($code && $desc ? ' - ' : '') . $desc . ($type ? " ({$type})" : ''));
+            })->filter()->values();
+
+            // Dokter/practitioner & Perawat
+            $doctors = ($e->practitioner ?? collect())->pluck('name')->filter()->values();
+            $nurses = ($e->nurses ?? collect())->pluck('name')->filter()->values();
+
+            // Tujuan Kunjungan & Jaminan
+            $purposeMap = [
+                1 => 'Kunjungan Sehat (Promotif/Preventif)',
+                2 => 'Rehabilitatif',
+                3 => 'Kunjungan Sakit',
+                4 => 'Darurat',
+                5 => 'Kontrol / Tindak Lanjut',
+                6 => 'Treatment',
+                7 => 'Konsultasi',
+            ];
+            $purpose = $purposeMap[$e->tujuan_kunjungan] ?? '-';
+            $insurance = $e->jenis_jaminan == 1 ? 'Umum' : 'Lainnya';
+
+            // Poliklinik
+            $clinicName = optional($e->clinic)->name;
+
+            // TTV
+            $ttvModel = $e->tandaVital;
+            $ttv = $ttvModel ? [
+                'nadi' => $ttvModel->nadi,
+                'pernapasan' => $ttvModel->pernapasan,
+                'sistolik' => $ttvModel->sistolik,
+                'diastolik' => $ttvModel->diastolik,
+                'suhu' => $ttvModel->suhu,
+                'kesadaran' => $ttvModel->kesadaran,
+                'tinggi_badan' => $ttvModel->tinggi_badan,
+                'berat_badan' => $ttvModel->berat_badan,
+            ] : null;
+
+            // Tindakan
+            $tindakan = $e->tindakan->map(function ($row) {
+                return [
+                    'tindakan_name' => $row->tindakan_name ?? '',
+                    'qty' => (int)($row->qty ?? 0),
+                    'harga' => $row->tindakan_harga ?? 0,
+                ];
+            })->values();
+
+            // Lab
+            $labItems = [];
+            foreach ($e->labRequests as $req) {
+                foreach ($req->items as $it) {
+                    $labItems[] = [
+                        'lab_request_id' => $req->id,
+                        'test_name' => $it->test_name,
+                        'status' => $req->status,
+                        'result_value' => $it->result_value,
+                        'result_unit' => $it->result_unit,
+                        'result_reference' => $it->result_reference,
+                        'result_notes' => $it->result_notes,
+                    ];
+                }
+            }
+
+            // Radiologi
+            $radiologiItems = $e->radiologyRequests->map(function ($rad) {
+                $results = $rad->results->map(function ($res) {
+                    return [
+                        'description' => $res->description ?? '',
+                        'conclusion' => $res->conclusion ?? '',
+                        'notes' => $res->notes ?? '',
+                    ];
+                })->toArray();
+
+                return [
+                    'radiology_request_id' => $rad->id,
+                    'name' => $rad->jenis->name ?? 'Radiologi',
+                    'status' => $rad->status,
+                    'results' => $results,
+                ];
+            })->values();
+
+            // Resep
+            $resepItems = [];
+            if ($e->resep && $e->resep->details) {
+                $resepItems = $e->resep->details->map(function ($d) {
+                    return [
+                        'nama_obat' => $d->nama_obat,
+                        'qty' => (int)($d->qty ?? 0),
+                        'aturan_pakai' => $d->aturan_pakai,
+                        'harga' => $d->harga ?? 0,
+                    ];
+                })->values();
+            }
+
+            return [
+                'encounter_id' => $e->id,
+                'no_encounter' => $e->no_encounter,
+                'date' => optional($e->created_at)->format('d M Y H:i'),
+                'type' => $e->type, // 1=RJ,2=RI,3=IGD
+                'type_label' => $e->type == 1 ? 'Rawat Jalan' : ($e->type == 2 ? 'Rawat Inap' : 'IGD'),
+                'purpose' => $purpose,
+                'insurance' => $insurance,
+                'clinic' => $clinicName,
+                'diagnoses' => $diagnoses,
+                'doctors' => $doctors,
+                'nurses' => $nurses,
+                'ttv' => $ttv,
+                'tindakan' => $tindakan,
+                'lab' => $labItems,
+                'radiologi' => $radiologiItems,
+                'resep' => $resepItems,
+                'cetak_url' => route('observasi.cetakEncounter', $e->id),
+            ];
+        })->values();
+
+        return response()->json([
+            'status' => true,
+            'pasien' => [
+                'rekam_medis' => $pasien->rekam_medis,
+                'name' => $pasien->name,
+                'jenis_kelamin' => $pasien->jenis_kelamin == 1 ? 'Laki-laki' : 'Perempuan',
+                'tgl_lahir' => optional($pasien->tgl_lahir)->format('d M Y'),
+                'age' => $pasien->tgl_lahir ? \Carbon\Carbon::parse($pasien->tgl_lahir)->age : null,
+                'no_hp' => $pasien->no_hp,
+                'alamat' => $pasien->alamat,
+            ],
+            'encounters' => $data,
+            'pagination' => [
+                'current_page' => $encounters->currentPage(),
+                'last_page' => $encounters->lastPage(),
+                'per_page' => $encounters->perPage(),
+                'total' => $encounters->total(),
+            ]
+        ]);
     }
 
     public function riwayatData(Request $request)
     {
         $q = trim((string)$request->get('q'));
         $patients = Pasien::query()
-            ->when($q, function($qq) use ($q) {
-                $qq->where(function($sub) use ($q) {
+            ->when($q, function ($qq) use ($q) {
+                $qq->where(function ($sub) use ($q) {
                     $sub->where('name', 'like', "%{$q}%")
                         ->orWhere('rekam_medis', 'like', "%{$q}%")
                         ->orWhere('mr_lama', 'like', "%{$q}%")
@@ -77,16 +265,16 @@ class MedicalRecordsController extends Controller
             ->limit(100)
             ->get();
 
-        $rows = $patients->map(function($p) {
+        $rows = $patients->map(function ($p) {
             // Ambil 5 kunjungan terakhir + diagnosisnya
-            $encounters = Encounter::with(['practitioner','tandaVital','resep.details','diagnosis','clinic','nurses'])
+            $encounters = Encounter::with(['practitioner', 'tandaVital', 'resep.details', 'diagnosis', 'clinic', 'nurses'])
                 ->where('rekam_medis', $p->rekam_medis)
                 ->orderByDesc('created_at')
                 ->limit(5)
                 ->get()
-                ->map(function($e){
+                ->map(function ($e) {
                     // Diagnosis
-                    $diagnoses = ($e->diagnosis ?? collect())->map(function($d){
+                    $diagnoses = ($e->diagnosis ?? collect())->map(function ($d) {
                         $code = $d->diagnosis_code ?: '';
                         $desc = $d->diagnosis_description ?: '';
                         $type = $d->diagnosis_type ?: '';
@@ -129,7 +317,7 @@ class MedicalRecordsController extends Controller
                     // Tindakan
                     $tindakanRows = TindakanEncounter::where('encounter_id', $e->id)->get();
                     $tindakan = [
-                        'items' => $tindakanRows->map(function($row){
+                        'items' => $tindakanRows->map(function ($row) {
                             return [
                                 'tindakan_name' => $row->tindakan_name ?? ($row->jenis_tindakan ?? ''),
                                 'qty' => (int)($row->qty ?? 0),
@@ -174,8 +362,8 @@ class MedicalRecordsController extends Controller
                         'nurses' => $nurses,
                         'ttv' => $ttv,
                         'tindakan' => $tindakan,
-                        'lab' => [ 'items' => $labItems ],
-                        'resep' => [ 'items' => $resepItems ],
+                        'lab' => ['items' => $labItems],
+                        'resep' => ['items' => $resepItems],
                         'observasi_url' => route('observasi.index', $e->id),
                     ];
                 })->values();
@@ -193,7 +381,7 @@ class MedicalRecordsController extends Controller
             ];
         })->values();
 
-        return response()->json([ 'data' => $rows ]);
+        return response()->json(['data' => $rows]);
     }
 
     public function statistik()
@@ -204,9 +392,11 @@ class MedicalRecordsController extends Controller
             ->whereYear('created_at', $year)
             ->groupBy('m')
             ->pluck('c', 'm');
-        $categories = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+        $categories = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         $seriesData = [];
-        for ($i=1; $i<=12; $i++) { $seriesData[] = (int)($raw[$i] ?? 0); }
+        for ($i = 1; $i <= 12; $i++) {
+            $seriesData[] = (int)($raw[$i] ?? 0);
+        }
 
         // Top 5 diagnosis codes
         $topDiagnosis = Diagnosis::select('diagnosis_code', DB::raw('COUNT(*) as total'))
@@ -217,10 +407,10 @@ class MedicalRecordsController extends Controller
             ->get();
 
         $stat = [
-            'monthly' => [ 'categories' => $categories, 'series' => [['name' => 'Kunjungan', 'data' => $seriesData]] ],
+            'monthly' => ['categories' => $categories, 'series' => [['name' => 'Kunjungan', 'data' => $seriesData]]],
             'topDiagnosis' => [
                 'labels' => $topDiagnosis->pluck('diagnosis_code')->toArray(),
-                'data' => $topDiagnosis->pluck('total')->map(fn($v)=>(int)$v)->toArray(),
+                'data' => $topDiagnosis->pluck('total')->map(fn($v) => (int)$v)->toArray(),
             ],
         ];
 
@@ -238,7 +428,7 @@ class MedicalRecordsController extends Controller
             'file' => 'required|file|max:10240', // 10MB
         ]);
         $path = $request->file('file')->store('medical-records-archive', 'public');
-        return response()->json(['status' => true, 'path' => $path, 'url' => Storage::disk('public')->url($path)]);
+        return response()->json(['status' => true, 'path' => $path, 'url' => Storage::url($path)]);
     }
 
     public function arsipList()
@@ -247,7 +437,7 @@ class MedicalRecordsController extends Controller
             ->map(fn($f) => [
                 'name' => basename($f),
                 'path' => $f,
-                'url' => Storage::disk('public')->url($f),
+                'url' => Storage::url($f),
                 'size' => Storage::disk('public')->size($f),
                 'last_modified' => optional(now()->createFromTimestamp(Storage::disk('public')->lastModified($f)))->format('d M Y H:i'),
             ])->sortByDesc('last_modified')->values();
@@ -256,7 +446,7 @@ class MedicalRecordsController extends Controller
 
     public function arsipDelete(string $filename)
     {
-        $full = 'medical-records-archive/'.$filename;
+        $full = 'medical-records-archive/' . $filename;
         if (!Storage::disk('public')->exists($full)) {
             return response()->json(['status' => false, 'message' => 'File tidak ditemukan'], 404);
         }

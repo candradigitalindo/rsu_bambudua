@@ -1,16 +1,9 @@
-<div class="letterhead">
-  <div class="lh-row">
-    <div class="lh-left">
-      <img src="{{ asset('images/bdc.png') }}" alt="Logo" class="lh-logo">
+<div
+    style="display: flex; align-items: center; margin-bottom: 16px; border-bottom: 3px double #000; padding-bottom: 12px;">
+    <img src="{{ asset('images/bdc.png') }}" alt="Logo" style="height:70px; margin-right:18px;">
+    <div style="flex:1;">
+        <div style="font-size:20px; font-weight:bold;">Bambu Dua Clinic</div>
+        <div style="font-size:15px;">Jl. Bambu II No.20, Durian, Kota Medan, Sumatera Utara</div>
+        <div style="font-size:13px;">Telp: (061) 6610112 / 6622802 | WhatsApp : 0811 - 6311 - 378</div>
     </div>
-    <div class="lh-center">
-      <div class="lh-name">{{ config('app.clinic_name', 'Bambu Dua Clinic') }}</div>
-      <div class="lh-sub">{{ config('app.clinic_address', 'Jl. Klinik No. 1, Kota') }}</div>
-      <div class="lh-sub">Telp: {{ config('app.clinic_phone', '08xx-xxxx-xxxx') }} | Email: {{ config('app.clinic_email', 'info@klinik.com') }}</div>
-    </div>
-    <div class="lh-right">
-      <!-- optional secondary logo or QR -->
-    </div>
-  </div>
-  <hr class="lh-divider">
 </div>

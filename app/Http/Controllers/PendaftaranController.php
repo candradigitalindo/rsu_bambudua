@@ -327,6 +327,15 @@ class PendaftaranController extends Controller
     }
     public function destroyEncounterRajal($id)
     {
+        // Check if encounter has been paid
+        $encounter = \App\Models\Encounter::findOrFail($id);
+        if ($encounter->status_bayar_tindakan || $encounter->status_bayar_resep) {
+            return response()->json([
+                'status' => false,
+                'text' => 'Tidak dapat menghapus encounter yang sudah dibayar'
+            ], 403);
+        }
+
         $result = $this->pendaftaranRepository->destroyEncounterRajal($id);
         return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }
@@ -391,6 +400,15 @@ class PendaftaranController extends Controller
     }
     public function destroyEncounterRdarurat($id)
     {
+        // Check if encounter has been paid
+        $encounter = \App\Models\Encounter::findOrFail($id);
+        if ($encounter->status_bayar_tindakan || $encounter->status_bayar_resep) {
+            return response()->json([
+                'status' => false,
+                'text' => 'Tidak dapat menghapus encounter yang sudah dibayar'
+            ], 403);
+        }
+
         $result = $this->pendaftaranRepository->destroyEncounterRdarurat($id);
         return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }
@@ -447,12 +465,14 @@ class PendaftaranController extends Controller
     // Fallback endpoint to fetch all doctors for IGD modal
     public function getAllDoctors()
     {
-        $doctors = User::where('role', 2)->orderBy('name')->get(['id','name']);
+        $doctors = User::where('role', 2)->orderBy('name')->get(['id', 'name']);
         if ($doctors->isEmpty()) {
-            $doctors = Clinic::with(['users' => function ($q) { $q->where('role', 2); }])
+            $doctors = Clinic::with(['users' => function ($q) {
+                $q->where('role', 2);
+            }])
                 ->get()->pluck('users')->flatten()->unique('id')->sortBy('name')->values();
         }
-        return response()->json($doctors->map(function($u){
+        return response()->json($doctors->map(function ($u) {
             return ['id' => $u->id, 'name' => $u->name];
         }));
     }
@@ -460,6 +480,15 @@ class PendaftaranController extends Controller
     // destroyEncounterRinap
     public function destroyRawatInap($id)
     {
+        // Check if encounter has been paid
+        $encounter = \App\Models\Encounter::findOrFail($id);
+        if ($encounter->status_bayar_tindakan || $encounter->status_bayar_resep) {
+            return response()->json([
+                'status' => false,
+                'text' => 'Tidak dapat menghapus encounter yang sudah dibayar'
+            ], 403);
+        }
+
         $result = $this->pendaftaranRepository->destroyEncounterRinap($id);
         return response()->json(['status' => true, 'text' => 'Encounter berhasil dihapus', 'data' => $result]);
     }

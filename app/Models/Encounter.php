@@ -83,6 +83,9 @@ class Encounter extends Model
      *
      * @return string
      */
+    // DEPRECATED: WhatsApp URL sekarang di-generate di LoketRepository
+    // menggunakan template dari reminder_settings, bukan accessor ini
+    /*
     public function getWhatsappUrlAttribute(): string
     {
         // Mengambil no_hp dari properti encounter
@@ -115,6 +118,8 @@ class Encounter extends Model
         $pesanEncoded = urlencode($pesan);
         return "https://wa.me/{$noHp}?text={$pesanEncoded}";
     }
+    */
+
     public function clinic()
     {
         return $this->belongsTo(Clinic::class);

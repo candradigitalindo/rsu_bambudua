@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
@@ -8,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pasien extends Model
 {
     use HasUuids;
-    
+
     protected $fillable = [
         'rekam_medis',
         'name',
@@ -36,7 +37,7 @@ class Pasien extends Model
         'satusehat_id',
         'status'
     ];
-    
+
     protected $casts = [
         'tgl_lahir' => 'date',
         'is_identitas' => 'boolean',
@@ -47,5 +48,10 @@ class Pasien extends Model
     public function riwayatPenyakit()
     {
         return $this->hasOne(RiwayatPenyakit::class);
+    }
+
+    public function encounters()
+    {
+        return $this->hasMany(Encounter::class, 'rekam_medis', 'rekam_medis');
     }
 }

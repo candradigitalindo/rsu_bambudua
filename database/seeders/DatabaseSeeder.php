@@ -70,7 +70,7 @@ class DatabaseSeeder extends Seeder
 
         // Payment Method Seeder
         $this->call(PaymentMethodSeeder::class);
-        
+
         // Unit Seeder
         $this->call(UnitSeeder::class);
 
@@ -86,6 +86,9 @@ class DatabaseSeeder extends Seeder
 
         // Incentive Setting Seeder
         $this->call(IncentiveSettingSeeder::class);
+
+        // Reminder Setting Seeder
+        $this->call(ReminderSettingSeeder::class);
 
         // Master Data Seeders
         $this->call([

@@ -28,8 +28,16 @@
                 </div>
             @endif
             <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title">Daftar Tagihan Pasien</h5>
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Daftar Tagihan Pasien</h5>
+                    <div>
+                        <a href="{{ route('kasir.histori') }}" class="btn btn-outline-primary btn-sm">
+                            <i class="ri-history-line"></i> Histori Transaksi
+                        </a>
+                        <a href="{{ route('kasir.laporan') }}" class="btn btn-outline-success btn-sm">
+                            <i class="ri-file-chart-line"></i> Laporan
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('kasir.index') }}" method="GET" class="mb-3">

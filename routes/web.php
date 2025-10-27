@@ -139,6 +139,10 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('expense-categories', ExpenseCategoryController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])->names('master.expense-categories');
         // SIP / Professional Licenses
         Route::resource('professional-licenses', \App\Http\Controllers\ProfessionalLicenseController::class)->except(['show'])->names('professional-licenses');
+
+        // Reminder Settings
+        Route::resource('reminder-settings', \App\Http\Controllers\ReminderSettingController::class)->except(['show']);
+        Route::post('reminder-settings/{reminder_setting}/toggle-status', [\App\Http\Controllers\ReminderSettingController::class, 'toggleStatus'])->name('reminder-settings.toggle-status');
     });
 
     Route::prefix('pendaftaran')->group(function () {
@@ -356,6 +360,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/penyiapan-resep/{id}/reorder', [ApotekController::class, 'reorder'])->name('apotek.penyiapan-resep.reorder.action');
         Route::post('/penyiapan-resep/batalkan/{id}', [ApotekController::class, 'batalkanResep'])->name('apotek.penyiapan-resep.batalkan');
 
+        // Detail Resep untuk Reminder (AJAX)
+        Route::get('/resep-detail/{encounterId}', [ApotekController::class, 'resepDetail'])->name('apotek.resep-detail');
 
         Route::get('transaksi-resep/pdf', [ApotekController::class, 'exportPdf'])->name('apotek.transaksi-resep.pdf');
         Route::get('transaksi-resep/excel', [ApotekController::class, 'exportExcel'])->name('apotek.transaksi-resep.excel');
@@ -385,12 +391,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/permintaan/{id}/hasil', [RadiologiController::class, 'resultsStore'])->name('requests.results.store');
         Route::post('/permintaan/{id}/status', [RadiologiController::class, 'requestsUpdateStatus'])->name('requests.status');
         Route::get('/hasil', [RadiologiController::class, 'resultsIndex'])->name('results.index');
-        Route::get('/jadwal', [RadiologiController::class, 'scheduleIndex'])->name('schedule.index');
-        Route::get('/permintaan/{id}/jadwal/create', [RadiologiController::class, 'scheduleCreate'])->name('requests.schedule.create');
-        Route::post('/permintaan/{id}/jadwal', [RadiologiController::class, 'scheduleStore'])->name('requests.schedule.store');
-        Route::post('/jadwal/{schedule}/start', [RadiologiController::class, 'scheduleStart'])->name('schedule.start');
-        Route::post('/jadwal/{schedule}/cancel', [RadiologiController::class, 'scheduleCancel'])->name('schedule.cancel');
-        Route::post('/jadwal/{schedule}/no-show', [RadiologiController::class, 'scheduleNoShow'])->name('schedule.no_show');
         // AJAX search pasien untuk Radiologi
         Route::get('/pasien/search', [RadiologiController::class, 'searchPatients'])->name('patients.search');
         // AJAX search dokter pengirim
@@ -402,6 +402,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pembayaran/{pasien_id}', [KasirController::class, 'show'])->name('kasir.show');
         Route::post('/pembayaran/{pasien_id}', [KasirController::class, 'processPayment'])->name('kasir.processPayment');
         Route::get('/cetak-terakhir', [KasirController::class, 'cetakStrukTerakhir'])->name('kasir.cetakStrukTerakhir');
+        Route::get('/histori', [KasirController::class, 'histori'])->name('kasir.histori');
+        Route::get('/laporan', [KasirController::class, 'laporan'])->name('kasir.laporan');
+        Route::get('/cetak-struk/{encounter_id}', [KasirController::class, 'cetakStruk'])->name('kasir.cetakStruk');
     });
 
     Route::prefix('laboratorium')->as('lab.')->group(function () {
@@ -429,6 +432,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [MedicalRecordsController::class, 'dashboard'])->name('dashboard');
         Route::get('/riwayat', [MedicalRecordsController::class, 'riwayat'])->name('riwayat');
         Route::get('/riwayat/data', [MedicalRecordsController::class, 'riwayatData'])->name('riwayat.data');
+        Route::get('/riwayat/pasien/{rekam_medis}', [MedicalRecordsController::class, 'riwayatPasien'])->name('riwayat.pasien');
         Route::get('/statistik', [MedicalRecordsController::class, 'statistik'])->name('statistik');
         Route::get('/arsip', [MedicalRecordsController::class, 'arsip'])->name('arsip');
         Route::post('/arsip/upload', [MedicalRecordsController::class, 'arsipUpload'])->name('arsip.upload');

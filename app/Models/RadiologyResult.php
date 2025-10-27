@@ -11,6 +11,7 @@ class RadiologyResult extends Model
 
     protected $fillable = [
         'radiology_request_id',
+        'radiologist_id',
         'findings',
         'impression',
         'payload',
@@ -33,5 +34,10 @@ class RadiologyResult extends Model
     public function reporter()
     {
         return $this->belongsTo(User::class, 'reported_by');
+    }
+
+    public function radiologist()
+    {
+        return $this->belongsTo(User::class, 'radiologist_id');
     }
 }

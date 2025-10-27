@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <title>Struk Resep</title>
@@ -11,27 +12,58 @@
             padding: 0;
             width: 58mm;
         }
+
         .struk {
             width: 58mm;
             padding: 8px;
         }
-        .text-center { text-align: center; }
-        .text-left { text-align: left; }
-        .text-right { text-align: right; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 2px 0; }
-        hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-left {
+            text-align: left;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 2px 0;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+
         @media print {
-            body, .struk { width: 58mm; }
+
+            body,
+            .struk {
+                width: 58mm;
+            }
         }
     </style>
 </head>
+
 <body onload="window.print()">
     <div class="struk">
         <div class="text-center">
-            <strong style="font-size:18px;">Bambu Dua Clinic</strong><br><br>
-            Jl. Bambu II No.20, Durian, Kota Medan, Sumatera Utara<br>
-            Telp: (061) 6610112 / 6622802 | WhatsApp : 0811 - 6311 - 378
+            <strong style="font-size:14px;">Bambu Dua Clinic</strong><br>
+            Jl. Bambu II No.20, Durian<br>
+            Kota Medan, Sumatera Utara<br>
+            Telp: (061) 6610112 / 6622802<br>
+            WA: 0811-6311-378
         </div>
         <hr>
         <table>
@@ -58,8 +90,8 @@
                 </tr>
             </thead>
             <tbody>
-                @if($encounter->resep && $encounter->resep->details)
-                    @foreach($encounter->resep->details as $detail)
+                @if ($encounter->resep && $encounter->resep->details)
+                    @foreach ($encounter->resep->details as $detail)
                         <tr>
                             <td>{{ $detail->nama_obat }}</td>
                             <td class="text-center">{{ $detail->aturan_pakai }}</td>
@@ -100,4 +132,5 @@
         };
     </script>
 </body>
+
 </html>

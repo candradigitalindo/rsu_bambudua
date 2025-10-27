@@ -75,9 +75,9 @@
 <body onload="window.print()">
     <div class="container">
         <div class="header">
-            <h3>{{-- Nama Klinik Anda --}}Bambu Dua Medika</h3>
-            <p>{{-- Alamat Klinik Anda --}}Jl. Bambu Apus Raya No. 2, Jakarta Timur</p>
-            <p>Telp: {{-- No Telp Klinik --}}021-12345678</p>
+            <h3>Bambu Dua Clinic</h3>
+            <p>Jl. Bambu II No.20, Durian, Kota Medan, Sumatera Utara</p>
+            <p>Telp: (061) 6610112 / 6622802 | WA: 0811-6311-378</p>
         </div>
 
         <div class="info">

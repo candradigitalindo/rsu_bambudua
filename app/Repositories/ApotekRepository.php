@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ApotekRepository
@@ -29,7 +30,7 @@ class ApotekRepository
             ->count();
 
         // Tentukan rentang waktu berdasarkan role
-        $userRole = auth()->user()->role;
+        $userRole = Auth::user()->role;
         $isOwner = ($userRole == 1);
         $defaultStartDate = $isOwner ? now()->subYear()->startOfDay() : now()->subMonths(3)->startOfDay();
 
@@ -105,7 +106,7 @@ class ApotekRepository
     public function getPaidPrescriptionQuery($start, $end)
     {
         $warning = null;
-        $userRole = auth()->user()->role;
+        $userRole = Auth::user()->role;
         $isOwner = ($userRole == 1);
 
         if ($start && $end) {
@@ -199,6 +200,22 @@ class ApotekRepository
             // Cek apakah semua item sudah disiapkan
             // Reload relasi untuk mendapatkan data terbaru setelah update di loop
             $resep->load('details');
+
+            // Update status resep utama menjadi 'Disiapkan' jika semua item sudah disiapkan
+            $allPrepared = !$resep->details()->where('status', 'Diajukan')->exists();
+            if ($allPrepared) {
+                $resep->update(['status' => 'Disiapkan']);
+
+                // Hitung total tagihan resep dan update ke encounter
+                $totalTagihan = $resep->details()->sum('total_harga');
+                $encounter = $resep->encounter;
+                if ($encounter) {
+                    $encounter->update([
+                        'total_resep' => $totalTagihan,
+                        'total_bayar_resep' => $totalTagihan
+                    ]);
+                }
+            }
         });
 
         return ['success' => true, 'message' => 'Semua item resep berhasil disiapkan.'];
@@ -228,6 +245,21 @@ class ApotekRepository
 
         // Cek apakah masih ada item yang berstatus 'Diajukan'
         $allPrepared = !$resep->details()->where('status', 'Diajukan')->exists();
+
+        // Update status resep utama jika semua item sudah disiapkan
+        if ($allPrepared) {
+            $resep->update(['status' => 'Disiapkan']);
+
+            // Hitung total tagihan resep dan update ke encounter
+            $totalTagihan = $resep->details()->sum('total_harga');
+            $encounter = $resep->encounter;
+            if ($encounter) {
+                $encounter->update([
+                    'total_resep' => $totalTagihan,
+                    'total_bayar_resep' => $totalTagihan
+                ]);
+            }
+        }
 
         return [
             'success' => true,

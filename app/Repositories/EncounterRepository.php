@@ -109,7 +109,20 @@ class EncounterRepository
     // Cetak Encounter
     public function getEncounterById($id)
     {
-        $encounter = Encounter::findOrFail($id);
+        $encounter = Encounter::with([
+            'pasien',
+            'practitioner.user',
+            'diagnosis',
+            'tindakan',
+            'resep.details',
+            'pemeriksaanPenunjang',
+            'anamnesis',
+            'tandaVital',
+            'labRequests.items',
+            'labRequests.requester',
+            'radiologyRequests.jenis',
+            'radiologyRequests.dokter'
+        ])->findOrFail($id);
         return $this->mapEncounter($encounter);
     }
 }

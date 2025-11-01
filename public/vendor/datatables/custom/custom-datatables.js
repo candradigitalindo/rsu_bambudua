@@ -32,10 +32,13 @@ $(function () {
 
 // Datatable with buttons
 $(document).ready(function () {
-    var table = $("#datatable-button").DataTable({
-        lengthChange: false,
-        buttons: ["copy", "excel", "pdf", "colvis"],
-    });
+    // Hanya jalankan jika table dengan id datatable-button ada
+    if ($("#datatable-button").length > 0) {
+        var table = $("#datatable-button").DataTable({
+            lengthChange: false,
+            buttons: ["copy", "excel", "pdf", "colvis"],
+        });
 
-    table.buttons().container().appendTo("#datatable-button_wrapper .col-md-6:eq(0)");
+        table.buttons().container().appendTo("#datatable-button_wrapper .col-md-6:eq(0)");
+    }
 });

@@ -51,7 +51,7 @@ class PendaftaranController extends Controller
     public function showRawatJalan(Request $request)
     {
         $data = $this->pendaftaranRepository->showRawatJalan($request);
-        $total_row = method_exists($data, 'total') ? $data->total() : (is_countable($data) ? count($data) : 0);
+        $total_row = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->total() : (is_countable($data) ? count($data) : 0);
 
         if ($total_row > 0) {
             $rows = [];
@@ -65,7 +65,7 @@ class PendaftaranController extends Controller
                     </tr>';
         }
 
-        $pagination = method_exists($data, 'links') ? $data->links()->render() : '';
+        $pagination = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->links()->toHtml() : '';
         return response()->json(['rows' => $rows, 'pagination' => $pagination]);
     }
     // showRawatDarurat - Handle both AJAX and direct URL requests
@@ -74,7 +74,7 @@ class PendaftaranController extends Controller
         // If this is an AJAX request, return JSON data for table
         if ($request->ajax() || $request->expectsJson()) {
             $data = $this->pendaftaranRepository->showRawatDarurat($request);
-            $total_row = method_exists($data, 'total') ? $data->total() : (is_countable($data) ? count($data) : 0);
+            $total_row = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->total() : (is_countable($data) ? count($data) : 0);
             if ($total_row > 0) {
                 $rows = [];
                 foreach ($data as $d) {
@@ -86,7 +86,7 @@ class PendaftaranController extends Controller
                             <td colspan="6" class="text-center">Data tidak ada</td>
                         </tr>';
             }
-            $pagination = method_exists($data, 'links') ? $data->links()->render() : '';
+            $pagination = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->links()->toHtml() : '';
             return response()->json(['rows' => $rows, 'pagination' => $pagination]);
         }
 
@@ -117,7 +117,7 @@ class PendaftaranController extends Controller
         // If this is an AJAX request, return JSON data for table
         if ($request->ajax() || $request->expectsJson()) {
             $data = $this->pendaftaranRepository->showRawatInap($request);
-            $total_row = method_exists($data, 'total') ? $data->total() : (is_countable($data) ? count($data) : 0);
+            $total_row = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->total() : (is_countable($data) ? count($data) : 0);
 
             if ($total_row > 0) {
                 $rows = [];
@@ -131,7 +131,7 @@ class PendaftaranController extends Controller
                         </tr>';
             }
 
-            $pagination = method_exists($data, 'links') ? $data->links()->render() : '';
+            $pagination = $data instanceof \Illuminate\Pagination\LengthAwarePaginator ? $data->links()->toHtml() : '';
             return response()->json(['rows' => $rows, 'pagination' => $pagination]);
         }
 

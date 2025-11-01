@@ -21,7 +21,7 @@ class DokterController extends Controller
 
         // Helper closure untuk query Practitioner by encounter type
         $countPractitioner = function ($type, $start, $end) use ($user) {
-            return Practitioner::where('id_petugas', $user->id_petugas)
+            return Practitioner::where('id_petugas', $user->id)
                 ->whereHas('encounter', function ($q) use ($type) {
                     $q->where('type', $type);
                 })
@@ -31,7 +31,7 @@ class DokterController extends Controller
 
         // Helper closure untuk query Practitioner by encounter type per bulan
         $countPractitionerMonth = function ($type) use ($user) {
-            return Practitioner::where('id_petugas', $user->id_petugas)
+            return Practitioner::where('id_petugas', $user->id)
                 ->whereHas('encounter', function ($q) use ($type) {
                     $q->where('type', $type);
                 })
@@ -133,14 +133,14 @@ class DokterController extends Controller
         };
 
         // Rawat Jalan (type 1)
-        $queryRawatJalan = Practitioner::where('id_petugas', $user->id_petugas)
+        $queryRawatJalan = Practitioner::where('id_petugas', $user->id)
             ->whereHas('encounter', fn($q) => $q->where('type', 1));
         $rawatJalan = $rekapPerBulan(clone $queryRawatJalan, $year);
         $totalRawatJalanTahunIni = $totalTahun(clone $queryRawatJalan, $year);
         $totalRawatJalanTahunLalu = $totalTahun(clone $queryRawatJalan, $year - 1);
 
         // Rawat Darurat (type 3)
-        $queryRawatDarurat = Practitioner::where('id_petugas', $user->id_petugas)
+        $queryRawatDarurat = Practitioner::where('id_petugas', $user->id)
             ->whereHas('encounter', fn($q) => $q->where('type', 3));
         $rawatDarurat = $rekapPerBulan(clone $queryRawatDarurat, $year);
         $totalRawatDaruratTahunIni = $totalTahun(clone $queryRawatDarurat, $year);
@@ -207,7 +207,7 @@ class DokterController extends Controller
         };
 
         // Query dasar untuk practitioner
-        $practitionerQuery = Practitioner::where('id_petugas', $user->id_petugas);
+        $practitionerQuery = Practitioner::where('id_petugas', $user->id);
 
         // Data untuk Grafik Bulanan (1 Tahun)
         $bulanan = [
@@ -235,7 +235,19 @@ class DokterController extends Controller
         $user = Auth::user();
         $year = now()->year;
 
-        // Helper untuk rekap pendapatan bulanan
+        // Helper untuk rekap pendapatan bulanan dari incentives
+        $rekapInsentifBulanan = function ($year, $userId) {
+            $data = \App\Models\Incentive::where('user_id', $userId)
+                ->where('year', $year)
+                ->selectRaw('month as bulan, SUM(amount) as total')
+                ->groupBy('month')
+                ->pluck('total', 'bulan')
+                ->toArray();
+
+            return array_map(fn($i) => (int)($data[$i] ?? 0), range(1, 12));
+        };
+
+        // Helper untuk rekap pendapatan bulanan dari InpatientTreatment
         $rekapPendapatanBulanan = function ($query, $year) {
             $data = $query
                 ->whereYear('created_at', $year)
@@ -247,18 +259,26 @@ class DokterController extends Controller
             return array_map(fn($i) => (int)($data[$i] ?? 0), range(1, 12));
         };
 
-        // Query untuk pendapatan dari tindakan (InpatientTreatment dengan tipe 'Tindakan')
+        // 1. Pendapatan dari Insentif (encounter, fee_penunjang, fee_obat)
+        $pendapatanInsentif = $rekapInsentifBulanan($year, $user->id);
+
+        // 2. Query untuk pendapatan dari tindakan rawat inap
         $queryPendapatanTindakan = InpatientTreatment::where('performed_by', $user->id)
             ->where('request_type', 'Tindakan');
         $pendapatanTindakan = $rekapPendapatanBulanan(clone $queryPendapatanTindakan, $year);
 
-        // Query untuk pendapatan dari visit rawat inap (InpatientTreatment)
-        $queryPendapatanVisit = InpatientTreatment::where('performed_by', $user->id) // Asumsi 'fee' ada di InpatientTreatment
+        // 3. Query untuk pendapatan dari visit rawat inap
+        $queryPendapatanVisit = InpatientTreatment::where('performed_by', $user->id)
             ->where('request_type', 'Visit');
         $pendapatanVisit = $rekapPendapatanBulanan(clone $queryPendapatanVisit, $year);
 
-        // Gabungkan data pendapatan
-        $totalPendapatan = array_map(fn($tindakan, $visit) => $tindakan + $visit, $pendapatanTindakan, $pendapatanVisit);
+        // Gabungkan semua pendapatan (insentif + tindakan + visit)
+        $totalPendapatan = array_map(
+            fn($insentif, $tindakan, $visit) => $insentif + $tindakan + $visit,
+            $pendapatanInsentif,
+            $pendapatanTindakan,
+            $pendapatanVisit
+        );
 
         return [
             'series' => [

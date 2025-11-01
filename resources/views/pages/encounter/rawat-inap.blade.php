@@ -92,16 +92,6 @@
                                                             id="spinerCetak-{{ $encounter->id }}"></span>
                                                     </a>
                                                 @endif
-                                                <script src="{{ asset('js/jquery.min.js') }}"></script>
-                                                <script>
-                                                    $(document).ready(function() {
-                                                        $("#periksa-{{ $encounter->id }}").click(function() {
-                                                            $("#spinerPeriksa-{{ $encounter->id }}").removeClass("d-none");
-                                                            $("#periksa-{{ $encounter->id }}").addClass("disabled", true);
-                                                            $("#textPeriksa-{{ $encounter->id }}").text("Mohon Tunggu ...");
-                                                        });
-                                                    });
-                                                </script>
                                             </td>
                                         </tr>
                                     @empty
@@ -134,6 +124,14 @@
                 $("#spinerCreateTindakan").removeClass("d-none");
                 $("#createTindakan").addClass("disabled", true);
                 $("#textCreateTindakan").text("Mohon Tunggu ...");
+            });
+
+            // Event delegation for periksa buttons
+            $('.table-responsive').on('click', '[id^="periksa-"]', function() {
+                let encounterId = $(this).attr('id').replace('periksa-', '');
+                $("#spinerPeriksa-" + encounterId).removeClass("d-none");
+                $(this).addClass("disabled");
+                $("#textPeriksa-" + encounterId).text("Mohon Tunggu ...");
             });
 
         });

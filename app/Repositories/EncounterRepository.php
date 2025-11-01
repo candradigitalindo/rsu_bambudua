@@ -49,10 +49,10 @@ class EncounterRepository
             $query->where('name_pasien', 'like', '%' . request('name') . '%');
         }
 
-        // Jika user dokter, filter by practitioner
-        if (Auth::user()->role == 2 && !request('name')) {
+        // Jika user dokter, filter by practitioner (tetap filter meskipun ada pencarian)
+        if (Auth::user()->role == 2) {
             $query->whereHas('practitioner', function ($q) {
-                $q->where('id_petugas', Auth::user()->id_petugas);
+                $q->where('id_petugas', Auth::user()->id);
             });
         }
 
@@ -71,8 +71,9 @@ class EncounterRepository
             });
         }
 
-        // Filter khusus untuk dokter (role 2), HANYA jika tidak ada pencarian
-        if (Auth::user()->role == 2 && !request('name')) {
+        // Filter khusus untuk dokter (role 2), tetap filter meskipun ada pencarian
+        // Rawat inap menggunakan dokter_id yang sudah benar (users.id)
+        if (Auth::user()->role == 2) {
             $query->where('dokter_id', Auth::user()->id);
         }
 
@@ -94,10 +95,10 @@ class EncounterRepository
             $query->where('name_pasien', 'like', '%' . request('name') . '%');
         }
 
-        // Jika user dokter, filter by practitioner
-        if (Auth::user()->role == 2 && !request('name')) {
+        // Jika user dokter, filter by practitioner (tetap filter meskipun ada pencarian)
+        if (Auth::user()->role == 2) {
             $query->whereHas('practitioner', function ($q) {
-                $q->where('id_petugas', Auth::user()->id_petugas);
+                $q->where('id_petugas', Auth::user()->id);
             });
         }
 

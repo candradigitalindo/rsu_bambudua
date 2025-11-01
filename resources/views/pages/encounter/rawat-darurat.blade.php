@@ -73,7 +73,8 @@
                                             <td class="text-center">
                                                 @if ($encounter->status == 'Progress')
                                                     <a href="{{ route('observasi.index', $encounter->id) }}"
-                                                        class="btn btn-outline-primary btn-sm periksa-btn" data-id="{{ $encounter->id }}">
+                                                        class="btn btn-outline-primary btn-sm periksa-btn"
+                                                        data-id="{{ $encounter->id }}">
                                                         <i class="ri-stethoscope-line"></i>
                                                         <span class="btn-text"
                                                             id="textPeriksa-{{ $encounter->id }}">Pemeriksaan</span>
@@ -82,11 +83,11 @@
                                                     </a>
                                                 @else
                                                     <a href="{{ route('observasi.cetakEncounter', $encounter->id) }}"
-                                                        target="_blank"
-                                                        class="btn btn-outline-info btn-sm cetak-btn" data-id="{{ $encounter->id }}">
+                                                        target="_blank" class="btn btn-outline-info btn-sm cetak-btn"
+                                                        data-id="{{ $encounter->id }}">
                                                         <i class="ri-profile-line"></i>
-                                                        <span class="btn-text"
-                                                            id="textCetak-{{ $encounter->id }}"> Cetak Hasil </span>
+                                                        <span class="btn-text" id="textCetak-{{ $encounter->id }}"> Cetak
+                                                            Hasil </span>
                                                         <span class="spinner-border spinner-border-sm d-none"
                                                             id="spinerCetak-{{ $encounter->id }}"></span>
                                                     </a>
@@ -117,7 +118,6 @@
     <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
     <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#createTindakan").click(function() {

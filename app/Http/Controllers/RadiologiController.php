@@ -78,10 +78,14 @@ class RadiologiController extends Controller
                 ->with('error', 'Hasil hanya bisa diisi saat status processing. Status saat ini: ' . ucfirst($req->status));
         }
 
+        // Check if it's ECHOCARDIOGRAPHY
+        $isEcho = $req->jenis && (stripos($req->jenis->name, 'ECHOCARDIOGRAPHY') !== false || stripos($req->jenis->name, 'ECHO') !== false);
+
         $rules = [
             'radiologist_id' => 'required|exists:users,id',
-            'findings'   => 'required|string',
-            'impression' => 'required|string',
+            'reporter_id' => 'required|exists:users,id',
+            'findings'   => $isEcho ? 'nullable|string' : 'required|string',
+            'impression' => $isEcho ? 'required|string' : 'nullable|string',
             'attachments.*' => 'nullable|file|max:10240',
         ];
 
@@ -106,16 +110,29 @@ class RadiologiController extends Controller
         $payload = [];
         if ($request->has('payload')) {
             $payload = $request->input('payload', []);
+            // Filter out empty values to keep payload clean
+            $payload = array_filter($payload, function ($value) {
+                return $value !== null && $value !== '';
+            });
         }
 
         $result = new RadiologyResult();
         $result->radiology_request_id = $req->id;
         $result->radiologist_id = $data['radiologist_id'];
-        $result->findings = $data['findings'];
-        $result->impression = $data['impression'];
+        $result->reported_by = $data['reporter_id']; // Perawat yang melakukan input
+
+        // For ECHO: findings is optional, impression is required
+        // For others: findings is required and also used as impression
+        if ($isEcho) {
+            $result->findings = $data['findings'] ?? '-'; // Default '-' if empty to avoid NULL
+            $result->impression = $data['impression'];
+        } else {
+            $result->findings = $data['findings'];
+            $result->impression = $data['findings']; // Use findings as impression for backward compatibility
+        }
+
         $result->payload = !empty($payload) ? $payload : null;
         $result->files = $files ?: null;
-        $result->reported_by = Auth::id();
         $result->reported_at = now();
         $result->save();
 
@@ -172,13 +189,45 @@ class RadiologiController extends Controller
 
     public function requestsStore(Request $request)
     {
-        // Validasi dasar: encounter wajib, lainnya fleksibel (agar bisa dipanggil dari Observasi)
+        // Validasi: encounter_id atau pasien_id harus ada
         $request->validate([
-            'encounter_id' => 'required|uuid|exists:encounters,id',
+            'encounter_id' => 'nullable|uuid|exists:encounters,id',
+            'pasien_id' => 'nullable|uuid|exists:pasiens,id',
             'catatan' => 'nullable|string',
         ]);
 
-        $encounter = \App\Models\Encounter::findOrFail($request->input('encounter_id'));
+        // Jika ada encounter_id, gunakan itu
+        if ($request->has('encounter_id') && $request->input('encounter_id')) {
+            $encounter = \App\Models\Encounter::findOrFail($request->input('encounter_id'));
+        }
+        // Jika tidak ada encounter_id, cek pasien_id dan buat encounter baru
+        elseif ($request->has('pasien_id') && $request->input('pasien_id')) {
+            $pasien = \App\Models\Pasien::findOrFail($request->input('pasien_id'));
+
+            // Cek apakah ada encounter aktif untuk pasien ini (encounter hari ini)
+            $encounter = \App\Models\Encounter::where('rekam_medis', $pasien->rekam_medis)
+                ->whereDate('created_at', now()->toDateString())
+                ->latest()
+                ->first();
+
+            // Jika tidak ada encounter aktif, buat baru
+            if (!$encounter) {
+                $encounter = new \App\Models\Encounter();
+                $encounter->no_encounter = 'ENC-' . strtoupper(uniqid());
+                $encounter->rekam_medis = $pasien->rekam_medis;
+                $encounter->name_pasien = $pasien->name;
+                $encounter->type = 1; // 1 = Rawat Jalan
+                $encounter->tujuan_kunjungan = 3; // 3 = Kunjungan Sakit
+                $encounter->created_by = Auth::id();
+                $encounter->save();
+            }
+        } else {
+            $msg = 'Pasien atau encounter wajib dipilih.';
+            return $request->wantsJson() || $request->ajax()
+                ? response()->json(['status' => false, 'message' => $msg], 422)
+                : back()->withErrors(['pasien_id' => $msg]);
+        }
+
         $jenisId = $request->input('pemeriksaan') ?: $request->input('jenis_pemeriksaan_id');
         if (!$jenisId) {
             $msg = 'Jenis pemeriksaan radiologi wajib dipilih.';
@@ -196,7 +245,7 @@ class RadiologiController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $jenisPemeriksaan, $encounter, $dokterPerujuk, $dokterId) {
             $req = new \App\Models\RadiologyRequest();
             $req->encounter_id = $encounter->id;
-            $req->pasien_id = $encounter->pasien->id; // Ambil dari encounter
+            $req->pasien_id = $encounter->pasien->id; // Ambil dari relasi pasien
             $req->jenis_pemeriksaan_id = $jenisPemeriksaan->id;
             $req->dokter_id = $dokterId;
             $req->notes = $request->input('catatan');
@@ -228,7 +277,18 @@ class RadiologiController extends Controller
             $q->with(['radiologist', 'reporter'])->orderByDesc('created_at');
         }])->findOrFail($id);
         $latest = $req->results->first();
-        return view('pages.radiologi.permintaan.print', [
+
+        // Cek jenis pemeriksaan untuk menggunakan template yang sesuai
+        $template = 'pages.radiologi.permintaan.print';
+        $jenisNama = optional($req->jenis)->name ?? '';
+        if (
+            stripos($jenisNama, 'ECHOCARDIOGRAPHY') !== false ||
+            stripos($jenisNama, 'ECHO') !== false
+        ) {
+            $template = 'pages.radiologi.permintaan.print_echo';
+        }
+
+        return view($template, [
             'req' => $req,
             'latest' => $latest,
         ]);

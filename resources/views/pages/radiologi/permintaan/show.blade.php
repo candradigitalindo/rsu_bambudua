@@ -93,27 +93,261 @@
                                         <h6 class="mb-0">Data Pemeriksaan</h6>
                                     </div>
                                     <div class="card-body">
-                                        <div class="row g-2">
-                                            @foreach ($latestResult->payload as $key => $value)
-                                                <div class="col-md-6">
-                                                    <div class="small text-muted">
-                                                        {{ ucwords(str_replace('_', ' ', $key)) }}</div>
-                                                    <div class="fw-semibold">{{ $value ?: '-' }}</div>
-                                                </div>
-                                            @endforeach
-                                        </div>
+                                        <style>
+                                            .measurement-table-result {
+                                                width: 100%;
+                                                border-collapse: collapse;
+                                                background-color: white;
+                                            }
+
+                                            .measurement-table-result th {
+                                                background-color: #198754;
+                                                color: white;
+                                                padding: 12px;
+                                                text-align: center;
+                                                font-weight: 600;
+                                                border: 1px solid #198754;
+                                            }
+
+                                            .measurement-table-result tbody td {
+                                                padding: 10px 12px;
+                                                border: 1px solid #dee2e6;
+                                                text-align: center !important;
+                                            }
+
+                                            .measurement-table-result tbody td:first-child {
+                                                background-color: #f8f9fa;
+                                                font-weight: 600;
+                                                text-align: left !important;
+                                                vertical-align: middle;
+                                                width: 20%;
+                                                padding-left: 15px;
+                                            }
+
+                                            .measurement-table-result tbody td:nth-child(2) {
+                                                background-color: #f8f9fa;
+                                                width: 30%;
+                                                font-weight: 500;
+                                                text-align: left !important;
+                                                padding-left: 15px;
+                                            }
+
+                                            .measurement-table-result tbody td:nth-child(3) {
+                                                background-color: #ffffff;
+                                                width: 150px;
+                                                font-weight: 600;
+                                                color: #000000 !important;
+                                            }
+
+                                            .measurement-table-result tbody td:nth-child(4) {
+                                                background-color: #fffbf0;
+                                                color: #6c757d;
+                                                width: auto;
+                                                font-size: 13px;
+                                                font-style: italic;
+                                            }
+                                        </style>
+
+                                        <table class="measurement-table-result">
+                                            <thead>
+                                                <tr>
+                                                    <th>Bagian</th>
+                                                    <th>Parameter</th>
+                                                    <th>Nilai</th>
+                                                    <th>Normal</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $echoStructure = [
+                                                        'Aorta' => [['param' => 'Root diam', 'normal' => '20–37 mm']],
+                                                        'Ventrikel Kiri<br>(Left Ventricle)' => [
+                                                            ['param' => 'EDD', 'normal' => '35–52 mm'],
+                                                            ['param' => 'ESD', 'normal' => '26–36 mm'],
+                                                            ['param' => 'IVS Diastole', 'normal' => '7–11 mm'],
+                                                            ['param' => 'IVS Systole', 'normal' => ''],
+                                                            ['param' => 'PW Diastole', 'normal' => '7–11 mm'],
+                                                            ['param' => 'PW Systole', 'normal' => ''],
+                                                        ],
+                                                        'Atrium Kiri<br>(Left Atrium)' => [
+                                                            ['param' => 'LA Dimension', 'normal' => '15–40 mm'],
+                                                            ['param' => 'LA/Ao ratio', 'normal' => '< 1.33'],
+                                                        ],
+                                                        'Ventrikel Kanan<br>(Right Ventricle)' => [
+                                                            ['param' => 'RV Dimension', 'normal' => '< 43 mm'],
+                                                            ['param' => 'M.V.A', 'normal' => '> 3 cm²'],
+                                                            ['param' => 'TAPSE', 'normal' => '≥ 16 mm'],
+                                                            ['param' => 'RA mayor', 'normal' => ''],
+                                                        ],
+                                                        'Fungsi' => [
+                                                            ['param' => 'EF', 'normal' => '52–77%'],
+                                                            ['param' => 'FS', 'normal' => '> 25%'],
+                                                            ['param' => 'EPSS', 'normal' => '< 10 mm'],
+                                                        ],
+                                                    ];
+                                                @endphp
+
+                                                @foreach ($echoStructure as $bagian => $parameters)
+                                                    @foreach ($parameters as $index => $item)
+                                                        <tr>
+                                                            @if ($index === 0)
+                                                                <td rowspan="{{ count($parameters) }}">
+                                                                    {!! $bagian !!}</td>
+                                                            @endif
+                                                            <td>{{ $item['param'] }}</td>
+                                                            <td style="text-align: center !important;">
+                                                                {{ $latestResult->payload[$item['param']] ?? '-' }}</td>
+                                                            <td style="text-align: center !important;">
+                                                                {!! $item['normal'] !!}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             @endif
 
-                            <div class="mb-2">
-                                <div class="small text-muted">Temuan (Findings)</div>
-                                <div style="white-space: pre-wrap;">{{ $latestResult->findings }}</div>
+                            @php
+                                // Define measurement parameters to exclude
+                                $measurementParams = [
+                                    'Root diam',
+                                    'EDD',
+                                    'ESD',
+                                    'IVS Diastole',
+                                    'IVS Systole',
+                                    'PW Diastole',
+                                    'PW Systole',
+                                    'LA Dimension',
+                                    'LA/Ao ratio',
+                                    'RV Dimension',
+                                    'M.V.A',
+                                    'TAPSE',
+                                    'RA mayor',
+                                    'EF',
+                                    'FS',
+                                    'EPSS',
+                                ];
+
+                                // Get valve assessment data (non-measurement fields)
+                                $valveData = [];
+                                if (!empty($latestResult->payload) && is_array($latestResult->payload)) {
+                                    foreach ($latestResult->payload as $key => $value) {
+                                        // Skip empty values and measurement parameters
+                                        if (in_array($key, $measurementParams)) {
+                                            continue;
+                                        }
+                                        // Add non-empty values
+                                        if (!empty(trim($value))) {
+                                            $valveData[$key] = $value;
+                                        }
+                                    }
+                                }
+                                $hasValveData = !empty($valveData);
+                            @endphp
+
+                            @if ($hasValveData)
+                                <div class="card bg-light mb-3">
+                                    <div class="card-header py-2">
+                                        <h6 class="mb-0">Penilaian Katup & Gerakan Otot</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <style>
+                                            .valve-assessment-table {
+                                                width: 100%;
+                                                border-collapse: collapse;
+                                                background-color: white;
+                                            }
+
+                                            .valve-assessment-table td {
+                                                padding: 8px 15px;
+                                                border: 1px solid #dee2e6;
+                                            }
+
+                                            .valve-assessment-table td:first-child {
+                                                background-color: #f8f9fa;
+                                                font-weight: 500;
+                                                width: 45%;
+                                            }
+
+                                            .valve-assessment-table td:nth-child(2) {
+                                                background-color: #ffffff;
+                                                width: 55%;
+                                            }
+                                        </style>
+                                        <table class="valve-assessment-table">
+                                            @foreach ($valveData as $field => $value)
+                                                <tr>
+                                                    <td>{{ $field }}</td>
+                                                    <td>: {{ $value }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </table>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- Tampilkan semua non-measurement data untuk debugging --}}
+                                @if (!empty($latestResult->payload) && is_array($latestResult->payload))
+                                    @php
+                                        $allNonMeasurement = [];
+                                        foreach ($latestResult->payload as $k => $v) {
+                                            if (!in_array($k, $measurementParams)) {
+                                                $allNonMeasurement[$k] = $v;
+                                            }
+                                        }
+                                    @endphp
+                                    @if (!empty($allNonMeasurement))
+                                        <div class="card bg-light mb-3">
+                                            <div class="card-header py-2">
+                                                <h6 class="mb-0">Penilaian Katup & Gerakan Otot</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <style>
+                                                    .valve-assessment-table {
+                                                        width: 100%;
+                                                        border-collapse: collapse;
+                                                        background-color: white;
+                                                    }
+
+                                                    .valve-assessment-table td {
+                                                        padding: 8px 15px;
+                                                        border: 1px solid #dee2e6;
+                                                    }
+
+                                                    .valve-assessment-table td:first-child {
+                                                        background-color: #f8f9fa;
+                                                        font-weight: 500;
+                                                        width: 45%;
+                                                    }
+
+                                                    .valve-assessment-table td:nth-child(2) {
+                                                        background-color: #ffffff;
+                                                        width: 55%;
+                                                    }
+                                                </style>
+                                                <table class="valve-assessment-table">
+                                                    @foreach ($allNonMeasurement as $field => $value)
+                                                        <tr>
+                                                            <td>{{ $field }}</td>
+                                                            <td>: {{ $value }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </table>
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
+                            @endif
+
+                            <div class="card bg-light mb-3">
+                                <div class="card-header py-2">
+                                    <h6 class="mb-0">Saran / Recommendation</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div style="white-space: pre-wrap;">{{ $latestResult->findings }}</div>
+                                </div>
                             </div>
-                            <div class="mb-2">
-                                <div class="small text-muted">Kesimpulan (Impression)</div>
-                                <div style="white-space: pre-wrap;">{{ $latestResult->impression }}</div>
-                            </div>
+
                             @if (is_array($latestResult->files) && count($latestResult->files))
                                 <div class="mb-2">
                                     <div class="small text-muted">Lampiran</div>
@@ -138,13 +372,14 @@
                             <i class="bi bi-pencil-square me-1"></i>Input Hasil Pemeriksaan
                         </a>
                     @elseif($st === 'completed')
-                        <a href="{{ route('radiologi.requests.print', $req->id) }}" target="_blank"
+                        <a href="{{ route('radiologi.requests.print', $req->id) }}?auto=1" target="_blank"
                             class="btn btn-outline-primary">
                             <i class="bi bi-printer me-1"></i>Cetak Hasil
                         </a>
                     @endif
                     @if ($st === 'processing')
-                        <form method="POST" action="{{ route('radiologi.requests.status', $req->id) }}" class="d-inline">
+                        <form method="POST" action="{{ route('radiologi.requests.status', $req->id) }}"
+                            class="d-inline">
                             @csrf
                             <input type="hidden" name="status" value="canceled">
                             <button type="submit" class="btn btn-outline-danger"

@@ -402,28 +402,46 @@
                 const statusBadge =
                     `<span class="badge ${badgeClass} ms-2">${(r.status||'').charAt(0).toUpperCase()+ (r.status||'').slice(1)}</span>`;
 
+                const printBtn = (r.status === 'completed') ?
+                    `<a href="/radiologi/permintaan/${r.id}/print?auto=1" target="_blank" class="btn btn-sm btn-success"><i class="ri-printer-line"></i> Cetak</a>` :
+                    '';
+
                 let contentHtml = '<div class="text-muted small">Belum ada hasil.</div>';
 
                 if (r.latest) {
+                    const isEcho = r.jenis_name && (r.jenis_name.toUpperCase().includes('ECHO') || r.jenis_name
+                        .toUpperCase().includes('ECHOCARDIOGRAPHY'));
+
                     const radiologistInfo = r.latest.radiologist_name ?
-                        `<div class="small mb-1"><span class="text-muted">Radiolog:</span> <strong>${r.latest.radiologist_name}</strong></div>` :
+                        `<div class="row mb-2"><div class="col-md-6"><small class="text-muted">Radiolog:</small> <strong>${r.latest.radiologist_name}</strong></div>` +
+                        (r.latest.reporter_name ?
+                            `<div class="col-md-6"><small class="text-muted">Perawat:</small> <strong>${r.latest.reporter_name}</strong></div></div>` :
+                            '</div>') :
                         '';
-                    const payloadHtml = buildRadiologyPayload(r.latest.payload);
-                    const findingsHtml =
-                        `<div><span class="text-muted">Findings:</span> ${r.latest.findings || '-'}</div>`;
-                    const impressionHtml =
-                        `<div><span class="text-muted">Impression:</span> ${r.latest.impression || '-'}</div>`;
+
+                    const payloadHtml = buildRadiologyPayload(r.latest.payload, isEcho);
+
+                    const findingsHtml = (r.latest.findings && r.latest.findings !== '-') ?
+                        `<div class="mt-2"><strong class="text-muted">Temuan / Findings:</strong><div class="border-start border-3 border-primary ps-2 mt-1">${r.latest.findings}</div></div>` :
+                        '';
+                    const impressionHtml = r.latest.impression ?
+                        `<div class="mt-2"><strong class="text-muted">Saran / Recommendation:</strong><div class="border-start border-3 border-success ps-2 mt-1">${r.latest.impression}</div></div>` :
+                        '';
 
                     contentHtml =
-                        `${radiologistInfo}${payloadHtml}<div class="small">${findingsHtml}${impressionHtml}</div>`;
+                        `${radiologistInfo}${payloadHtml}${findingsHtml}${impressionHtml}`;
                 }
 
-                return `<div class="mb-3 border rounded p-2"><div class="d-flex justify-content-between align-items-center mb-2"><div><strong>${r.created_at || ''}</strong>${statusBadge}</div></div><div><div class="fw-semibold mb-1">${r.jenis_name || ''}</div>${contentHtml}</div></div>`;
+                return `<div class="mb-3 border rounded p-3 shadow-sm"><div class="d-flex justify-content-between align-items-center mb-2"><div><strong>${r.created_at || ''}</strong>${statusBadge}</div><div>${printBtn}</div></div><div><div class="fw-semibold mb-2 text-primary">${r.jenis_name || ''}</div>${contentHtml}</div></div>`;
             }
 
-            function buildRadiologyPayload(payload) {
+            function buildRadiologyPayload(payload, isEcho = false) {
                 if (!payload || typeof payload !== 'object' || Object.keys(payload).length === 0) {
                     return '';
+                }
+
+                if (isEcho) {
+                    return buildEchoPayload(payload);
                 }
 
                 let fieldsHtml = '';
@@ -438,6 +456,268 @@
                 return fieldsHtml ?
                     `<div class="card bg-light mt-2 mb-2"><div class="card-body p-2"><div class="row g-2">${fieldsHtml}</div></div></div>` :
                     '';
+            }
+
+            function buildEchoPayload(payload) {
+                const normalRanges = {
+                    'Root diam': '20-37 mm',
+                    'LA Dimension': '15-40 mm',
+                    'LA/Ao ratio': '< 1.33',
+                    'RV Dimension': '< 43 mm',
+                    'M.V.A': '> 3 cm²',
+                    'TAPSE': '≥ 16 mm',
+                    'EDD': '35-52 mm',
+                    'ESD': '26-36 mm',
+                    'IVS Diastole': '7-11 mm',
+                    'PW Diastole': '7-11 mm',
+                    'EF': '52-77 %',
+                    'FS': '> 25 %',
+                    'EPSS': '< 10 mm'
+                };
+
+                const measurements = [{
+                        section: 'Aorta',
+                        rowspan: 1,
+                        fields: ['Root diam']
+                    },
+                    {
+                        section: 'Atrium Kiri<br>(Left Atrium)',
+                        rowspan: 2,
+                        fields: ['LA Dimension', 'LA/Ao ratio']
+                    },
+                    {
+                        section: 'Ventrikel Kanan<br>(Right Ventricle)',
+                        rowspan: 5,
+                        fields: ['RV Dimension', 'M.V.A', 'TAPSE', 'RA mayor', 'RA minor']
+                    },
+                    {
+                        section: 'Ventrikel Kiri<br>(Left Ventricle)',
+                        rowspan: 9,
+                        fields: ['EDD', 'ESD', 'IVS Diastole', 'IVS Systole', 'PW Diastole', 'PW Systole', 'EF',
+                            'FS', 'EPSS'
+                        ]
+                    }
+                ];
+
+                let html = '<div class="mt-3 mb-3">';
+                html +=
+                    '<div class="bg-white border border-dark text-center py-2 fw-bold">Pengukuran / Measurement</div>';
+                html += '<div class="table-responsive">';
+                html += '<table class="table table-sm table-bordered border-dark mb-0" style="font-size: 0.875rem;">';
+                html += '<thead style="background-color: #D9E2F3;"><tr>';
+                html +=
+                    '<th colspan="2" class="text-center border-dark">Parameter</th><th class="text-center border-dark">Hasil</th>';
+                html +=
+                    '<th class="text-center border-dark text-success" style="background-color: #FFF2CC;">Normal Range</th>';
+                html +=
+                    '<th colspan="2" class="text-center border-dark">Parameter</th><th class="text-center border-dark">Hasil</th>';
+                html +=
+                    '<th class="text-center border-dark text-success" style="background-color: #FFF2CC;">Normal Range</th>';
+                html += '</tr></thead><tbody>';
+
+                // Row 1: Aorta (Root diam) | Ventrikel Kiri (EDD)
+                html += '<tr>';
+                html += '<td class="fw-bold bg-light border-dark align-middle">Aorta</td>';
+                html += '<td class="fw-semibold bg-light border-dark">Root diam</td>';
+                html += `<td class="text-center border-dark">${payload['Root diam'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">20-37 mm</td>';
+                html +=
+                    '<td rowspan="9" class="fw-bold bg-light border-dark align-middle">Ventrikel Kiri<br>(Left Ventricle)</td>';
+                html += '<td class="fw-semibold bg-light border-dark">EDD</td>';
+                html += `<td class="text-center border-dark">${payload['EDD'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">35-52 mm</td>';
+                html += '</tr>';
+
+                // Row 2: Atrium Kiri (LA Dimension) | Ventrikel Kiri (ESD)
+                html += '<tr>';
+                html +=
+                    '<td rowspan="2" class="fw-bold bg-light border-dark align-middle">Atrium Kiri<br>(Left Atrium)</td>';
+                html += '<td class="fw-semibold bg-light border-dark">LA Dimension</td>';
+                html += `<td class="text-center border-dark">${payload['LA Dimension'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">15-40 mm</td>';
+                html += '<td class="fw-semibold bg-light border-dark">ESD</td>';
+                html += `<td class="text-center border-dark">${payload['ESD'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">26-36 mm</td>';
+                html += '</tr>';
+
+                // Row 3: Atrium Kiri (LA/Ao ratio) | Ventrikel Kiri (IVS Diastole)
+                html += '<tr>';
+                html += '<td class="fw-semibold bg-light border-dark">LA/Ao ratio</td>';
+                html += `<td class="text-center border-dark">${payload['LA/Ao ratio'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">< 1.33</td>';
+                html += '<td class="fw-semibold bg-light border-dark">IVS Diastole</td>';
+                html += `<td class="text-center border-dark">${payload['IVS Diastole'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">7-11 mm</td>';
+                html += '</tr>';
+
+                // Row 4: Ventrikel Kanan (RV Dimension) | Ventrikel Kiri (IVS Systole)
+                html += '<tr>';
+                html +=
+                    '<td rowspan="5" class="fw-bold bg-light border-dark align-middle">Ventrikel Kanan<br>(Right Ventricle)</td>';
+                html += '<td class="fw-semibold bg-light border-dark">RV Dimension</td>';
+                html += `<td class="text-center border-dark">${payload['RV Dimension'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">< 43 mm</td>';
+                html += '<td class="fw-semibold bg-light border-dark">IVS Systole</td>';
+                html += `<td class="text-center border-dark">${payload['IVS Systole'] || '-'}</td>`;
+                html += '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;"></td>';
+                html += '</tr>';
+
+                // Row 5: Ventrikel Kanan (M.V.A) | Ventrikel Kiri (PW Diastole)
+                html += '<tr>';
+                html += '<td class="fw-semibold bg-light border-dark">M.V.A</td>';
+                html += `<td class="text-center border-dark">${payload['M.V.A'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">> 3 cm²</td>';
+                html += '<td class="fw-semibold bg-light border-dark">PW Diastole</td>';
+                html += `<td class="text-center border-dark">${payload['PW Diastole'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">7-11 mm</td>';
+                html += '</tr>';
+
+                // Row 6: Ventrikel Kanan (TAPSE) | Ventrikel Kiri (PW Systole)
+                html += '<tr>';
+                html += '<td class="fw-semibold bg-light border-dark">TAPSE</td>';
+                html += `<td class="text-center border-dark">${payload['TAPSE'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">≥ 16 mm</td>';
+                html += '<td class="fw-semibold bg-light border-dark">PW Systole</td>';
+                html += `<td class="text-center border-dark">${payload['PW Systole'] || '-'}</td>`;
+                html += '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;"></td>';
+                html += '</tr>';
+
+                // Row 7: Ventrikel Kanan (RA mayor) | Ventrikel Kiri (EF)
+                html += '<tr>';
+                html += '<td class="fw-semibold bg-light border-dark">RA mayor</td>';
+                html += `<td class="text-center border-dark">${payload['RA mayor'] || '-'}</td>`;
+                html += '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;"></td>';
+                html += '<td class="fw-semibold bg-light border-dark">EF</td>';
+                html += `<td class="text-center border-dark">${payload['EF'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">52-77 %</td>';
+                html += '</tr>';
+
+                // Row 8: Ventrikel Kanan (RA minor) | Ventrikel Kiri (FS)
+                html += '<tr>';
+                html += '<td class="fw-semibold bg-light border-dark">RA minor</td>';
+                html += `<td class="text-center border-dark">${payload['RA minor'] || '-'}</td>`;
+                html += '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;"></td>';
+                html += '<td class="fw-semibold bg-light border-dark">FS</td>';
+                html += `<td class="text-center border-dark">${payload['FS'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">> 25 %</td>';
+                html += '</tr>';
+
+                // Row 9: Empty left | Ventrikel Kiri (EPSS)
+                html += '<tr>';
+                html += '<td colspan="4" class="border-dark"></td>';
+                html += '<td class="fw-semibold bg-light border-dark">EPSS</td>';
+                html += `<td class="text-center border-dark">${payload['EPSS'] || '-'}</td>`;
+                html +=
+                    '<td class="text-center border-dark text-success" style="background-color: #FFF2CC;">< 10 mm</td>';
+                html += '</tr>';
+                html += '</tbody></table></div>';
+
+                const findingsTable1 = [{
+                        label: 'Gerakan Otot / Wall Motion',
+                        field: 'Gerakan Otot / Wall Motion',
+                        pair: {
+                            label: 'Katup Aorta / Aortic Valve',
+                            field: 'Katup Aorta / Aortic Valve'
+                        }
+                    },
+                    {
+                        label: 'Katup Mitral / Mitral Valve',
+                        field: 'Katup Mitral / Mitral Valve',
+                        pair: {
+                            label: 'Katup Pulmonal / Pulmonal Valve',
+                            field: 'Katup Pulmonal / Pulmonal Valve'
+                        }
+                    },
+                    {
+                        label: 'Katup Trikuspid / Tricuspid Valve',
+                        field: 'Katup Trikuspid / Tricuspid Valve',
+                        colspan: true
+                    }
+                ];
+
+                html +=
+                    '<div class="border border-dark mt-3 mb-2"><table class="table table-sm table-bordered border-dark mb-0" style="font-size: 0.875rem;"><tbody>';
+                findingsTable1.forEach(item => {
+                    html += '<tr>';
+                    html +=
+                        `<td class="fw-semibold bg-light border-dark" style="width: 28%;">${item.label}</td><td class="border-dark" style="width: 2%;">:</td>`;
+                    if (item.colspan) {
+                        html += `<td colspan="4" class="border-dark">${payload[item.field] || '-'}</td>`;
+                    } else {
+                        html +=
+                            `<td class="border-dark" style="width: 20%;">${payload[item.field] || '-'}</td>`;
+                        html +=
+                            `<td class="fw-semibold bg-light border-dark" style="width: 28%;">${item.pair.label}</td><td class="border-dark" style="width: 2%;">:</td>`;
+                        html +=
+                            `<td class="border-dark" style="width: 20%;">${payload[item.pair.field] || '-'}</td>`;
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+
+                const findingsTable2 = [{
+                        label: 'Wall motion',
+                        field: 'Gerakan Otot / Wall Motion',
+                        pair: {
+                            label: 'Katup-Katup',
+                            merged: true
+                        }
+                    },
+                    {
+                        label: 'Fungsi sistolik LV',
+                        field: 'Fungsi Sistolik LV',
+                        pair: {
+                            label: 'Dimensi ruang jantung',
+                            field: 'Dimensi Ruang Jantung'
+                        }
+                    }
+                ];
+
+                html +=
+                    '<div class="border border-dark mb-2"><table class="table table-sm table-bordered border-dark mb-0" style="font-size: 0.875rem;"><tbody>';
+                findingsTable2.forEach(item => {
+                    html += '<tr>';
+                    html +=
+                        `<td class="fw-semibold bg-light border-dark" style="width: 28%;">${item.label}</td><td class="border-dark" style="width: 2%;">:</td>`;
+                    if (item.pair.merged) {
+                        const katupFields = ['Katup Mitral / Mitral Valve', 'Katup Trikuspid / Tricuspid Valve',
+                            'Katup Aorta / Aortic Valve', 'Katup Pulmonal / Pulmonal Valve'
+                        ];
+                        const katupValues = katupFields.map(f => payload[f]).filter(v => v);
+                        const mergedValue = katupValues.length > 0 ? katupValues.join(', ') : '-';
+                        html +=
+                            `<td class="border-dark" style="width: 20%;">${payload[item.field] || '-'}</td>`;
+                        html +=
+                            `<td class="fw-semibold bg-light border-dark" style="width: 28%;">${item.pair.label}</td><td class="border-dark" style="width: 2%;">:</td>`;
+                        html += `<td class="border-dark" style="width: 20%;">${mergedValue}</td>`;
+                    } else {
+                        let funcValue = payload[item.field] || '';
+                        const efValue = payload['EF'];
+                        if (efValue && funcValue && !funcValue.toLowerCase().includes('ef')) {
+                            funcValue += ` (EF: ${efValue} %)`;
+                        }
+                        html += `<td class="border-dark" style="width: 20%;">${funcValue || '-'}</td>`;
+                        html +=
+                            `<td class="fw-semibold bg-light border-dark" style="width: 28%;">${item.pair.label}</td><td class="border-dark" style="width: 2%;">:</td>`;
+                        html +=
+                            `<td class="border-dark" style="width: 20%;">${payload[item.pair.field] || '-'}</td>`;
+                    }
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div></div>';
+                return html;
             }
 
             // ==================== DELETE HANDLER ====================

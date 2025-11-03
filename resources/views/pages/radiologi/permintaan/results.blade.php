@@ -57,7 +57,292 @@
                             <div class="form-text">Pilih dokter spesialis radiologi yang melakukan pemeriksaan</div>
                         </div>
 
-                        @if ($req->jenis && $req->jenis->templateFields && $req->jenis->templateFields->isNotEmpty())
+                        <div class="mb-3">
+                            <label class="form-label">Perawat / Nurse <span class="text-danger">*</span></label>
+                            <select name="reporter_id" class="form-select" required>
+                                <option value="">-- Pilih Perawat --</option>
+                                @php
+                                    $nurses = \App\Models\User::where('role', 3)
+                                        ->where('is_active', 1)
+                                        ->orderBy('name')
+                                        ->get();
+                                @endphp
+                                @foreach ($nurses as $nurse)
+                                    <option value="{{ $nurse->id }}"
+                                        {{ old('reporter_id') == $nurse->id ? 'selected' : '' }}>
+                                        {{ $nurse->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Pilih perawat yang membantu pemeriksaan</div>
+                        </div>
+
+                        @if (
+                            $req->jenis &&
+                                (stripos($req->jenis->name, 'ECHOCARDIOGRAPHY') !== false || stripos($req->jenis->name, 'ECHO') !== false))
+                            {{-- ECHOCARDIOGRAPHY Structured Form --}}
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="mb-3">Pengukuran / Measurement</h6>
+
+                                    <style>
+                                        .measurement-table {
+                                            width: 100%;
+                                            border-collapse: collapse;
+                                            margin-bottom: 1rem;
+                                            background-color: white;
+                                        }
+
+                                        .measurement-table th {
+                                            background-color: #198754;
+                                            color: white;
+                                            padding: 12px;
+                                            text-align: center;
+                                            font-weight: 600;
+                                            border: 1px solid #198754;
+                                        }
+
+                                        .measurement-table td {
+                                            padding: 10px 12px;
+                                            border: 1px solid #dee2e6;
+                                        }
+
+                                        .measurement-table td:first-child {
+                                            background-color: #f8f9fa;
+                                            font-weight: 600;
+                                            text-align: center;
+                                            vertical-align: middle;
+                                            width: 20%;
+                                        }
+
+                                        .measurement-table tbody td:nth-child(2) {
+                                            background-color: #f8f9fa;
+                                            width: 30%;
+                                            font-weight: 500;
+                                            text-align: left !important;
+                                            padding-left: 15px;
+                                        }
+
+                                        .measurement-table td:nth-child(3) {
+                                            background-color: #ffffff;
+                                            width: 180px;
+                                            min-width: 180px;
+                                            max-width: 180px;
+                                            padding: 8px;
+                                            text-align: center;
+                                            vertical-align: middle;
+                                        }
+
+                                        .measurement-table td:nth-child(4) {
+                                            background-color: #fffbf0;
+                                            color: #6c757d;
+                                            width: 200px;
+                                            min-width: 200px;
+                                            font-size: 13px;
+                                            font-style: italic;
+                                            text-align: center;
+                                            vertical-align: middle;
+                                        }
+
+                                        .measurement-table input[type="number"] {
+                                            width: 160px;
+                                            padding: 10px 12px;
+                                            border: 1px solid #ced4da;
+                                            border-radius: 4px;
+                                            box-sizing: border-box;
+                                            height: 40px;
+                                            display: block;
+                                            margin: 0 auto;
+                                            font-size: 15px;
+                                            text-align: center;
+                                            font-weight: 500;
+                                        }
+
+                                        .measurement-table tbody tr td:nth-child(1) {
+                                            text-align: left !important;
+                                        }
+
+                                        .measurement-table input[type="number"]:focus {
+                                            outline: none;
+                                            border-color: #198754;
+                                            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+                                        }
+
+                                        .measurement-table input[type="number"]::placeholder {
+                                            text-align: center;
+                                            color: #adb5bd;
+                                            font-style: italic;
+                                        }
+                                    </style>
+
+                                    <table class="measurement-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Bagian</th>
+                                                <th>Parameter</th>
+                                                <th>Nilai</th>
+                                                <th>Normal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td rowspan="1">Aorta</td>
+                                                <td>Root diam</td>
+                                                <td><input type="number" step="0.1" name="payload[Root diam]"
+                                                        value="{{ old('payload.Root diam') }}" placeholder="mm"></td>
+                                                <td>20–37 mm</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td rowspan="9">Ventrikel Kiri<br>(Left Ventricle)</td>
+                                                <td>EDD</td>
+                                                <td><input type="number" step="0.1" name="payload[EDD]"
+                                                        value="{{ old('payload.EDD') }}" placeholder="mm"></td>
+                                                <td>35–52 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>ESD</td>
+                                                <td><input type="number" step="0.1" name="payload[ESD]"
+                                                        value="{{ old('payload.ESD') }}" placeholder="mm"></td>
+                                                <td>26–36 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>IVS Diastole</td>
+                                                <td><input type="number" step="0.1" name="payload[IVS Diastole]"
+                                                        value="{{ old('payload.IVS Diastole') }}" placeholder="mm"></td>
+                                                <td>7–11 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>IVS Systole</td>
+                                                <td><input type="number" step="0.1" name="payload[IVS Systole]"
+                                                        value="{{ old('payload.IVS Systole') }}" placeholder="mm"></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>PW Diastole</td>
+                                                <td><input type="number" step="0.1" name="payload[PW Diastole]"
+                                                        value="{{ old('payload.PW Diastole') }}" placeholder="mm"></td>
+                                                <td>7–11 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>PW Systole</td>
+                                                <td><input type="number" step="0.1" name="payload[PW Systole]"
+                                                        value="{{ old('payload.PW Systole') }}" placeholder="mm"></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>EF</td>
+                                                <td><input type="number" step="0.1" name="payload[EF]"
+                                                        value="{{ old('payload.EF') }}" placeholder="%"></td>
+                                                <td>52–77%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>FS</td>
+                                                <td><input type="number" step="0.1" name="payload[FS]"
+                                                        value="{{ old('payload.FS') }}" placeholder="%"></td>
+                                                <td>&gt; 25%</td>
+                                            </tr>
+                                            <tr>
+                                                <td>EPSS</td>
+                                                <td><input type="number" step="0.1" name="payload[EPSS]"
+                                                        value="{{ old('payload.EPSS') }}" placeholder="mm"></td>
+                                                <td>&lt; 10 mm</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td rowspan="2">Atrium Kiri<br>(Left Atrium)</td>
+                                                <td>Dimension</td>
+                                                <td><input type="number" step="0.1" name="payload[LA Dimension]"
+                                                        value="{{ old('payload.LA Dimension') }}" placeholder="mm"></td>
+                                                <td>15–40 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>LA/Ao ratio</td>
+                                                <td><input type="number" step="0.01" name="payload[LA/Ao ratio]"
+                                                        value="{{ old('payload.LA/Ao ratio') }}" placeholder="ratio">
+                                                </td>
+                                                <td>&lt; 1.33</td>
+                                            </tr>
+
+                                            <tr>
+                                                <td rowspan="5">Ventrikel Kanan<br>(Right Ventricle)</td>
+                                                <td>Dimension</td>
+                                                <td><input type="number" step="0.1" name="payload[RV Dimension]"
+                                                        value="{{ old('payload.RV Dimension') }}" placeholder="mm"></td>
+                                                <td>&lt; 43 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>M.V.A</td>
+                                                <td><input type="number" step="0.1" name="payload[M.V.A]"
+                                                        value="{{ old('payload.M.V.A') }}" placeholder="cm²"></td>
+                                                <td>&gt; 3 cm²</td>
+                                            </tr>
+                                            <tr>
+                                                <td>TAPSE</td>
+                                                <td><input type="number" step="0.1" name="payload[TAPSE]"
+                                                        value="{{ old('payload.TAPSE') }}" placeholder="mm"></td>
+                                                <td>≥ 16 mm</td>
+                                            </tr>
+                                            <tr>
+                                                <td>RA mayor</td>
+                                                <td><input type="number" step="0.1" name="payload[RA mayor]"
+                                                        value="{{ old('payload.RA mayor') }}" placeholder="mm"></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td>RA minor</td>
+                                                <td><input type="number" step="0.1" name="payload[RA minor]"
+                                                        value="{{ old('payload.RA minor') }}" placeholder="mm"></td>
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <h6 class="mb-3 mt-4">Penilaian Katup & Gerakan Otot</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Gerakan Otot / Wall Motion</label>
+                                            <textarea name="payload[Gerakan Otot / Wall Motion]" class="form-control" rows="2"
+                                                placeholder="Contoh: Normokinetik">{{ old('payload.Gerakan Otot / Wall Motion') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Katup Mitral / Mitral Valve</label>
+                                            <textarea name="payload[Katup Mitral / Mitral Valve]" class="form-control" rows="2"
+                                                placeholder="Contoh: MR Mild, E/A > 1">{{ old('payload.Katup Mitral / Mitral Valve') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Katup Trikuspid / Tricuspid Valve</label>
+                                            <textarea name="payload[Katup Trikuspid / Tricuspid Valve]" class="form-control" rows="2"
+                                                placeholder="Contoh: TR Mild">{{ old('payload.Katup Trikuspid / Tricuspid Valve') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Katup Aorta / Aortic Valve</label>
+                                            <textarea name="payload[Katup Aorta / Aortic Valve]" class="form-control" rows="2" placeholder="Contoh: Baik">{{ old('payload.Katup Aorta / Aortic Valve') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Katup Pulmonal / Pulmonal Valve</label>
+                                            <textarea name="payload[Katup Pulmonal / Pulmonal Valve]" class="form-control" rows="2"
+                                                placeholder="Contoh: Baik">{{ old('payload.Katup Pulmonal / Pulmonal Valve') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Fungsi Sistolik LV</label>
+                                            <textarea name="payload[Fungsi Sistolik LV]" class="form-control" rows="2"
+                                                placeholder="Contoh: Baik (EF: 66%)">{{ old('payload.Fungsi Sistolik LV') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Dimensi Ruang Jantung</label>
+                                            <textarea name="payload[Dimensi Ruang Jantung]" class="form-control" rows="2" placeholder="Contoh: LVH (+)">{{ old('payload.Dimensi Ruang Jantung') }}</textarea>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Lain-lain (PH, Efusi Perikard, dll)</label>
+                                            <textarea name="payload[Lain-lain]" class="form-control" rows="2"
+                                                placeholder="Contoh: PH (-), Efusi Perikard (-)">{{ old('payload.Lain-lain') }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @elseif ($req->jenis && $req->jenis->templateFields && $req->jenis->templateFields->isNotEmpty())
+                            {{-- Generic Template Fields for Non-ECHO Examinations --}}
                             <div class="card bg-light mb-3">
                                 <div class="card-header">
                                     <h6 class="mb-0">Data Pemeriksaan {{ $req->jenis->name }}</h6>
@@ -99,22 +384,31 @@
                             </div>
                         @endif
 
-                        <div class="mb-3">
-                            <label class="form-label">Temuan (Findings) <span class="text-danger">*</span></label>
-                            <textarea name="findings" class="form-control" rows="6" required>{{ old('findings') }}</textarea>
-                            <div class="form-text">Deskripsi lengkap temuan radiologi</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Kesimpulan (Impression) <span class="text-danger">*</span></label>
-                            <textarea name="impression" class="form-control" rows="4" required>{{ old('impression') }}</textarea>
-                            <div class="form-text">Kesimpulan dan diagnosis radiologi</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Lampiran Gambar/File (opsional)</label>
-                            <input type="file" name="attachments[]" class="form-control" multiple accept="image/*,.pdf">
-                            <div class="form-text">Anda bisa mengunggah beberapa file gambar atau PDF (maks 10MB per file).
+                        @if (
+                            $req->jenis &&
+                                (stripos($req->jenis->name, 'ECHOCARDIOGRAPHY') !== false || stripos($req->jenis->name, 'ECHO') !== false))
+                            {{-- ECHO specific fields --}}
+                            <div class="mb-3">
+                                <label class="form-label">Temuan / Findings</label>
+                                <textarea name="findings" class="form-control" rows="4">{{ old('findings') }}</textarea>
+                                <div class="form-text">Temuan dan analisis hasil pemeriksaan echocardiography (opsional)
+                                </div>
                             </div>
-                        </div>
+                            <div class="mb-3">
+                                <label class="form-label">Saran / Recommendation<span class="text-danger">*</span></label>
+                                <textarea name="impression" class="form-control" rows="4" required>{{ old('impression') }}</textarea>
+                                <div class="form-text">Saran dan rekomendasi dari hasil pemeriksaan echocardiography</div>
+                            </div>
+                        @else
+                            {{-- Generic for other examinations --}}
+                            <div class="mb-3">
+                                <label class="form-label">Saran / Recommendation <span
+                                        class="text-danger">*</span></label>
+                                <textarea name="findings" class="form-control" rows="6" required>{{ old('findings') }}</textarea>
+                                <div class="form-text">Saran dan rekomendasi dari hasil pemeriksaan radiologi</div>
+                            </div>
+                        @endif
+
                         <div class="d-flex gap-2">
                             <a href="{{ route('radiologi.requests.show', $req->id) }}" class="btn btn-light">Batal</a>
                             <button type="submit" class="btn btn-success">

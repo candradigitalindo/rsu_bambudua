@@ -122,6 +122,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('jenis-pemeriksaan/{id}/fields', [JenisPemeriksaanPenunjangController::class, 'showFields'])->name('jenis-pemeriksaan.fields.index');
         Route::post('jenis-pemeriksaan/{id}/fields', [JenisPemeriksaanPenunjangController::class, 'storeField'])->name('jenis-pemeriksaan.fields.store');
         Route::delete('jenis-pemeriksaan/fields/{field_id}', [JenisPemeriksaanPenunjangController::class, 'destroyField'])->name('jenis-pemeriksaan.fields.destroy');
+        Route::post('jenis-pemeriksaan/fields/{field_id}/examinations', [JenisPemeriksaanPenunjangController::class, 'storeExamination'])->name('jenis-pemeriksaan.examinations.store');
+        Route::delete('jenis-pemeriksaan/examinations/{item_id}', [JenisPemeriksaanPenunjangController::class, 'destroyExamination'])->name('jenis-pemeriksaan.examinations.destroy');
         Route::resource('jenis-pemeriksaan', JenisPemeriksaanPenunjangController::class)->except(['show']);
         Route::resource('icd10', Icd10Controller::class);
         Route::post('icd10/import', [\App\Http\Controllers\Icd10Controller::class, 'import'])->name('icd10.import');
@@ -419,6 +421,7 @@ Route::middleware(['auth'])->group(function () {
         // Requests
         Route::resource('requests', LabRequestController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::get('requests/{id}/print', [LabRequestController::class, 'print'])->name('requests.print');
+        Route::get('requests/{id}/print-medical', [LabRequestController::class, 'printMedical'])->name('requests.print.medical');
         Route::get('requests/{id}/print-pdf', [LabRequestController::class, 'printPdf'])->name('requests.print.pdf');
         // Reagents
         Route::resource('reagents', LabReagentController::class)->except(['show', 'destroy']);

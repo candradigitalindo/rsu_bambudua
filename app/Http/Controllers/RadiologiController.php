@@ -54,7 +54,7 @@ class RadiologiController extends Controller
 
     public function resultsEdit($id)
     {
-        $req = RadiologyRequest::with(['pasien', 'jenis.templateFields', 'dokter'])->findOrFail($id);
+        $req = RadiologyRequest::with(['pasien', 'jenis.templateFields.fieldItems', 'dokter'])->findOrFail($id);
 
         // Auto-update status to processing if currently requested
         if ($req->status === 'requested') {
@@ -71,7 +71,7 @@ class RadiologiController extends Controller
 
     public function resultsStore(Request $request, $id)
     {
-        $req = RadiologyRequest::with('jenis.templateFields')->findOrFail($id);
+        $req = RadiologyRequest::with('jenis.templateFields.fieldItems')->findOrFail($id);
 
         if ($req->status !== 'processing') {
             return redirect()->route('radiologi.requests.show', $id)
@@ -92,7 +92,14 @@ class RadiologiController extends Controller
         // Build validation rules for custom fields
         if ($req->jenis && $req->jenis->templateFields->isNotEmpty()) {
             foreach ($req->jenis->templateFields as $field) {
-                $rules['payload.' . $field->field_name] = 'nullable';
+                if ($field->field_type === 'group') {
+                    // For group fields, validate each sub-field
+                    foreach ($field->fieldItems as $item) {
+                        $rules['payload.' . $field->field_name . '.' . $item->item_name] = 'nullable';
+                    }
+                } else {
+                    $rules['payload.' . $field->field_name] = 'nullable';
+                }
             }
         }
 

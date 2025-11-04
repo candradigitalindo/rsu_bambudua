@@ -189,25 +189,26 @@
             font-size: 9pt;
         }
 
-        .findings-table td:nth-child(1),
-        .findings-table td:nth-child(4) {
-            width: 200px;
+        .findings-table td:nth-child(1) {
+            width: 250px;
             font-weight: bold;
             background-color: #f8f9fa;
             vertical-align: top;
+            border-right: none !important;
         }
 
-        .findings-table td:nth-child(2),
-        .findings-table td:nth-child(5) {
+        .findings-table td:nth-child(2) {
             width: 15px;
             text-align: center;
             font-weight: bold;
             background-color: #f8f9fa;
+            border-left: none !important;
+            border-right: none !important;
         }
 
-        .findings-table td:nth-child(3),
-        .findings-table td:nth-child(6) {
+        .findings-table td:nth-child(3) {
             background-color: #ffffff;
+            border-left: none !important;
         }
 
         .summary-box {
@@ -447,13 +448,15 @@
                     </tr>
                 </tbody>
             </table>
-            {{-- TABEL 1: Detail Lengkap Gerakan Otot & Katup (2 Kolom) --}}
+            {{-- TABEL 1: Detail Lengkap Gerakan Otot & Katup (1 Kolom) --}}
             <div class="findings-box">
                 <table class="findings-table">
                     <tr>
-                        <td>Gerakan Otot / Wall Motion</td>
-                        <td>:</td>
+                        <td style="width: 250px;">Gerakan Otot / Wall Motion</td>
+                        <td style="width: 15px;">:</td>
                         <td>{{ $measurementData['Gerakan Otot / Wall Motion'] ?? 'Normokinetik' }}</td>
+                    </tr>
+                    <tr>
                         <td>Katup Aorta / Aortic Valve</td>
                         <td>:</td>
                         <td>{{ $measurementData['Katup Aorta / Aortic Valve'] ?? '-' }}</td>
@@ -462,6 +465,8 @@
                         <td>Katup Mitral / Mitral Valve</td>
                         <td>:</td>
                         <td>{{ $measurementData['Katup Mitral / Mitral Valve'] ?? '-' }}</td>
+                    </tr>
+                    <tr>
                         <td>Katup Pulmonal / Pulmonal Valve</td>
                         <td>:</td>
                         <td>{{ $measurementData['Katup Pulmonal / Pulmonal Valve'] ?? '-' }}</td>
@@ -469,28 +474,30 @@
                     <tr>
                         <td>Katup Trikuspid / Tricuspid Valve</td>
                         <td>:</td>
-                        <td colspan="4">{{ $measurementData['Katup Trikuspid / Tricuspid Valve'] ?? '-' }}</td>
+                        <td>{{ $measurementData['Katup Trikuspid / Tricuspid Valve'] ?? '-' }}</td>
                     </tr>
                 </table>
             </div>
 
-            {{-- TABEL 2: Ringkasan (2 Kolom) --}}
+            {{-- TABEL 2: Ringkasan (1 Kolom) --}}
             <div class="findings-box">
                 <table class="findings-table">
                     <tr>
-                        <td>Wall motion</td>
-                        <td>:</td>
+                        <td style="width: 250px;">Wall motion</td>
+                        <td style="width: 15px;">:</td>
                         <td>{{ $measurementData['Gerakan Otot / Wall Motion'] ?? 'Normokinetik' }}</td>
+                    </tr>
+                    <tr>
                         <td>Katup-Katup</td>
                         <td>:</td>
                         <td>
                             @php
                                 $katupItems = [];
                                 if (!empty($measurementData['Katup Mitral / Mitral Valve'])) {
-                                    $katupItems[] = $measurementData['Katup Mitral / Mitral Valve'];
+                                    $katupItems[] = 'MR ' . $measurementData['Katup Mitral / Mitral Valve'];
                                 }
                                 if (!empty($measurementData['Katup Trikuspid / Tricuspid Valve'])) {
-                                    $katupItems[] = $measurementData['Katup Trikuspid / Tricuspid Valve'];
+                                    $katupItems[] = 'TR ' . $measurementData['Katup Trikuspid / Tricuspid Valve'];
                                 }
                                 if (!empty($measurementData['Katup Aorta / Aortic Valve'])) {
                                     $katupItems[] = $measurementData['Katup Aorta / Aortic Valve'];
@@ -515,6 +522,8 @@
                                 echo $fungsi ?: '-';
                             @endphp
                         </td>
+                    </tr>
+                    <tr>
                         <td>Dimensi ruang jantung</td>
                         <td>:</td>
                         <td>{{ $measurementData['Dimensi Ruang Jantung'] ?? '-' }}</td>

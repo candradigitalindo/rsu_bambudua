@@ -89,8 +89,19 @@
                                     @if (is_array($it->result_payload) && count($it->result_payload))
                                         <dl class="row mb-0">
                                             @foreach ($it->result_payload as $k => $v)
-                                                <dt class="col-sm-4 small-text">{{ str_replace('_', ' ', ucfirst($k)) }}</dt>
-                                                <dd class="col-sm-8">{{ $v }}</dd>
+                                                <dt class="col-sm-4 small-text">{{ str_replace('_', ' ', ucfirst($k)) }}
+                                                </dt>
+                                                <dd class="col-sm-8">
+                                                    @if (is_array($v))
+                                                        @foreach ($v as $subK => $subV)
+                                                            <div>
+                                                                <strong>{{ str_replace('_', ' ', ucfirst($subK)) }}:</strong>
+                                                                {{ $subV }}</div>
+                                                        @endforeach
+                                                    @else
+                                                        {{ $v }}
+                                                    @endif
+                                                </dd>
                                             @endforeach
                                         </dl>
                                     @else

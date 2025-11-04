@@ -22,4 +22,15 @@ class TemplateField extends Model
     {
         return $this->belongsTo(JenisPemeriksaanPenunjang::class, 'jenis_pemeriksaan_id');
     }
+
+    public function fieldItems()
+    {
+        return $this->hasMany(TemplateFieldItem::class, 'template_field_id')->orderBy('order');
+    }
+
+    // Check if this field is a group type with sub-items
+    public function isGroup()
+    {
+        return $this->field_type === 'group';
+    }
 }

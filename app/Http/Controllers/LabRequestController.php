@@ -17,17 +17,17 @@ class LabRequestController extends Controller
         $q = $request->input('q');
         $status = $request->input('status');
         $requests = LabRequest::with(['encounter'])
-            ->when($q, function($qr) use ($q){
-                $qr->whereHas('encounter', function($x) use ($q){
-                    $x->where('rekam_medis','like',"%{$q}%")
-                      ->orWhere('name_pasien','like',"%{$q}%");
+            ->when($q, function ($qr) use ($q) {
+                $qr->whereHas('encounter', function ($x) use ($q) {
+                    $x->where('rekam_medis', 'like', "%{$q}%")
+                        ->orWhere('name_pasien', 'like', "%{$q}%");
                 });
             })
-            ->when($status, fn($qr)=>$qr->where('status',$status))
+            ->when($status, fn($qr) => $qr->where('status', $status))
             ->orderByDesc('created_at')
             ->paginate(15)
             ->withQueryString();
-        return view('pages.lab.requests.index', compact('requests','q','status'));
+        return view('pages.lab.requests.index', compact('requests', 'q', 'status'));
     }
 
     public function create()
@@ -40,7 +40,7 @@ class LabRequestController extends Controller
         $data = $request->validate([
             'encounter_id' => 'required|string|exists:encounters,id',
             'notes' => 'nullable|string',
-'tests' => 'required|array|min:1',
+            'tests' => 'required|array|min:1',
             'tests.*.id' => 'required|string|exists:jenis_pemeriksaan_penunjangs,id',
             'tests.*.name' => 'nullable|string',
         ]);
@@ -72,31 +72,41 @@ class LabRequestController extends Controller
         }
         $lr->update(['total_charge' => $total]);
 
-        return redirect()->route('lab.requests.index')->with('success','Permintaan lab berhasil dibuat.');
+        return redirect()->route('lab.requests.index')->with('success', 'Permintaan lab berhasil dibuat.');
     }
 
     public function show(string $id)
     {
-        $req = LabRequest::with(['encounter','items'])->findOrFail($id);
+        $req = LabRequest::with(['encounter', 'items.jenisPemeriksaan.templateFields.fieldItems'])->findOrFail($id);
         return view('pages.lab.requests.show', compact('req'));
     }
 
     public function print(string $id)
     {
-        $req = LabRequest::with(['encounter','items'])->findOrFail($id);
+        $req = LabRequest::with(['encounter', 'items'])->findOrFail($id);
         // Optional: only allow print when completed
         if ($req->status !== 'completed') {
-            return redirect()->route('lab.requests.show', $id)->with('error','Hasil hanya dapat dicetak jika status Completed.');
+            return redirect()->route('lab.requests.show', $id)->with('error', 'Hasil hanya dapat dicetak jika status Completed.');
         }
         return view('pages.lab.requests.print', compact('req'));
+    }
+
+    public function printMedical(string $id)
+    {
+        $req = LabRequest::with(['encounter.user', 'items.jenisPemeriksaan.templateFields.fieldItems', 'requester'])->findOrFail($id);
+        // Optional: only allow print when completed
+        if ($req->status !== 'completed') {
+            return redirect()->route('lab.requests.show', $id)->with('error', 'Hasil hanya dapat dicetak jika status Completed.');
+        }
+        return view('pages.lab.requests.print-medical', compact('req'));
     }
 
     // Stream PDF langsung ke browser viewer
     public function printPdf(string $id)
     {
-        $req = LabRequest::with(['encounter','items'])->findOrFail($id);
+        $req = LabRequest::with(['encounter', 'items'])->findOrFail($id);
         if ($req->status !== 'completed') {
-            return redirect()->route('lab.requests.show', $id)->with('error','Hasil hanya dapat dicetak jika status Completed.');
+            return redirect()->route('lab.requests.show', $id)->with('error', 'Hasil hanya dapat dicetak jika status Completed.');
         }
         $pdf = Pdf::loadView('pages.lab.requests.print', compact('req'));
         $filename = 'hasil-lab-' . ($req->encounter->rekam_medis ?? 'pasien') . '.pdf';
@@ -105,13 +115,13 @@ class LabRequestController extends Controller
 
     public function edit(string $id)
     {
-        $req = LabRequest::with(['encounter','items'])->findOrFail($id);
+        $req = LabRequest::with(['encounter', 'items.jenisPemeriksaan.templateFields.fieldItems'])->findOrFail($id);
         return view('pages.lab.requests.edit', compact('req'));
     }
 
     public function update(Request $request, string $id)
     {
-        $req = LabRequest::with('items','encounter')->findOrFail($id);
+        $req = LabRequest::with('items', 'encounter')->findOrFail($id);
         $data = $request->validate([
             'status' => 'required|in:requested,collected,processing,completed,cancelled',
             'items' => 'nullable|array',
@@ -139,8 +149,12 @@ class LabRequestController extends Controller
 
         $req->notes = $data['notes'] ?? $req->notes;
         $req->status = $data['status'];
-        if ($data['status'] === 'collected' && !$req->collected_at) { $req->collected_at = now(); }
-        if ($data['status'] === 'completed' && !$req->completed_at) { $req->completed_at = now(); }
+        if ($data['status'] === 'collected' && !$req->collected_at) {
+            $req->collected_at = now();
+        }
+        if ($data['status'] === 'completed' && !$req->completed_at) {
+            $req->completed_at = now();
+        }
         $req->save();
 
         // Integrasi Kasir: saat completed dan belum charged, tambahkan total_charge ke Encounter.total_bayar_tindakan
@@ -154,7 +168,7 @@ class LabRequestController extends Controller
             }
         }
 
-        return redirect()->route('lab.requests.show', $req->id)->with('success','Permintaan lab diperbarui.');
+        return redirect()->route('lab.requests.show', $req->id)->with('success', 'Permintaan lab diperbarui.');
     }
 
     // (Opsional) Autosuggest test dari master Jenis Pemeriksaan Penunjang
@@ -162,20 +176,20 @@ class LabRequestController extends Controller
     {
         $q = $request->input('q');
         $rows = DB::table('jenis_pemeriksaan_penunjangs')
-            ->when($q, function($qr) use ($q){
-                $qr->where('name','like',"%{$q}%");
+            ->when($q, function ($qr) use ($q) {
+                $qr->where('name', 'like', "%{$q}%");
             })
             ->orderBy('name')
             ->limit(20)
-            ->get(['id','name','harga']);
-        $results = $rows->map(function($r){
+            ->get(['id', 'name', 'harga']);
+        $results = $rows->map(function ($r) {
             return [
                 'id' => $r->id,
                 'text' => $r->name,
                 'price' => (int) $r->harga,
             ];
         });
-        return response()->json(['results'=>$results]);
+        return response()->json(['results' => $results]);
     }
 
     // Pencarian encounter sederhana (by RM/nama) untuk Select2
@@ -184,17 +198,17 @@ class LabRequestController extends Controller
         $q = $request->input('q');
         $id = $request->input('id');
         $rows = DB::table('encounters')
-            ->when($id, fn($qr)=>$qr->where('id',$id))
-            ->when($q, function($qr) use ($q){
-                $qr->where(function($x) use ($q){
-                    $x->where('rekam_medis','like',"%{$q}%")
-                      ->orWhere('name_pasien','like',"%{$q}%");
+            ->when($id, fn($qr) => $qr->where('id', $id))
+            ->when($q, function ($qr) use ($q) {
+                $qr->where(function ($x) use ($q) {
+                    $x->where('rekam_medis', 'like', "%{$q}%")
+                        ->orWhere('name_pasien', 'like', "%{$q}%");
                 });
             })
             ->orderByDesc('created_at')
             ->limit(20)
-            ->get(['id','rekam_medis','name_pasien']);
-        $results = $rows->map(fn($r)=>['id'=>$r->id,'text'=>($r->rekam_medis.' - '.$r->name_pasien)]);
-        return response()->json(['results'=>$results]);
+            ->get(['id', 'rekam_medis', 'name_pasien']);
+        $results = $rows->map(fn($r) => ['id' => $r->id, 'text' => ($r->rekam_medis . ' - ' . $r->name_pasien)]);
+        return response()->json(['results' => $results]);
     }
 }

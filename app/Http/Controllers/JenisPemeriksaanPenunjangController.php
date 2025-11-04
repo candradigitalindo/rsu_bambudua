@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateJenisPemeriksaanRequest;
 
 use App\Models\JenisPemeriksaanPenunjang;
 use App\Models\TemplateField;
+use App\Models\TemplateFieldItem;
 use Illuminate\Http\Request;
 use App\Repositories\JenisPemeriksaanPenunjangRepository;
 use RealRashid\SweetAlert\Facades\Alert;
@@ -77,7 +78,9 @@ class JenisPemeriksaanPenunjangController extends Controller
 
     public function showFields($id)
     {
-        $jenisPemeriksaan = JenisPemeriksaanPenunjang::with('templateFields')->findOrFail($id);
+        $jenisPemeriksaan = JenisPemeriksaanPenunjang::with(['templateFields' => function ($query) {
+            $query->with('fieldItems')->orderBy('order');
+        }])->findOrFail($id);
         confirmDelete('Hapus Kolom!', 'Apakah Anda yakin ingin menghapus kolom ini?');
         return view('pages.master.jenis_pemeriksaan.fields', compact('jenisPemeriksaan'));
     }
@@ -86,7 +89,7 @@ class JenisPemeriksaanPenunjangController extends Controller
     {
         $request->validate([
             'field_label' => 'required|string|max:255',
-            'field_type' => 'required|string|in:text,number,textarea',
+            'field_type' => 'required|string|in:text,number,textarea,group',
             'placeholder' => 'nullable|string|max:255',
         ], [
             'field_label.required' => 'Label Kolom harus diisi.',
@@ -97,12 +100,15 @@ class JenisPemeriksaanPenunjangController extends Controller
 
         $fieldName = \Illuminate\Support\Str::snake($request->field_label);
 
-        $jenisPemeriksaan->templateFields()->create([
+        $templateField = $jenisPemeriksaan->templateFields()->create([
             'field_name' => $fieldName,
             'field_label' => $request->field_label,
             'field_type' => $request->field_type,
             'placeholder' => $request->placeholder,
         ]);
+
+        // Jika tipe field adalah 'group', tidak perlu buat sub-field otomatis
+        // Sub-field akan ditambahkan manual oleh admin nanti
 
         Alert::success('Berhasil', 'Kolom berhasil ditambahkan.');
         return back();
@@ -112,6 +118,50 @@ class JenisPemeriksaanPenunjangController extends Controller
     {
         TemplateField::findOrFail($field_id)->delete();
         Alert::success('Berhasil', 'Kolom berhasil dihapus.');
+        return back();
+    }
+
+    public function storeExamination(Request $request, $field_id)
+    {
+        $request->validate([
+            'examination_name' => 'required|string|max:255',
+            'unit' => 'required|string|max:50',
+            'normal_range' => 'required|string|max:255',
+        ], [
+            'examination_name.required' => 'Nama Pemeriksaan harus diisi.',
+            'unit.required' => 'Satuan harus diisi.',
+            'normal_range.required' => 'Range Normal harus diisi.',
+        ]);
+
+        $templateField = TemplateField::findOrFail($field_id);
+
+        // Pastikan field adalah tipe group
+        if ($templateField->field_type !== 'group') {
+            Alert::error('Gagal', 'Hanya field grup yang bisa ditambahkan pemeriksaan.');
+            return back();
+        }
+
+        $itemName = \Illuminate\Support\Str::snake($request->examination_name);
+
+        $templateField->fieldItems()->create([
+            'item_name' => $itemName,
+            'item_label' => 'Hasil',
+            'item_type' => 'text',
+            'examination_name' => $request->examination_name,
+            'unit' => $request->unit,
+            'normal_range' => $request->normal_range,
+            'placeholder' => "Masukkan hasil {$request->examination_name}",
+            'order' => $templateField->fieldItems()->count() + 1
+        ]);
+
+        Alert::success('Berhasil', 'Pemeriksaan berhasil ditambahkan ke grup.');
+        return back();
+    }
+
+    public function destroyExamination($item_id)
+    {
+        TemplateFieldItem::findOrFail($item_id)->delete();
+        Alert::success('Berhasil', 'Pemeriksaan berhasil dihapus.');
         return back();
     }
 }

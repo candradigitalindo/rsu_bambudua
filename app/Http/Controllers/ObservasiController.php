@@ -313,7 +313,7 @@ class ObservasiController extends Controller
 
     public function getTemplateFields($id)
     {
-        $jenisPemeriksaan = JenisPemeriksaanPenunjang::with('templateFields')->find($id);
+        $jenisPemeriksaan = JenisPemeriksaanPenunjang::with('templateFields.fieldItems')->find($id);
         $fields = $jenisPemeriksaan ? $jenisPemeriksaan->templateFields : [];
         return response()->json($fields);
     }

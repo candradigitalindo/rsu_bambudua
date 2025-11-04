@@ -3,6 +3,50 @@
 @section('title', 'Input Hasil Radiologi')
 @push('style')
     <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
+    <style>
+        .examination-group-card {
+            border: 2px solid #dee2e6 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .examination-group-card .card-header {
+            background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important;
+            border-bottom: 2px solid #146c43 !important;
+            padding: 12px 16px !important;
+        }
+
+        .examination-group-card .card-body {
+            padding: 16px !important;
+            background-color: #ffffff !important;
+        }
+
+        .examination-group-card .table-bordered {
+            border: 1px solid #dee2e6 !important;
+        }
+
+        .examination-group-card .table-bordered th,
+        .examination-group-card .table-bordered td {
+            border: 1px solid #dee2e6 !important;
+        }
+
+        .examination-group-card .table thead th {
+            background-color: #f8f9fa !important;
+            font-weight: 600 !important;
+            color: #495057 !important;
+        }
+
+        .examination-group-card input.form-control-sm {
+            border: 1px solid #ced4da !important;
+            border-radius: 4px !important;
+        }
+
+        .examination-group-card input.form-control-sm:focus {
+            border-color: #198754 !important;
+            box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25) !important;
+        }
+    </style>
 @endpush
 @section('content')
     <div class="row">
@@ -350,34 +394,89 @@
                                 <div class="card-body">
                                     <div class="row g-3">
                                         @foreach ($req->jenis->templateFields as $field)
-                                            <div class="col-md-6">
-                                                <label class="form-label">{{ $field->field_label }}</label>
-                                                @if ($field->field_type === 'textarea')
-                                                    <textarea name="payload[{{ $field->field_name }}]" class="form-control" rows="3"
-                                                        placeholder="{{ $field->placeholder }}">{{ old('payload.' . $field->field_name) }}</textarea>
-                                                @elseif($field->field_type === 'number')
-                                                    <input type="number" step="0.01"
-                                                        name="payload[{{ $field->field_name }}]" class="form-control"
-                                                        value="{{ old('payload.' . $field->field_name) }}"
-                                                        placeholder="{{ $field->placeholder }}">
-                                                @elseif($field->field_type === 'select')
-                                                    <select name="payload[{{ $field->field_name }}]" class="form-select">
-                                                        <option value="">-- Pilih --</option>
-                                                        @if ($field->placeholder)
-                                                            @foreach (explode('|', $field->placeholder) as $option)
-                                                                <option value="{{ $option }}"
-                                                                    {{ old('payload.' . $field->field_name) == $option ? 'selected' : '' }}>
-                                                                    {{ $option }}</option>
-                                                            @endforeach
-                                                        @endif
-                                                    </select>
-                                                @else
-                                                    <input type="text" name="payload[{{ $field->field_name }}]"
-                                                        class="form-control"
-                                                        value="{{ old('payload.' . $field->field_name) }}"
-                                                        placeholder="{{ $field->placeholder }}">
-                                                @endif
-                                            </div>
+                                            @if ($field->field_type === 'group')
+                                                {{-- Group field dengan pemeriksaan yang sudah ditentukan admin --}}
+                                                <div class="col-12">
+                                                    <div class="card examination-group-card">
+                                                        <div class="card-header bg-success text-white">
+                                                            <h6 class="mb-0">
+                                                                <i class="bi bi-folder me-1"></i>{{ $field->field_label }}
+                                                            </h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            @if ($field->fieldItems->isNotEmpty())
+                                                                <div class="table-responsive">
+                                                                    <table class="table table-sm table-bordered">
+                                                                        <thead class="table-light">
+                                                                            <tr>
+                                                                                <th>Pemeriksaan</th>
+                                                                                <th width="150">Hasil</th>
+                                                                                <th width="100">Satuan</th>
+                                                                                <th width="200">Nilai Normal</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            @foreach ($field->fieldItems as $item)
+                                                                                <tr>
+                                                                                    <td class="fw-semibold">
+                                                                                        {{ $item->examination_name }}</td>
+                                                                                    <td>
+                                                                                        <input type="text"
+                                                                                            name="payload[{{ $field->field_name }}][{{ $item->item_name }}]"
+                                                                                            class="form-control form-control-sm"
+                                                                                            value="{{ old('payload.' . $field->field_name . '.' . $item->item_name) }}"
+                                                                                            placeholder="Masukkan hasil">
+                                                                                    </td>
+                                                                                    <td class="text-center text-muted">
+                                                                                        {{ $item->unit }}</td>
+                                                                                    <td class="text-muted">
+                                                                                        {{ $item->normal_range }}</td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            @else
+                                                                <div class="alert alert-warning">
+                                                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                                                    Belum ada pemeriksaan yang dikonfigurasi untuk grup ini.
+                                                                </div>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                {{-- Regular field --}}
+                                                <div class="col-md-6">
+                                                    <label class="form-label">{{ $field->field_label }}</label>
+                                                    @if ($field->field_type === 'textarea')
+                                                        <textarea name="payload[{{ $field->field_name }}]" class="form-control" rows="3"
+                                                            placeholder="{{ $field->placeholder }}">{{ old('payload.' . $field->field_name) }}</textarea>
+                                                    @elseif($field->field_type === 'number')
+                                                        <input type="number" step="0.01"
+                                                            name="payload[{{ $field->field_name }}]" class="form-control"
+                                                            value="{{ old('payload.' . $field->field_name) }}"
+                                                            placeholder="{{ $field->placeholder }}">
+                                                    @elseif($field->field_type === 'select')
+                                                        <select name="payload[{{ $field->field_name }}]"
+                                                            class="form-select">
+                                                            <option value="">-- Pilih --</option>
+                                                            @if ($field->placeholder)
+                                                                @foreach (explode('|', $field->placeholder) as $option)
+                                                                    <option value="{{ $option }}"
+                                                                        {{ old('payload.' . $field->field_name) == $option ? 'selected' : '' }}>
+                                                                        {{ $option }}</option>
+                                                                @endforeach
+                                                            @endif
+                                                        </select>
+                                                    @else
+                                                        <input type="text" name="payload[{{ $field->field_name }}]"
+                                                            class="form-control"
+                                                            value="{{ old('payload.' . $field->field_name) }}"
+                                                            placeholder="{{ $field->placeholder }}">
+                                                    @endif
+                                                </div>
+                                            @endif
                                         @endforeach
                                     </div>
                                 </div>

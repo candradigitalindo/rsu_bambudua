@@ -32,11 +32,11 @@
                                     class="text-danger">*</span></label>
                             <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
                                 required>
-                                <option value="lab"
-                                    {{ old('type', $item->type) == 'lab' ? 'selected' : '' }}>Laboratorium
+                                <option value="lab" {{ old('type', $item->type) == 'lab' ? 'selected' : '' }}>
+                                    Laboratorium
                                 </option>
-                                <option value="radiologi"
-                                    {{ old('type', $item->type) == 'radiologi' ? 'selected' : '' }}>Radiologi</option>
+                                <option value="radiologi" {{ old('type', $item->type) == 'radiologi' ? 'selected' : '' }}>
+                                    Radiologi</option>
                             </select>
                             @error('type')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -47,11 +47,11 @@
                             <div class="input-group">
                                 <span class="input-group-text">Rp.</span>
                                 <input type="text" class="form-control @error('harga') is-invalid @enderror"
-                                    id="harga_display" value="{{ old('harga') ? number_format(preg_replace('/[^\d]/', '', old('harga')), 0, ',', '.') : number_format($item->harga, 0, ',', '.') }}"
+                                    id="harga_display" value="{{ old('harga', number_format($item->harga, 0, ',', '.')) }}"
                                     required>
-                                <!-- Input tersembunyi untuk menyimpan nilai asli tanpa format -->
+                                <!-- Input tersembunyi untuk menyimpan nilai asli -->
                                 <input type="hidden" name="harga" id="harga"
-                                    value="{{ old('harga') ? preg_replace('/[^\d]/', '', old('harga')) : $item->harga }}">
+                                    value="{{ old('harga', $item->harga) }}">
                             </div>
                             @error('harga')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -89,19 +89,15 @@
                 return rupiah;
             }
 
-            // Format initial value on page load
-            $('#harga_display').val(formatRupiah($('#harga_display').val()));
+            // Set initial value correctly on page load
+            let initialDisplayValue = $('#harga_display').val();
+            let initialRealValue = initialDisplayValue.replace(/\./g, '');
+            $('#harga').val(initialRealValue);
 
             $('#harga_display').on('keyup', function() {
                 let displayValue = $(this).val();
-                let realValue = displayValue.replace(/\./g, '').replace(/[^0-9]/g, '');
+                let realValue = displayValue.replace(/\./g, '');
                 $(this).val(formatRupiah(displayValue));
-                $('#harga').val(realValue);
-            });
-
-            // Ensure clean number is sent on form submit
-            $('form').on('submit', function() {
-                let realValue = $('#harga_display').val().replace(/\./g, '').replace(/[^0-9]/g, '');
                 $('#harga').val(realValue);
             });
         });

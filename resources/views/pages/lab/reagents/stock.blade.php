@@ -2,6 +2,10 @@
 
 @section('title', 'Manajemen Stok Reagen')
 
+@push('style')
+    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
+@endpush
+
 @section('content')
     <div class="row">
         <div class="col-12 col-lg-8 mx-auto">
@@ -64,6 +68,9 @@
 @endsection
 
 @push('scripts')
+    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
+    <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
+    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const typeSelect = document.getElementById('type');

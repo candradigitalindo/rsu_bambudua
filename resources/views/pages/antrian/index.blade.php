@@ -18,6 +18,7 @@
   ************* -->
     <link rel="stylesheet" href="{{ asset('fonts/remix/remixicon.css') }}">
     <link rel="stylesheet" href="{{ asset('css/main.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
 </head>
 
@@ -38,48 +39,49 @@
                         </thead>
                         <tbody>
                             @foreach ($lokasis as $l)
-                            <tr>
-                                <td>{{ $l->lokasi_loket }}</td>
-                                <td class="text-center">
-                                    <a href="{{route('antrian.show', $l->id)}}"
-                                        class="btn btn-primary btn-sm" id="antrian-{{ $l->id }}">
-                                        <i class="ri-printer-line"></i>
-                                        <span class="btn-text" id="text-{{ $l->id }}">Buka Halaman </span>
-                                        <span class="spinner-border spinner-border-sm d-none"
-                                            id="spiner-{{ $l->id }}"></span>
-                                    </a>
-                                    <script src="{{ asset('js/jquery.min.js') }}"></script>
-                                    <script>
-                                        $(document).ready(function() {
-                                            $("#antrian-{{ $l->id }}").click(function() {
-                                                $("#spiner-{{ $l->id }}").removeClass("d-none");
-                                                $("#edit-{{ $l->id }}").addClass("disabled", true);
-                                                $("#text-{{ $l->id }}").text("Mohon Tunggu ...");
+                                <tr>
+                                    <td>{{ $l->lokasi_loket }}</td>
+                                    <td class="text-center">
+                                        <a href="{{ route('antrian.show', $l->id) }}" class="btn btn-primary btn-sm"
+                                            id="antrian-{{ $l->id }}">
+                                            <i class="ri-printer-line"></i>
+                                            <span class="btn-text" id="text-{{ $l->id }}">Buka Halaman </span>
+                                            <span class="spinner-border spinner-border-sm d-none"
+                                                id="spiner-{{ $l->id }}"></span>
+                                        </a>
+                                        <script src="{{ asset('js/jquery.min.js') }}"></script>
+                                        <script>
+                                            $(document).ready(function() {
+                                                $("#antrian-{{ $l->id }}").click(function() {
+                                                    $("#spiner-{{ $l->id }}").removeClass("d-none");
+                                                    $("#edit-{{ $l->id }}").addClass("disabled", true);
+                                                    $("#text-{{ $l->id }}").text("Mohon Tunggu ...");
+                                                });
                                             });
-                                        });
-                                    </script>
+                                        </script>
 
-                                </td>
-                                <td>
-                                    <a href="{{ route('antrian.monitor', $l->id) }}"
-                                       class="btn btn-primary btn-sm" id="monitor-{{ $l->id }}">
-                                        <i class="ri-computer-line"></i>
-                                        <span class="btn-text" id="monitor-{{ $l->id }}">Buka Halaman </span>
-                                        <span class="spinner-border spinner-border-sm d-none"
-                                              id="monitor-{{ $l->id }}"></span>
-                                    </a>
-                                    <script src="{{ asset('js/jquery.min.js') }}"></script>
-                                    <script>
-                                        $(document).ready(function() {
-                                            $("#monitor-{{ $l->id }}").click(function() {
-                                                $("#monitor-{{ $l->id }}").removeClass("d-none");
-                                                $("#monitor-{{ $l->id }}").addClass("disabled", true);
-                                                $("#monitor-{{ $l->id }}").text("Mohon Tunggu ...");
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('antrian.monitor', $l->id) }}" class="btn btn-primary btn-sm"
+                                            id="monitor-{{ $l->id }}">
+                                            <i class="ri-computer-line"></i>
+                                            <span class="btn-text" id="monitor-{{ $l->id }}">Buka Halaman
+                                            </span>
+                                            <span class="spinner-border spinner-border-sm d-none"
+                                                id="monitor-{{ $l->id }}"></span>
+                                        </a>
+                                        <script src="{{ asset('js/jquery.min.js') }}"></script>
+                                        <script>
+                                            $(document).ready(function() {
+                                                $("#monitor-{{ $l->id }}").click(function() {
+                                                    $("#monitor-{{ $l->id }}").removeClass("d-none");
+                                                    $("#monitor-{{ $l->id }}").addClass("disabled", true);
+                                                    $("#monitor-{{ $l->id }}").text("Mohon Tunggu ...");
+                                                });
                                             });
-                                        });
-                                    </script>
-                                </td>
-                            </tr>
+                                        </script>
+                                    </td>
+                                </tr>
                             @endforeach
                         </tbody>
                     </table>
@@ -94,6 +96,8 @@
     <script src="{{ asset('js/moment.min.js') }}"></script>
     <!-- Custom JS files -->
     <script src="{{ asset('js/custom.js') }}"></script>
+    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
+    <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
 </body>
 
 </html>

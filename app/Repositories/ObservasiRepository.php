@@ -218,9 +218,8 @@ class ObservasiRepository
             'price' => $test->harga,
         ]);
 
-        // [FIX] Panggil method untuk membuat insentif untuk dokter yang login
-        $dokterPerujuk = User::find(Auth::id());
-        $this->createPemeriksaanPenunjangIncentive($encounter, $dokterPerujuk, $test->name, (float)$test->harga);
+        // [CHANGED] Fee penunjang akan dibuat saat pembayaran kasir, bukan saat request
+        // Logika dipindahkan ke KasirController
 
         $this->updateEncounterTotalTindakan($encounter->id);
 
@@ -1267,12 +1266,51 @@ class ObservasiRepository
         ]);
     }
 
+    /**
+     * Create incentive for radiologist/lab analyst who performs the examination
+     * This is separate from fee_penunjang (referrer fee)
+     *
+     * @param \App\Models\Encounter $encounter
+     * @param \App\Models\User $pelaksana (radiologist or lab analyst)
+     * @param string $namaPemeriksaan
+     * @param float $hargaPemeriksaan
+     * @param string $tipe ('radiologi' or 'lab')
+     * @return void
+     */
+    public function createRadiologistIncentive(\App\Models\Encounter $encounter, \App\Models\User $pelaksana, string $namaPemeriksaan, float $hargaPemeriksaan, string $tipe = 'radiologi'): void
+    {
+        $tipe = strtolower($tipe);
+        // Use same setting as referrer fee for now (bisa dibuat setting terpisah jika perlu)
+        $modeKey = $tipe === 'radiologi' ? 'fee_radiologi_mode' : 'fee_lab_mode';
+        $valKey  = $tipe === 'radiologi' ? 'fee_radiologi_value' : 'fee_lab_value';
+        $mode = (int) (\App\Models\IncentiveSetting::where('setting_key', $modeKey)->value('setting_value') ?? 1);
+        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', $valKey)->value('setting_value') ?? 0);
+
+        $amount = $this->computeFeeAmount($hargaPemeriksaan, $mode, $val);
+        if ($amount <= 0) {
+            return;
+        }
+
+        $description = "Fee Pelaksana " . ucfirst($tipe) . " ($namaPemeriksaan) untuk " . $encounter->name_pasien;
+
+        \App\Models\Incentive::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'user_id' => $pelaksana->id,
+            'amount' => $amount,
+            'type' => 'fee_pelaksana_' . $tipe,
+            'description' => $description,
+            'year' => now()->year,
+            'month' => now()->month,
+            'status' => 'pending',
+        ]);
+    }
+
     private function createPharmacyIncentiveForInpatient(\App\Models\InpatientDailyMedication $medication): void
     {
         try {
-            $mode = (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_mode')->value('setting_value') ?? 1);
-            $val  = (float)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_value')->value('setting_value') ?? 0);
-            $target= (int)(\App\Models\IncentiveSetting::where('setting_key','fee_obat_target_mode')->value('setting_value') ?? 0);
+            $mode = (int)(\App\Models\IncentiveSetting::where('setting_key', 'fee_obat_mode')->value('setting_value') ?? 1);
+            $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', 'fee_obat_value')->value('setting_value') ?? 0);
+            $target = (int)(\App\Models\IncentiveSetting::where('setting_key', 'fee_obat_target_mode')->value('setting_value') ?? 0);
             $base = (float)($medication->total ?? 0);
             if ($base <= 0 || $val <= 0) return;
 
@@ -1301,7 +1339,7 @@ class ObservasiRepository
                 'status' => 'pending',
             ]);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::warning('Gagal membuat insentif obat inap: '.$e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('Gagal membuat insentif obat inap: ' . $e->getMessage());
         }
     }
 }

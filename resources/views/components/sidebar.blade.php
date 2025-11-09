@@ -65,7 +65,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [8, 4, 1]))
+            @if (in_array(auth()->user()->role, [8, 4, 1, 2]))
+                {{-- Laboratorium, Admin, Owner & Dokter --}}
                 <li class="treeview {{ request()->is('laboratorium*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-test-tube-line"></i>
@@ -92,7 +93,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [9, 4, 1]))
+            @if (in_array(auth()->user()->role, [9, 4, 1, 2]))
+                {{-- Radiologi, Admin, Owner & Dokter --}}
                 <li class="treeview {{ request()->is('radiologi*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-flask-line"></i>

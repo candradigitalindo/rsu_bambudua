@@ -140,8 +140,8 @@ class ObservasiController extends Controller
                 $message = 'Permintaan Laboratorium berhasil dibuat.';
             }
 
-            // Buat insentif untuk dokter
-            $this->observasiRepository->createPemeriksaanPenunjangIncentive($encounter, $dokter, $jp->name, (float)$jp->harga, strtolower($jp->type) === 'radiologi' ? 'radiologi' : 'lab');
+            // [CHANGED] Fee penunjang akan dibuat saat pembayaran kasir, bukan saat request
+            // Logika dipindahkan ke KasirController
         });
 
         // Recalculate encounter totals to include LabRequest/RadiologyRequest items

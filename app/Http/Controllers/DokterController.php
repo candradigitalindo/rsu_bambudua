@@ -87,6 +87,12 @@ class DokterController extends Controller
         $grafikKunjungan = $this->getGrafikKunjungan();
         $grafikPendapatan = $this->getGrafikPendapatan();
 
+        // Histori pasien yang ditangani (10 terakhir)
+        $historiPasien = $this->getHistoriPasien();
+
+        // Histori pendapatan detail (10 terakhir)
+        $historiPendapatan = $this->getHistoriPendapatan();
+
         return view('pages.dokter.index', compact(
             'user',
             'thisWeek_rawatJalan',
@@ -103,7 +109,9 @@ class DokterController extends Controller
             'percent_inpatient',
             'grafik',
             'grafikKunjungan',
-            'grafikPendapatan'
+            'grafikPendapatan',
+            'historiPasien',
+            'historiPendapatan'
         ));
     }
 
@@ -287,5 +295,304 @@ class DokterController extends Controller
             'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
             'total_tahun_ini' => array_sum($totalPendapatan)
         ];
+    }
+
+    /**
+     * Get histori pasien yang ditangani (10 terakhir)
+     */
+    private function getHistoriPasien()
+    {
+        $user = Auth::user();
+
+        // Ambil encounters dari practitioner (rawat jalan & IGD)
+        $encountersFromPractitioner = Practitioner::where('id_petugas', $user->id)
+            ->with(['encounter.pasien', 'encounter.diagnosis'])
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($practitioner) {
+                $encounter = $practitioner->encounter;
+                if (!$encounter) return null;
+
+                return [
+                    'tanggal' => $encounter->created_at,
+                    'no_encounter' => $encounter->no_encounter,
+                    'rekam_medis' => $encounter->rekam_medis,
+                    'nama_pasien' => $encounter->name_pasien,
+                    'type' => $encounter->type, // 1=RJ, 2=RI, 3=IGD
+                    'type_text' => $encounter->type == 1 ? 'Rawat Jalan' : ($encounter->type == 3 ? 'IGD' : 'Rawat Inap'),
+                    'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
+                    'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
+                ];
+            })
+            ->filter(); // Remove null values
+
+        // Ambil visit rawat inap
+        $visitsFromInpatient = InpatientTreatment::where('performed_by', $user->id)
+            ->where('request_type', 'Visit')
+            ->with(['admission.encounter.pasien', 'admission.encounter.diagnosis'])
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($treatment) {
+                $encounter = $treatment->admission->encounter ?? null;
+                if (!$encounter) return null;
+
+                return [
+                    'tanggal' => $treatment->treatment_date,
+                    'no_encounter' => $encounter->no_encounter,
+                    'rekam_medis' => $encounter->rekam_medis,
+                    'nama_pasien' => $encounter->name_pasien,
+                    'type' => 2, // Rawat Inap
+                    'type_text' => 'Rawat Inap (Visit)',
+                    'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
+                    'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
+                ];
+            })
+            ->filter();
+
+        // Gabungkan dan sort berdasarkan tanggal terbaru
+        return $encountersFromPractitioner->merge($visitsFromInpatient)
+            ->sortByDesc('tanggal')
+            ->take(10)
+            ->values();
+    }
+
+    /**
+     * Get histori pendapatan detail (10 terakhir)
+     */
+    private function getHistoriPendapatan()
+    {
+        $user = Auth::user();
+
+        // 1. Ambil incentives (fee encounter, fee penunjang, fee pelaksana, fee obat)
+        $incentives = \App\Models\Incentive::where('user_id', $user->id)
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($incentive) {
+                // Parse type untuk label yang lebih friendly
+                $typeLabels = [
+                    'encounter' => 'Fee Kunjungan',
+                    'treatment_inap' => 'Fee Tindakan Rawat Inap',
+                    'visit_inap' => 'Fee Visit Rawat Inap',
+                    'fee_penunjang' => 'Fee Penunjang',
+                    'fee_pelaksana_lab' => 'Fee Pelaksana Lab',
+                    'fee_pelaksana_radiologi' => 'Fee Pelaksana Radiologi',
+                    'fee_obat_rj' => 'Fee Obat Rawat Jalan',
+                    'fee_obat_inap' => 'Fee Obat Rawat Inap',
+                ];
+
+                return [
+                    'tanggal' => $incentive->created_at,
+                    'bulan' => $incentive->month,
+                    'tahun' => $incentive->year,
+                    'jenis' => $typeLabels[$incentive->type] ?? ucfirst(str_replace('_', ' ', $incentive->type)),
+                    'keterangan' => $incentive->description,
+                    'amount' => $incentive->amount,
+                    'status' => $incentive->status == 'paid' ? 'Dibayar' : 'Pending',
+                    'status_class' => $incentive->status == 'paid' ? 'success' : 'warning',
+                ];
+            });
+
+        // 2. Ambil pendapatan dari tindakan rawat inap
+        $inpatientTreatments = InpatientTreatment::where('performed_by', $user->id)
+            ->whereIn('request_type', ['Tindakan', 'Visit'])
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($treatment) {
+                return [
+                    'tanggal' => $treatment->treatment_date,
+                    'bulan' => $treatment->treatment_date->month,
+                    'tahun' => $treatment->treatment_date->year,
+                    'jenis' => $treatment->request_type == 'Tindakan' ? 'Tindakan Rawat Inap' : 'Visit Rawat Inap',
+                    'keterangan' => $treatment->tindakan_name ?? 'Visit Pasien',
+                    'amount' => $treatment->total,
+                    'status' => 'Selesai',
+                    'status_class' => 'success',
+                ];
+            });
+
+        // Gabungkan dan sort berdasarkan tanggal terbaru
+        return $incentives->merge($inpatientTreatments)
+            ->sortByDesc('tanggal')
+            ->take(10)
+            ->values();
+    }
+
+    /**
+     * Halaman histori pasien lengkap dengan filter tanggal
+     */
+    public function historiPasien(Request $request)
+    {
+        $user = Auth::user();
+
+        // Default 30 hari terakhir
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        // Query untuk encounters dari practitioner (rawat jalan & IGD)
+        $encountersQuery = Practitioner::where('id_petugas', $user->id)
+            ->with(['encounter.pasien', 'encounter.diagnosis'])
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        // Query untuk visit rawat inap
+        $visitsQuery = InpatientTreatment::where('performed_by', $user->id)
+            ->where('request_type', 'Visit')
+            ->with(['admission.encounter.pasien', 'admission.encounter.diagnosis'])
+            ->whereBetween('treatment_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        // Get data
+        $encountersFromPractitioner = $encountersQuery->get()
+            ->map(function ($practitioner) {
+                $encounter = $practitioner->encounter;
+                if (!$encounter) return null;
+
+                return [
+                    'tanggal' => $encounter->created_at,
+                    'no_encounter' => $encounter->no_encounter,
+                    'rekam_medis' => $encounter->rekam_medis,
+                    'nama_pasien' => $encounter->name_pasien,
+                    'type' => $encounter->type,
+                    'type_text' => $encounter->type == 1 ? 'Rawat Jalan' : ($encounter->type == 3 ? 'IGD' : 'Rawat Inap'),
+                    'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
+                    'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
+                ];
+            })
+            ->filter();
+
+        $visitsFromInpatient = $visitsQuery->get()
+            ->map(function ($treatment) {
+                $encounter = $treatment->admission->encounter ?? null;
+                if (!$encounter) return null;
+
+                return [
+                    'tanggal' => $treatment->treatment_date,
+                    'no_encounter' => $encounter->no_encounter,
+                    'rekam_medis' => $encounter->rekam_medis,
+                    'nama_pasien' => $encounter->name_pasien,
+                    'type' => 2,
+                    'type_text' => 'Rawat Inap (Visit)',
+                    'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
+                    'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
+                ];
+            })
+            ->filter();
+
+        // Gabungkan dan sort
+        $historiPasien = $encountersFromPractitioner->merge($visitsFromInpatient)
+            ->sortByDesc('tanggal')
+            ->values();
+
+        // Hitung statistik
+        $totalPasien = $historiPasien->count();
+        $totalRawatJalan = $historiPasien->where('type', 1)->count();
+        $totalIGD = $historiPasien->where('type', 3)->count();
+        $totalRawatInap = $historiPasien->where('type', 2)->count();
+
+        return view('pages.dokter.histori-pasien', compact(
+            'historiPasien',
+            'startDate',
+            'endDate',
+            'totalPasien',
+            'totalRawatJalan',
+            'totalIGD',
+            'totalRawatInap'
+        ));
+    }
+
+    /**
+     * Halaman histori pendapatan lengkap dengan filter tanggal
+     */
+    public function historiPendapatan(Request $request)
+    {
+        $user = Auth::user();
+
+        // Default 30 hari terakhir
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
+
+        // Query incentives
+        $incentivesQuery = \App\Models\Incentive::where('user_id', $user->id)
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        // Query inpatient treatments
+        $inpatientTreatmentsQuery = InpatientTreatment::where('performed_by', $user->id)
+            ->whereIn('request_type', ['Tindakan', 'Visit'])
+            ->whereBetween('treatment_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        // Type labels
+        $typeLabels = [
+            'encounter' => 'Fee Kunjungan',
+            'treatment_inap' => 'Fee Tindakan Rawat Inap',
+            'visit_inap' => 'Fee Visit Rawat Inap',
+            'fee_penunjang' => 'Fee Penunjang',
+            'fee_pelaksana_lab' => 'Fee Pelaksana Lab',
+            'fee_pelaksana_radiologi' => 'Fee Pelaksana Radiologi',
+            'fee_obat_rj' => 'Fee Obat Rawat Jalan',
+            'fee_obat_inap' => 'Fee Obat Rawat Inap',
+        ];
+
+        // Get incentives
+        $incentives = $incentivesQuery->get()
+            ->map(function ($incentive) use ($typeLabels) {
+                return [
+                    'tanggal' => $incentive->created_at,
+                    'bulan' => $incentive->month,
+                    'tahun' => $incentive->year,
+                    'jenis' => $typeLabels[$incentive->type] ?? ucfirst(str_replace('_', ' ', $incentive->type)),
+                    'keterangan' => $incentive->description,
+                    'amount' => $incentive->amount,
+                    'status' => $incentive->status == 'paid' ? 'Dibayar' : 'Pending',
+                    'status_class' => $incentive->status == 'paid' ? 'success' : 'warning',
+                ];
+            });
+
+        // Get inpatient treatments
+        $inpatientTreatments = $inpatientTreatmentsQuery->get()
+            ->map(function ($treatment) {
+                return [
+                    'tanggal' => $treatment->treatment_date,
+                    'bulan' => $treatment->treatment_date->month,
+                    'tahun' => $treatment->treatment_date->year,
+                    'jenis' => $treatment->request_type == 'Tindakan' ? 'Tindakan Rawat Inap' : 'Visit Rawat Inap',
+                    'keterangan' => $treatment->tindakan_name ?? 'Visit Pasien',
+                    'amount' => $treatment->total,
+                    'status' => 'Selesai',
+                    'status_class' => 'success',
+                ];
+            });
+
+        // Gabungkan dan sort
+        $historiPendapatan = $incentives->merge($inpatientTreatments)
+            ->sortByDesc('tanggal')
+            ->values();
+
+        // Hitung statistik
+        $totalPendapatan = $historiPendapatan->sum('amount');
+        $totalTransaksi = $historiPendapatan->count();
+        $totalDibayar = $historiPendapatan->where('status', 'Dibayar')->sum('amount');
+        $totalPending = $historiPendapatan->where('status', 'Pending')->sum('amount');
+
+        // Group by jenis untuk breakdown
+        $breakdownByJenis = $historiPendapatan->groupBy('jenis')->map(function ($items, $jenis) {
+            return [
+                'jenis' => $jenis,
+                'jumlah' => $items->count(),
+                'total' => $items->sum('amount'),
+            ];
+        })->values();
+
+        return view('pages.dokter.histori-pendapatan', compact(
+            'historiPendapatan',
+            'startDate',
+            'endDate',
+            'totalPendapatan',
+            'totalTransaksi',
+            'totalDibayar',
+            'totalPending',
+            'breakdownByJenis'
+        ));
     }
 }

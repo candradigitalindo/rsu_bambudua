@@ -214,6 +214,135 @@
 
     </div>
     <!-- Row ends -->
+
+    <!-- Row starts - Histori Pasien -->
+    <div class="row gx-3">
+        <div class="col-lg-7 col-12">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Histori Pasien yang Ditangani</h5>
+                    <a href="{{ route('dokter.histori-pasien') }}" class="btn btn-sm btn-primary">
+                        <i class="ri-file-list-3-line"></i> Lihat Semua
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Pasien</th>
+                                    <th>Jenis</th>
+                                    <th>Diagnosis</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($historiPasien as $pasien)
+                                    <tr>
+                                        <td>
+                                            <small>{{ \Carbon\Carbon::parse($pasien['tanggal'])->format('d/m/Y') }}</small><br>
+                                            <small
+                                                class="text-muted">{{ \Carbon\Carbon::parse($pasien['tanggal'])->format('H:i') }}</small>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>{{ $pasien['nama_pasien'] }}</strong><br>
+                                                <small class="text-muted">RM: {{ $pasien['rekam_medis'] }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge
+                                            @if ($pasien['type'] == 1) bg-primary-subtle text-primary
+                                            @elseif($pasien['type'] == 2) bg-info-subtle text-info
+                                            @else bg-danger-subtle text-danger @endif">
+                                                {{ $pasien['type_text'] }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>{{ Str::limit($pasien['diagnosis'], 30) }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success-subtle text-success">
+                                                {{ $pasien['status'] }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">
+                                            <i class="ri-folder-open-line fs-4"></i>
+                                            <p class="mb-0 mt-2">Belum ada data pasien</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 col-12">
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Histori Pendapatan</h5>
+                    <a href="{{ route('dokter.histori-pendapatan') }}" class="btn btn-sm btn-success">
+                        <i class="ri-money-dollar-circle-line"></i> Lihat Semua
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jenis</th>
+                                    <th>Jumlah</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($historiPendapatan as $pendapatan)
+                                    <tr>
+                                        <td>
+                                            <small>{{ \Carbon\Carbon::parse($pendapatan['tanggal'])->format('d/m/Y') }}</small>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong class="small">{{ $pendapatan['jenis'] }}</strong><br>
+                                                <small
+                                                    class="text-muted">{{ Str::limit($pendapatan['keterangan'], 25) }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">{{ formatPrice($pendapatan['amount']) }}</strong>
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge bg-{{ $pendapatan['status_class'] }}-subtle text-{{ $pendapatan['status_class'] }}">
+                                                {{ $pendapatan['status'] }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted">
+                                            <i class="ri-wallet-3-line fs-4"></i>
+                                            <p class="mb-0 mt-2">Belum ada data pendapatan</p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Row ends -->
+
     <!-- Row starts -->
     {{-- <div class="row gx-3">
         <div class="col-sm-12">

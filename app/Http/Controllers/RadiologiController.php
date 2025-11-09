@@ -147,6 +147,9 @@ class RadiologiController extends Controller
         $req->status = 'completed';
         $req->save();
 
+        // [CHANGED] Fee pelaksana radiologi akan dibuat saat pembayaran kasir, bukan saat hasil selesai
+        // Logika dipindahkan ke KasirController
+
         return redirect()->route('radiologi.requests.show', $req->id)
             ->with('success', 'Hasil radiologi tersimpan dan status diselesaikan.');
     }
@@ -261,11 +264,11 @@ class RadiologiController extends Controller
             $req->created_by = Auth::id();
             $req->save();
 
-            // Buat insentif untuk dokter yang merujuk
-            $observasiRepo = new \App\Repositories\ObservasiRepository();
-            $observasiRepo->createPemeriksaanPenunjangIncentive($encounter, $dokterPerujuk, $jenisPemeriksaan->name, (float)$jenisPemeriksaan->harga, 'radiologi');
+            // [CHANGED] Fee penunjang radiologi akan dibuat saat pembayaran kasir, bukan saat request
+            // Logika dipindahkan ke KasirController
 
             // Update total tagihan di encounter
+            $observasiRepo = new \App\Repositories\ObservasiRepository();
             $observasiRepo->updateEncounterTotalTindakan($encounter->id);
         });
 

@@ -300,6 +300,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/updateInpatientDailyMedicationStatus', [ObservasiController::class, 'updateInpatientDailyMedicationStatus'])->name('observasi.updateInpatientDailyMedicationStatus');
 
         Route::get('/dashboard-dokter', [DokterController::class, 'index'])->name('dokter.index');
+        Route::get('/histori-pasien', [DokterController::class, 'historiPasien'])->name('dokter.histori-pasien');
+        Route::get('/histori-pendapatan', [DokterController::class, 'historiPendapatan'])->name('dokter.histori-pendapatan');
 
         // Konsultasi Spesialis
         Route::resource('konsultasi', SpecialistConsultationController::class)->only(['index', 'create', 'store', 'edit', 'update', 'show']);

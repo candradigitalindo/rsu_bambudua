@@ -280,6 +280,9 @@ class KasirController extends Controller
                         'status_bayar_tindakan' => 1,
                         'total' => $encounter->total_bayar_tindakan
                     ]);
+
+                    // [NEW] Buat insentif lab & radiologi saat pembayaran lunas
+                    $this->createLabRadiologiIncentives($encounter);
                 }
 
                 // Process resep payment
@@ -578,5 +581,120 @@ class KasirController extends Controller
             ->get();
 
         return view('pages.kasir.struk', compact('encounters', 'paid', 'pasien', 'total', 'unpaidEncounters'));
+    }
+
+    /**
+     * Buat insentif lab dan radiologi saat pembayaran lunas
+     * Mencakup fee penunjang (dokter perujuk) dan fee pelaksana (dokter lab/radiologi)
+     */
+    private function createLabRadiologiIncentives(Encounter $encounter)
+    {
+        try {
+            $observasiRepo = new \App\Repositories\ObservasiRepository();
+
+            // 1. Proses Lab Requests
+            $labRequests = \App\Models\LabRequest::with('items')
+                ->where('encounter_id', $encounter->id)
+                ->where('status', 'completed')
+                ->get();
+
+            foreach ($labRequests as $labRequest) {
+                // Fee Penunjang untuk dokter perujuk (requested_by atau dokter_id)
+                $dokterPerujukId = $labRequest->dokter_id ?? $labRequest->requested_by;
+                if ($dokterPerujukId) {
+                    $dokterPerujuk = \App\Models\User::find($dokterPerujukId);
+                    if ($dokterPerujuk) {
+                        $observasiRepo->createPemeriksaanPenunjangIncentive(
+                            $encounter,
+                            $dokterPerujuk,
+                            'Pemeriksaan Laboratorium',
+                            (float)$labRequest->total_charge,
+                            'lab'
+                        );
+                    }
+                }
+
+                // Fee Pelaksana untuk petugas lab yang menyelesaikan
+                // Ambil dari user yang melakukan completed (biasanya Auth user saat update status)
+                // Karena tidak ada field performed_by, gunakan updated_by atau cek dari activity log
+                // Alternatif: gunakan user yang login terakhir saat completed_at
+                if ($labRequest->completed_at) {
+                    // Cari siapa yang menyelesaikan lab ini
+                    // Untuk sementara, gunakan dokter_id atau first practitioner sebagai pelaksana
+                    // Idealnya harus ada field performed_by di lab_requests
+                    $pelaksanaLab = \App\Models\User::where('role', 8)->first(); // Ambil user lab pertama sebagai fallback
+
+                    // Coba cari dari activity log siapa yang terakhir update status completed
+                    $lastActivity = \App\Models\ActivityLog::where('subject_type', 'App\\Models\\LabRequest')
+                        ->where('subject_id', $labRequest->id)
+                        ->where('properties->status', 'completed')
+                        ->latest()
+                        ->first();
+
+                    if ($lastActivity && $lastActivity->causer_id) {
+                        $pelaksanaLab = \App\Models\User::find($lastActivity->causer_id);
+                    }
+
+                    if ($pelaksanaLab) {
+                        $observasiRepo->createRadiologistIncentive(
+                            $encounter,
+                            $pelaksanaLab,
+                            'Pemeriksaan Laboratorium',
+                            (float)$labRequest->total_charge,
+                            'lab'
+                        );
+                    }
+                }
+            }
+
+            // 2. Proses Radiology Requests
+            $radiologyRequests = \App\Models\RadiologyRequest::with(['jenis', 'results'])
+                ->where('encounter_id', $encounter->id)
+                ->where('status', 'completed')
+                ->get();
+
+            foreach ($radiologyRequests as $radiologyRequest) {
+                // Fee Penunjang untuk dokter perujuk
+                if ($radiologyRequest->dokter_id) {
+                    $dokterPerujuk = \App\Models\User::find($radiologyRequest->dokter_id);
+                    if ($dokterPerujuk) {
+                        $observasiRepo->createPemeriksaanPenunjangIncentive(
+                            $encounter,
+                            $dokterPerujuk,
+                            optional($radiologyRequest->jenis)->name ?? 'Radiologi',
+                            (float)$radiologyRequest->price,
+                            'radiologi'
+                        );
+                    }
+                }
+
+                // Fee Pelaksana untuk radiologist yang melakukan pemeriksaan
+                $result = $radiologyRequest->results()->latest()->first();
+                if ($result && $result->radiologist_id) {
+                    $radiologist = \App\Models\User::find($result->radiologist_id);
+                    if ($radiologist) {
+                        $observasiRepo->createRadiologistIncentive(
+                            $encounter,
+                            $radiologist,
+                            optional($radiologyRequest->jenis)->name ?? 'Radiologi',
+                            (float)$radiologyRequest->price,
+                            'radiologi'
+                        );
+                    }
+                }
+            }
+
+            \Illuminate\Support\Facades\Log::info('Lab & Radiologi incentives created for encounter', [
+                'encounter_id' => $encounter->id,
+                'lab_count' => $labRequests->count(),
+                'radio_count' => $radiologyRequests->count()
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to create lab/radiologi incentives', [
+                'encounter_id' => $encounter->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 }

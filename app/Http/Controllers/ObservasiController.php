@@ -33,7 +33,7 @@ class ObservasiController extends Controller
         // Ambil data perawat yang menangani
         $perawats = $this->observasiRepository->getPerawats($id);
         // [LAB] Ambil semua permintaan lab dan hasilnya untuk encounter ini
-        $labRequests = \App\Models\LabRequest::with('items')->where('encounter_id', $id)->orderByDesc('created_at')->get();
+        $labRequests = \App\Models\LabRequest::with('items.jenisPemeriksaan.templateFields.fieldItems')->where('encounter_id', $id)->orderByDesc('created_at')->get();
         return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats', 'jenisPemeriksaan', 'labRequests'));
     }
     public function riwayatPenyakit($id)
@@ -208,7 +208,7 @@ class ObservasiController extends Controller
     // AJAX: Ambil semua LabRequest beserta items untuk encounter
     public function labRequests($id)
     {
-        $rows = \App\Models\LabRequest::with('items')
+        $rows = \App\Models\LabRequest::with('items.jenisPemeriksaan.templateFields.fieldItems')
             ->where('encounter_id', $id)
             ->orderByDesc('created_at')
             ->get();
@@ -218,6 +218,24 @@ class ObservasiController extends Controller
                 'status' => $req->status,
                 'created_at' => optional($req->created_at)->format('d M Y H:i'),
                 'items' => $req->items->map(function ($it) {
+                    // Build template metadata for grouped fields
+                    $templateMeta = [];
+                    if ($it->jenisPemeriksaan && $it->jenisPemeriksaan->templateFields) {
+                        foreach ($it->jenisPemeriksaan->templateFields as $field) {
+                            if ($field->field_type === 'group' && $field->fieldItems) {
+                                $groupMeta = [];
+                                foreach ($field->fieldItems as $item) {
+                                    $groupMeta[$item->item_name] = [
+                                        'label' => $item->examination_name ?? $item->item_label,
+                                        'unit' => $item->unit,
+                                        'normal_range' => $item->normal_range,
+                                    ];
+                                }
+                                $templateMeta[$field->field_name] = $groupMeta;
+                            }
+                        }
+                    }
+
                     return [
                         'test_name' => $it->test_name,
                         'price' => (int) $it->price,
@@ -226,10 +244,21 @@ class ObservasiController extends Controller
                         'result_unit' => $it->result_unit,
                         'result_reference' => $it->result_reference,
                         'result_notes' => $it->result_notes,
+                        'template_meta' => $templateMeta, // Add template metadata
                     ];
                 })->toArray(),
             ];
         })->toArray());
+    }
+
+    // Print hasil lab dari halaman observasi
+    public function printLabRequest($id)
+    {
+        $req = \App\Models\LabRequest::with(['encounter.user', 'items.jenisPemeriksaan.templateFields.fieldItems', 'requester'])->findOrFail($id);
+        if ($req->status !== 'completed') {
+            return redirect()->back()->with('error', 'Hasil hanya dapat dicetak jika status Completed.');
+        }
+        return view('pages.lab.requests.print-medical', compact('req'));
     }
 
     // AJAX: Ambil semua RadiologyRequest beserta ringkas hasil terakhir untuk encounter
@@ -569,7 +598,7 @@ class ObservasiController extends Controller
         $dokters = $this->observasiRepository->getDokters($observasi);
         $perawats = $this->observasiRepository->getPerawats($observasi);
         $jenisPemeriksaan = \App\Models\JenisPemeriksaanPenunjang::all();
-        $labRequests = \App\Models\LabRequest::with('items')->where('encounter_id', $observasi)->orderByDesc('created_at')->get();
+        $labRequests = \App\Models\LabRequest::with('items.jenisPemeriksaan.templateFields.fieldItems')->where('encounter_id', $observasi)->orderByDesc('created_at')->get();
         return view('pages.observasi.rinap', compact('encounter', 'observasi', 'dokters', 'perawats', 'jenisPemeriksaan', 'labRequests'));
     }
     public function postInpatientTreatment(Request $request, $id)

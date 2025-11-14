@@ -682,6 +682,20 @@ class KasirController extends Controller
                         );
                     }
                 }
+
+                // Fee Radiologi untuk perawat yang membantu
+                // Ambil perawat yang ditugaskan pada encounter ini
+                $nurses = $encounter->nurses; // Assuming this relationship exists
+                if ($nurses && $nurses->isNotEmpty()) {
+                    foreach ($nurses as $nurse) {
+                        $observasiRepo->createNurseRadiologistIncentive(
+                            $encounter,
+                            $nurse,
+                            optional($radiologyRequest->jenis)->name ?? 'Radiologi',
+                            (float)$radiologyRequest->price
+                        );
+                    }
+                }
             }
 
             \Illuminate\Support\Facades\Log::info('Lab & Radiologi incentives created for encounter', [

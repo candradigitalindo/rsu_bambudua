@@ -870,22 +870,35 @@ class ObservasiRepository
 
     private function processIncentives(Encounter $encounter, array $perawatIds)
     {
-        $settings = IncentiveSetting::whereIn('setting_key', ['perawat_per_encounter', 'dokter_per_encounter'])
-            ->pluck('setting_value', 'setting_key');
+        $settings = IncentiveSetting::whereIn('setting_key', [
+            'perawat_per_encounter_rawat_jalan',
+            'perawat_per_encounter_igd',
+            'perawat_per_encounter_rawat_inap',
+            'dokter_per_encounter'
+        ])->pluck('setting_value', 'setting_key');
 
-        $amountPerawat = $settings['perawat_per_encounter'] ?? 0;
+        $amountPerawatRJ = $settings['perawat_per_encounter_rawat_jalan'] ?? 0;
+        $amountPerawatIGD = $settings['perawat_per_encounter_igd'] ?? 0;
+        $amountPerawatInap = $settings['perawat_per_encounter_rawat_inap'] ?? 0;
         $amountDokter = $settings['dokter_per_encounter'] ?? 0;
         $now = now();
         $incentivesToCreate = [];
 
-        // Insentif Perawat (Rawat Jalan/Darurat)
-        if ($amountPerawat > 0 && in_array($encounter->type, [1, 3]) && !empty($perawatIds)) {
+        // Insentif Perawat Rawat Jalan (type 1)
+        if ($encounter->type == 1 && $amountPerawatRJ > 0 && !empty($perawatIds)) {
             foreach ($perawatIds as $perawatId) {
-                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawat, 'encounter', $encounter, $now);
+                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawatRJ, 'encounter_rawat_jalan', $encounter, $now);
             }
         }
 
-        // Insentif Dokter (Rawat Jalan/Darurat)
+        // Insentif Perawat IGD (type 3)
+        if ($encounter->type == 3 && $amountPerawatIGD > 0 && !empty($perawatIds)) {
+            foreach ($perawatIds as $perawatId) {
+                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawatIGD, 'encounter_igd', $encounter, $now);
+            }
+        }
+
+        // Insentif Dokter (Rawat Jalan/IGD)
         if ($amountDokter > 0 && in_array($encounter->type, [1, 3])) {
             $practitioner = $encounter->practitioner()->with('user')->first();
             if ($practitioner && $practitioner->user) {
@@ -893,17 +906,17 @@ class ObservasiRepository
             }
         }
 
-        // Insentif Rawat Inap
+        // Insentif Rawat Inap (type 2)
         if ($encounter->type == 2) {
             $inpatientAdmission = InpatientAdmission::where('encounter_id', $encounter->id)->first();
             if ($inpatientAdmission) {
                 // Insentif Perawat (Tindakan Rawat Inap)
-                if ($amountPerawat > 0) {
+                if ($amountPerawatInap > 0) {
                     $treatments = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
                         ->whereHas('performedBy', fn($q) => $q->where('role', 3)) // Perawat
                         ->get();
                     foreach ($treatments as $treatment) {
-                        $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $amountPerawat, 'treatment_inap', $encounter, $now);
+                        $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $amountPerawatInap, 'treatment_inap', $encounter, $now);
                     }
                 }
 
@@ -1298,6 +1311,41 @@ class ObservasiRepository
             'user_id' => $pelaksana->id,
             'amount' => $amount,
             'type' => 'fee_pelaksana_' . $tipe,
+            'description' => $description,
+            'year' => now()->year,
+            'month' => now()->month,
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
+     * Create incentive for nurse who assists in radiology examination
+     *
+     * @param \App\Models\Encounter $encounter
+     * @param \App\Models\User $perawat (nurse who assisted)
+     * @param string $namaPemeriksaan
+     * @param float $hargaPemeriksaan
+     * @return void
+     */
+    public function createNurseRadiologistIncentive(\App\Models\Encounter $encounter, \App\Models\User $perawat, string $namaPemeriksaan, float $hargaPemeriksaan): void
+    {
+        $modeKey = 'perawat_fee_radiologi_mode';
+        $valKey  = 'perawat_fee_radiologi_value';
+        $mode = (int) (\App\Models\IncentiveSetting::where('setting_key', $modeKey)->value('setting_value') ?? 1);
+        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', $valKey)->value('setting_value') ?? 0);
+
+        $amount = $this->computeFeeAmount($hargaPemeriksaan, $mode, $val);
+        if ($amount <= 0) {
+            return;
+        }
+
+        $description = "Fee Radiologi Perawat ($namaPemeriksaan) untuk " . $encounter->name_pasien;
+
+        \App\Models\Incentive::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'user_id' => $perawat->id,
+            'amount' => $amount,
+            'type' => 'fee_perawat_radiologi',
             'description' => $description,
             'year' => now()->year,
             'month' => now()->month,

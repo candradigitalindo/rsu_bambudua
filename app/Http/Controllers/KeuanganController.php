@@ -84,7 +84,6 @@ class KeuanganController extends Controller
             'pendapatan_lainnya' => 'Pendapatan Lainnya',
             'pengeluaran_operasional' => 'Pengeluaran Operasional',
             'gaji_dan_insentif' => 'Gaji & Insentif',
-            // 'bonus_insentif' => 'Bonus & Insentif', // Duplicated logic, covered by gaji_dan_insentif
         ];
 
         // Inisialisasi semua data dengan 0
@@ -92,37 +91,77 @@ class KeuanganController extends Controller
             $data[$key] = array_fill(0, 12, 0);
         }
 
-        // Helper untuk mengisi data dari query
-        $fillData = function (array &$data, string $key, \Illuminate\Support\Collection $results) {
-            foreach ($results as $result) {
-                if ($result->bulan) {
-                    $data[$key][$result->bulan - 1] = (int)$result->total;
-                }
-            }
-        };
+        // Ambil data dari DB
+        $pendapatanTindakan = Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_tindakan) as total')
+            ->where('status_bayar_tindakan', 1)
+            ->whereYear('updated_at', $year)
+            ->groupBy('bulan')
+            ->get();
 
-        // Ambil data dari DB dalam satu query jika memungkinkan atau query terpisah yang jelas
-        $pendapatanTindakan = Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_tindakan) as total')->where('status_bayar_tindakan', 1)->whereYear('updated_at', $year)->groupBy('bulan')->get();
-        $pendapatanFarmasi = Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')->where('status_bayar_resep', 1)->whereYear('updated_at', $year)->groupBy('bulan')->get();
-        $pendapatanLainnya = OtherIncome::selectRaw('MONTH(income_date) as bulan, SUM(amount) as total')->whereYear('income_date', $year)->groupBy('bulan')->get();
-        $pengeluaranOperasional = OperationalExpense::selectRaw('MONTH(expense_date) as bulan, SUM(amount) as total')->whereYear('expense_date', $year)->groupBy('bulan')->get();
-        $gajiTahunan = SalaryPayment::selectRaw('month as bulan, SUM(amount) as total')->where('status', 'paid')->whereYear('year', $year)->groupBy('bulan')->get();
+        $pendapatanFarmasi = Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
+            ->where('status_bayar_resep', 1)
+            ->whereYear('updated_at', $year)
+            ->groupBy('bulan')
+            ->get();
+
+        $pendapatanLainnya = OtherIncome::selectRaw('MONTH(income_date) as bulan, SUM(amount) as total')
+            ->whereYear('income_date', $year)
+            ->groupBy('bulan')
+            ->get();
+
+        $pengeluaranOperasional = OperationalExpense::selectRaw('MONTH(expense_date) as bulan, SUM(amount) as total')
+            ->whereYear('expense_date', $year)
+            ->groupBy('bulan')
+            ->get();
+
+        $gajiTahunan = SalaryPayment::selectRaw('month as bulan, SUM(amount) as total')
+            ->where('status', 'paid')
+            ->where('year', $year)
+            ->groupBy('bulan')
+            ->get();
 
         // Isi data yang ada dari DB
-        $fillData($data, 'pendapatan_tindakan', $pendapatanTindakan);
-        $fillData($data, 'pendapatan_farmasi', $pendapatanFarmasi);
-        $fillData($data, 'pendapatan_lainnya', $pendapatanLainnya);
-        $fillData($data, 'pengeluaran_operasional', $pengeluaranOperasional);
-        $fillData($data, 'gaji_dan_insentif', $gajiTahunan);
+        foreach ($pendapatanTindakan as $result) {
+            if ($result->bulan) {
+                $data['pendapatan_tindakan'][$result->bulan - 1] = (float)$result->total;
+            }
+        }
 
-        // Hapus series yang tidak digunakan lagi
-        unset($seriesNames['bonus_insentif'], $seriesNames['gaji_karyawan']);
-        $seriesNames['gaji_dan_insentif'] = 'Gaji & Insentif';
+        foreach ($pendapatanFarmasi as $result) {
+            if ($result->bulan) {
+                $data['pendapatan_farmasi'][$result->bulan - 1] = (float)$result->total;
+            }
+        }
+
+        foreach ($pendapatanLainnya as $result) {
+            if ($result->bulan) {
+                $data['pendapatan_lainnya'][$result->bulan - 1] = (float)$result->total;
+            }
+        }
+
+        foreach ($pengeluaranOperasional as $result) {
+            if ($result->bulan) {
+                $data['pengeluaran_operasional'][$result->bulan - 1] = (float)$result->total;
+            }
+        }
+
+        foreach ($gajiTahunan as $result) {
+            if ($result->bulan) {
+                $data['gaji_dan_insentif'][$result->bulan - 1] = (float)$result->total;
+            }
+        }
+
+        // Buat series untuk chart
+        $series = [];
+        foreach ($seriesNames as $key => $name) {
+            $series[] = [
+                'name' => $name,
+                'data' => $data[$key]
+            ];
+        }
 
         return [
-            'series' => array_values(array_map(function ($key, $name) use ($data) {
-                return ['name' => $name, 'data' => $data[$key]];
-            }, array_keys($seriesNames), $seriesNames)),
+            'series' => $series,
             'categories' => $namaBulan,
         ];
     }
@@ -214,40 +253,70 @@ class KeuanganController extends Controller
 
     public function pengaturanIncentive()
     {
-        $settings = IncentiveSetting::pluck('setting_value', 'setting_key');
+        $settings = IncentiveSetting::pluck('setting_value', 'setting_key')->toArray();
+
+        // Cast cutoff_day to integer to remove decimal
+        if (isset($settings['cutoff_day'])) {
+            $settings['cutoff_day'] = (int) $settings['cutoff_day'];
+        }
+
         return view('pages.keuangan.pengaturan_insentif', compact('settings'));
     }
 
     public function simpanPengaturanIncentive(Request $request)
     {
         $request->validate([
-            'perawat_per_encounter' => 'required|numeric|min:0',
+            'perawat_per_encounter_rawat_jalan' => 'required|numeric|min:0',
+            'perawat_per_encounter_igd' => 'required|numeric|min:0',
+            'perawat_per_encounter_rawat_inap' => 'required|numeric|min:0',
             'dokter_per_encounter' => 'required|numeric|min:0',
-            'cutoff_day' => 'required|integer|min:1|max:28',
+            'cutoff_day' => 'required|numeric|min:1|max:28',
             'fee_lab_mode' => 'nullable|in:0,1',
             'fee_lab_value' => 'nullable|numeric|min:0',
             'fee_radiologi_mode' => 'nullable|in:0,1',
             'fee_radiologi_value' => 'nullable|numeric|min:0',
+            'perawat_fee_radiologi_mode' => 'nullable|in:0,1',
+            'perawat_fee_radiologi_value' => 'nullable|numeric|min:0',
             'fee_obat_mode' => 'nullable|in:0,1',
             'fee_obat_value' => 'nullable|numeric|min:0',
             'fee_obat_target_mode' => 'nullable|in:0,1',
             'fee_dokter_penunjang' => 'nullable|numeric|min:0',
         ], [
-            'perawat_per_encounter.required' => 'Nilai insentif perawat harus diisi.',
-            'perawat_per_encounter.numeric' => 'Nilai insentif harus berupa angka.',
+            'perawat_per_encounter_rawat_jalan.required' => 'Nilai insentif perawat rawat jalan harus diisi.',
+            'perawat_per_encounter_rawat_jalan.numeric' => 'Nilai insentif harus berupa angka.',
+            'perawat_per_encounter_igd.required' => 'Nilai insentif perawat IGD harus diisi.',
+            'perawat_per_encounter_igd.numeric' => 'Nilai insentif harus berupa angka.',
+            'perawat_per_encounter_rawat_inap.required' => 'Nilai insentif perawat rawat inap harus diisi.',
+            'perawat_per_encounter_rawat_inap.numeric' => 'Nilai insentif harus berupa angka.',
             'dokter_per_encounter.required' => 'Nilai insentif dokter harus diisi.',
             'dokter_per_encounter.numeric' => 'Nilai insentif harus berupa angka.',
             'cutoff_day.required' => 'Tanggal cut-off harus diisi.',
-            'cutoff_day.integer' => 'Tanggal cut-off harus berupa angka.',
+            'cutoff_day.numeric' => 'Tanggal cut-off harus berupa angka bulat.',
             'cutoff_day.min' => 'Tanggal cut-off minimal adalah 1.',
             'cutoff_day.max' => 'Tanggal cut-off maksimal adalah 28.',
         ]);
 
         IncentiveSetting::updateOrCreate(
-            ['setting_key' => 'perawat_per_encounter'],
+            ['setting_key' => 'perawat_per_encounter_rawat_jalan'],
             [
-                'setting_value' => $request->perawat_per_encounter,
-                'description' => 'Insentif yang diberikan kepada perawat setiap kali menangani satu pasien (encounter) hingga selesai.'
+                'setting_value' => $request->perawat_per_encounter_rawat_jalan,
+                'description' => 'Insentif untuk perawat per encounter Rawat Jalan'
+            ]
+        );
+
+        IncentiveSetting::updateOrCreate(
+            ['setting_key' => 'perawat_per_encounter_igd'],
+            [
+                'setting_value' => $request->perawat_per_encounter_igd,
+                'description' => 'Insentif untuk perawat per encounter IGD'
+            ]
+        );
+
+        IncentiveSetting::updateOrCreate(
+            ['setting_key' => 'perawat_per_encounter_rawat_inap'],
+            [
+                'setting_value' => $request->perawat_per_encounter_rawat_inap,
+                'description' => 'Insentif untuk perawat per tindakan Rawat Inap'
             ]
         );
 
@@ -262,14 +331,23 @@ class KeuanganController extends Controller
         IncentiveSetting::updateOrCreate(
             ['setting_key' => 'cutoff_day'],
             [
-                'setting_value' => $request->cutoff_day,
+                'setting_value' => (int) $request->cutoff_day,
                 'description' => 'Tanggal batas (cut-off) untuk perhitungan gaji dan insentif bulanan.'
             ]
         );
 
         // Simpan pengaturan fee penunjang & obat
         $keys = [
-            'fee_lab_mode','fee_lab_value','fee_radiologi_mode','fee_radiologi_value','fee_obat_mode','fee_obat_value','fee_obat_target_mode','fee_dokter_penunjang'
+            'fee_lab_mode',
+            'fee_lab_value',
+            'fee_radiologi_mode',
+            'fee_radiologi_value',
+            'perawat_fee_radiologi_mode',
+            'perawat_fee_radiologi_value',
+            'fee_obat_mode',
+            'fee_obat_value',
+            'fee_obat_target_mode',
+            'fee_dokter_penunjang'
         ];
         foreach ($keys as $key) {
             if (!is_null($request->$key)) {

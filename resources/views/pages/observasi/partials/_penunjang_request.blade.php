@@ -95,74 +95,242 @@
             <div class="card-body">
                 <div id="lab-requests-container">
                     @forelse($labRequests ?? [] as $lr)
-                        <div class="mb-3 border rounded p-2">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="mb-3 border rounded p-3" style="background-color: #f8f9fa;">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
                                 <div>
-                                    <strong>{{ $lr->created_at->format('d M Y H:i') }}</strong>
-                                    <span class="badge bg-secondary ms-2">{{ ucfirst($lr->status) }}</span>
+                                    <strong class="fs-6">{{ $lr->created_at->format('d M Y H:i') }}</strong>
+                                    <span class="badge bg-primary ms-2">{{ ucfirst($lr->status) }}</span>
                                 </div>
                                 <div class="d-flex gap-2">
                                     @if (auth()->user()->role != 2)
                                         @if ($lr->status === 'completed')
-                                            <a href="{{ route('lab.requests.print', $lr->id) }}" target="_blank"
-                                                class="btn btn-sm btn-success">Cetak Hasil</a>
+                                            <a href="{{ route('observasi.lab.print', $lr->id) }}" target="_blank"
+                                                class="btn btn-sm btn-success"><i class="ri-printer-line"></i> Cetak
+                                                Hasil</a>
                                         @endif
                                     @endif
                                 </div>
                             </div>
                             <div class="table-responsive">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:25%">Pemeriksaan</th>
-                                            <th>Hasil</th>
-                                            <th class="text-end" style="width:10%">Harga</th>
+                                <table class="table table-bordered table-sm mb-0" style="border: 2px solid #000;">
+                                    <thead style="background-color: #ffffff;">
+                                        <tr style="border-bottom: 2px solid #000;">
+                                            <th style="width:35%; font-weight: bold; text-align: left; padding: 10px;">
+                                                PEMERIKSAAN</th>
+                                            <th
+                                                style="width:20%; font-weight: bold; text-align: center; padding: 10px;">
+                                                HASIL</th>
+                                            <th
+                                                style="width:15%; font-weight: bold; text-align: center; padding: 10px;">
+                                                SATUAN</th>
+                                            <th style="width:30%; font-weight: bold; text-align: left; padding: 10px;">
+                                                NILAI NORMAL</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($lr->items as $it)
-                                            <tr>
-                                                <td>
-                                                    <div class="fw-semibold">{{ $it->test_name }}</div>
-                                                </td>
-                                                <td>
-                                                    @if (is_array($it->result_payload) && count($it->result_payload))
-                                                        <dl class="row mb-0">
-                                                            @foreach ($it->result_payload as $k => $v)
-                                                                <dt class="col-sm-4 text-muted small">
-                                                                    {{ str_replace('_', ' ', ucfirst($k)) }}</dt>
-                                                                <dd class="col-sm-8">{{ $v }}</dd>
+                                        @php
+                                            $groupedItems = $lr->items->groupBy(function ($item) {
+                                                $name = strtolower($item->test_name);
+                                                if (
+                                                    str_contains($name, 'albumin') ||
+                                                    str_contains($name, 'sgot') ||
+                                                    str_contains($name, 'sgpt') ||
+                                                    str_contains($name, 'bilirubin')
+                                                ) {
+                                                    return 'FUNGSI HATI';
+                                                }
+                                                if (
+                                                    str_contains($name, 'ureum') ||
+                                                    str_contains($name, 'creatinine') ||
+                                                    str_contains($name, 'asam urat') ||
+                                                    str_contains($name, 'uric acid')
+                                                ) {
+                                                    return 'FUNGSI GINJAL';
+                                                }
+                                                if (
+                                                    str_contains($name, 'gula') ||
+                                                    str_contains($name, 'glucose') ||
+                                                    str_contains($name, 'andrandum') ||
+                                                    str_contains($name, 'gds') ||
+                                                    str_contains($name, 'gdp') ||
+                                                    str_contains($name, 'gd2pp')
+                                                ) {
+                                                    return 'KADAR GULA DARAH';
+                                                }
+                                                if (
+                                                    str_contains($name, 'cholesterol') ||
+                                                    str_contains($name, 'kolesterol') ||
+                                                    str_contains($name, 'trigliserida') ||
+                                                    str_contains($name, 'hdl') ||
+                                                    str_contains($name, 'ldl')
+                                                ) {
+                                                    return 'PROFIL LEMAK';
+                                                }
+                                                if (
+                                                    str_contains($name, 'hemoglobin') ||
+                                                    str_contains($name, 'leukosit') ||
+                                                    str_contains($name, 'eritrosit') ||
+                                                    str_contains($name, 'hematokrit') ||
+                                                    str_contains($name, 'trombosit')
+                                                ) {
+                                                    return 'HEMATOLOGI';
+                                                }
+                                                return 'LAINNYA';
+                                            });
+                                            $categoryOrder = [
+                                                'FUNGSI HATI',
+                                                'FUNGSI GINJAL',
+                                                'KADAR GULA DARAH',
+                                                'PROFIL LEMAK',
+                                                'HEMATOLOGI',
+                                                'LAINNYA',
+                                            ];
+                                            $sortedGroups = collect($categoryOrder)
+                                                ->filter(fn($cat) => $groupedItems->has($cat))
+                                                ->mapWithKeys(fn($cat) => [$cat => $groupedItems[$cat]]);
+                                        @endphp
+                                        @foreach ($sortedGroups as $category => $items)
+                                            @php
+                                                // Check if category has non-grouped items (skip category header if all items are grouped)
+                                                $hasNonGroupedItems = false;
+                                                foreach ($items as $it) {
+                                                    $hasPayload =
+                                                        is_array($it->result_payload) && count($it->result_payload) > 0;
+                                                    $isGrouped = false;
+                                                    if ($hasPayload) {
+                                                        foreach ($it->result_payload as $k => $v) {
+                                                            if (is_array($v)) {
+                                                                $isGrouped = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!$isGrouped) {
+                                                        $hasNonGroupedItems = true;
+                                                        break;
+                                                    }
+                                                }
+                                            @endphp
+                                            @if ($hasNonGroupedItems)
+                                                <tr>
+                                                    <td colspan="4"
+                                                        style="padding: 8px; background-color: #f8f9fa; font-weight: bold; font-style: italic;">
+                                                        {{ $category }}
+                                                    </td>
+                                                </tr>
+                                            @endif
+                                            @foreach ($items as $it)
+                                                @php
+                                                    $hasPayload =
+                                                        is_array($it->result_payload) && count($it->result_payload) > 0;
+                                                    $isGroupedPayload = false;
+                                                    if ($hasPayload) {
+                                                        foreach ($it->result_payload as $k => $v) {
+                                                            if (is_array($v)) {
+                                                                $isGroupedPayload = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if ($isGroupedPayload)
+                                                    {{-- Test name sebagai header --}}
+                                                    <tr>
+                                                        <td colspan="4"
+                                                            style="padding: 8px; background-color: #e9ecef; font-weight: bold;">
+                                                            {{ $it->test_name }}
+                                                        </td>
+                                                    </tr>
+                                                    @php
+                                                        // Build template metadata map
+                                                        $templateMeta = [];
+                                                        if (
+                                                            $it->jenisPemeriksaan &&
+                                                            $it->jenisPemeriksaan->templateFields
+                                                        ) {
+                                                            foreach ($it->jenisPemeriksaan->templateFields as $field) {
+                                                                if (
+                                                                    $field->field_type === 'group' &&
+                                                                    $field->fieldItems
+                                                                ) {
+                                                                    $groupMeta = [];
+                                                                    foreach ($field->fieldItems as $item) {
+                                                                        $groupMeta[$item->item_name] = [
+                                                                            'label' =>
+                                                                                $item->examination_name ??
+                                                                                $item->item_label,
+                                                                            'unit' => $item->unit,
+                                                                            'normal_range' => $item->normal_range,
+                                                                        ];
+                                                                    }
+                                                                    $templateMeta[$field->field_name] = $groupMeta;
+                                                                }
+                                                            }
+                                                        }
+                                                    @endphp
+                                                    @foreach ($it->result_payload as $groupName => $groupItems)
+                                                        @if (is_array($groupItems))
+                                                            {{-- Sub-group header (hijau) --}}
+                                                            <tr>
+                                                                <td colspan="4"
+                                                                    style="padding: 8px; background-color: #198754; color: white; font-weight: bold;">
+                                                                    {{ ucwords(str_replace('_', ' ', $groupName)) }}
+                                                                </td>
+                                                            </tr>
+                                                            {{-- Items dalam grup --}}
+                                                            @foreach ($groupItems as $itemName => $itemValue)
+                                                                @php
+                                                                    $meta = $templateMeta[$groupName][$itemName] ?? [];
+                                                                    $displayName =
+                                                                        $meta['label'] ??
+                                                                        ucwords(str_replace('_', ' ', $itemName));
+                                                                    $unit = $meta['unit'] ?? '-';
+                                                                    $normalRange = $meta['normal_range'] ?? '-';
+                                                                @endphp
+                                                                <tr>
+                                                                    <td style="padding: 8px;">{{ $displayName }}</td>
+                                                                    <td style="padding: 8px; text-align: center;">
+                                                                        <strong>{{ $itemValue ?? '-' }}</strong>
+                                                                    </td>
+                                                                    <td style="padding: 8px; text-align: center;">
+                                                                        {{ $unit }}</td>
+                                                                    <td style="padding: 8px;">{{ $normalRange }}</td>
+                                                                </tr>
                                                             @endforeach
-                                                        </dl>
-                                                    @else
-                                                        <div class="row g-2">
-                                                            <div class="col-md-4">
-                                                                <div><small class="text-muted">Nilai</small></div>
-                                                                <div>{{ $it->result_value ?? '-' }}</div>
-                                                            </div>
-                                                            <div class="col-md-3">
-                                                                <div><small class="text-muted">Satuan</small></div>
-                                                                <div>{{ $it->result_unit ?? '-' }}</div>
-                                                            </div>
-                                                            <div class="col-md-5">
-                                                                <div><small class="text-muted">Rujukan</small></div>
-                                                                <div>{{ $it->result_reference ?? '-' }}</div>
-                                                            </div>
-                                                        </div>
-                                                    @endif
-                                                    @if ($it->result_notes)
-                                                        <div class="mt-1"><small class="text-muted">Catatan:</small>
-                                                            {{ $it->result_notes }}</div>
-                                                    @endif
-                                                </td>
-                                                <td class="text-end">
-                                                    {{ 'Rp ' . number_format($it->price, 0, ',', '.') }}
-                                                </td>
-                                            </tr>
+                                                        @endif
+                                                    @endforeach
+                                                @else
+                                                    {{-- Format biasa (non-grouped) --}}
+                                                    <tr>
+                                                        <td style="padding: 8px;">{{ $it->test_name }}</td>
+                                                        <td style="padding: 8px; text-align: center;">
+                                                            @if ($hasPayload)
+                                                                @foreach ($it->result_payload as $k => $v)
+                                                                    @if ($k === 'result_value' || $k === 'value' || $k === 'hasil')
+                                                                        <strong>{{ is_array($v) ? json_encode($v) : $v }}</strong>
+                                                                        @break
+                                                                    @endif
+                                                                @endforeach
+                                                            @else
+                                                                <strong>{{ $it->result_value ?? '-' }}</strong>
+                                                            @endif
+                                                        </td>
+                                                        <td style="padding: 8px; text-align: center;">
+                                                            {{ $it->result_unit ?? '-' }}</td>
+                                                        <td style="padding: 8px;">{{ $it->result_reference ?? '-' }}
+                                                        </td>
+                                                    </tr>
+                                                @endif
+                                            @endforeach
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
+                            @if ($lr->items->first()?->result_notes)
+                                <div class="mt-2 text-muted small">
+                                    <strong>Catatan:</strong> {{ $lr->items->first()?->result_notes }}
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <div class="text-muted">Belum ada permintaan/hasil laboratorium untuk encounter ini.</div>
@@ -346,35 +514,138 @@
                 const statusBadge =
                     `<span class="badge ${badgeClass} ms-2">${(lr.status||'').charAt(0).toUpperCase()+ (lr.status||'').slice(1)}</span>`;
 
-                const itemsHtml = (lr.items || []).map(function(it) {
-                    return buildLabResultRow(it);
-                }).join('');
+                // Group items by category
+                const categories = {
+                    'FUNGSI HATI': [],
+                    'FUNGSI GINJAL': [],
+                    'KADAR GULA DARAH': [],
+                    'PROFIL LEMAK': [],
+                    'HEMATOLOGI': [],
+                    'LAINNYA': []
+                };
 
-                return `<div class="mb-3 border rounded p-2"><div class="d-flex justify-content-between align-items-center mb-2"><div><strong>${lr.created_at || ''}</strong>${statusBadge}</div></div><div class="table-responsive"><table class="table table-sm align-middle mb-0"><thead><tr><th style="width:25%">Pemeriksaan</th><th>Hasil</th><th class="text-end" style="width:10%">Harga</th></tr></thead><tbody>${itemsHtml}</tbody></table></div></div>`;
+                (lr.items || []).forEach(function(item) {
+                    const name = (item.test_name || '').toLowerCase();
+                    if (name.includes('albumin') || name.includes('sgot') || name.includes('sgpt') || name
+                        .includes('bilirubin')) {
+                        categories['FUNGSI HATI'].push(item);
+                    } else if (name.includes('ureum') || name.includes('creatinine') || name.includes(
+                            'asam urat') || name.includes('uric acid')) {
+                        categories['FUNGSI GINJAL'].push(item);
+                    } else if (name.includes('gula') || name.includes('glucose') || name.includes(
+                            'andrandum') || name.includes('gds') || name.includes('gdp') || name.includes(
+                            'gd2pp')) {
+                        categories['KADAR GULA DARAH'].push(item);
+                    } else if (name.includes('cholesterol') || name.includes('kolesterol') || name.includes(
+                            'trigliserida') || name.includes('hdl') || name.includes('ldl')) {
+                        categories['PROFIL LEMAK'].push(item);
+                    } else if (name.includes('hemoglobin') || name.includes('leukosit') || name.includes(
+                            'eritrosit') || name.includes('hematokrit') || name.includes('trombosit')) {
+                        categories['HEMATOLOGI'].push(item);
+                    } else {
+                        categories['LAINNYA'].push(item);
+                    }
+                });
+
+                let itemsHtml = '';
+                const categoryOrder = ['FUNGSI HATI', 'FUNGSI GINJAL', 'KADAR GULA DARAH', 'PROFIL LEMAK', 'HEMATOLOGI',
+                    'LAINNYA'
+                ];
+                categoryOrder.forEach(function(category) {
+                    if (categories[category].length > 0) {
+                        // Check if category has non-grouped items
+                        let hasNonGroupedItems = false;
+                        categories[category].forEach(function(item) {
+                            const payload = item.result_payload;
+                            let isGrouped = false;
+                            if (payload && typeof payload === 'object') {
+                                for (let key in payload) {
+                                    if (typeof payload[key] === 'object' && payload[key] !== null) {
+                                        isGrouped = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!isGrouped) {
+                                hasNonGroupedItems = true;
+                            }
+                        });
+
+                        // Only show category header if there are non-grouped items
+                        if (hasNonGroupedItems) {
+                            itemsHtml +=
+                                `<tr><td colspan="4" style="padding: 8px; background-color: #f8f9fa; font-weight: bold; font-style: italic;">${category}</td></tr>`;
+                        }
+
+                        categories[category].forEach(function(item) {
+                            itemsHtml += buildLabResultRow(item);
+                        });
+                    }
+                });
+
+                return `<div class="mb-3 border rounded p-3" style="background-color: #f8f9fa;"><div class="d-flex justify-content-between align-items-center mb-3"><div><strong class="fs-6">${lr.created_at || ''}</strong>${statusBadge}</div></div><div class="table-responsive"><table class="table table-bordered table-sm mb-0" style="border: 2px solid #000;"><thead style="background-color: #ffffff;"><tr style="border-bottom: 2px solid #000;"><th style="width:35%; font-weight: bold; text-align: left; padding: 10px;">PEMERIKSAAN</th><th style="width:20%; font-weight: bold; text-align: center; padding: 10px;">HASIL</th><th style="width:15%; font-weight: bold; text-align: center; padding: 10px;">SATUAN</th><th style="width:30%; font-weight: bold; text-align: left; padding: 10px;">NILAI NORMAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div></div>`;
             }
 
             function buildLabResultRow(item) {
-                const hasPayload = (item.result_payload && typeof item.result_payload === 'object' && Object.keys(item
-                    .result_payload).length > 0);
-                let resultHtml = '';
+                const testName = item.test_name || '';
+                const payload = item.result_payload;
+                const templateMeta = item.template_meta || {};
+                let html = '';
 
-                if (hasPayload) {
-                    const payloadItems = Object.keys(item.result_payload).map(function(k) {
-                        const label = k.replace(/_/g, ' ').charAt(0).toUpperCase() + k.replace(/_/g, ' ').slice(
-                            1);
-                        const value = item.result_payload[k] || '';
-                        return `<dt class="col-sm-4 text-muted small">${label}</dt><dd class="col-sm-8">${value}</dd>`;
-                    }).join('');
-                    resultHtml = `<dl class="row mb-0">${payloadItems}</dl>`;
-                } else {
-                    resultHtml =
-                        `<div class="row g-2"><div class="col-md-4"><div><small class="text-muted">Nilai</small></div><div>${item.result_value ?? '-'}</div></div><div class="col-md-3"><div><small class="text-muted">Satuan</small></div><div>${item.result_unit ?? '-'}</div></div><div class="col-md-5"><div><small class="text-muted">Rujukan</small></div><div>${item.result_reference ?? '-'}</div></div></div>`;
+                // Check if payload has grouped structure (contains objects)
+                let isGroupedPayload = false;
+                if (payload && typeof payload === 'object') {
+                    for (let key in payload) {
+                        if (typeof payload[key] === 'object' && payload[key] !== null) {
+                            isGroupedPayload = true;
+                            break;
+                        }
+                    }
                 }
 
-                const notesHtml = item.result_notes ?
-                    `<div class="mt-1"><small class="text-muted">Catatan:</small> ${item.result_notes}</div>` : '';
+                if (isGroupedPayload) {
+                    // Test name sebagai header
+                    html +=
+                        `<tr><td colspan="4" style="padding: 8px; background-color: #e9ecef; font-weight: bold;">${testName}</td></tr>`;
 
-                return `<tr><td><div class="fw-semibold">${item.test_name || ''}</div></td><td>${resultHtml}${notesHtml}</td><td class="text-end">${formatRupiah(item.price)}</td></tr>`;
+                    // Loop through groups
+                    for (let groupName in payload) {
+                        if (typeof payload[groupName] === 'object' && payload[groupName] !== null) {
+                            // Convert group name from snake_case to Title Case
+                            const displayGroupName = groupName.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(
+                                1)).join(' ');
+
+                            // Sub-group header (hijau)
+                            html +=
+                                `<tr><td colspan="4" style="padding: 8px; background-color: #198754; color: white; font-weight: bold;">${displayGroupName}</td></tr>`;
+
+                            // Get metadata for this group
+                            const groupMeta = templateMeta[groupName] || {};
+
+                            // Items dalam grup
+                            for (let itemName in payload[groupName]) {
+                                const itemValue = payload[groupName][itemName] || '-';
+                                const meta = groupMeta[itemName] || {};
+                                const displayItemName = meta.label || itemName.split('_').map(w => w.charAt(0)
+                                    .toUpperCase() + w.slice(1)).join(' ');
+                                const unit = meta.unit || '-';
+                                const normalRange = meta.normal_range || '-';
+
+                                html +=
+                                    `<tr><td style="padding: 8px;">${displayItemName}</td><td style="padding: 8px; text-align: center;"><strong>${itemValue}</strong></td><td style="padding: 8px; text-align: center;">${unit}</td><td style="padding: 8px;">${normalRange}</td></tr>`;
+                            }
+                        }
+                    }
+                } else {
+                    // Format biasa (non-grouped)
+                    const resultValue = item.result_value || (payload && payload.value) || '-';
+                    const resultUnit = item.result_unit || '-';
+                    const resultReference = item.result_reference || '-';
+                    html =
+                        `<tr><td style="padding: 8px;">${testName}</td><td style="padding: 8px; text-align: center;"><strong>${resultValue}</strong></td><td style="padding: 8px; text-align: center;">${resultUnit}</td><td style="padding: 8px;">${resultReference}</td></tr>`;
+                }
+
+                return html;
             }
 
             // ==================== RADIOLOGY REQUESTS ====================

@@ -245,6 +245,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/observasi/pemeriksaan-penunjang/download/{id}', [ObservasiController::class, 'downloadPemeriksaanPenunjang'])->name('observasi.downloadPemeriksaanPenunjang');
         // AJAX Hasil Lab (untuk realtime render)
         Route::get('/observasi/{id}/labRequests', [ObservasiController::class, 'labRequests'])->name('observasi.labRequests');
+        Route::get('/observasi/lab/{id}/print', [ObservasiController::class, 'printLabRequest'])->name('observasi.lab.print');
         Route::get('/observasi/{id}/radiologyRequests', [ObservasiController::class, 'radiologyRequests'])->name('observasi.radiologyRequests');
         Route::post('/observasi/radiologi/{id}/cancel', [ObservasiController::class, 'cancelRadiologyRequest'])->name('observasi.radiologi.cancel');
         Route::delete('/observasi/radiologi/{id}', [ObservasiController::class, 'destroyRadiologyRequest'])->name('observasi.radiologi.destroy');

@@ -83,7 +83,7 @@ class LabRequestController extends Controller
 
     public function print(string $id)
     {
-        $req = LabRequest::with(['encounter', 'items'])->findOrFail($id);
+        $req = LabRequest::with(['encounter.pasien', 'encounter.user', 'items.jenisPemeriksaan.templateFields.fieldItems'])->findOrFail($id);
         // Optional: only allow print when completed
         if ($req->status !== 'completed') {
             return redirect()->route('lab.requests.show', $id)->with('error', 'Hasil hanya dapat dicetak jika status Completed.');

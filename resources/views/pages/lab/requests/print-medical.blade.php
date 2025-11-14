@@ -56,29 +56,9 @@
             font-size: 16px;
             font-weight: bold;
             margin-top: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             text-decoration: underline;
             text-align: center;
-        }
-
-        .responsible-doctor {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-        }
-
-        .responsible-doctor-title {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .responsible-doctor-name {
-            font-size: 14px;
-            font-weight: bold;
         }
 
         .patient-info {
@@ -87,21 +67,23 @@
 
         .info-row {
             display: flex;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .info-label {
-            width: 120px;
-            font-weight: normal;
+            width: 140px;
+            font-weight: bold;
+            font-size: 11px;
         }
 
         .info-colon {
-            width: 20px;
+            width: 15px;
         }
 
         .info-value {
             flex: 1;
             font-weight: normal;
+            font-size: 11px;
         }
 
         .results-table {
@@ -196,109 +178,127 @@
 
     <div class="report-title">HASIL PEMERIKSAAN LABORATORIUM</div>
 
-    <!-- Responsible Doctor Section -->
-    <div class="responsible-doctor">
-        <div class="responsible-doctor-title">DOKTER PENANGGUNG JAWAB PELAYANAN</div>
-        <div class="responsible-doctor-name">
-            {{ $req->encounter->user->name ?? 'Dr. [Nama Dokter]' }}
-        </div>
-    </div>
-
     <!-- Patient Information -->
     <div class="patient-info">
-        <div style="display: flex; gap: 40px;">
-            <!-- Column 1 -->
-            <div style="flex: 1;">
-                <div class="info-row">
-                    <div class="info-label">No. Rekam Medis</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->encounter->rekam_medis ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Nama Pasien</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->encounter->name_pasien ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Umur</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->encounter->age ?? '-' }} tahun</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Jenis Kelamin</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->encounter->gender ?? '-' }}</div>
-                </div>
-            </div>
-
-            <!-- Column 2 -->
-            <div style="flex: 1;">
-                <div class="info-row">
-                    <div class="info-label">Alamat</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->encounter->address ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Dokter Pengirim</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->encounter->user->name ?? '-' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Tanggal Permintaan</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->created_at->format('d/m/Y H:i') }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Tanggal Selesai</div>
-                    <div class="info-colon">:</div>
-                    <div class="info-value">{{ $req->completed_at?->format('d/m/Y H:i') ?? '-' }}</div>
-                </div>
-            </div>
-        </div>
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="width: 50%; vertical-align: top; border: none; padding-right: 20px;">
+                    <div class="info-row">
+                        <div class="info-label">NAMA PASIEN</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{ $req->encounter->name_pasien ?? '-' }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">TANGGAL LAHIR</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">
+                            {{ $req->encounter->tanggal_lahir ? \Carbon\Carbon::parse($req->encounter->tanggal_lahir)->format('d F Y') : '-' }}
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">J.KELAMIN</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{ $req->encounter->gender ?? '-' }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">ALAMAT</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{ $req->encounter->address ?? '-' }}</div>
+                    </div>
+                </td>
+                <td style="width: 50%; vertical-align: top; border: none; padding-left: 20px;">
+                    <div class="info-row">
+                        <div class="info-label">KODE LAB</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{ $req->id ? substr($req->id, 0, 4) . '/prtk' : '-' }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">TANGGAL</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">
+                            {{ $req->completed_at?->format('d F Y') ?? $req->created_at->format('d F Y') }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">PENGIRIM</div>
+                        <div class="info-colon">:</div>
+                        <div class="info-value">{{ $req->encounter->user->name ?? '-' }}</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <!-- Results Table -->
     <table class="results-table">
         <thead>
             <tr>
-                <th class="examination-name">Pemeriksaan</th>
-                <th class="result-value">Hasil</th>
-                <th class="unit">Satuan</th>
-                <th class="normal-range">Nilai Normal</th>
+                <th class="examination-name">PEMERIKSAAN</th>
+                <th class="result-value">HASIL</th>
+                <th class="unit">SATUAN</th>
+                <th class="normal-range">NILAI NORMAL</th>
             </tr>
         </thead>
         <tbody>
             @foreach ($req->items as $item)
-                @if ($item->jenisPemeriksaan && $item->jenisPemeriksaan->templateFields->isNotEmpty())
-                    @foreach ($item->jenisPemeriksaan->templateFields as $field)
-                        <!-- Group Header -->
-                        <tr>
-                            <td colspan="4" class="group-header">{{ $field->field_label }}</td>
-                        </tr>
-                        @if ($field->fieldItems && $field->fieldItems->isNotEmpty())
-                            @foreach ($field->fieldItems->sortBy('order') as $fieldItem)
-                                @php
-                                    $resultValue = '';
-                                    $isAbnormal = false;
+                @php
+                    $hasPayload = is_array($item->result_payload) && count($item->result_payload) > 0;
+                    $isGroupedPayload = false;
+                    if ($hasPayload) {
+                        foreach ($item->result_payload as $k => $v) {
+                            if (is_array($v)) {
+                                $isGroupedPayload = true;
+                                break;
+                            }
+                        }
+                    }
+                @endphp
 
-                                    if (
-                                        is_array($item->result_payload) &&
-                                        isset($item->result_payload[$field->field_name])
-                                    ) {
-                                        $groupData = $item->result_payload[$field->field_name];
-                                        if (is_array($groupData)) {
-                                            // Convert examination name to lowercase with underscores to match the key format
-                                            $examKey = strtolower(str_replace(' ', '_', $fieldItem->examination_name));
-                                            if (isset($groupData[$examKey])) {
-                                                $resultValue = $groupData[$examKey];
-                                            }
-                                        }
+                @if ($isGroupedPayload)
+                    {{-- Test name sebagai header --}}
+                    <tr>
+                        <td colspan="4" style="background-color: #e9ecef; font-weight: bold; padding: 8px;">
+                            {{ $item->test_name }}
+                        </td>
+                    </tr>
+                    @php
+                        // Build template metadata map
+                        $templateMeta = [];
+                        if ($item->jenisPemeriksaan && $item->jenisPemeriksaan->templateFields) {
+                            foreach ($item->jenisPemeriksaan->templateFields as $field) {
+                                if ($field->field_type === 'group' && $field->fieldItems) {
+                                    $groupMeta = [];
+                                    foreach ($field->fieldItems as $fieldItem) {
+                                        $groupMeta[$fieldItem->item_name] = [
+                                            'label' => $fieldItem->examination_name ?? $fieldItem->item_label,
+                                            'unit' => $fieldItem->unit,
+                                            'normal_range' => $fieldItem->normal_range,
+                                        ];
                                     }
+                                    $templateMeta[$field->field_name] = $groupMeta;
+                                }
+                            }
+                        }
+                    @endphp
+                    @foreach ($item->result_payload as $groupName => $groupItems)
+                        @if (is_array($groupItems))
+                            {{-- Sub-group header (hijau) --}}
+                            <tr>
+                                <td colspan="4" class="group-header"
+                                    style="background-color: #198754; color: white; font-weight: bold; padding: 8px;">
+                                    {{ ucwords(str_replace('_', ' ', $groupName)) }}
+                                </td>
+                            </tr>
+                            {{-- Items dalam grup --}}
+                            @foreach ($groupItems as $itemName => $itemValue)
+                                @php
+                                    $meta = $templateMeta[$groupName][$itemName] ?? [];
+                                    $displayName = $meta['label'] ?? ucwords(str_replace('_', ' ', $itemName));
+                                    $unit = $meta['unit'] ?? '-';
+                                    $normalRange = $meta['normal_range'] ?? '-';
 
-                                    // Check if result is abnormal (basic check)
-                                    if ($fieldItem->normal_range && $resultValue && is_numeric($resultValue)) {
-                                        $normalRange = trim($fieldItem->normal_range);
-                                        // Simple range check for format "min-max"
+                                    // Check if result is abnormal
+                                    $isAbnormal = false;
+                                    if ($normalRange && $normalRange !== '-' && $itemValue && is_numeric($itemValue)) {
                                         if (
                                             preg_match(
                                                 '/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/',
@@ -308,24 +308,24 @@
                                         ) {
                                             $min = floatval($matches[1]);
                                             $max = floatval($matches[2]);
-                                            $val = floatval($resultValue);
+                                            $val = floatval($itemValue);
                                             $isAbnormal = $val < $min || $val > $max;
                                         }
                                     }
                                 @endphp
                                 <tr>
-                                    <td class="examination-name">{{ $fieldItem->examination_name }}</td>
+                                    <td class="examination-name">{{ $displayName }}</td>
                                     <td class="result-value {{ $isAbnormal ? 'abnormal' : '' }}">
-                                        {{ $resultValue ?: '-' }}
+                                        {{ $itemValue ?? '-' }}
                                     </td>
-                                    <td class="unit">{{ $fieldItem->unit ?? '-' }}</td>
-                                    <td class="normal-range">{{ $fieldItem->normal_range ?? '-' }}</td>
+                                    <td class="unit">{{ $unit }}</td>
+                                    <td class="normal-range">{{ $normalRange }}</td>
                                 </tr>
                             @endforeach
                         @endif
                     @endforeach
                 @else
-                    <!-- Simple result without template -->
+                    {{-- Simple result without grouped payload --}}
                     <tr>
                         <td class="examination-name">{{ $item->test_name }}</td>
                         <td class="result-value">{{ $item->result_value ?? '-' }}</td>
@@ -344,8 +344,14 @@
         </div>
     @endif
 
-    <div class="print-date">
-        Dicetak pada: {{ now()->format('d/m/Y H:i:s') }}
+    <div
+        style="margin-top: 30px; border-top: 2px solid #000; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 11px;">
+            <strong>Tanggal Cetak:</strong> {{ now()->format('d-m-Y(H:i') }} <strong>Wib</strong>)
+        </div>
+        <div style="text-align: right; font-size: 11px;">
+            <strong>dto</strong>
+        </div>
     </div>
 
     <script>

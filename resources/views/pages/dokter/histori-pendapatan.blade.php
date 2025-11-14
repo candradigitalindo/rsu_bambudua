@@ -139,7 +139,6 @@
                         <table id="historiPendapatanTable" class="table table-hover align-middle">
                             <thead>
                                 <tr>
-                                    <th>No</th>
                                     <th>Tanggal</th>
                                     <th>Jenis Pendapatan</th>
                                     <th>Keterangan</th>
@@ -148,9 +147,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($historiPendapatan as $index => $pendapatan)
+                                @forelse($historiPendapatan as $pendapatan)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
                                         <td>
                                             <strong>{{ \Carbon\Carbon::parse($pendapatan['tanggal'])->format('d/m/Y') }}</strong><br>
                                             <small
@@ -171,7 +169,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-5">
+                                        <td colspan="5" class="text-center text-muted py-5">
                                             <i class="ri-wallet-3-line fs-1"></i>
                                             <p class="mb-0 mt-2">Tidak ada data pendapatan pada periode ini</p>
                                         </td>
@@ -200,13 +198,8 @@
                 },
                 "pageLength": 25,
                 "order": [
-                    [1, "desc"]
-                ], // Sort by tanggal descending
-                "columnDefs": [{
-                        "orderable": false,
-                        "targets": 0
-                    } // No column tidak bisa disorting
-                ]
+                    [0, "desc"]
+                ] // Sort by tanggal descending
             });
         });
     </script>

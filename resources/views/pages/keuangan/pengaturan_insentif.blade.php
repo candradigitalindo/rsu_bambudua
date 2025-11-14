@@ -377,9 +377,9 @@
                                 </div>
                             </div>
 
-                            <div class="mb-0">
+                            <div class="mb-3">
                                 <label class="form-label">
-                                    <i class="ri-nurse-line text-success"></i> Fee Radiologi (Perawat)
+                                    <i class="ri-nurse-line text-success"></i> Fee Radiologi Echo/USG (Perawat)
                                 </label>
                                 <div class="row g-2">
                                     <div class="col-md-5">
@@ -406,7 +406,30 @@
                                 </div>
                                 <div class="form-text">
                                     <i class="ri-information-line"></i>
-                                    Fee diberikan kepada perawat yang membantu proses pemeriksaan radiologi
+                                    Fee diberikan kepada perawat untuk pemeriksaan Echo dan USG
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label">
+                                    <i class="ri-nurse-line text-success"></i> Fee Radiologi Lainnya (Perawat) - Per
+                                    Tindakan
+                                </label>
+                                <div class="row g-2">
+                                    <div class="col-md-12">
+                                        <div class="input-group">
+                                            <span class="input-group-text">Rp</span>
+                                            <input type="number" step="1" min="0"
+                                                class="form-control currency-input"
+                                                name="perawat_fee_radiologi_pertindakan_value"
+                                                value="{{ old('perawat_fee_radiologi_pertindakan_value', $settings['perawat_fee_radiologi_pertindakan_value'] ?? 15000) }}"
+                                                placeholder="Masukkan nominal" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-text">
+                                    <i class="ri-information-line"></i>
+                                    Fee flat per tindakan untuk radiologi selain Echo/USG (Rontgen, CT Scan, MRI, dll)
                                 </div>
                             </div>
                         </div>

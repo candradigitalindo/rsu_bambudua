@@ -43,4 +43,9 @@ class RadiologyRequest extends Model
     {
         return $this->hasOne(RadiologySchedule::class, 'radiology_request_id');
     }
+
+    public function encounter()
+    {
+        return $this->belongsTo(Encounter::class, 'encounter_id');
+    }
 }

@@ -35,12 +35,23 @@ Sistem insentif perawat telah diperbarui untuk mendukung:
 
 ### 2. Fee Radiologi untuk Perawat
 
-#### **Fee Pemeriksaan Radiologi**
+#### **Fee Pemeriksaan Echo dan USG**
 
 -   Setting keys:
     -   `perawat_fee_radiologi_mode` (0 = Flat Rupiah, 1 = Persentase)
     -   `perawat_fee_radiologi_value` (nilai fee)
 -   Nilai default: 5% dari harga pemeriksaan
+-   Berlaku untuk: Echo dan USG (Ultrasonografi)
+-   Diberikan kepada: Perawat yang membantu proses pemeriksaan Echo/USG
+-   Type incentive: `fee_perawat_radiologi`
+-   Diberikan saat: Pembayaran tindakan lunas
+
+#### **Fee Pemeriksaan Radiologi Lainnya (Per Tindakan)**
+
+-   Setting key:
+    -   `perawat_fee_radiologi_pertindakan_value` (nilai flat per tindakan)
+-   Nilai default: Rp 15.000
+-   Berlaku untuk: Radiologi selain Echo/USG (Rontgen, CT Scan, MRI, dll)
 -   Diberikan kepada: Perawat yang membantu proses pemeriksaan radiologi
 -   Type incentive: `fee_perawat_radiologi`
 -   Diberikan saat: Pembayaran tindakan lunas
@@ -138,7 +149,9 @@ public function createNurseRadiologistIncentive(
 **Fungsi:**
 
 -   Membuat insentif untuk perawat yang membantu pemeriksaan radiologi
--   Menghitung amount berdasarkan mode (flat/persentase)
+-   **Logika Pembedaan:**
+    -   Jika nama pemeriksaan mengandung "Echo", "USG", atau "Ultraso" → Gunakan setting `perawat_fee_radiologi_mode` dan `perawat_fee_radiologi_value` (persentase/flat dari harga)
+    -   Jika radiologi lainnya → Gunakan setting `perawat_fee_radiologi_pertindakan_value` (nominal tetap per tindakan)
 -   Menyimpan dengan type `fee_perawat_radiologi`
 
 ### 5. **Controller - Pembayaran Kasir**
@@ -209,7 +222,9 @@ if ($nurses && $nurses->isNotEmpty()) {
    a. Buat fee untuk dokter perujuk
    b. Buat fee untuk radiologist
    c. BARU: Buat fee untuk setiap perawat di encounter
-6. Fee dihitung berdasarkan mode (flat/persentase)
+6. Fee dihitung berdasarkan jenis pemeriksaan:
+   - Echo/USG: Berdasarkan mode (flat/persentase dari harga)
+   - Radiologi lainnya: Nominal tetap per tindakan
 7. Status incentive: 'pending'
 ```
 
@@ -254,11 +269,11 @@ if ($nurses && $nurses->isNotEmpty()) {
 5. Verifikasi: Amount per tindakan = nilai perawat_per_encounter_rawat_inap
 ```
 
-### Test Case 4: Fee Radiologi Perawat
+### Test Case 4: Fee Radiologi Perawat (Echo/USG)
 
 ```
 1. Buat encounter dengan 1 perawat assigned
-2. Order pemeriksaan radiologi (harga Rp 200.000)
+2. Order pemeriksaan Echo atau USG (harga Rp 200.000)
 3. Selesaikan radiologi
 4. Bayar tindakan
 5. Verifikasi: Fee perawat dibuat
@@ -266,14 +281,26 @@ if ($nurses && $nurses->isNotEmpty()) {
 7. Jika mode = flat Rp 5.000: Amount = Rp 5.000
 ```
 
+### Test Case 5: Fee Radiologi Perawat (Radiologi Lainnya)
+
+```
+1. Buat encounter dengan 1 perawat assigned
+2. Order pemeriksaan Rontgen/CT Scan/MRI (harga berapapun)
+3. Selesaikan radiologi
+4. Bayar tindakan
+5. Verifikasi: Fee perawat dibuat
+6. Amount = Nilai setting perawat_fee_radiologi_pertindakan_value (default Rp 15.000)
+```
+
 ## ⚙️ Konfigurasi Default
 
 ```php
-'perawat_per_encounter_rawat_jalan' => 10000,  // Rp 10.000
-'perawat_per_encounter_igd' => 15000,          // Rp 15.000
-'perawat_per_encounter_rawat_inap' => 20000,   // Rp 20.000
-'perawat_fee_radiologi_mode' => 1,             // Persentase
-'perawat_fee_radiologi_value' => 5,            // 5%
+'perawat_per_encounter_rawat_jalan' => 10000,          // Rp 10.000
+'perawat_per_encounter_igd' => 15000,                  // Rp 15.000
+'perawat_per_encounter_rawat_inap' => 20000,           // Rp 20.000
+'perawat_fee_radiologi_mode' => 1,                     // Persentase (untuk Echo/USG)
+'perawat_fee_radiologi_value' => 5,                    // 5% (untuk Echo/USG)
+'perawat_fee_radiologi_pertindakan_value' => 15000,    // Rp 15.000 (untuk radiologi lainnya)
 ```
 
 ## 🔐 Catatan Penting
@@ -308,8 +335,8 @@ if ($nurses && $nurses->isNotEmpty()) {
     - IGD: Nominal untuk pasien gawat darurat
     - Rawat Inap: Nominal per tindakan
 3. Atur fee radiologi untuk perawat:
-    - Pilih mode: Flat (Rupiah) atau Persentase (%)
-    - Masukkan nilai
+    - **Echo/USG**: Pilih mode (Flat/Persentase) dan masukkan nilai
+    - **Radiologi Lainnya**: Masukkan nominal tetap per tindakan
 4. Klik **Simpan Pengaturan**
 5. Sistem akan otomatis menerapkan setting baru untuk incentive periode berikutnya
 
@@ -333,8 +360,15 @@ if ($nurses && $nurses->isNotEmpty()) {
 -   Pastikan pembayaran tindakan sudah lunas (status_bayar_tindakan = 1)
 -   Pastikan encounter memiliki nurse assigned
 
+### Fee Echo/USG vs Radiologi lainnya tidak sesuai
+
+-   Verifikasi nama pemeriksaan mengandung kata "Echo", "USG", atau "Ultraso"
+-   Cek setting `perawat_fee_radiologi_mode` dan `perawat_fee_radiologi_value` untuk Echo/USG
+-   Cek setting `perawat_fee_radiologi_pertindakan_value` untuk radiologi lainnya
+
 ---
 
 **Tanggal Implementasi**: 14 November 2025  
+**Last Update**: 14 November 2025 - Pemisahan fee Echo/USG dengan radiologi lainnya  
 **Developer**: AI Assistant  
 **Status**: ✅ Complete & Tested

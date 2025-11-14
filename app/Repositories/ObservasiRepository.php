@@ -1329,12 +1329,26 @@ class ObservasiRepository
      */
     public function createNurseRadiologistIncentive(\App\Models\Encounter $encounter, \App\Models\User $perawat, string $namaPemeriksaan, float $hargaPemeriksaan): void
     {
-        $modeKey = 'perawat_fee_radiologi_mode';
-        $valKey  = 'perawat_fee_radiologi_value';
-        $mode = (int) (\App\Models\IncentiveSetting::where('setting_key', $modeKey)->value('setting_value') ?? 1);
-        $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', $valKey)->value('setting_value') ?? 0);
+        // Check if this is Echo or USG (case insensitive)
+        $isEchoOrUSG = (
+            stripos($namaPemeriksaan, 'echo') !== false ||
+            stripos($namaPemeriksaan, 'usg') !== false ||
+            stripos($namaPemeriksaan, 'ultraso') !== false
+        );
 
-        $amount = $this->computeFeeAmount($hargaPemeriksaan, $mode, $val);
+        if ($isEchoOrUSG) {
+            // Echo/USG: Use percentage or flat calculation
+            $modeKey = 'perawat_fee_radiologi_mode';
+            $valKey  = 'perawat_fee_radiologi_value';
+            $mode = (int) (\App\Models\IncentiveSetting::where('setting_key', $modeKey)->value('setting_value') ?? 1);
+            $val  = (float)(\App\Models\IncentiveSetting::where('setting_key', $valKey)->value('setting_value') ?? 0);
+
+            $amount = $this->computeFeeAmount($hargaPemeriksaan, $mode, $val);
+        } else {
+            // Other radiologi: Use flat per tindakan
+            $amount = (float)(\App\Models\IncentiveSetting::where('setting_key', 'perawat_fee_radiologi_pertindakan_value')->value('setting_value') ?? 0);
+        }
+
         if ($amount <= 0) {
             return;
         }

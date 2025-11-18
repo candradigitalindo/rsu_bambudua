@@ -396,7 +396,9 @@
                 }).done(function(data) {
                     const tbody = $('#tbody-pendukung');
                     tbody.empty();
-                    (data || []).forEach(function(item) {
+                    // Ensure data is an array
+                    const items = Array.isArray(data) ? data : (data ? [data] : []);
+                    items.forEach(function(item) {
                         const canDelete = (item.status === 'requested' || item.status === 'canceled');
                         const canPrint = item.status === 'completed';
                         const printUrl = item.type === 'lab' ?

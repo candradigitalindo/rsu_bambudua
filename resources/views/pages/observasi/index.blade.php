@@ -14,6 +14,45 @@
             /* And disable the pointer events */
             pointer-events: none;
         }
+
+        /* Modal without backdrop - ensure it's above everything */
+        #modalLabResults,
+        #modalRadioResults {
+            z-index: 10600 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            overflow-x: hidden !important;
+            overflow-y: auto !important;
+            pointer-events: none !important;
+            /* Allow clicking through modal container */
+        }
+
+        #modalLabResults .modal-dialog,
+        #modalRadioResults .modal-dialog {
+            z-index: 10700 !important;
+            position: relative !important;
+            margin: 1.75rem auto !important;
+            pointer-events: auto !important;
+            /* Re-enable clicks on modal content */
+        }
+
+        #modalLabResults .modal-content,
+        #modalRadioResults .modal-content {
+            position: relative !important;
+            z-index: 10800 !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5) !important;
+            /* Add shadow for depth */
+        }
+
+        /* Override any parent container z-index */
+        .card,
+        .tab-content,
+        .tab-pane {
+            z-index: auto !important;
+        }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <!-- Custom CSS -->
@@ -160,6 +199,64 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Hasil Lab -->
+    <div class="modal fade" id="modalLabResults" tabindex="-1" aria-labelledby="modalLabResultsLabel"
+        aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-warning-subtle">
+                    <h5 class="modal-title" id="modalLabResultsLabel">
+                        <i class="ri-flask-line"></i> Hasil Pemeriksaan Laboratorium
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="labResultsContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Memuat...</span>
+                        </div>
+                        <p class="mt-2">Memuat hasil laboratorium...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="printLabResults()">
+                        <i class="ri-printer-line"></i> Cetak
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Hasil Radiologi -->
+    <div class="modal fade" id="modalRadioResults" tabindex="-1" aria-labelledby="modalRadioResultsLabel"
+        aria-hidden="true" data-bs-backdrop="false">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-info-subtle">
+                    <h5 class="modal-title" id="modalRadioResultsLabel">
+                        <i class="ri-scan-line"></i> Hasil Pemeriksaan Radiologi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="radioResultsContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Memuat...</span>
+                        </div>
+                        <p class="mt-2">Memuat hasil radiologi...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" onclick="printRadioResults()">
+                        <i class="ri-printer-line"></i> Cetak
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 @prepend('scripts')
     <!-- Overlay Scroll JS -->
@@ -178,6 +275,13 @@
             $('#dokter_id').select2({
                 placeholder: "Pilih satu atau lebih dokter",
                 allowClear: true
+            });
+
+            // Ensure modal is visible when shown (no backdrop)
+            $('#modalLabResults, #modalRadioResults').on('show.bs.modal', function(e) {
+                const modal = $(this);
+                modal.css('z-index', 10600);
+                modal.find('.modal-dialog').css('z-index', 10700);
             });
         });
     </script>

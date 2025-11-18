@@ -630,62 +630,126 @@ class ObservasiRepository
     // Ringkasan encounter terakhir (sebelum encounter saat ini)
     public function getLastEncounterSummary($encounterId)
     {
-        $current = \App\Models\Encounter::find($encounterId);
-        if (!$current) {
+        try {
+            $current = \App\Models\Encounter::find($encounterId);
+            if (!$current) {
+                return null;
+            }
+
+            $prev = \App\Models\Encounter::where('rekam_medis', $current->rekam_medis)
+                ->where('id', '!=', $encounterId)
+                ->orderByDesc('created_at')
+                ->first();
+            if (!$prev) {
+                return null;
+            }
+
+            // Type mapping
+            $typeMap = [
+                1 => 'Rawat Jalan',
+                2 => 'Rawat Inap',
+                3 => 'IGD'
+            ];
+
+            // Diagnosis
+            $diagnosisCollection = $this->getDiagnosis($prev->id);
+            $diagnosis = $diagnosisCollection ? $diagnosisCollection->map(function ($d) {
+                return [
+                    'diagnosis_code' => $d->diagnosis_code ?? '',
+                    'diagnosis_description' => $d->diagnosis_description ?? '',
+                    'diagnosis_type' => $d->diagnosis_type ?? '',
+                ];
+            })->toArray() : [];
+
+            // TTV
+            $ttv = \App\Models\TandaVital::where('encounter_id', $prev->id)->first();
+
+            // Anamnesis untuk keluhan
+            $anamnesis = \App\Models\Anamnesis::where('encounter_id', $prev->id)->first();
+
+            // Resep ringkas dengan satuan
+            $resep = \App\Models\Resep::where('encounter_id', $prev->id)->latest()->first();
+            $resepItems = [];
+            if ($resep) {
+                $resepDetails = \App\Models\ResepDetail::where('resep_id', $resep->id)->get();
+                foreach ($resepDetails as $d) {
+                    $resepItems[] = [
+                        'nama_obat' => $d->nama_obat ?? '',
+                        'qty' => $d->qty ?? 0,
+                        'satuan' => $d->satuan ?? '',
+                        'aturan_pakai' => $d->aturan_pakai ?? ''
+                    ];
+                }
+            }
+
+            // Lab ringkas - ambil semua lab requests
+            $labRequests = \App\Models\LabRequest::where('encounter_id', $prev->id)->orderByDesc('created_at')->get();
+            $labItems = [];
+            foreach ($labRequests as $labReq) {
+                $testNames = [];
+                $labRequestItems = \App\Models\LabRequestItem::where('lab_request_id', $labReq->id)->get();
+                foreach ($labRequestItems as $it) {
+                    $testName = 'Pemeriksaan Lab';
+                    if ($it->test_id) {
+                        $test = \App\Models\JenisPemeriksaanPenunjang::find($it->test_id);
+                        $testName = $test ? $test->name : ($it->test_name ?? 'Pemeriksaan Lab');
+                    } else {
+                        $testName = $it->test_name ?? 'Pemeriksaan Lab';
+                    }
+                    $testNames[] = $testName;
+                }
+
+                $labItems[] = [
+                    'lab_request_id' => $labReq->id,
+                    'status' => $labReq->status,
+                    'test_names' => $testNames,
+                    'test_summary' => count($testNames) > 0 ? $testNames[0] . (count($testNames) > 1 ? ' +' . (count($testNames) - 1) : '') : 'Pemeriksaan Lab'
+                ];
+            }
+
+            // Radiologi ringkas - ambil semua radiologi requests
+            $radiologiRequests = \App\Models\RadiologyRequest::where('encounter_id', $prev->id)->orderByDesc('created_at')->get();
+            $radiologiItems = [];
+            foreach ($radiologiRequests as $radioReq) {
+                $jenis = \App\Models\JenisPemeriksaanPenunjang::find($radioReq->jenis_pemeriksaan_id);
+                $radiologiItems[] = [
+                    'radiology_request_id' => $radioReq->id,
+                    'status' => $radioReq->status,
+                    'jenis_name' => $jenis ? $jenis->name : 'Pemeriksaan Radiologi'
+                ];
+            }
+
+            return [
+                'encounter_id' => $prev->id,
+                'date' => optional($prev->created_at)->format('d M Y H:i'),
+                'type' => $typeMap[$prev->type] ?? 'Tidak Diketahui',
+                'keluhan' => optional($anamnesis)->keluhan_utama,
+                'diagnosis' => $diagnosis,
+                'ttv' => $ttv ? [
+                    'nadi' => $ttv->nadi,
+                    'pernapasan' => $ttv->pernapasan,
+                    'sistolik' => $ttv->sistolik,
+                    'diastolik' => $ttv->diastolik,
+                    'suhu' => $ttv->suhu,
+                    'kesadaran' => $ttv->kesadaran,
+                ] : null,
+                'resep' => [
+                    'count' => count($resepItems),
+                    'items' => $resepItems,
+                ],
+                'lab' => [
+                    'count' => count($labItems),
+                    'items' => $labItems,
+                ],
+                'radiologi' => [
+                    'count' => count($radiologiItems),
+                    'items' => $radiologiItems,
+                ],
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error loading last encounter summary: ' . $e->getMessage());
             return null;
         }
-
-        $prev = \App\Models\Encounter::where('rekam_medis', $current->rekam_medis)
-            ->where('id', '!=', $encounterId)
-            ->orderByDesc('created_at')
-            ->first();
-        if (!$prev) {
-            return null;
-        }
-
-        // Diagnosis
-        $diagnosis = $this->getDiagnosis($prev->id);
-        // TTV
-        $ttv = \App\Models\TandaVital::where('encounter_id', $prev->id)->first();
-        // Resep ringkas
-        $resep = \App\Models\Resep::with('details')->where('encounter_id', $prev->id)->latest()->first();
-        $resepItems = [];
-        if ($resep && $resep->details) {
-            foreach ($resep->details as $d) {
-                $resepItems[] = ['nama_obat' => $d->nama_obat, 'qty' => $d->qty, 'aturan_pakai' => $d->aturan_pakai];
-            }
-        }
-        // Lab ringkas
-        $lab = \App\Models\LabRequest::with('items')->where('encounter_id', $prev->id)->latest()->first();
-        $labItems = [];
-        if ($lab && $lab->items) {
-            foreach ($lab->items as $it) {
-                $labItems[] = ['test_name' => $it->test_name];
-            }
-        }
-
-        return [
-            'encounter_id' => $prev->id,
-            'date' => optional($prev->created_at)->format('d M Y H:i'),
-            'type' => $prev->type,
-            'diagnosis' => $diagnosis ?? [],
-            'ttv' => $ttv ? [
-                'nadi' => $ttv->nadi,
-                'pernapasan' => $ttv->pernapasan,
-                'sistolik' => $ttv->sistolik,
-                'diastolik' => $ttv->diastolik,
-                'suhu' => $ttv->suhu,
-            ] : null,
-            'resep' => [
-                'count' => $resep ? $resep->details->count() : 0,
-                'items' => array_slice($resepItems, 0, 3),
-            ],
-            'lab' => [
-                'status' => $lab ? $lab->status : null,
-                'count' => $lab ? $lab->items->count() : 0,
-                'items' => array_slice($labItems, 0, 3),
-            ],
-        ];
     }
     // Buat diskon tindakan
     public function postDiskonTindakan($request, $id)

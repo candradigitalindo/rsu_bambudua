@@ -233,6 +233,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postAnemnesis', [ObservasiController::class, 'postAnemnesis'])->name('observasi.postAnemnesis');
         Route::get('/observasi/{id}/tandaVital', [ObservasiController::class, 'tandaVital'])->name('observasi.tandaVital');
         Route::get('/observasi/{id}/lastEncounterSummary', [ObservasiController::class, 'lastEncounterSummary'])->name('observasi.lastEncounterSummary');
+        Route::get('/observasi/{id}/lastEncounterFull', [ObservasiController::class, 'lastEncounterFull'])->name('observasi.lastEncounterFull');
+        Route::post('/observasi/{id}/copyLastEncounter', [ObservasiController::class, 'copyLastEncounter'])->name('observasi.copyLastEncounter');
         Route::post('/observasi/{id}/postTandaVital', [ObservasiController::class, 'postTandaVital'])->name('observasi.postTandaVital');
         Route::get('/observasi/{id}/pemeriksaanPenunjang', [ObservasiController::class, 'pemeriksaanPenunjang'])->name('observasi.pemeriksaanPenunjang');
         Route::post('/observasi/{id}/postPemeriksaanPenunjang', [ObservasiController::class, 'postPemeriksaanPenunjang'])->name('observasi.postPemeriksaanPenunjang');
@@ -247,6 +249,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/observasi/{id}/labRequests', [ObservasiController::class, 'labRequests'])->name('observasi.labRequests');
         Route::get('/observasi/lab/{id}/print', [ObservasiController::class, 'printLabRequest'])->name('observasi.lab.print');
         Route::get('/observasi/{id}/radiologyRequests', [ObservasiController::class, 'radiologyRequests'])->name('observasi.radiologyRequests');
+        // Get detailed lab and radiologi results for modal display
+        Route::get('/lab/{id}/hasil', [ObservasiController::class, 'getLabResults'])->name('kunjungan.lab.hasil');
+        Route::get('/radiologi/{id}/hasil', [ObservasiController::class, 'getRadiologyResults'])->name('kunjungan.radiologi.hasil');
         Route::post('/observasi/radiologi/{id}/cancel', [ObservasiController::class, 'cancelRadiologyRequest'])->name('observasi.radiologi.cancel');
         Route::delete('/observasi/radiologi/{id}', [ObservasiController::class, 'destroyRadiologyRequest'])->name('observasi.radiologi.destroy');
 

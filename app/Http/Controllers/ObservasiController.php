@@ -533,6 +533,267 @@ class ObservasiController extends Controller
         $summary = $this->observasiRepository->getLastEncounterSummary($id);
         return response()->json($summary ?? []);
     }
+
+    // Data lengkap encounter terakhir untuk copy
+    public function lastEncounterFull($id)
+    {
+        try {
+            $current = \App\Models\Encounter::find($id);
+            if (!$current) {
+                return response()->json(['error' => 'Encounter tidak ditemukan'], 404);
+            }
+
+            $prev = \App\Models\Encounter::where('rekam_medis', $current->rekam_medis)
+                ->where('id', '!=', $id)
+                ->orderByDesc('created_at')
+                ->first();
+
+            if (!$prev) {
+                return response()->json(['error' => 'Tidak ada kunjungan sebelumnya'], 404);
+            }
+
+            // Anamnesis lengkap
+            $anamnesis = \App\Models\Anamnesis::where('encounter_id', $prev->id)->first();
+
+            // Riwayat Penyakit (uses pasien_id, not encounter_id)
+            $riwayatPenyakit = null;
+            $pasien = \App\Models\Pasien::where('rekam_medis', $prev->rekam_medis)->first();
+            if ($pasien) {
+                $riwayatPenyakit = \App\Models\RiwayatPenyakit::where('pasien_id', $pasien->id)->first();
+            }
+
+            // Diagnosis
+            $diagnosis = \App\Models\Diagnosis::where('encounter_id', $prev->id)->get()->map(function ($d) {
+                return [
+                    'diagnosis_code' => $d->diagnosis_code,
+                    'diagnosis_description' => $d->diagnosis_description,
+                    'diagnosis_type' => $d->diagnosis_type,
+                ];
+            })->toArray();
+
+            // Tindakan
+            $tindakan = \App\Models\TindakanEncounter::where('encounter_id', $prev->id)->get()->map(function ($t) {
+                return [
+                    'tindakan_id' => $t->tindakan_id,
+                    'nama_tindakan' => $t->tindakan->nama_tindakan ?? null,
+                    'qty' => $t->qty,
+                    'harga' => $t->harga,
+                ];
+            })->toArray();
+
+            // Resep
+            $resep = \App\Models\Resep::where('encounter_id', $prev->id)->latest()->first();
+            $resepItems = [];
+            if ($resep) {
+                $resepDetails = \App\Models\ResepDetail::where('resep_id', $resep->id)->get();
+                foreach ($resepDetails as $d) {
+                    $resepItems[] = [
+                        'product_apotek_id' => $d->product_apotek_id,
+                        'nama_obat' => $d->nama_obat,
+                        'qty' => $d->qty,
+                        'harga' => $d->harga,
+                        'total_harga' => $d->total_harga,
+                        'aturan_pakai' => $d->aturan_pakai,
+                        'status' => $d->status,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'encounter_id' => $prev->id,
+                'anamnesis' => $anamnesis ? [
+                    'keluhan_utama' => $anamnesis->keluhan_utama,
+                    'riwayat_penyakit' => $riwayatPenyakit->riwayat_penyakit ?? null,
+                    'riwayat_penyakit_keluarga' => $riwayatPenyakit->riwayat_penyakit_keluarga ?? null,
+                ] : null,
+                'ttv' => \App\Models\TandaVital::where('encounter_id', $prev->id)->first(),
+                'diagnosis' => $diagnosis,
+                'tindakan' => $tindakan,
+                'resep' => $resepItems,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Copy data encounter terakhir ke encounter saat ini
+    public function copyLastEncounter(Request $request, $id)
+    {
+        try {
+            \DB::beginTransaction();
+
+            $current = \App\Models\Encounter::find($id);
+            if (!$current) {
+                return response()->json(['success' => false, 'message' => 'Encounter tidak ditemukan'], 404);
+            }
+
+            $prev = \App\Models\Encounter::where('rekam_medis', $current->rekam_medis)
+                ->where('id', '!=', $id)
+                ->orderByDesc('created_at')
+                ->first();
+
+            if (!$prev) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada kunjungan sebelumnya'], 404);
+            }
+
+            $copiedItems = [];
+
+            // 1. Copy Anamnesis
+            $prevAnamnesis = \App\Models\Anamnesis::where('encounter_id', $prev->id)->first();
+            if ($prevAnamnesis) {
+                \App\Models\Anamnesis::updateOrCreate(
+                    ['encounter_id' => $id],
+                    ['keluhan_utama' => $prevAnamnesis->keluhan_utama]
+                );
+                $copiedItems[] = 'Anamnesis';
+            }
+
+            // 2. Copy Riwayat Penyakit (uses pasien_id, not encounter_id)
+            $pasien = \App\Models\Pasien::where('rekam_medis', $current->rekam_medis)->first();
+            if ($pasien) {
+                $prevRiwayat = \App\Models\RiwayatPenyakit::where('pasien_id', $pasien->id)->first();
+                if ($prevRiwayat) {
+                    // Riwayat Penyakit is patient-level, so it's already shared
+                    // Just mark as copied if exists
+                    $copiedItems[] = 'Riwayat Penyakit';
+                }
+            }
+
+            // 3. Copy TTV
+            $prevTTV = \App\Models\TandaVital::where('encounter_id', $prev->id)->first();
+            if ($prevTTV) {
+                \App\Models\TandaVital::updateOrCreate(
+                    ['encounter_id' => $id],
+                    [
+                        'nadi' => $prevTTV->nadi,
+                        'pernapasan' => $prevTTV->pernapasan,
+                        'sistolik' => $prevTTV->sistolik,
+                        'diastolik' => $prevTTV->diastolik,
+                        'suhu' => $prevTTV->suhu,
+                        'kesadaran' => $prevTTV->kesadaran,
+                        'tinggi_badan' => $prevTTV->tinggi_badan,
+                        'berat_badan' => $prevTTV->berat_badan,
+                    ]
+                );
+                $copiedItems[] = 'Tanda Vital';
+            }
+
+            // 4. Copy Diagnosis
+            $prevDiagnosis = \App\Models\Diagnosis::where('encounter_id', $prev->id)->get();
+            $diagnosisCount = 0;
+            foreach ($prevDiagnosis as $diag) {
+                // Check if not already exists
+                $exists = \App\Models\Diagnosis::where('encounter_id', $id)
+                    ->where('diagnosis_code', $diag->diagnosis_code)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\Diagnosis::create([
+                        'encounter_id' => $id,
+                        'diagnosis_code' => $diag->diagnosis_code,
+                        'diagnosis_description' => $diag->diagnosis_description,
+                        'diagnosis_type' => $diag->diagnosis_type,
+                    ]);
+                    $diagnosisCount++;
+                }
+            }
+            if ($diagnosisCount > 0) {
+                $copiedItems[] = "$diagnosisCount Diagnosis";
+            }
+
+            // 5. Copy Tindakan
+            $prevTindakan = \App\Models\TindakanEncounter::where('encounter_id', $prev->id)->get();
+            $tindakanCount = 0;
+            foreach ($prevTindakan as $tind) {
+                // Check if not already exists
+                $exists = \App\Models\TindakanEncounter::where('encounter_id', $id)
+                    ->where('tindakan_id', $tind->tindakan_id)
+                    ->exists();
+
+                if (!$exists) {
+                    \App\Models\TindakanEncounter::create([
+                        'encounter_id' => $id,
+                        'tindakan_id' => $tind->tindakan_id,
+                        'tindakan_name' => $tind->tindakan_name,
+                        'tindakan_description' => $tind->tindakan_description,
+                        'tindakan_harga' => $tind->tindakan_harga,
+                        'qty' => $tind->qty,
+                        'total_harga' => $tind->total_harga,
+                    ]);
+                    $tindakanCount++;
+                }
+            }
+            if ($tindakanCount > 0) {
+                $copiedItems[] = "$tindakanCount Tindakan";
+            }
+
+            // 6. Copy Resep
+            $prevResep = \App\Models\Resep::where('encounter_id', $prev->id)->latest()->first();
+            if ($prevResep) {
+                // Check if resep already exists for current encounter
+                $currentResep = \App\Models\Resep::where('encounter_id', $id)->first();
+
+                if (!$currentResep) {
+                    // Generate kode_resep
+                    $lastKodeResep = \App\Models\Resep::max('kode_resep');
+                    if ($lastKodeResep) {
+                        $lastNumber = (int) substr($lastKodeResep, 3);
+                        $kodeResep = 'RSP' . str_pad($lastNumber + 1, 5, '0', STR_PAD_LEFT);
+                    } else {
+                        $kodeResep = 'RSP00001';
+                    }
+
+                    // Create new resep
+                    $currentResep = \App\Models\Resep::create([
+                        'encounter_id' => $id,
+                        'kode_resep' => $kodeResep,
+                        'dokter' => Auth::user()->name,
+                    ]);
+                }
+
+                $prevResepDetails = \App\Models\ResepDetail::where('resep_id', $prevResep->id)->get();
+                $resepCount = 0;
+                foreach ($prevResepDetails as $detail) {
+                    // Check if not already exists (using product_apotek_id)
+                    $exists = \App\Models\ResepDetail::where('resep_id', $currentResep->id)
+                        ->where('product_apotek_id', $detail->product_apotek_id)
+                        ->exists();
+
+                    if (!$exists) {
+                        \App\Models\ResepDetail::create([
+                            'resep_id' => $currentResep->id,
+                            'product_apotek_id' => $detail->product_apotek_id,
+                            'nama_obat' => $detail->nama_obat,
+                            'qty' => $detail->qty,
+                            'harga' => $detail->harga,
+                            'total_harga' => $detail->total_harga,
+                            'aturan_pakai' => $detail->aturan_pakai,
+                            'status' => 'Diajukan',
+                        ]);
+                        $resepCount++;
+                    }
+                }
+                if ($resepCount > 0) {
+                    $copiedItems[] = "$resepCount Resep Obat";
+                }
+            }
+
+            \DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil di-copy: ' . implode(', ', $copiedItems),
+                'copied_items' => $copiedItems
+            ]);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal meng-copy data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     // Buat diskon tindakan
     public function postDiskonTindakan(Request $request, $id)
     {
@@ -708,6 +969,231 @@ class ObservasiController extends Controller
                 'status' => 200,
                 'message' => 'Obat berhasil dihapus.'
             ]);
+        }
+    }
+
+    /**
+     * Get lab request results for modal display
+     */
+    public function getLabResults($id)
+    {
+        try {
+            $labRequest = LabRequest::with([
+                'encounter.pasien',
+                'items.jenisPemeriksaan',
+                'requester'
+            ])->findOrFail($id);
+
+            if ($labRequest->status !== 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hasil lab belum tersedia. Status: ' . ucfirst($labRequest->status)
+                ], 404);
+            }
+
+            $pasien = $labRequest->encounter->pasien;
+
+            $data = [
+                'klinik_nama' => config('app.name', 'Klinik Bambu Dua'),
+                'pasien_no_rm' => $pasien->no_rm ?? '-',
+                'pasien_nama' => $pasien->nama ?? '-',
+                'pasien_tgl_lahir' => $pasien->tgl_lahir ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d M Y') : '-',
+                'nomor_permintaan' => $labRequest->id,
+                'tanggal_permintaan' => $labRequest->requested_at ? $labRequest->requested_at->format('d M Y H:i') : '-',
+                'dokter_nama' => $labRequest->requester->name ?? '-',
+                'catatan' => $labRequest->notes,
+                'petugas_lab' => $labRequest->completed_by ? \App\Models\User::find($labRequest->completed_by)?->name : null,
+                'items' => []
+            ];
+
+            foreach ($labRequest->items as $item) {
+                // Get data from result_payload JSON first, fallback to regular columns
+                $payload = $item->result_payload ?? [];
+
+                $namaPemeriksaan = $item->test_name ?? ($item->jenisPemeriksaan->name ?? '-');
+
+                // Check if payload has nested structure (categorized results)
+                $hasNestedPayload = false;
+                if (is_array($payload) && !empty($payload)) {
+                    // Check if all values are arrays (nested structure)
+                    $hasNestedPayload = !empty(array_filter($payload, fn($val) => is_array($val)));
+                }
+
+                if ($hasNestedPayload) {
+                    // Nested structure - add category-based results
+                    foreach ($payload as $category => $tests) {
+                        if (is_array($tests)) {
+                            foreach ($tests as $testName => $testValue) {
+                                $data['items'][] = [
+                                    'nama_pemeriksaan' => ucwords(str_replace('_', ' ', $category)) . ' - ' . ucwords(str_replace('_', ' ', $testName)),
+                                    'hasil' => $testValue ?? '-',
+                                    'nilai_normal' => '-',
+                                    'satuan' => '',
+                                    'catatan' => '',
+                                    'is_abnormal' => false,
+                                    'is_category_item' => true
+                                ];
+                            }
+                        }
+                    }
+                } else {
+                    // Simple structure or fallback to regular columns
+                    $hasil = $payload['result_value'] ?? $item->result_value ?? '-';
+                    $nilaiNormal = $payload['result_reference'] ?? $item->result_reference ?? '-';
+                    $satuan = $payload['result_unit'] ?? $item->result_unit ?? '';
+                    $catatan = $payload['result_notes'] ?? $item->result_notes ?? '';
+
+                    // Check if result is abnormal (basic check)
+                    $isAbnormal = false;
+                    if (is_numeric($hasil) && $nilaiNormal) {
+                        // Try to parse reference range (e.g., "10-20" or "< 10")
+                        if (preg_match('/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/', $nilaiNormal, $matches)) {
+                            $min = (float)$matches[1];
+                            $max = (float)$matches[2];
+                            $value = (float)$hasil;
+                            $isAbnormal = ($value < $min || $value > $max);
+                        }
+                    }
+
+                    $data['items'][] = [
+                        'nama_pemeriksaan' => $namaPemeriksaan,
+                        'hasil' => $hasil,
+                        'nilai_normal' => $nilaiNormal,
+                        'satuan' => $satuan,
+                        'catatan' => $catatan,
+                        'is_abnormal' => $isAbnormal,
+                        'is_category_item' => false
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat hasil lab: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get radiology request results for modal display
+     */
+    public function getRadiologyResults($id)
+    {
+        try {
+            $radioRequest = \App\Models\RadiologyRequest::with([
+                'encounter.pasien',
+                'jenis',
+                'dokter',
+                'results.radiologist'
+            ])->findOrFail($id);
+
+            if ($radioRequest->status !== 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Hasil radiologi belum tersedia. Status: ' . ucfirst($radioRequest->status)
+                ], 404);
+            }
+
+            $pasien = $radioRequest->encounter->pasien;
+            $latestResult = $radioRequest->results->first(); // Get the latest result
+
+            // Get data from payload JSON first, fallback to regular columns
+            $payload = $latestResult->payload ?? [];
+
+            // Extract findings, impression from payload or regular columns
+            $findings = $latestResult->findings ?? '-';
+            $impression = $latestResult->impression ?? '-';
+            $technique = null;
+            $clinicalInfo = null;
+            $conclusion = null;
+
+            // Extract component results from payload (for Echo, USG, etc.)
+            $componentResults = [];
+            $hasComponentData = false;
+
+            if (is_array($payload) && !empty($payload)) {
+                // Check if payload contains standard fields or component data
+                if (isset($payload['findings']) || isset($payload['impression']) || isset($payload['technique']) || isset($payload['clinical_info'])) {
+                    // Standard format in payload
+                    $findings = $payload['findings'] ?? $findings;
+                    $impression = $payload['impression'] ?? $impression;
+                    $technique = $payload['technique'] ?? null;
+                    $clinicalInfo = $payload['clinical_info'] ?? null;
+                    $conclusion = $payload['conclusion'] ?? null;
+                } else {
+                    // Component-based data (Echo, USG, Rontgen, etc.)
+                    // This means payload contains detailed measurements/findings
+                    $hasComponentData = true;
+                    foreach ($payload as $key => $value) {
+                        if (!empty($value) && $value !== '-') {
+                            $componentResults[] = [
+                                'nama' => $key,
+                                'nilai' => $value
+                            ];
+                        }
+                    }
+
+                    // If we have component data, clear findings/impression to avoid redundancy
+                    // unless they contain meaningful narrative text
+                    if (!empty($componentResults)) {
+                        // Only keep findings/impression if they're not just placeholder values
+                        if (in_array(strtolower(trim($findings)), ['', '-', 'null', '11'])) {
+                            $findings = null;
+                        }
+                        if (in_array(strtolower(trim($impression)), ['', '-', 'null', '11'])) {
+                            $impression = null;
+                        }
+                    }
+                }
+            }
+
+            $data = [
+                'klinik_nama' => config('app.name', 'Klinik Bambu Dua'),
+                'pasien_no_rm' => $pasien->no_rm ?? '-',
+                'pasien_nama' => $pasien->nama ?? '-',
+                'pasien_tgl_lahir' => $pasien->tgl_lahir ? \Carbon\Carbon::parse($pasien->tgl_lahir)->format('d M Y') : '-',
+                'nomor_permintaan' => $radioRequest->id,
+                'tanggal_permintaan' => $radioRequest->created_at ? $radioRequest->created_at->format('d M Y H:i') : '-',
+                'dokter_nama' => $radioRequest->dokter->name ?? '-',
+                'items' => [
+                    [
+                        'nama_pemeriksaan' => $radioRequest->jenis->name ?? '-'
+                    ]
+                ],
+                'component_results' => $componentResults,
+                'findings' => $findings,
+                'impression' => $impression,
+                'technique' => $technique,
+                'clinical_info' => $clinicalInfo,
+                'conclusion' => $conclusion,
+                'radiolog' => $latestResult->radiologist->name ?? null,
+                'images' => []
+            ];            // Parse files for images if available
+            if ($latestResult && $latestResult->files) {
+                $files = is_string($latestResult->files) ? json_decode($latestResult->files, true) : $latestResult->files;
+                if (is_array($files)) {
+                    foreach ($files as $file) {
+                        $data['images'][] = [
+                            'url' => asset('storage/' . $file)
+                        ];
+                    }
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat hasil radiologi: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

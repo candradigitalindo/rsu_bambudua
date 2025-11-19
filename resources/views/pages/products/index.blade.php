@@ -70,6 +70,7 @@
                                     <th>Kode Produk</th>
                                     <th>Kategori</th>
                                     <th>Nama Produk</th>
+                                    <th>Satuan</th>
                                     <th>Harga</th>
                                     <th>Stok</th>
                                     <th>Warning Stok</th>
@@ -84,9 +85,11 @@
                                         <td>{{ $product->code }}</td>
                                         <td>{{ $product->category->name }}</td>
                                         <td>{{ $product->name }}</td>
+                                        <td><span class="badge bg-info">{{ $product->satuan ?? '-' }}</span></td>
                                         <td>{{ number_format($product->harga, 0, ',', '.') }}</td>
                                         {{-- Format harga dengan titik sebagai pemisah ribuan --}}
-                                        <td>{{ $product->stok }}</td>
+                                        <td><strong>{{ $product->stok }}</strong> <small
+                                                class="text-muted">{{ $product->satuan ?? '' }}</small></td>
                                         <td>
                                             @if ($product->stok == 0)
                                                 <span class="badge bg-danger">Stok Habis</span>

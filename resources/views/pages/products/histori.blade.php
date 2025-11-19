@@ -55,7 +55,7 @@
                     </form>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped align-middle">
-                            <thead class="table-light">
+                            <thead class=\"table-light\">
                                 <tr>
                                     <th>No</th>
                                     <th>Kode Produk</th>
@@ -75,12 +75,17 @@
                                         <td>{{ $history->productApotek->name ?? '-' }}</td>
                                         <td>
                                             @if ($history->type == 0)
-                                                <span class="badge bg-success">Masuk</span>
+                                                <span class=\"badge bg-success\">Masuk</span>
                                             @else
-                                                <span class="badge bg-danger">Keluar</span>
+                                                <span class=\"badge bg-danger\">Keluar</span>
                                             @endif
                                         </td>
-                                        <td>{{ $history->jumlah }}</td>
+                                        <td>
+                                            <strong>{{ $history->jumlah }}</strong>
+                                            @if ($history->productApotek && $history->productApotek->satuan)
+                                                <small class=\"text-muted\">{{ $history->productApotek->satuan }}</small>
+                                            @endif
+                                        </td>
                                         <td>
                                             {{ $history->expired_at ? \Carbon\Carbon::parse($history->expired_at)->format('d-m-Y') : '-' }}
                                         </td>

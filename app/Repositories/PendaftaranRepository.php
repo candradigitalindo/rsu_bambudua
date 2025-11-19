@@ -81,7 +81,7 @@ class PendaftaranRepository
         $orderBy = in_array($request->order_by ?? '', ['created_at', 'no_encounter', 'name_pasien']) ? $request->order_by : null;
         $orderDir = in_array(strtolower($request->order_dir ?? ''), ['asc', 'desc']) ? strtolower($request->order_dir) : 'desc';
 
-        $encounters = Encounter::with(['practitioner', 'clinic'])
+        $encounters = Encounter::with(['practitioner', 'clinic', 'anamnesis', 'diagnosis', 'tindakan'])
             ->where('type', 1)
             ->where(function ($query) {
                 $query->where('status', 1)
@@ -124,6 +124,11 @@ class PendaftaranRepository
             };
             $e['poliklinik'] = optional($e->clinic)->nama ?: '-';
             $e['created_at_fmt'] = $e->created_at ? $e->created_at->format('d M Y H:i') : '-';
+
+            // Check if encounter is paid or has examination data
+            $isPaid = ($e->status_bayar_tindakan == 'Paid' || $e->status_bayar_resep == 'Paid');
+            $hasExamination = $e->anamnesis || $e->diagnosis->isNotEmpty() || $e->tindakan->isNotEmpty();
+            $e['can_delete'] = !($isPaid || $hasExamination);
         }
 
         return $encounters;
@@ -136,7 +141,7 @@ class PendaftaranRepository
         $orderBy = in_array($request->order_by ?? '', ['created_at', 'no_encounter', 'name_pasien']) ? $request->order_by : null;
         $orderDir = in_array(strtolower($request->order_dir ?? ''), ['asc', 'desc']) ? strtolower($request->order_dir) : 'asc';
 
-        $encounters = Encounter::with(['practitioner'])
+        $encounters = Encounter::with(['practitioner', 'anamnesis', 'diagnosis', 'tindakan'])
             ->where('type', 3)
             ->where(function ($query) {
                 $query->where('status', 1)
@@ -178,6 +183,11 @@ class PendaftaranRepository
                 default => "-",
             };
             $e['created_at_fmt'] = $e->created_at ? $e->created_at->format('d M Y H:i') : '-';
+
+            // Check if encounter is paid or has examination data
+            $isPaid = ($e->status_bayar_tindakan == 'Paid' || $e->status_bayar_resep == 'Paid');
+            $hasExamination = $e->anamnesis || $e->diagnosis->isNotEmpty() || $e->tindakan->isNotEmpty();
+            $e['can_delete'] = !($isPaid || $hasExamination);
         }
         return $encounters;
     }
@@ -189,7 +199,7 @@ class PendaftaranRepository
         $orderBy = in_array($request->order_by ?? '', ['created_at', 'no_encounter', 'name_pasien']) ? $request->order_by : null;
         $orderDir = in_array(strtolower($request->order_dir ?? ''), ['asc', 'desc']) ? strtolower($request->order_dir) : 'desc';
 
-        $encounters = Encounter::with(['admission'])
+        $encounters = Encounter::with(['admission', 'anamnesis', 'diagnosis', 'tindakan'])
             ->where('type', 2)
             ->where(function ($query) {
                 $query->where('status', 1)
@@ -231,6 +241,11 @@ class PendaftaranRepository
                 default => "-",
             };
             $e['created_at_fmt'] = $e->created_at ? $e->created_at->format('d M Y H:i') : '-';
+
+            // Check if encounter is paid or has examination data
+            $isPaid = ($e->status_bayar_tindakan == 'Paid' || $e->status_bayar_resep == 'Paid');
+            $hasExamination = $e->anamnesis || $e->diagnosis->isNotEmpty() || $e->tindakan->isNotEmpty();
+            $e['can_delete'] = !($isPaid || $hasExamination);
         }
         return $encounters;
     }

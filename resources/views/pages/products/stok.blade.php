@@ -11,6 +11,11 @@
             <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="mb-0">Tambah / Kurang Stok {{ $product->name ?? '' }}</h5>
+                    @if ($product->satuan)
+                        <p class="mb-0 text-muted"><small><i class="ri-information-line"></i> Satuan:
+                                <strong>{{ $product->satuan }}</strong> | Stok Saat Ini: <strong>{{ $product->stok }}
+                                    {{ $product->satuan }}</strong></small></p>
+                    @endif
                 </div>
                 <div class="card-body">
                     <form action="{{ route('product.storeStock', $product->id) }}" method="POST">
@@ -30,9 +35,18 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="stok" class="form-label">Stok</label>
-                            <input type="number" class="form-control @error('stok') is-invalid @enderror" id="stok"
-                                name="stok" value="{{ old('stok', $product->stok ?? 0) }}" min="0" required>
+                            <label for="stok" class="form-label">Jumlah @if ($product->satuan)
+                                    <span class="text-primary">({{ $product->satuan }})</span>
+                                @endif
+                            </label>
+                            <div class="input-group">
+                                <input type="number" class="form-control @error('stok') is-invalid @enderror"
+                                    id="stok" name="stok" value="{{ old('stok', $product->stok ?? 0) }}"
+                                    min="0" required>
+                                @if ($product->satuan)
+                                    <span class="input-group-text">{{ $product->satuan }}</span>
+                                @endif
+                            </div>
                             @error('stok')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

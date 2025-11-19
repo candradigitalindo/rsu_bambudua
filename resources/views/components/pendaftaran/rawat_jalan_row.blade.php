@@ -21,7 +21,9 @@
                     @php
                         $isActive = in_array($d->status, [1, '1', true, 'true'], true);
                         $statusText = $isActive ? 'Aktif' : 'Non-Aktif';
-                        $badgeClass = $isActive ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
+                        $badgeClass = $isActive
+                            ? 'bg-success-subtle text-success'
+                            : 'bg-secondary-subtle text-secondary';
                     @endphp
                     <span class="badge {{ $badgeClass }} rounded-pill">
                         <i class="ri-circle-fill me-1"></i>Status : {{ $statusText }}
@@ -60,9 +62,12 @@
             <i class="ri-edit-2-fill"></i>
             Edit
         </button>
-        <button type="button" class="btn destroyRawatJalan btn-outline-danger btn-sm" id="{{ $d->id }}" title="Hapus pendaftaran">
-            <i class="ri-delete-bin-5-fill"></i>
-            Hapus
-        </button>
+        @if ($d->can_delete ?? true)
+            <button type="button" class="btn destroyRawatJalan btn-outline-danger btn-sm" id="{{ $d->id }}"
+                title="Hapus pendaftaran">
+                <i class="ri-delete-bin-5-fill"></i>
+                Hapus
+            </button>
+        @endif
     </td>
 </tr>

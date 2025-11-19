@@ -13,6 +13,7 @@ class ResepDetail extends Model
         'id',
         'resep_id',
         'nama_obat',
+        'satuan',
         'qty',
         'aturan_pakai',
         'expired_at',

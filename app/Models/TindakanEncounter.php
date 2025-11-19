@@ -16,6 +16,8 @@ class TindakanEncounter extends Model
         'tindakan_harga',
         'qty',
         'total_harga',
+        'id_petugas',
+        'petugas_name',
     ];
     public function encounter()
     {

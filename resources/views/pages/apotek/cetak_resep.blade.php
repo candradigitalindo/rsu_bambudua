@@ -86,7 +86,7 @@
                 <tr>
                     <th class="text-left">Obat</th>
                     <th class="text-center">Aturan Pakai</th>
-                    <th class="text-right">Qty</th>
+                    <th class="text-right">Jumlah</th>
                 </tr>
             </thead>
             <tbody>
@@ -95,7 +95,8 @@
                         <tr>
                             <td>{{ $detail->nama_obat }}</td>
                             <td class="text-center">{{ $detail->aturan_pakai }}</td>
-                            <td class="text-right">{{ $detail->qty }}</td>
+                            <td class="text-right">{{ $detail->qty }}{{ $detail->satuan ? ' ' . $detail->satuan : '' }}
+                            </td>
                         </tr>
                     @endforeach
                 @endif

@@ -111,11 +111,11 @@
 
         (function() {
             const csrf = "{{ csrf_token() }}";
-            const riwayatUrl = "{{ route('observasi.riwayatPenyakit', ':id') }}".replace(':id', ENCOUNTER_ID);
-            const postAnamnesisUrl = "{{ route('observasi.postAnemnesis', ':id') }}".replace(':id', ENCOUNTER_ID);
-            const getTtvUrl = "{{ route('observasi.tandaVital', ':id') }}".replace(':id', ENCOUNTER_ID);
-            const postTtvUrl = "{{ route('observasi.postTandaVital', ':id') }}".replace(':id', ENCOUNTER_ID);
-            const lastSummaryUrl = "{{ route('observasi.lastEncounterSummary', ':id') }}".replace(':id', ENCOUNTER_ID);
+            const riwayatUrl = "{{ url('kunjungan/observasi') }}/" + ENCOUNTER_ID + "/riwayatPenyakit";
+            const postAnamnesisUrl = "{{ url('kunjungan/observasi') }}/" + ENCOUNTER_ID + "/postAnemnesis";
+            const getTtvUrl = "{{ url('kunjungan/observasi') }}/" + ENCOUNTER_ID + "/tandaVital";
+            const postTtvUrl = "{{ url('kunjungan/observasi') }}/" + ENCOUNTER_ID + "/postTandaVital";
+            const lastSummaryUrl = "{{ url('kunjungan/observasi') }}/" + ENCOUNTER_ID + "/lastEncounterSummary";
 
             // Toggle button text untuk ringkasan kunjungan terakhir
             $('#last-enc-summary-body').on('show.bs.collapse', function() {
@@ -269,8 +269,8 @@
                             </div>
                             ${lab.status === 'completed' && lab.lab_request_id ?
                                 `<button class="btn btn-sm btn-outline-primary" onclick="viewLabResults('${lab.lab_request_id}')" title="Lihat Hasil Lengkap">
-                                                                                                        <i class="ri-file-list-3-line"></i>
-                                                                                                    </button>` : ''}
+                                                                                                                <i class="ri-file-list-3-line"></i>
+                                                                                                            </button>` : ''}
                         </div>`).join('') : '<div class="text-muted small">Tidak ada pemeriksaan lab</div>';
 
                     // Radiologi dengan button lihat hasil per item
@@ -288,8 +288,8 @@
                                 </div>
                                 ${radio.status === 'completed' && radio.radiology_request_id ?
                                     `<button class="btn btn-sm btn-outline-info" onclick="viewRadioResults('${radio.radiology_request_id}')" title="Lihat Hasil Lengkap">
-                                                                                                        <i class="ri-file-list-3-line"></i>
-                                                                                                    </button>` : ''}
+                                                                                                                <i class="ri-file-list-3-line"></i>
+                                                                                                            </button>` : ''}
                             </div>`).join('') : '<div class="text-muted small">Tidak ada pemeriksaan radiologi</div>';
 
                     // Resep (maks 5) dengan aturan pakai
@@ -392,16 +392,16 @@
 
           <!-- Keluhan Utama jika ada -->
           ${resp.keluhan ? `
-                                                                                                      <div class="col-12">
-                                                                                                        <div class="card border">
-                                                                                                            <div class="card-header bg-light">
-                                                                                                                <h6 class="mb-0"><i class="ri-chat-3-line"></i> Keluhan Utama</h6>
-                                                                                                            </div>
-                                                                                                            <div class="card-body">
-                                                                                                                <p class="mb-0">${resp.keluhan}</p>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                      </div>` : ''}
+                                                                                                              <div class="col-12">
+                                                                                                                <div class="card border">
+                                                                                                                    <div class="card-header bg-light">
+                                                                                                                        <h6 class="mb-0"><i class="ri-chat-3-line"></i> Keluhan Utama</h6>
+                                                                                                                    </div>
+                                                                                                                    <div class="card-body">
+                                                                                                                        <p class="mb-0">${resp.keluhan}</p>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                              </div>` : ''}
         </div>
       `);
                 }).fail(function(xhr, status, error) {
@@ -618,11 +618,11 @@
                                 </div>
 
                                 ${data.catatan ? `
-                                                                                                            <div class="mt-3">
-                                                                                                                <h6>Catatan:</h6>
-                                                                                                                <p>${data.catatan}</p>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                    <div class="mt-3">
+                                                                                                                        <h6>Catatan:</h6>
+                                                                                                                        <p>${data.catatan}</p>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 <div class="row mt-4">
                                     <div class="col-6"></div>
@@ -731,78 +731,78 @@
                                 </div>
 
                                 ${data.clinical_info ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Informasi Klinis:</h6>
-                                                                                                                <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
-                                                                                                                    ${data.clinical_info.replace(/\n/g, '<br>')}
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Informasi Klinis:</h6>
+                                                                                                                        <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
+                                                                                                                            ${data.clinical_info.replace(/\n/g, '<br>')}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 ${data.technique ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Teknik Pemeriksaan:</h6>
-                                                                                                                <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
-                                                                                                                    ${data.technique.replace(/\n/g, '<br>')}
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Teknik Pemeriksaan:</h6>
+                                                                                                                        <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
+                                                                                                                            ${data.technique.replace(/\n/g, '<br>')}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 ${data.component_results && data.component_results.length > 0 ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Hasil Pemeriksaan:</h6>
-                                                                                                                <table class="table table-bordered" style="border-collapse: collapse;">
-                                                                                                                    <tbody>
-                                                                                                                        ${data.component_results.map(comp => `
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Hasil Pemeriksaan:</h6>
+                                                                                                                        <table class="table table-bordered" style="border-collapse: collapse;">
+                                                                                                                            <tbody>
+                                                                                                                                ${data.component_results.map(comp => `
                                             <tr>
                                                 <td style="width: 40%; border: 1px solid #ccc; padding: 8px;">${comp.nama}</td>
                                                 <td style="border: 1px solid #ccc; padding: 8px;">${comp.nilai}</td>
                                             </tr>
                                         `).join('')}
-                                                                                                                    </tbody>
-                                                                                                                </table>
-                                                                                                            </div>
-                                                                                                        ` : ''}
+                                                                                                                            </tbody>
+                                                                                                                        </table>
+                                                                                                                    </div>
+                                                                                                                ` : ''}
 
                                 ${data.findings && data.findings !== '-' ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Hasil Pemeriksaan (Findings):</h6>
-                                                                                                                <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
-                                                                                                                    ${data.findings.replace(/\n/g, '<br>')}
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Hasil Pemeriksaan (Findings):</h6>
+                                                                                                                        <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
+                                                                                                                            ${data.findings.replace(/\n/g, '<br>')}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 ${data.impression && data.impression !== '-' ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Kesan (Impression):</h6>
-                                                                                                                <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
-                                                                                                                    ${data.impression.replace(/\n/g, '<br>')}
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Kesan (Impression):</h6>
+                                                                                                                        <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
+                                                                                                                            ${data.impression.replace(/\n/g, '<br>')}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 ${data.conclusion ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Kesimpulan:</h6>
-                                                                                                                <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
-                                                                                                                    ${data.conclusion.replace(/\n/g, '<br>')}
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Kesimpulan:</h6>
+                                                                                                                        <div style="border: 1px solid #ccc; min-height: 100px; border-radius: 4px; padding: 8px;">
+                                                                                                                            ${data.conclusion.replace(/\n/g, '<br>')}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 ${data.images && data.images.length > 0 ? `
-                                                                                                            <div class="mb-3">
-                                                                                                                <h6 class="fw-bold">Gambar:</h6>
-                                                                                                                <div class="row g-2">
-                                                                                                                    ${data.images.map(img => `
+                                                                                                                    <div class="mb-3">
+                                                                                                                        <h6 class="fw-bold">Gambar:</h6>
+                                                                                                                        <div class="row g-2">
+                                                                                                                            ${data.images.map(img => `
                                             <div class="col-md-4">
                                                 <img src="${img.url}" class="img-fluid rounded border" alt="Hasil Radiologi">
                                             </div>
                                         `).join('')}
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                            ` : ''}
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                    ` : ''}
 
                                 <div class="row mt-4">
                                     <div class="col-6"></div>

@@ -408,14 +408,51 @@
                             `<a class="btn btn-sm btn-success" href="${printUrl}" target="_blank"><i class="ri-printer-line"></i> Cetak</a>` :
                             '';
                         const deleteBtn = canDelete ?
-                            `<button class="btn btn-sm btn-danger btn-hapus-pemeriksaan" data-id="${item.id}" data-type="${item.type}"><i class="ri-delete-bin-6-line"></i> Hapus</button>` :
+                            `<button class="btn btn-sm btn-danger btn-hapus-pemeriksaan" data-id="${item.id}" data-type="${item.type}">
+                                <i class="ri-delete-bin-6-line"></i> Hapus
+                            </button>` :
                             '';
-                        const actionsHtml = IS_DOCTOR ? '' : `${deleteBtn} ${printBtn}`;
+                        // Show delete button for requested/canceled status, print button for completed
+                        const actionsHtml = `${deleteBtn} ${printBtn}`;
+
+                        // Status badge styling
+                        let statusBadge = '';
+                        let statusText = item.status ?? 'Unknown';
+                        switch (statusText.toLowerCase()) {
+                            case 'requested':
+                                statusBadge =
+                                    `<span class="badge rounded-pill bg-warning text-dark"><i class="ri-time-line"></i> Menunggu Pemeriksaan</span>`;
+                                break;
+                            case 'completed':
+                                statusBadge =
+                                    `<span class="badge rounded-pill bg-success"><i class="ri-checkbox-circle-line"></i> Selesai</span>`;
+                                break;
+                            case 'canceled':
+                                statusBadge =
+                                    `<span class="badge rounded-pill bg-danger"><i class="ri-close-circle-line"></i> Dibatalkan</span>`;
+                                break;
+                            case 'in_progress':
+                                statusBadge =
+                                    `<span class="badge rounded-pill bg-info"><i class="ri-loader-4-line"></i> Sedang Dikerjakan</span>`;
+                                break;
+                            default:
+                                statusBadge =
+                                    `<span class="badge rounded-pill bg-secondary">${statusText}</span>`;
+                        }
+
+                        // Type badge with icon
+                        const typeBadge = item.type === 'lab' ?
+                            `<span class="badge bg-info"><i class="ri-flask-line"></i> Laboratorium</span>` :
+                            `<span class="badge bg-primary"><i class="ri-heart-pulse-line"></i> Radiologi</span>`;
+
                         tbody.append(`
           <tr>
             <td>
-              <div class="fw-semibold">${item.jenis_pemeriksaan} <span class="badge bg-${item.type === 'lab' ? 'info' : 'primary'}">${item.type}</span></div>
-              <div class="small text-muted">${item.status ?? ''}</div>
+              <div class="fw-semibold mb-1">${item.jenis_pemeriksaan}</div>
+              <div class="d-flex gap-1 align-items-center flex-wrap">
+                ${typeBadge}
+                ${statusBadge}
+              </div>
             </td>
             <td class=\"text-center\">${item.qty}</td>
             <td class="text-end">${formatRupiah(item.harga)}</td>
@@ -512,9 +549,30 @@
             }
 
             function buildLabRequestCard(lr) {
-                const badgeClass = (lr.status === 'completed') ? 'bg-primary' : 'bg-secondary';
-                const statusBadge =
-                    `<span class="badge ${badgeClass} ms-2">${(lr.status||'').charAt(0).toUpperCase()+ (lr.status||'').slice(1)}</span>`;
+                // Enhanced status badge with icons
+                let statusBadge = '';
+                const status = (lr.status || '').toLowerCase();
+                switch (status) {
+                    case 'completed':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-success ms-2"><i class="ri-checkbox-circle-line"></i> Hasil Tersedia</span>`;
+                        break;
+                    case 'requested':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-warning text-dark ms-2"><i class="ri-time-line"></i> Menunggu Hasil</span>`;
+                        break;
+                    case 'in_progress':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-info ms-2"><i class="ri-loader-4-line"></i> Sedang Diproses</span>`;
+                        break;
+                    case 'canceled':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-danger ms-2"><i class="ri-close-circle-line"></i> Dibatalkan</span>`;
+                        break;
+                    default:
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-secondary ms-2">${status.charAt(0).toUpperCase()+ status.slice(1)}</span>`;
+                }
 
                 // Group items by category
                 const categories = {
@@ -573,10 +631,10 @@
                             }
                         });
 
-                        // Only show category header if there are non-grouped items
-                        if (hasNonGroupedItems) {
+                        // Only show category header if there are non-grouped items AND not LAINNYA category
+                        if (hasNonGroupedItems && category !== 'LAINNYA') {
                             itemsHtml +=
-                                `<tr><td colspan="4" style="padding: 8px; background-color: #f8f9fa; font-weight: bold; font-style: italic;">${category}</td></tr>`;
+                                `<tr><td colspan="4" style="padding: 8px; background-color: #e3f2fd; font-weight: bold; border-left: 4px solid #0dcaf0;">${category}</td></tr>`;
                         }
 
                         categories[category].forEach(function(item) {
@@ -585,7 +643,50 @@
                     }
                 });
 
-                return `<div class="mb-3 border rounded p-3" style="background-color: #f8f9fa;"><div class="d-flex justify-content-between align-items-center mb-3"><div><strong class="fs-6">${lr.created_at || ''}</strong>${statusBadge}</div></div><div class="table-responsive"><table class="table table-bordered table-sm mb-0" style="border: 2px solid #000;"><thead style="background-color: #ffffff;"><tr style="border-bottom: 2px solid #000;"><th style="width:35%; font-weight: bold; text-align: left; padding: 10px;">PEMERIKSAAN</th><th style="width:20%; font-weight: bold; text-align: center; padding: 10px;">HASIL</th><th style="width:15%; font-weight: bold; text-align: center; padding: 10px;">SATUAN</th><th style="width:30%; font-weight: bold; text-align: left; padding: 10px;">NILAI NORMAL</th></tr></thead><tbody>${itemsHtml}</tbody></table></div></div>`;
+                // Determine if there are actual results
+                const hasResults = itemsHtml && itemsHtml.trim() !== '';
+
+                // Content based on status - sama seperti radiologi
+                let contentHtml = '';
+                if (hasResults) {
+                    contentHtml = `
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm mb-0" style="border: 2px solid #dee2e6;">
+                                <thead style="background: linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%); color: white;">
+                                    <tr>
+                                        <th style="width:35%; font-weight: bold; text-align: left; padding: 10px;">PEMERIKSAAN</th>
+                                        <th style="width:20%; font-weight: bold; text-align: center; padding: 10px;">HASIL</th>
+                                        <th style="width:15%; font-weight: bold; text-align: center; padding: 10px;">SATUAN</th>
+                                        <th style="width:30%; font-weight: bold; text-align: left; padding: 10px;">NILAI NORMAL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${itemsHtml}</tbody>
+                            </table>
+                        </div>`;
+                } else {
+                    // Tampilan sederhana seperti radiologi
+                    contentHtml = '<div class="text-muted small">Belum ada hasil.</div>';
+                }
+
+                return `
+                    <div class="mb-3 border rounded p-3 shadow-sm" style="background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ri-calendar-line text-info"></i>
+                                    <strong class="text-dark">${lr.created_at || ''}</strong>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded" style="background-color: rgba(13, 202, 240, 0.08);">
+                                <i class="ri-flask-line fs-5 text-info"></i>
+                                <div class="fw-semibold text-info">${lr.jenis_name || 'Pemeriksaan Laboratorium'}</div>
+                            </div>
+                            ${contentHtml}
+                        </div>
+                    </div>`;
             }
 
             function buildLabResultRow(item) {
@@ -671,9 +772,30 @@
             }
 
             function buildRadiologyRequestCard(r) {
-                const badgeClass = (r.status === 'completed') ? 'bg-primary' : 'bg-secondary';
-                const statusBadge =
-                    `<span class="badge ${badgeClass} ms-2">${(r.status||'').charAt(0).toUpperCase()+ (r.status||'').slice(1)}</span>`;
+                // Enhanced status badge with icons for radiology
+                let statusBadge = '';
+                const status = (r.status || '').toLowerCase();
+                switch (status) {
+                    case 'completed':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-success ms-2"><i class="ri-checkbox-circle-line"></i> Hasil Tersedia</span>`;
+                        break;
+                    case 'requested':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-warning text-dark ms-2"><i class="ri-time-line"></i> Menunggu Hasil</span>`;
+                        break;
+                    case 'in_progress':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-info ms-2"><i class="ri-loader-4-line"></i> Sedang Diproses</span>`;
+                        break;
+                    case 'canceled':
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-danger ms-2"><i class="ri-close-circle-line"></i> Dibatalkan</span>`;
+                        break;
+                    default:
+                        statusBadge =
+                            `<span class="badge rounded-pill bg-secondary ms-2">${status.charAt(0).toUpperCase()+ status.slice(1)}</span>`;
+                }
 
                 const printBtn = (r.status === 'completed') ?
                     `<a href="/radiologi/permintaan/${r.id}/print?auto=1" target="_blank" class="btn btn-sm btn-success"><i class="ri-printer-line"></i> Cetak</a>` :
@@ -705,7 +827,26 @@
                         `${radiologistInfo}${payloadHtml}${findingsHtml}${impressionHtml}`;
                 }
 
-                return `<div class="mb-3 border rounded p-3 shadow-sm"><div class="d-flex justify-content-between align-items-center mb-2"><div><strong>${r.created_at || ''}</strong>${statusBadge}</div><div>${printBtn}</div></div><div><div class="fw-semibold mb-2 text-primary">${r.jenis_name || ''}</div>${contentHtml}</div></div>`;
+                return `
+                    <div class="mb-3 border rounded p-3 shadow-sm" style="background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ri-calendar-line text-primary"></i>
+                                    <strong class="text-dark">${r.created_at || ''}</strong>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            <div>${printBtn}</div>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-3 p-2 rounded" style="background-color: rgba(13, 110, 253, 0.08);">
+                                <i class="ri-heart-pulse-line fs-5 text-primary"></i>
+                                <div class="fw-semibold text-primary">${r.jenis_name || ''}</div>
+                            </div>
+                            ${contentHtml}
+                        </div>
+                    </div>`;
             }
 
             function buildRadiologyPayload(payload, isEcho = false) {

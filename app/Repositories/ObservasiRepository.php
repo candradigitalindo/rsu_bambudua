@@ -271,7 +271,7 @@ class ObservasiRepository
     {
         $tindakan = \App\Models\TindakanEncounter::where('encounter_id', $id)->get();
         if ($tindakan->isEmpty()) {
-            return null; // Jika tidak ada data tindakan
+            return []; // Return empty array instead of null
         }
         // Tambahkan grand total_harga
         $grandTotal = 0;
@@ -313,6 +313,8 @@ class ObservasiRepository
             $tindakanEncounter->tindakan_name = $tindakan->name;
             $tindakanEncounter->tindakan_harga = $tindakan->harga;
             $tindakanEncounter->qty = $qty;
+            $tindakanEncounter->id_petugas = \Illuminate\Support\Facades\Auth::user()->id_petugas;
+            $tindakanEncounter->petugas_name = \Illuminate\Support\Facades\Auth::user()->name;
         }
 
         $subtotal = $tindakanEncounter->qty * $tindakan->harga;
@@ -529,6 +531,7 @@ class ObservasiRepository
         // Jika sudah ada, tambahkan qty, jika belum set qty baru
         $resepDetail->qty = ($resepDetail->exists ? $resepDetail->qty : 0) + $request->qty_obat;
         $resepDetail->nama_obat = $stokTerdekat->productApotek->name;
+        $resepDetail->satuan = $stokTerdekat->productApotek->satuan;
         $resepDetail->aturan_pakai = $request->aturan_pakai;
         $resepDetail->expired_at = $stokTerdekat->expired_at;
         $resepDetail->harga = $stokTerdekat->productApotek->harga;

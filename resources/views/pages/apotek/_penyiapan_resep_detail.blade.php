@@ -12,7 +12,7 @@
         <thead>
             <tr>
                 <th>Nama Obat</th>
-                <th class="text-center">Jumlah</th>
+                <th class="text-center" width="120">Jumlah</th>
                 <th class="text-end">Harga Satuan</th>
                 <th class="text-end">Total Harga</th>
                 <th>Aturan Pakai</th>
@@ -27,7 +27,12 @@
                 @php $totalBiaya += $detail->total_harga; @endphp
                 <tr>
                     <td>{{ $detail->nama_obat ?? 'N/A' }}</td>
-                    <td class="text-center">{{ $detail->qty }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-light text-dark fs-6">{{ $detail->qty }}</span>
+                        @if ($detail->satuan)
+                            <small class="text-muted d-block">{{ $detail->satuan }}</small>
+                        @endif
+                    </td>
                     <td class="text-end">{{ number_format($detail->harga, 0, ',', '.') }}</td>
                     <td class="text-end">{{ number_format($detail->total_harga, 0, ',', '.') }}</td>
                     <td>{{ $detail->aturan_pakai }}</td>

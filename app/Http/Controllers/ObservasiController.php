@@ -361,11 +361,8 @@ class ObservasiController extends Controller
     public function getTindakanEncounter($id)
     {
         $tindakan = $this->observasiRepository->getTindakanEncounter($id);
-        if ($tindakan) {
-            return response()->json($tindakan);
-        } else {
-            return response()->json($tindakan);
-        }
+        // Always return array, even if empty
+        return response()->json($tindakan ?? []);
     }
     // post tindakan encounter
     public function postTindakanEncounter(Request $request, $id)
@@ -693,6 +690,8 @@ class ObservasiController extends Controller
                         'diagnosis_code' => $diag->diagnosis_code,
                         'diagnosis_description' => $diag->diagnosis_description,
                         'diagnosis_type' => $diag->diagnosis_type,
+                        'id_petugas' => Auth::user()->id_petugas,
+                        'petugas_name' => Auth::user()->name,
                     ]);
                     $diagnosisCount++;
                 }
@@ -719,6 +718,8 @@ class ObservasiController extends Controller
                         'tindakan_harga' => $tind->tindakan_harga,
                         'qty' => $tind->qty,
                         'total_harga' => $tind->total_harga,
+                        'id_petugas' => Auth::user()->id_petugas,
+                        'petugas_name' => Auth::user()->name,
                     ]);
                     $tindakanCount++;
                 }
@@ -747,6 +748,7 @@ class ObservasiController extends Controller
                     $currentResep = \App\Models\Resep::create([
                         'encounter_id' => $id,
                         'kode_resep' => $kodeResep,
+                        'masa_pemakaian_hari' => $prevResep->masa_pemakaian_hari,
                         'dokter' => Auth::user()->name,
                     ]);
                 }
@@ -764,6 +766,7 @@ class ObservasiController extends Controller
                             'resep_id' => $currentResep->id,
                             'product_apotek_id' => $detail->product_apotek_id,
                             'nama_obat' => $detail->nama_obat,
+                            'satuan' => $detail->satuan,
                             'qty' => $detail->qty,
                             'harga' => $detail->harga,
                             'total_harga' => $detail->total_harga,

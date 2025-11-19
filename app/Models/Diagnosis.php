@@ -14,6 +14,8 @@ class Diagnosis extends Model
         'diagnosis_code',
         'diagnosis_description',
         'diagnosis_type',
+        'id_petugas',
+        'petugas_name',
     ];
 
     public function encounter()

@@ -230,8 +230,8 @@
                 </li>
             @endif
 
-            @if (auth()->user()->role == 1)
-                {{-- Owner Only --}}
+            @if (in_array(auth()->user()->role, [1, 2, 3]))
+                {{-- Owner, Dokter & Perawat --}}
                 <li class="treeview {{ request()->is('medical-records*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-file-list-3-line"></i>

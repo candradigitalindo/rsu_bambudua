@@ -235,19 +235,21 @@
                         <div class="stat-target">
                             <i class="ri-information-line"></i> Semua jenis produk
                         </div>
-                        @php
-                            $persentaseTersedia =
-                                $data['total_obat'] > 0
-                                    ? round(($data['obat_tersedia'] / $data['total_obat']) * 100, 1)
-                                    : 0;
-                        @endphp
-                        <span class="stat-badge badge-primary">
-                            <i class="ri-check-line"></i> {{ $persentaseTersedia }}% Tersedia
-                        </span>
                     </div>
                     <div class="stat-icon icon-primary">
                         <i class="ri-medicine-bottle-line"></i>
                     </div>
+                </div>
+                <div class="px-3 pb-3">
+                    @php
+                        $persentaseTersedia =
+                            $data['total_obat'] > 0
+                                ? round(($data['obat_tersedia'] / $data['total_obat']) * 100, 1)
+                                : 0;
+                    @endphp
+                    <span class="stat-badge badge-primary d-block text-center">
+                        <i class="ri-check-line"></i> {{ $persentaseTersedia }}% Tersedia
+                    </span>
                 </div>
             </div>
         </div>
@@ -261,13 +263,15 @@
                         <div class="stat-target">
                             <i class="ri-check-double-line"></i> Stok ready untuk digunakan
                         </div>
-                        <span class="stat-badge badge-success">
-                            <i class="ri-shield-check-line"></i> Stok Aman
-                        </span>
                     </div>
                     <div class="stat-icon icon-success">
                         <i class="ri-checkbox-circle-line"></i>
                     </div>
+                </div>
+                <div class="px-3 pb-3">
+                    <span class="stat-badge badge-success d-block text-center">
+                        <i class="ri-shield-check-line"></i> Stok Aman
+                    </span>
                 </div>
             </div>
         </div>
@@ -282,13 +286,15 @@
                             <div class="stat-target">
                                 <i class="ri-alert-line"></i> Perlu restock segera
                             </div>
-                            <span class="stat-badge badge-danger">
-                                <i class="ri-arrow-right-circle-line"></i> Lihat Detail
-                            </span>
                         </div>
                         <div class="stat-icon icon-danger">
                             <i class="ri-alert-line"></i>
                         </div>
+                    </div>
+                    <div class="px-3 pb-3">
+                        <span class="stat-badge badge-danger d-block text-center">
+                            <i class="ri-arrow-right-circle-line"></i> Lihat Detail
+                        </span>
                     </div>
                 </div>
             </a>
@@ -304,13 +310,15 @@
                             <div class="stat-target">
                                 <i class="ri-time-line"></i> Expired atau akan expired
                             </div>
-                            <span class="stat-badge badge-warning">
-                                <i class="ri-arrow-right-circle-line"></i> Lihat Detail
-                            </span>
                         </div>
                         <div class="stat-icon icon-warning">
                             <i class="ri-time-line"></i>
                         </div>
+                    </div>
+                    <div class="px-3 pb-3">
+                        <span class="stat-badge badge-warning d-block text-center">
+                            <i class="ri-arrow-right-circle-line"></i> Lihat Detail
+                        </span>
                     </div>
                 </div>
             </a>

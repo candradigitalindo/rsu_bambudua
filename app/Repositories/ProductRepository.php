@@ -26,6 +26,21 @@ class ProductRepository
         if (request('category_id')) {
             $query->where('category_id', request('category_id'));
         }
+
+        // Filter khusus dari dashboard
+        if (request('filter') === 'habis') {
+            // Filter produk yang stoknya habis (stok <= 0)
+            $query->where('stok', '<=', 0);
+        }
+
+        if (request('filter') === 'kadaluarsa') {
+            // Filter produk yang memiliki stok kadaluarsa
+            $query->whereHas('apotekStok', function ($q) {
+                $q->where('expired_at', '<', now())
+                    ->where('status', 0);
+            });
+        }
+
         // Count ProductApotek yang akan expired 30 hari lagi berdasarkan data apotekStok
         $query->withCount([
             'apotekStok as expired_count' => function ($q) {

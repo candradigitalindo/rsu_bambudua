@@ -122,8 +122,11 @@
                                                     </span>
                                                     <select class="form-select" id="a7" name="role">
                                                         <option value="">Pilih Hak Akses</option>
-                                                        <option value="1" {{ old('role') == '1' ? 'selected' : '' }}>
-                                                            Owner</option>
+                                                        @if (auth()->user()->role != 4)
+                                                            <option value="1"
+                                                                {{ old('role') == '1' ? 'selected' : '' }}>
+                                                                Owner</option>
+                                                        @endif
                                                         <option value="2" {{ old('role') == '2' ? 'selected' : '' }}>
                                                             Dokter</option>
                                                         <option value="3" {{ old('role') == '3' ? 'selected' : '' }}>

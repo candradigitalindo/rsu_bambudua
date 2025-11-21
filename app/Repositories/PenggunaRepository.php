@@ -6,6 +6,7 @@ use App\Models\Clinic;
 use App\Models\Profile;
 use App\Models\Spesialis;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class PenggunaRepository
@@ -21,6 +22,11 @@ class PenggunaRepository
     public function index()
     {
         $query = User::query();
+
+        // Jika yang login adalah Admin (role 4), hide Owner (role 1)
+        if (Auth::check() && Auth::user()->role == 4) {
+            $query->where('role', '!=', 1);
+        }
 
         if (request()->filled('q')) {
             $query->where('name', 'like', '%' . request()->q . '%');
@@ -88,7 +94,8 @@ class PenggunaRepository
 
         // Simpan SIP/STR jika diisi
         if ($request->filled('profession') || $request->filled('sip_number') || $request->filled('sip_expiry_date') || $request->filled('str_number') || $request->filled('str_expiry_date')) {
-            $sipPath = null; $strPath = null;
+            $sipPath = null;
+            $strPath = null;
             if ($request->file('sip_file')) {
                 $sipPath = $request->file('sip_file')->store('licenses', 'public');
             }
@@ -101,7 +108,7 @@ class PenggunaRepository
                 'sip_number' => $request->input('sip_number'),
                 'sip_expiry_date' => $request->input('sip_expiry_date') ?: now()->addYear()->toDateString(),
                 'str_number' => $request->input('str_number'),
-'str_expiry_date' => $request->input('str_expiry_date'),
+                'str_expiry_date' => $request->input('str_expiry_date'),
                 'sip_file_path' => $sipPath,
                 'str_file_path' => $strPath,
             ]);
@@ -120,7 +127,7 @@ class PenggunaRepository
 
     public function update($request, $id)
     {
-        $user = User::with(['profile','professionalLicenses'])->findOrFail($id);
+        $user = User::with(['profile', 'professionalLicenses'])->findOrFail($id);
 
         $data = [
             'name'      => ucfirst($request->name),

@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Reagent;
 use App\Models\ReagentBatch;
 use App\Models\ReagentTransaction;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth as FacadesAuth;
 
 class LabReagentController extends Controller
 {
     public function index(Request $request)
     {
         $q = $request->input('q');
+        $filter = $request->input('filter');
+
         $query = Reagent::when($q, fn($qr) => $qr->where('name', 'like', "%{$q}%"));
 
         // Hitung batch yang akan expired (dalam 30 hari) dan yang sudah expired
@@ -27,8 +31,18 @@ class LabReagentController extends Controller
             }
         ]);
 
-        $reagents = $query->orderBy('name')->paginate(15)->withQueryString();
-        return view('pages.lab.reagents.index', compact('reagents', 'q'));
+        // Filter berdasarkan status
+        if ($filter === 'habis') {
+            $query->where('stock', '<=', 0);
+        } elseif ($filter === 'kadaluarsa') {
+            $query->whereHas('batches', function ($q) {
+                $q->where('remaining_quantity', '>', 0)
+                    ->where('expiry_date', '<', now());
+            });
+        }
+
+        $reagents = $query->orderBy('name')->paginate(15)->appends($request->query());
+        return view('pages.lab.reagents.index', compact('reagents', 'q', 'filter'));
     }
 
     public function create()
@@ -105,7 +119,7 @@ class LabReagentController extends Controller
             // Catat transaksi ke histori
             ReagentTransaction::create([
                 'reagent_id' => $reagent->id,
-                'user_id' => auth()->id(),
+                'user_id' => FacadesAuth::id(),
                 'type' => $data['type'],
                 'qty' => $data['quantity'],
                 'expiry_date' => $data['expiry_date'] ?? null,
@@ -125,7 +139,7 @@ class LabReagentController extends Controller
         }
         // Tambahkan filter tanggal jika diperlukan
 
-        $transactions = $query->paginate(20)->withQueryString();
+        $transactions = $query->paginate(20)->appends($request->query());
         return view('pages.lab.reagents.history', compact('transactions'));
     }
 }

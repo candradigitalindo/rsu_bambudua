@@ -21,10 +21,45 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    @if (request('filter') === 'habis')
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="ri-alert-line"></i> <strong>Filter Aktif:</strong> Menampilkan reagensia yang stoknya
+                            habis
+                            <a href="{{ route('lab.reagents.index') }}" class="btn btn-sm btn-outline-danger ms-2">
+                                <i class="ri-close-line"></i> Reset Filter
+                            </a>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if (request('filter') === 'kadaluarsa')
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="ri-time-line"></i> <strong>Filter Aktif:</strong> Menampilkan reagensia yang memiliki
+                            batch kadaluarsa
+                            <a href="{{ route('lab.reagents.index') }}" class="btn btn-sm btn-outline-warning ms-2">
+                                <i class="ri-close-line"></i> Reset Filter
+                            </a>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     <form method="GET" class="row g-2 mb-3">
-                        <div class="col-md-4"><input type="text" name="q" class="form-control"
-                                placeholder="Cari reagensia..." value="{{ $q ?? '' }}"></div>
-                        <div class="col-md-2"><button class="btn btn-outline-primary">Cari</button></div>
+                        <div class="col-md-4">
+                            <input type="text" name="q" class="form-control" placeholder="Cari reagensia..."
+                                value="{{ $q ?? '' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="filter" class="form-select">
+                                <option value="">Semua Status</option>
+                                <option value="habis" {{ request('filter') === 'habis' ? 'selected' : '' }}>
+                                    🔴 Stok Habis
+                                </option>
+                                <option value="kadaluarsa" {{ request('filter') === 'kadaluarsa' ? 'selected' : '' }}>
+                                    ⚠️ Kadaluarsa
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-2"><button class="btn btn-primary">Terapkan</button></div>
                     </form>
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -55,7 +90,7 @@
                                             @endif
                                             @if ($r->expiring_soon_count > 0)
                                                 <span class="badge bg-warning text-dark">
-                                                    Segera Expired: {{ $r->expiring_soon_count }} 
+                                                    Segera Expired: {{ $r->expiring_soon_count }}
                                                 </span>
                                             @endif
                                             @if ($r->expired_count == 0 && $r->expiring_soon_count == 0)

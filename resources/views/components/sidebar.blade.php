@@ -65,8 +65,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [8, 4, 1, 2]))
-                {{-- Laboratorium, Admin, Owner & Dokter --}}
+            @if (in_array(auth()->user()->role, [8, 1, 2]))
+                {{-- Laboratorium, Owner & Dokter --}}
                 <li class="treeview {{ request()->is('laboratorium*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-test-tube-line"></i>
@@ -93,8 +93,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [9, 4, 1, 2]))
-                {{-- Radiologi, Admin, Owner & Dokter --}}
+            @if (in_array(auth()->user()->role, [9, 1, 2]))
+                {{-- Radiologi, Owner & Dokter --}}
                 <li class="treeview {{ request()->is('radiologi*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-flask-line"></i>
@@ -113,12 +113,16 @@
                             <a class="{{ request()->is('radiologi/hasil*') ? 'active-sub' : '' }}"
                                 href="{{ route('radiologi.results.index') }}">Hasil Radiologi</a>
                         </li>
+                        <li>
+                            <a class="{{ request()->is('radiologi/supplies*') ? 'active-sub' : '' }}"
+                                href="{{ route('radiologi.supplies.index') }}">Kelola Bahan</a>
+                        </li>
                     </ul>
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [1, 4]))
-                {{-- Admin & Owner --}}
+            @if (auth()->user()->role == 1)
+                {{-- Owner Only --}}
                 <li class="treeview {{ request()->is('masterdata*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-archive-drawer-line"></i>
@@ -191,7 +195,7 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [2, 3, 4, 1]))
+            @if (in_array(auth()->user()->role, [2, 3, 1]))
                 <li class="treeview {{ request()->is('kunjungan*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-dossier-line"></i>
@@ -214,7 +218,7 @@
                             <a class="{{ request()->is('kunjungan/rawatDarurat*') ? 'active-sub' : '' }}"
                                 href="{{ route('kunjungan.rawatDarurat') }}">IGD</a>
                         </li>
-                        @if (in_array(auth()->user()->role, [3, 4, 1]))
+                        @if (in_array(auth()->user()->role, [3, 1]))
                             <li>
                                 <a class="{{ request()->is('kunjungan/dashboard-bed-perawat') ? 'active-sub' : '' }}"
                                     href="{{ route('kunjungan.nurse-bed-dashboard') }}">
@@ -307,8 +311,8 @@
                 </li>
             @endif
 
-            @if (in_array(auth()->user()->role, [7, 4, 1]))
-                {{-- Apotek, Admin, Owner --}}
+            @if (in_array(auth()->user()->role, [7, 1]))
+                {{-- Apotek & Owner --}}
                 <li class="treeview {{ request()->is('apotek*') ? 'active current-page' : '' }}">
                     <a href="#">
                         <i class="ri-medicine-bottle-line"></i>

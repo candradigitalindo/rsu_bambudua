@@ -6,6 +6,7 @@ use App\Models\Salary;
 use App\Models\User;
 use App\Repositories\PenggunaRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Carbon;
 
@@ -80,6 +81,13 @@ class PenggunaController extends Controller
      */
     public function edit(string $id)
     {
+        // Prevent admin from editing owner
+        $user = User::findOrFail($id);
+        if (Auth::user()->role == 4 && $user->role == 1) {
+            Alert::error('Error', 'Anda tidak memiliki akses untuk mengedit Owner');
+            return redirect()->route('pengguna.index');
+        }
+
         $data = $this->penggunaRepository->edit($id);
         $clinics = $this->penggunaRepository->getClinics();
         return view('pages.pengguna.edit', compact('data', 'clinics'));
@@ -90,6 +98,13 @@ class PenggunaController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Prevent admin from updating owner
+        $user = User::findOrFail($id);
+        if (Auth::user()->role == 4 && $user->role == 1) {
+            Alert::error('Error', 'Anda tidak memiliki akses untuk mengupdate Owner');
+            return redirect()->route('pengguna.index');
+        }
+
         $request->validate([
             'name'      => 'required|string',
             'username'  => 'required|string|unique:users,username,' . $id,
@@ -121,6 +136,13 @@ class PenggunaController extends Controller
      */
     public function destroy(string $id)
     {
+        // Prevent admin from deleting owner
+        $user = User::findOrFail($id);
+        if (Auth::user()->role == 4 && $user->role == 1) {
+            Alert::error('Error', 'Anda tidak memiliki akses untuk menghapus Owner');
+            return back();
+        }
+
         $user = $this->penggunaRepository->destroy($id);
         Alert::info('Berhasil', 'Data Pengguna ' . $user->name . ' berhasil dihapus!');
         return back();
@@ -186,7 +208,7 @@ class PenggunaController extends Controller
             $query->whereDate('created_at', '<=', $to);
         }
 
-        $logs = $query->paginate(20)->withQueryString();
+        $logs = $query->paginate(20)->appends($request->query());
         $users = User::orderBy('name')->get(['id', 'name']);
 
         return view('pages.pengguna.activity', compact('logs', 'users'));

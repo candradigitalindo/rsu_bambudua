@@ -617,7 +617,7 @@ class ObservasiController extends Controller
     public function copyLastEncounter(Request $request, $id)
     {
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
 
             $current = \App\Models\Encounter::find($id);
             if (!$current) {
@@ -781,7 +781,7 @@ class ObservasiController extends Controller
                 }
             }
 
-            \DB::commit();
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -789,7 +789,7 @@ class ObservasiController extends Controller
                 'copied_items' => $copiedItems
             ]);
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal meng-copy data: ' . $e->getMessage()

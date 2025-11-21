@@ -47,6 +47,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\RadiologiController;
+use App\Http\Controllers\RadiologySupplyController;
 use App\Http\Controllers\MedicalRecordsController;
 use App\Http\Controllers\IncentiveController;
 use App\Http\Controllers\MedicalEquipmentController;
@@ -404,6 +405,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pasien/search', [RadiologiController::class, 'searchPatients'])->name('patients.search');
         // AJAX search dokter pengirim
         Route::get('/dokter/search', [RadiologiController::class, 'searchDoctors'])->name('doctors.search');
+
+        // Inventory/Supplies Management
+        Route::resource('supplies', RadiologySupplyController::class)->except(['show']);
+        Route::post('/supplies/{supply}/stock', [RadiologySupplyController::class, 'updateStock'])->name('supplies.stock');
+        Route::get('/supplies-history', [RadiologySupplyController::class, 'history'])->name('supplies.history');
     });
 
     Route::prefix('kasir')->group(function () {

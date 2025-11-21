@@ -10,6 +10,7 @@ use App\Models\Pasien;
 use App\Models\User;
 use App\Models\RadiologyRequest;
 use App\Models\RadiologyResult;
+use App\Models\RadiologySupply;
 use Illuminate\Support\Facades\Auth;
 
 class RadiologiController extends Controller
@@ -22,9 +23,19 @@ class RadiologiController extends Controller
             'completed'  => \App\Models\RadiologyRequest::where('status', 'completed')->count(),
             'requested'  => \App\Models\RadiologyRequest::where('status', 'requested')->count(),
         ];
+
+        // Supply statistics
+        $supplyStats = [
+            'habis' => RadiologySupply::where('stock', '<=', 0)->count(),
+            'kadaluarsa' => RadiologySupply::whereHas('batches', function ($q) {
+                $q->where('expiry_date', '<=', now())
+                    ->where('remaining_quantity', '>', 0);
+            })->count(),
+        ];
+
         $recent = \App\Models\RadiologyRequest::with(['pasien', 'jenis', 'dokter'])
             ->orderByDesc('created_at')->limit(10)->get();
-        return view('pages.radiologi.dashboard', compact('stats', 'recent'));
+        return view('pages.radiologi.dashboard', compact('stats', 'recent', 'supplyStats'));
     }
 
     public function requestsIndex()

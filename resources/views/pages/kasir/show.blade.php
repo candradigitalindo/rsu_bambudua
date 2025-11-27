@@ -121,6 +121,20 @@
 @section('content')
     <div class="row">
         <div class="col-12">
+            {{-- Alert untuk error atau success --}}
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="ri-error-warning-line"></i> {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="ri-check-line"></i> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
 
@@ -692,6 +706,25 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Show error alert if exists
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Pembayaran Gagal',
+                    text: '{{ session('error') }}',
+                    confirmButtonText: 'OK'
+                });
+            @endif
+
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: '{{ session('success') }}',
+                    confirmButtonText: 'OK'
+                });
+            @endif
+
             const paymentItems = document.querySelectorAll('.payment-item');
             const billTotalEl = document.getElementById('billTotal');
             const paidTotalEl = document.getElementById('paidTotal');
@@ -951,29 +984,29 @@
                     return false;
                 }
 
-                // Konfirmasi pembayaran
-                if (currentPaidTotal > currentBillTotal) {
-                    const kembalian = currentPaidTotal - currentBillTotal;
-                    e.preventDefault();
-                    Swal.fire({
-                        title: 'Konfirmasi Pembayaran',
-                        html: `
-                            <div class="text-start">
-                                <p><strong>Total Tagihan:</strong> ${formatRupiah(currentBillTotal)}</p>
-                                <p><strong>Total Dibayar:</strong> ${formatRupiah(currentPaidTotal)}</p>
-                                <p class="text-success"><strong>Kembalian:</strong> ${formatRupiah(kembalian)}</p>
-                            </div>
-                        `,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonText: 'Ya, Proses',
-                        cancelButtonText: 'Batal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            e.target.submit();
-                        }
-                    });
-                }
+                // Konfirmasi pembayaran untuk semua kasus
+                const kembalian = currentPaidTotal - currentBillTotal;
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Konfirmasi Pembayaran',
+                    html: `
+                        <div class="text-start">
+                            <p><strong>Total Tagihan:</strong> ${formatRupiah(currentBillTotal)}</p>
+                            <p><strong>Total Dibayar:</strong> ${formatRupiah(currentPaidTotal)}</p>
+                            ${kembalian > 0 ? `<p class="text-success"><strong>Kembalian:</strong> ${formatRupiah(kembalian)}</p>` : ''}
+                            ${kembalian === 0 ? `<p class="text-info"><strong>Status:</strong> Pembayaran Pas</p>` : ''}
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Proses',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        e.target.submit();
+                    }
+                });
             });
 
             // Initial calculation

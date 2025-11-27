@@ -266,10 +266,6 @@ class KeuanganController extends Controller
     public function simpanPengaturanIncentive(Request $request)
     {
         $request->validate([
-            'perawat_per_encounter_rawat_jalan' => 'required|numeric|min:0',
-            'perawat_per_encounter_igd' => 'required|numeric|min:0',
-            'perawat_per_encounter_rawat_inap' => 'required|numeric|min:0',
-            'dokter_per_encounter' => 'required|numeric|min:0',
             'cutoff_day' => 'required|numeric|min:1|max:28',
             'fee_lab_mode' => 'nullable|in:0,1',
             'fee_lab_value' => 'nullable|numeric|min:0',
@@ -283,51 +279,14 @@ class KeuanganController extends Controller
             'fee_obat_target_mode' => 'nullable|in:0,1',
             'fee_dokter_penunjang' => 'nullable|numeric|min:0',
         ], [
-            'perawat_per_encounter_rawat_jalan.required' => 'Nilai insentif perawat rawat jalan harus diisi.',
-            'perawat_per_encounter_rawat_jalan.numeric' => 'Nilai insentif harus berupa angka.',
-            'perawat_per_encounter_igd.required' => 'Nilai insentif perawat IGD harus diisi.',
-            'perawat_per_encounter_igd.numeric' => 'Nilai insentif harus berupa angka.',
-            'perawat_per_encounter_rawat_inap.required' => 'Nilai insentif perawat rawat inap harus diisi.',
-            'perawat_per_encounter_rawat_inap.numeric' => 'Nilai insentif harus berupa angka.',
-            'dokter_per_encounter.required' => 'Nilai insentif dokter harus diisi.',
-            'dokter_per_encounter.numeric' => 'Nilai insentif harus berupa angka.',
             'cutoff_day.required' => 'Tanggal cut-off harus diisi.',
             'cutoff_day.numeric' => 'Tanggal cut-off harus berupa angka bulat.',
             'cutoff_day.min' => 'Tanggal cut-off minimal adalah 1.',
             'cutoff_day.max' => 'Tanggal cut-off maksimal adalah 28.',
         ]);
 
-        IncentiveSetting::updateOrCreate(
-            ['setting_key' => 'perawat_per_encounter_rawat_jalan'],
-            [
-                'setting_value' => $request->perawat_per_encounter_rawat_jalan,
-                'description' => 'Insentif untuk perawat per encounter Rawat Jalan'
-            ]
-        );
-
-        IncentiveSetting::updateOrCreate(
-            ['setting_key' => 'perawat_per_encounter_igd'],
-            [
-                'setting_value' => $request->perawat_per_encounter_igd,
-                'description' => 'Insentif untuk perawat per encounter IGD'
-            ]
-        );
-
-        IncentiveSetting::updateOrCreate(
-            ['setting_key' => 'perawat_per_encounter_rawat_inap'],
-            [
-                'setting_value' => $request->perawat_per_encounter_rawat_inap,
-                'description' => 'Insentif untuk perawat per tindakan Rawat Inap'
-            ]
-        );
-
-        IncentiveSetting::updateOrCreate(
-            ['setting_key' => 'dokter_per_encounter'],
-            [
-                'setting_value' => $request->dokter_per_encounter,
-                'description' => 'Insentif yang diberikan kepada dokter setiap kali menangani satu pasien (encounter) hingga selesai.'
-            ]
-        );
+        // Honor Dokter dan Bonus Perawat sekarang diatur di Master Data Tindakan
+        // Setting ini tidak lagi digunakan
 
         IncentiveSetting::updateOrCreate(
             ['setting_key' => 'cutoff_day'],

@@ -25,14 +25,12 @@
                         <span class="input-group-text"><i class="ri-discount-percent-line"></i></span>
                         <input type="number" name="diskon_tindakan" class="form-control" placeholder="0"
                             id="diskon_tindakan" min="0" max="100">
-                        @if (auth()->user()->role != 3)
-                            <span class="input-group-text">%</span>
-                            <button class="btn btn-primary px-4" type="submit" id="btn-buat-diskon-tindakan">
-                                <span id="text-buat-diskon-tindakan"><i class="ri-check-line me-1"></i>Terapkan</span>
-                                <span class="spinner-border spinner-border-sm d-none" id="spinner-buat-diskon-tindakan"
-                                    role="status" aria-hidden="true"></span>
-                            </button>
-                        @endif
+                        <span class="input-group-text">%</span>
+                        <button class="btn btn-primary px-4" type="submit" id="btn-buat-diskon-tindakan">
+                            <span id="text-buat-diskon-tindakan"><i class="ri-check-line me-1"></i>Terapkan</span>
+                            <span class="spinner-border spinner-border-sm d-none" id="spinner-buat-diskon-tindakan"
+                                role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -134,14 +132,12 @@
                         <span class="input-group-text"><i class="ri-discount-percent-line"></i></span>
                         <input type="number" name="diskon_resep" class="form-control" placeholder="0"
                             id="diskon_resep" min="0" max="100">
-                        @if (auth()->user()->role != 3)
-                            <span class="input-group-text">%</span>
-                            <button class="btn btn-success px-4" type="submit" id="btn-buat-diskon-resep">
-                                <span id="text-buat-diskon-resep"><i class="ri-check-line me-1"></i>Terapkan</span>
-                                <span class="spinner-border spinner-border-sm d-none" id="spinner-buat-diskon-resep"
-                                    role="status" aria-hidden="true"></span>
-                            </button>
-                        @endif
+                        <span class="input-group-text">%</span>
+                        <button class="btn btn-success px-4" type="submit" id="btn-buat-diskon-resep">
+                            <span id="text-buat-diskon-resep"><i class="ri-check-line me-1"></i>Terapkan</span>
+                            <span class="spinner-border spinner-border-sm d-none" id="spinner-buat-diskon-resep"
+                                role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -275,22 +271,20 @@
                     </div>
                 </div>
 
-                @if (auth()->user()->role != 3)
-                    <hr class="my-4">
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-outline-secondary">
-                            <i class="ri-draft-line me-1"></i>Simpan Draft
-                        </button>
-                        <button type="button" class="btn btn-success btn-lg px-5" id="btn-simpan-catatan"
-                            style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); border: none;">
-                            <span id="text-simpan-catatan">
-                                <i class="ri-check-double-line me-2"></i>Selesai Pemeriksaan
-                            </span>
-                            <span class="spinner-border spinner-border-sm d-none" id="spinner-simpan-catatan"
-                                role="status" aria-hidden="true"></span>
-                        </button>
-                    </div>
-                @endif
+                <hr class="my-4">
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" class="btn btn-outline-secondary">
+                        <i class="ri-draft-line me-1"></i>Simpan Draft
+                    </button>
+                    <button type="button" class="btn btn-success btn-lg px-5" id="btn-simpan-catatan"
+                        style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); border: none;">
+                        <span id="text-simpan-catatan">
+                            <i class="ri-check-double-line me-2"></i>Selesai Pemeriksaan
+                        </span>
+                        <span class="spinner-border spinner-border-sm d-none" id="spinner-simpan-catatan"
+                            role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

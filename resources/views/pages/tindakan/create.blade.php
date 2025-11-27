@@ -40,36 +40,96 @@
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
 
-                                                    <input type="text" class="form-control" id="a1"
-                                                        name="name" value="{{ old('name') }}">
+                                                    <input type="text" class="form-control" id="a1" name="name"
+                                                        value="{{ old('name') }}">
                                                 </div>
                                                 <p class="text-danger">{{ $errors->first('name') }}</p>
                                             </div>
                                         </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-3 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="harga">Harga <span
+                                                <label class="form-label" for="harga">Harga Total <span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
-
                                                     <input type="text" class="form-control" id="harga" name="harga"
-                                                        value="{{ old('harga') }}">
+                                                        value="{{ old('harga') }}" readonly>
                                                 </div>
                                                 <p class="text-danger">{{ $errors->first('harga') }}</p>
                                             </div>
                                         </div>
-                                        <div class="col-xxl-4 col-lg-4 col-sm-6">
+                                        <div class="col-xxl-3 col-lg-3 col-sm-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="a1">Status<span
                                                         class="text-danger">*</span></label>
                                                 <div class="input-group">
                                                     <select class="form-select" id="a7" name="status">
                                                         <option value="">Pilih Status</option>
-                                                        <option value="1" {{ old('status') == 1 ? 'selected' : '' }}>Aktif</option>
-                                                        <option value="2" {{ old('status') == 2 ? 'selected' : '' }}>Tidak Aktif</option>
+                                                        <option value="1" {{ old('status') == 1 ? 'selected' : '' }}>
+                                                            Aktif</option>
+                                                        <option value="2" {{ old('status') == 2 ? 'selected' : '' }}>
+                                                            Tidak Aktif</option>
                                                     </select>
                                                 </div>
                                                 <p class="text-danger">{{ $errors->first('status') }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <hr class="my-3">
+                                            <h6 class="mb-3"><i class="ri-money-dollar-circle-line"></i> Komposisi Harga
+                                            </h6>
+                                        </div>
+
+                                        <div class="col-xxl-3 col-lg-3 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="honor_dokter"><i
+                                                        class="ri-user-heart-line text-primary"></i> Honor Dokter</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Rp</span>
+                                                    <input type="text" class="form-control price-input" id="honor_dokter"
+                                                        name="honor_dokter" value="{{ old('honor_dokter') }}"
+                                                        placeholder="0">
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('honor_dokter') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-3 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="bonus_perawat"><i
+                                                        class="ri-nurse-line text-success"></i> Bonus Perawat</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Rp</span>
+                                                    <input type="text" class="form-control price-input"
+                                                        id="bonus_perawat" name="bonus_perawat"
+                                                        value="{{ old('bonus_perawat') }}" placeholder="0">
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('bonus_perawat') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-3 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="biaya_bahan"><i
+                                                        class="ri-test-tube-line text-info"></i> Biaya Bahan</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Rp</span>
+                                                    <input type="text" class="form-control price-input"
+                                                        id="biaya_bahan" name="biaya_bahan"
+                                                        value="{{ old('biaya_bahan') }}" placeholder="0">
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('biaya_bahan') }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-xxl-3 col-lg-3 col-sm-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="jasa_sarana"><i
+                                                        class="ri-hospital-line text-warning"></i> Jasa Sarana RS</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Rp</span>
+                                                    <input type="text" class="form-control price-input"
+                                                        id="jasa_sarana" name="jasa_sarana"
+                                                        value="{{ old('jasa_sarana') }}" placeholder="0">
+                                                </div>
+                                                <p class="text-danger">{{ $errors->first('jasa_sarana') }}</p>
                                             </div>
                                         </div>
 
@@ -132,9 +192,12 @@
                 $(".btn-txt").text("Mohon Tunggu ...");
             });
 
-            var tanpa_rupiah = document.getElementById('harga');
-            tanpa_rupiah.addEventListener('keyup', function(e) {
-                tanpa_rupiah.value = formatRupiah(this.value);
+            // Format rupiah untuk semua input price
+            $('.price-input').each(function() {
+                $(this).on('keyup', function() {
+                    this.value = formatRupiah(this.value);
+                    calculateTotal();
+                });
             });
 
             function formatRupiah(angka, prefix) {
@@ -151,6 +214,15 @@
 
                 rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
                 return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+            }
+
+            function calculateTotal() {
+                var honor = parseInt($('#honor_dokter').val().replace(/\./g, '') || 0);
+                var bonus = parseInt($('#bonus_perawat').val().replace(/\./g, '') || 0);
+                var bahan = parseInt($('#biaya_bahan').val().replace(/\./g, '') || 0);
+                var sarana = parseInt($('#jasa_sarana').val().replace(/\./g, '') || 0);
+                var total = honor + bonus + bahan + sarana;
+                $('#harga').val(formatRupiah(total.toString()));
             }
 
         });

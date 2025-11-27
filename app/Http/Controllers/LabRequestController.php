@@ -155,8 +155,9 @@ class LabRequestController extends Controller
         if ($data['status'] === 'completed' && !$req->completed_at) {
             $req->completed_at = now();
 
-            // [CHANGED] Fee pelaksana lab akan dibuat saat pembayaran kasir, bukan saat hasil selesai
-            // Logika dipindahkan ke KasirController
+            // Process incentives untuk pemeriksaan lab
+            $observasiRepo = new \App\Repositories\ObservasiRepository();
+            $observasiRepo->processPenunjangIncentives($req->id, 'lab');
         }
         $req->save();
 

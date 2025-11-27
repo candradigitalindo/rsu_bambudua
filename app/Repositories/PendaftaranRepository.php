@@ -474,6 +474,12 @@ class PendaftaranRepository
         $pasien = Pasien::findOrFail($id);
         $count = Encounter::whereDate('created_at', now()->toDateString())->count();
         $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+        // Set dpjp_id ke dokter pertama yang dipilih
+        $dpjpId = null;
+        if ($request->filled('dokter') && is_array($request->dokter) && count($request->dokter) > 0) {
+            $dpjpId = $request->dokter[0]; // Dokter pertama sebagai DPJP
+        }
+
         $encounter = Encounter::create([
             'no_encounter'        => $noEncounter,
             'rekam_medis'         => $pasien->rekam_medis,
@@ -483,7 +489,8 @@ class PendaftaranRepository
             'jenis_jaminan'       => $request->jenis_jaminan,
             'tujuan_kunjungan'    => $request->tujuan_kunjungan,
             'clinic_id'           => $request->clinic_id ? $request->clinic_id : null,
-            'created_by'         => Auth::id()
+            'created_by'         => Auth::id(),
+            'dpjp_id'            => $dpjpId
         ]);
 
         if ($request->filled('dokter') && is_array($request->dokter)) {
@@ -539,6 +546,12 @@ class PendaftaranRepository
         $pasien = Pasien::findOrFail($id);
         $count = Encounter::whereDate('created_at', now()->toDateString())->count();
         $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+        // Set dpjp_id ke dokter pertama yang dipilih
+        $dpjpId = null;
+        if ($request->filled('dokter') && is_array($request->dokter) && count($request->dokter) > 0) {
+            $dpjpId = $request->dokter[0]; // Dokter pertama sebagai DPJP
+        }
+
         $encounter = Encounter::create([
             'no_encounter'        => $noEncounter,
             'rekam_medis'         => $pasien->rekam_medis,
@@ -547,7 +560,8 @@ class PendaftaranRepository
             'type'                => 3,
             'jenis_jaminan'       => $request->jenis_jaminan,
             'tujuan_kunjungan'    => $request->tujuan_kunjungan,
-            'created_by'         => Auth::id()
+            'created_by'         => Auth::id(),
+            'dpjp_id'            => $dpjpId
         ]);
 
         if ($request->filled('dokter') && is_array($request->dokter)) {

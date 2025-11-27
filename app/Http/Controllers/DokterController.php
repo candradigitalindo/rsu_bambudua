@@ -19,58 +19,48 @@ class DokterController extends Controller
     {
         $user = Auth::user();
 
-        // Helper closure untuk query Practitioner by encounter type
-        $countPractitioner = function ($type, $start, $end) use ($user) {
-            return Practitioner::where('id_petugas', $user->id)
-                ->whereHas('encounter', function ($q) use ($type) {
-                    $q->where('type', $type);
-                })
+        // Helper untuk count encounters dari incentives berdasarkan type encounter
+        $countFromIncentives = function ($encounterType, $start, $end) use ($user) {
+            // Ambil encounter IDs unik dari incentives
+            $encounterIds = \App\Models\Incentive::where('user_id', $user->id)
+                ->whereNotNull('encounter_id')
                 ->whereBetween('created_at', [$start, $end])
+                ->distinct()
+                ->pluck('encounter_id');
+
+            // Count encounters dengan type tertentu
+            return \App\Models\Encounter::whereIn('id', $encounterIds)
+                ->where('type', $encounterType)
                 ->count();
         };
 
-        // Helper closure untuk query Practitioner by encounter type per bulan
-        $countPractitionerMonth = function ($type) use ($user) {
-            return Practitioner::where('id_petugas', $user->id)
-                ->whereHas('encounter', function ($q) use ($type) {
-                    $q->where('type', $type);
-                })
+        $countFromIncentivesMonth = function ($encounterType) use ($user) {
+            $encounterIds = \App\Models\Incentive::where('user_id', $user->id)
+                ->whereNotNull('encounter_id')
                 ->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)
-                ->count();
-        };
+                ->distinct()
+                ->pluck('encounter_id');
 
-        // Helper closure untuk query InpatientTreatment
-
-        $countInpatient = function ($start, $end) use ($user) {
-            return InpatientTreatment::where('performed_by', $user->id)
-                ->where('request_type', 'Visit')
-                ->whereBetween('created_at', [$start, $end])
-                ->count();
-        };
-
-        $countInpatientMonth = function () use ($user) {
-            return InpatientTreatment::where('performed_by', $user->id)
-                ->where('request_type', 'Visit')
-                ->whereMonth('created_at', now()->month)
-                ->whereYear('created_at', now()->year)
+            return \App\Models\Encounter::whereIn('id', $encounterIds)
+                ->where('type', $encounterType)
                 ->count();
         };
 
         // Rawat Jalan (type 1)
-        $thisWeek_rawatJalan = $countPractitioner(1, now()->startOfWeek(), now()->endOfWeek());
-        $lastWeek_rawatJalan = $countPractitioner(1, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
-        $thisMonth_rawatJalan = $countPractitionerMonth(1);
+        $thisWeek_rawatJalan = $countFromIncentives(1, now()->startOfWeek(), now()->endOfWeek());
+        $lastWeek_rawatJalan = $countFromIncentives(1, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
+        $thisMonth_rawatJalan = $countFromIncentivesMonth(1);
 
         // Rawat Darurat (type 3)
-        $thisWeek_rawatDarurat = $countPractitioner(3, now()->startOfWeek(), now()->endOfWeek());
-        $lastWeek_rawatDarurat = $countPractitioner(3, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
-        $thisMonth_rawatDarurat = $countPractitionerMonth(3);
+        $thisWeek_rawatDarurat = $countFromIncentives(3, now()->startOfWeek(), now()->endOfWeek());
+        $lastWeek_rawatDarurat = $countFromIncentives(3, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
+        $thisMonth_rawatDarurat = $countFromIncentivesMonth(3);
 
-        // Rawat Inap
-        $thisWeek_inpatient = $countInpatient(now()->startOfWeek(), now()->endOfWeek());
-        $lastWeek_inpatient = $countInpatient(now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
-        $thisMonth_inpatient = $countInpatientMonth();
+        // Rawat Inap (type 2)
+        $thisWeek_inpatient = $countFromIncentives(2, now()->startOfWeek(), now()->endOfWeek());
+        $lastWeek_inpatient = $countFromIncentives(2, now()->subWeek()->startOfWeek(), now()->subWeek()->endOfWeek());
+        $thisMonth_inpatient = $countFromIncentivesMonth(2);
 
         // Persentase kenaikan/penurunan
         $percent = function ($thisWeek, $lastWeek) {
@@ -120,45 +110,61 @@ class DokterController extends Controller
         $user = Auth::user();
         $year = now()->year;
 
-        // Helper untuk rekap per bulan (index 1-12)
-        $rekapPerBulan = function ($query, $year) {
-            $data = $query
+        // Helper untuk rekap per bulan berdasarkan encounter type dari incentives
+        $rekapPerBulan = function ($encounterType, $year) use ($user) {
+            // Ambil semua incentives untuk user ini dalam tahun tersebut
+            $incentives = \App\Models\Incentive::where('user_id', $user->id)
+                ->whereNotNull('encounter_id')
                 ->whereYear('created_at', $year)
-                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
-                ->groupBy('bulan')
-                ->pluck('total', 'bulan')
-                ->toArray();
+                ->with('encounter:id,type,created_at')
+                ->get();
 
-            return array_map(
-                fn($i) => $data[$i] ?? 0,
-                range(1, 12)
-            );
+            // Group by bulan dan filter by encounter type
+            $data = [];
+            foreach ($incentives as $incentive) {
+                if ($incentive->encounter && $incentive->encounter->type == $encounterType) {
+                    $month = $incentive->created_at->month;
+                    if (!isset($data[$month])) {
+                        $data[$month] = [];
+                    }
+                    // Simpan encounter_id untuk unique count
+                    $data[$month][$incentive->encounter_id] = true;
+                }
+            }
+
+            // Convert to count per bulan
+            return array_map(function ($i) use ($data) {
+                return isset($data[$i]) ? count($data[$i]) : 0;
+            }, range(1, 12));
         };
 
         // Helper untuk total encounter per tahun
-        $totalTahun = function ($query, $year) {
-            return $query->whereYear('created_at', $year)->count();
+        $totalTahun = function ($encounterType, $year) use ($user) {
+            $encounterIds = \App\Models\Incentive::where('user_id', $user->id)
+                ->whereNotNull('encounter_id')
+                ->whereYear('created_at', $year)
+                ->distinct()
+                ->pluck('encounter_id');
+
+            return \App\Models\Encounter::whereIn('id', $encounterIds)
+                ->where('type', $encounterType)
+                ->count();
         };
 
         // Rawat Jalan (type 1)
-        $queryRawatJalan = Practitioner::where('id_petugas', $user->id)
-            ->whereHas('encounter', fn($q) => $q->where('type', 1));
-        $rawatJalan = $rekapPerBulan(clone $queryRawatJalan, $year);
-        $totalRawatJalanTahunIni = $totalTahun(clone $queryRawatJalan, $year);
-        $totalRawatJalanTahunLalu = $totalTahun(clone $queryRawatJalan, $year - 1);
+        $rawatJalan = $rekapPerBulan(1, $year);
+        $totalRawatJalanTahunIni = $totalTahun(1, $year);
+        $totalRawatJalanTahunLalu = $totalTahun(1, $year - 1);
 
         // Rawat Darurat (type 3)
-        $queryRawatDarurat = Practitioner::where('id_petugas', $user->id)
-            ->whereHas('encounter', fn($q) => $q->where('type', 3));
-        $rawatDarurat = $rekapPerBulan(clone $queryRawatDarurat, $year);
-        $totalRawatDaruratTahunIni = $totalTahun(clone $queryRawatDarurat, $year);
-        $totalRawatDaruratTahunLalu = $totalTahun(clone $queryRawatDarurat, $year - 1);
+        $rawatDarurat = $rekapPerBulan(3, $year);
+        $totalRawatDaruratTahunIni = $totalTahun(3, $year);
+        $totalRawatDaruratTahunLalu = $totalTahun(3, $year - 1);
 
-        // Rawat Inap
-        $queryRawatInap = InpatientAdmission::where('dokter_id', $user->id);
-        $rawatInap = $rekapPerBulan(clone $queryRawatInap, $year);
-        $totalRawatInapTahunIni = $totalTahun(clone $queryRawatInap, $year);
-        $totalRawatInapTahunLalu = $totalTahun(clone $queryRawatInap, $year - 1);
+        // Rawat Inap (type 2)
+        $rawatInap = $rekapPerBulan(2, $year);
+        $totalRawatInapTahunIni = $totalTahun(2, $year);
+        $totalRawatInapTahunLalu = $totalTahun(2, $year - 1);
 
         // Total encounter tahun ini & tahun lalu (semua jenis)
         $totalTahunIni = $totalRawatJalanTahunIni + $totalRawatDaruratTahunIni + $totalRawatInapTahunIni;
@@ -189,39 +195,60 @@ class DokterController extends Controller
         $month = now()->month;
         $daysInMonth = now()->daysInMonth;
 
-        // Helper untuk rekap bulanan (index 1-12)
-        $rekapBulanan = function ($query, $year) {
-            $data = $query
+        // Helper untuk rekap bulanan dari incentives by encounter type
+        $rekapBulanan = function ($encounterType, $year) use ($user) {
+            $incentives = \App\Models\Incentive::where('user_id', $user->id)
+                ->whereNotNull('encounter_id')
                 ->whereYear('created_at', $year)
-                ->selectRaw('MONTH(created_at) as bulan, COUNT(*) as total')
-                ->groupBy('bulan')
-                ->pluck('total', 'bulan')
-                ->toArray();
+                ->with('encounter:id,type,created_at')
+                ->get();
 
-            return array_map(fn($i) => $data[$i] ?? 0, range(1, 12));
+            $data = [];
+            foreach ($incentives as $incentive) {
+                if ($incentive->encounter && $incentive->encounter->type == $encounterType) {
+                    $month = $incentive->created_at->month;
+                    if (!isset($data[$month])) {
+                        $data[$month] = [];
+                    }
+                    $data[$month][$incentive->encounter_id] = true;
+                }
+            }
+
+            return array_map(function ($i) use ($data) {
+                return isset($data[$i]) ? count($data[$i]) : 0;
+            }, range(1, 12));
         };
 
         // Helper untuk rekap harian dalam sebulan
-        $rekapHarian = function ($query, $year, $month) use ($daysInMonth) {
-            $data = $query
+        $rekapHarian = function ($encounterType, $year, $month) use ($user, $daysInMonth) {
+            $incentives = \App\Models\Incentive::where('user_id', $user->id)
+                ->whereNotNull('encounter_id')
                 ->whereYear('created_at', $year)
                 ->whereMonth('created_at', $month)
-                ->selectRaw('DAY(created_at) as tanggal, COUNT(*) as total')
-                ->groupBy('tanggal')
-                ->pluck('total', 'tanggal')
-                ->toArray();
+                ->with('encounter:id,type,created_at')
+                ->get();
 
-            return array_map(fn($i) => $data[$i] ?? 0, range(1, $daysInMonth));
+            $data = [];
+            foreach ($incentives as $incentive) {
+                if ($incentive->encounter && $incentive->encounter->type == $encounterType) {
+                    $day = $incentive->created_at->day;
+                    if (!isset($data[$day])) {
+                        $data[$day] = [];
+                    }
+                    $data[$day][$incentive->encounter_id] = true;
+                }
+            }
+
+            return array_map(function ($i) use ($data) {
+                return isset($data[$i]) ? count($data[$i]) : 0;
+            }, range(1, $daysInMonth));
         };
-
-        // Query dasar untuk practitioner
-        $practitionerQuery = Practitioner::where('id_petugas', $user->id);
 
         // Data untuk Grafik Bulanan (1 Tahun)
         $bulanan = [
             'series' => [
-                ['name' => 'Rawat Jalan', 'data' => $rekapBulanan(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 1)), $year)],
-                ['name' => 'IGD', 'data' => $rekapBulanan(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 3)), $year)],
+                ['name' => 'Rawat Jalan', 'data' => $rekapBulanan(1, $year)],
+                ['name' => 'IGD', 'data' => $rekapBulanan(3, $year)],
             ],
             'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
         ];
@@ -229,8 +256,8 @@ class DokterController extends Controller
         // Data untuk Grafik Harian (1 Bulan)
         $harian = [
             'series' => [
-                ['name' => 'Rawat Jalan', 'data' => $rekapHarian(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 1)), $year, $month)],
-                ['name' => 'IGD', 'data' => $rekapHarian(clone $practitionerQuery->whereHas('encounter', fn($q) => $q->where('type', 3)), $year, $month)],
+                ['name' => 'Rawat Jalan', 'data' => $rekapHarian(1, $year, $month)],
+                ['name' => 'IGD', 'data' => $rekapHarian(3, $year, $month)],
             ],
             'categories' => range(1, $daysInMonth),
         ];
@@ -299,63 +326,38 @@ class DokterController extends Controller
 
     /**
      * Get histori pasien yang ditangani (10 terakhir)
+     * Menggunakan incentives.encounter_id untuk mendapatkan semua pasien yang ditangani
      */
     private function getHistoriPasien()
     {
         $user = Auth::user();
 
-        // Ambil encounters dari practitioner (rawat jalan & IGD)
-        $encountersFromPractitioner = Practitioner::where('id_petugas', $user->id)
-            ->with(['encounter.pasien', 'encounter.diagnosis'])
+        // Ambil encounters unik dari incentives dokter ini
+        $encounterIds = \App\Models\Incentive::where('user_id', $user->id)
+            ->whereNotNull('encounter_id')
+            ->distinct()
+            ->pluck('encounter_id');
+
+        // Ambil data encounter lengkap
+        $encounters = \App\Models\Encounter::whereIn('id', $encounterIds)
+            ->with(['pasien', 'diagnosis'])
             ->latest()
             ->take(10)
             ->get()
-            ->map(function ($practitioner) {
-                $encounter = $practitioner->encounter;
-                if (!$encounter) return null;
-
+            ->map(function ($encounter) {
                 return [
                     'tanggal' => $encounter->created_at,
                     'no_encounter' => $encounter->no_encounter,
                     'rekam_medis' => $encounter->rekam_medis,
                     'nama_pasien' => $encounter->name_pasien,
-                    'type' => $encounter->type, // 1=RJ, 2=RI, 3=IGD
+                    'type' => $encounter->type,
                     'type_text' => $encounter->type == 1 ? 'Rawat Jalan' : ($encounter->type == 3 ? 'IGD' : 'Rawat Inap'),
                     'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
                     'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
                 ];
-            })
-            ->filter(); // Remove null values
+            });
 
-        // Ambil visit rawat inap
-        $visitsFromInpatient = InpatientTreatment::where('performed_by', $user->id)
-            ->where('request_type', 'Visit')
-            ->with(['admission.encounter.pasien', 'admission.encounter.diagnosis'])
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($treatment) {
-                $encounter = $treatment->admission->encounter ?? null;
-                if (!$encounter) return null;
-
-                return [
-                    'tanggal' => $treatment->treatment_date,
-                    'no_encounter' => $encounter->no_encounter,
-                    'rekam_medis' => $encounter->rekam_medis,
-                    'nama_pasien' => $encounter->name_pasien,
-                    'type' => 2, // Rawat Inap
-                    'type_text' => 'Rawat Inap (Visit)',
-                    'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
-                    'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
-                ];
-            })
-            ->filter();
-
-        // Gabungkan dan sort berdasarkan tanggal terbaru
-        return $encountersFromPractitioner->merge($visitsFromInpatient)
-            ->sortByDesc('tanggal')
-            ->take(10)
-            ->values();
+        return $encounters;
     }
 
     /**
@@ -374,9 +376,14 @@ class DokterController extends Controller
                 // Parse type untuk label yang lebih friendly
                 $typeLabels = [
                     'encounter' => 'Fee Kunjungan',
-                    'treatment_inap' => 'Fee Tindakan Rawat Inap',
-                    'visit_inap' => 'Fee Visit Rawat Inap',
-                    'fee_penunjang' => 'Fee Penunjang',
+                    'encounter_rawat_jalan' => 'Insentif Rawat Jalan',
+                    'encounter_igd' => 'Insentif IGD',
+                    'treatment_inap' => 'Insentif Tindakan Rawat Inap',
+                    'visit_inap' => 'Insentif Visit Rawat Inap',
+                    'fee_penunjang' => 'Fee Pemeriksaan Penunjang',
+                    'fee_perawat_penunjang' => 'Fee Perawat Penunjang',
+                    'fee_perawat_lab' => 'Fee Perawat Laboratorium',
+                    'fee_perawat_radiologi' => 'Fee Perawat Radiologi',
                     'fee_pelaksana_lab' => 'Fee Pelaksana Lab',
                     'fee_pelaksana_radiologi' => 'Fee Pelaksana Radiologi',
                     'fee_obat_rj' => 'Fee Obat Rawat Jalan',
@@ -432,23 +439,18 @@ class DokterController extends Controller
         $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
 
-        // Query untuk encounters dari practitioner (rawat jalan & IGD)
-        $encountersQuery = Practitioner::where('id_petugas', $user->id)
-            ->with(['encounter.pasien', 'encounter.diagnosis'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        // Ambil encounter_ids unik dari incentives dokter ini dalam rentang tanggal
+        $encounterIds = \App\Models\Incentive::where('user_id', $user->id)
+            ->whereNotNull('encounter_id')
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->distinct()
+            ->pluck('encounter_id');
 
-        // Query untuk visit rawat inap
-        $visitsQuery = InpatientTreatment::where('performed_by', $user->id)
-            ->where('request_type', 'Visit')
-            ->with(['admission.encounter.pasien', 'admission.encounter.diagnosis'])
-            ->whereBetween('treatment_date', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-
-        // Get data
-        $encountersFromPractitioner = $encountersQuery->get()
-            ->map(function ($practitioner) {
-                $encounter = $practitioner->encounter;
-                if (!$encounter) return null;
-
+        // Ambil data encounter lengkap
+        $historiPasien = \App\Models\Encounter::whereIn('id', $encounterIds)
+            ->with(['pasien', 'diagnosis'])
+            ->get()
+            ->map(function ($encounter) {
                 return [
                     'tanggal' => $encounter->created_at,
                     'no_encounter' => $encounter->no_encounter,
@@ -460,28 +462,6 @@ class DokterController extends Controller
                     'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
                 ];
             })
-            ->filter();
-
-        $visitsFromInpatient = $visitsQuery->get()
-            ->map(function ($treatment) {
-                $encounter = $treatment->admission->encounter ?? null;
-                if (!$encounter) return null;
-
-                return [
-                    'tanggal' => $treatment->treatment_date,
-                    'no_encounter' => $encounter->no_encounter,
-                    'rekam_medis' => $encounter->rekam_medis,
-                    'nama_pasien' => $encounter->name_pasien,
-                    'type' => 2,
-                    'type_text' => 'Rawat Inap (Visit)',
-                    'diagnosis' => $encounter->diagnosis->first()->diagnosis_description ?? '-',
-                    'status' => $encounter->status == 2 ? 'Selesai' : 'Sedang Dirawat',
-                ];
-            })
-            ->filter();
-
-        // Gabungkan dan sort
-        $historiPasien = $encountersFromPractitioner->merge($visitsFromInpatient)
             ->sortByDesc('tanggal')
             ->values();
 
@@ -525,8 +505,10 @@ class DokterController extends Controller
         // Type labels
         $typeLabels = [
             'encounter' => 'Fee Kunjungan',
-            'treatment_inap' => 'Fee Tindakan Rawat Inap',
-            'visit_inap' => 'Fee Visit Rawat Inap',
+            'encounter_rawat_jalan' => 'Insentif Rawat Jalan',
+            'encounter_igd' => 'Insentif IGD',
+            'treatment_inap' => 'Insentif Tindakan Rawat Inap',
+            'visit_inap' => 'Insentif Visit Rawat Inap',
             'fee_penunjang' => 'Fee Penunjang',
             'fee_pelaksana_lab' => 'Fee Pelaksana Lab',
             'fee_pelaksana_radiologi' => 'Fee Pelaksana Radiologi',

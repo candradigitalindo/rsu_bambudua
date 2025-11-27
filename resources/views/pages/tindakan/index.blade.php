@@ -31,7 +31,8 @@
                                 <!-- Search Patient Starts -->
                                 <div class="search-container d-xl-block d-none">
                                     <form method="GET" action="{{ route('tindakan.index') }}">
-                                        <input type="text" class="form-control" name="name" id="searchPatient" placeholder="Search">
+                                        <input type="text" class="form-control" name="name" id="searchPatient"
+                                            placeholder="Search">
                                         <i class="ri-search-line"></i>
                                     </form>
                                 </div>
@@ -60,7 +61,8 @@
                                 <thead>
                                     <tr>
                                         <th>Nama</th>
-                                        <th>Harga</th>
+                                        <th>Harga Total</th>
+                                        <th>Komposisi Harga</th>
                                         <th>Keterangan</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center">Aksi</th>
@@ -70,7 +72,35 @@
                                     @forelse ($tindakans as $tindakan)
                                         <tr>
                                             <td>{{ $tindakan->name }}</td>
-                                            <td>{{ $tindakan->getHargaFormattedAttribute() }}</td>
+                                            <td class="fw-bold">Rp {{ number_format($tindakan->harga, 0, ',', '.') }}</td>
+                                            <td>
+                                                <div class="d-flex flex-column gap-1">
+                                                    <small class="d-flex align-items-center">
+                                                        <i class="ri-user-heart-line text-primary me-2"></i>
+                                                        <span>Honor Dokter:</span>
+                                                        <span class="fw-semibold ms-auto">Rp
+                                                            {{ number_format($tindakan->honor_dokter, 0, ',', '.') }}</span>
+                                                    </small>
+                                                    <small class="d-flex align-items-center">
+                                                        <i class="ri-nurse-line text-success me-2"></i>
+                                                        <span>Bonus Perawat:</span>
+                                                        <span class="fw-semibold ms-auto">Rp
+                                                            {{ number_format($tindakan->bonus_perawat, 0, ',', '.') }}</span>
+                                                    </small>
+                                                    <small class="d-flex align-items-center">
+                                                        <i class="ri-test-tube-line text-info me-2"></i>
+                                                        <span>Biaya Bahan:</span>
+                                                        <span class="fw-semibold ms-auto">Rp
+                                                            {{ number_format($tindakan->biaya_bahan, 0, ',', '.') }}</span>
+                                                    </small>
+                                                    <small class="d-flex align-items-center">
+                                                        <i class="ri-hospital-line text-warning me-2"></i>
+                                                        <span>Jasa Sarana:</span>
+                                                        <span class="fw-semibold ms-auto">Rp
+                                                            {{ number_format($tindakan->jasa_sarana, 0, ',', '.') }}</span>
+                                                    </small>
+                                                </div>
+                                            </td>
                                             <td>{{ $tindakan->description }}</td>
                                             <td class="text-center">
                                                 @if ($tindakan->status == 1)
@@ -83,7 +113,9 @@
                                                 <a href="{{ route('tindakan.getBahan', $tindakan->id) }}"
                                                     class="btn btn-outline-primary btn-sm" id="bahan-{{ $tindakan->id }}">
                                                     <i class="ri-archive-line"></i>
-                                                    <span class="btn-text" id="bahantext-{{ $tindakan->id }}">{{ $tindakan->bahan->count() }} Bahan Tindakan </span>
+                                                    <span class="btn-text"
+                                                        id="bahantext-{{ $tindakan->id }}">{{ $tindakan->bahan->count() }}
+                                                        Bahan Tindakan </span>
                                                     <span class="spinner-border spinner-border-sm d-none"
                                                         id="bahanspiner-{{ $tindakan->id }}"></span>
                                                 </a>

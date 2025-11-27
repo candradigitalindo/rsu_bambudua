@@ -32,12 +32,18 @@ class Encounter extends Model
         'status_bayar_tindakan',
         'metode_pembayaran_tindakan',
         'clinic_id',
-        'created_by'
+        'created_by',
+        'dpjp_id'
     ];
 
     public function practitioner()
     {
         return $this->hasMany(Practitioner::class);
+    }
+
+    public function dpjp()
+    {
+        return $this->belongsTo(User::class, 'dpjp_id');
     }
     public function anamnesis()
     {
@@ -145,5 +151,10 @@ class Encounter extends Model
     public function radiologyRequests()
     {
         return $this->hasMany(\App\Models\RadiologyRequest::class, 'encounter_id', 'id');
+    }
+
+    public function incentives()
+    {
+        return $this->hasMany(Incentive::class, 'encounter_id', 'id');
     }
 }

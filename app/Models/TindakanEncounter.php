@@ -23,4 +23,9 @@ class TindakanEncounter extends Model
     {
         return $this->belongsTo(Encounter::class);
     }
+
+    public function tindakan()
+    {
+        return $this->belongsTo(Tindakan::class, 'tindakan_id');
+    }
 }

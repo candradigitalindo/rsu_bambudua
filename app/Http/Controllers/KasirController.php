@@ -307,12 +307,18 @@ class KasirController extends Controller
                         if ($base > 0 && $val > 0) {
                             $amount = $mode === 1 ? ($base * ($val / 100.0)) : $val;
                             $userId = null;
-                            if ($target === 1) {
-                                // Prescriber tidak terekam dengan id user pada model Resep, fallback ke DPJP
-                                $userId = optional(optional($encounter->practitioner()->with('user')->first())->user)->id;
+
+                            // Prioritas: dpjp_id field, fallback ke practitioner pertama
+                            if ($encounter->dpjp_id) {
+                                $userId = $encounter->dpjp_id;
                             } else {
-                                $userId = optional(optional($encounter->practitioner()->with('user')->first())->user)->id;
+                                // Fallback ke practitioner pertama untuk backward compatibility
+                                $firstPractitioner = $encounter->practitioner()->first();
+                                if ($firstPractitioner && $firstPractitioner->id_petugas) {
+                                    $userId = $firstPractitioner->id_petugas;
+                                }
                             }
+
                             if ($userId) {
                                 \App\Models\Incentive::create([
                                     'id' => \Illuminate\Support\Str::uuid(),
@@ -610,6 +616,19 @@ class KasirController extends Controller
                             'Pemeriksaan Laboratorium',
                             (float)$labRequest->total_charge,
                             'lab'
+                        );
+                    }
+                }
+
+                // Fee Perawat Lab yang membantu
+                $nurses = $encounter->nurses; // Perawat yang ditugaskan pada encounter
+                if ($nurses && $nurses->isNotEmpty()) {
+                    foreach ($nurses as $nurse) {
+                        $observasiRepo->createNurseLabIncentive(
+                            $encounter,
+                            $nurse,
+                            'Pemeriksaan Laboratorium',
+                            (float)$labRequest->total_charge
                         );
                     }
                 }

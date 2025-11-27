@@ -12,13 +12,14 @@ class Incentive extends Model
 
     protected $fillable = [
         'user_id',
+        'encounter_id',
         'year',
         'month',
         'amount',
         'type',
         'description',
         'status',
-        'paid_at',
+        'paid_at'
     ];
 
     /**
@@ -27,5 +28,10 @@ class Incentive extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function encounter()
+    {
+        return $this->belongsTo(Encounter::class);
     }
 }

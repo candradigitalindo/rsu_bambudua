@@ -193,243 +193,79 @@
                     <form action="{{ route('keuangan.incentive.settings.simpan') }}" method="POST" id="form-insentif">
                         @csrf
 
-                        <!-- Insentif Tenaga Medis -->
-                        <div class="setting-section">
-                            <div class="section-header">
-                                <div class="section-icon icon-primary">
-                                    <i class="ri-user-heart-line"></i>
-                                </div>
-                                <div class="section-title">
-                                    <h5>Insentif Tenaga Medis</h5>
-                                    <small>Pengaturan insentif per kunjungan pasien</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">
-                                    <i class="ri-nurse-line text-primary"></i> Insentif Perawat per Jenis Pelayanan
-                                </label>
-
-                                <!-- Rawat Jalan -->
-                                <div class="mb-3">
-                                    <label for="perawat_per_encounter_rawat_jalan_display" class="form-label">
-                                        Rawat Jalan
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">Rp</span>
-                                        <input type="text"
-                                            class="form-control @error('perawat_per_encounter_rawat_jalan') is-invalid @enderror"
-                                            id="perawat_per_encounter_rawat_jalan_display"
-                                            value="{{ old('perawat_per_encounter_rawat_jalan', isset($settings['perawat_per_encounter_rawat_jalan']) ? number_format($settings['perawat_per_encounter_rawat_jalan'], 0, ',', '.') : '') }}"
-                                            placeholder="0">
-                                    </div>
-                                    <input type="hidden" name="perawat_per_encounter_rawat_jalan"
-                                        id="perawat_per_encounter_rawat_jalan"
-                                        value="{{ old('perawat_per_encounter_rawat_jalan', isset($settings['perawat_per_encounter_rawat_jalan']) ? (int) $settings['perawat_per_encounter_rawat_jalan'] : '') }}">
-                                    @error('perawat_per_encounter_rawat_jalan')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <!-- IGD -->
-                                <div class="mb-3">
-                                    <label for="perawat_per_encounter_igd_display" class="form-label">
-                                        IGD (Instalasi Gawat Darurat)
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">Rp</span>
-                                        <input type="text"
-                                            class="form-control @error('perawat_per_encounter_igd') is-invalid @enderror"
-                                            id="perawat_per_encounter_igd_display"
-                                            value="{{ old('perawat_per_encounter_igd', isset($settings['perawat_per_encounter_igd']) ? number_format($settings['perawat_per_encounter_igd'], 0, ',', '.') : '') }}"
-                                            placeholder="0">
-                                    </div>
-                                    <input type="hidden" name="perawat_per_encounter_igd" id="perawat_per_encounter_igd"
-                                        value="{{ old('perawat_per_encounter_igd', isset($settings['perawat_per_encounter_igd']) ? (int) $settings['perawat_per_encounter_igd'] : '') }}">
-                                    @error('perawat_per_encounter_igd')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <!-- Rawat Inap -->
-                                <div class="mb-0">
-                                    <label for="perawat_per_encounter_rawat_inap_display" class="form-label">
-                                        Rawat Inap (per tindakan)
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">Rp</span>
-                                        <input type="text"
-                                            class="form-control @error('perawat_per_encounter_rawat_inap') is-invalid @enderror"
-                                            id="perawat_per_encounter_rawat_inap_display"
-                                            value="{{ old('perawat_per_encounter_rawat_inap', isset($settings['perawat_per_encounter_rawat_inap']) ? number_format($settings['perawat_per_encounter_rawat_inap'], 0, ',', '.') : '') }}"
-                                            placeholder="0">
-                                    </div>
-                                    <input type="hidden" name="perawat_per_encounter_rawat_inap"
-                                        id="perawat_per_encounter_rawat_inap"
-                                        value="{{ old('perawat_per_encounter_rawat_inap', isset($settings['perawat_per_encounter_rawat_inap']) ? (int) $settings['perawat_per_encounter_rawat_inap'] : '') }}">
-                                    @error('perawat_per_encounter_rawat_inap')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="form-text mt-2">
+                        <!-- Info: Insentif telah dipindahkan ke Master Data Tindakan -->
+                        <div class="setting-section" style="background: #e8f5e9; border-left: 4px solid #238781;">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3" style="font-size: 32px; color: #238781;">
                                     <i class="ri-information-line"></i>
-                                    Nominal yang diberikan kepada setiap perawat berdasarkan jenis pelayanan
                                 </div>
-                            </div>
-
-                            <div class="mb-0">
-                                <label for="dokter_per_encounter_display" class="form-label">
-                                    <i class="ri-stethoscope-line text-primary"></i> Insentif Dokter per Pasien
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
-                                    <input type="text"
-                                        class="form-control @error('dokter_per_encounter') is-invalid @enderror"
-                                        id="dokter_per_encounter_display"
-                                        value="{{ old('dokter_per_encounter', isset($settings['dokter_per_encounter']) ? number_format($settings['dokter_per_encounter'], 0, ',', '.') : '') }}"
-                                        placeholder="0">
+                                <div>
+                                    <h5 class="mb-2" style="color: #238781;">
+                                        <i class="ri-arrow-right-line"></i> Insentif Tenaga Medis Telah Dipindahkan
+                                    </h5>
+                                    <p class="mb-2" style="color: #2d5016;">
+                                        <strong>Honor Dokter</strong> dan <strong>Bonus Perawat</strong> sekarang diatur
+                                        langsung di <strong>Master Data Tindakan</strong> pada menu:
+                                    </p>
+                                    <div class="ms-3 mb-2">
+                                        <p class="mb-1" style="color: #2d5016;">
+                                            <i class="ri-corner-down-right-line"></i>
+                                            <strong>Master Data → Data Tindakan</strong>
+                                        </p>
+                                    </div>
+                                    <p class="mb-2" style="color: #2d5016;">
+                                        Setiap tindakan dapat memiliki nilai honor/bonus yang berbeda sesuai dengan
+                                        tingkat kesulitan dan jenis pelayanan yang diberikan.
+                                    </p>
+                                    <div class="alert alert-info mb-0 mt-3" style="border-left: 3px solid #0288d1;">
+                                        <small>
+                                            <i class="ri-lightbulb-line"></i>
+                                            <strong>Keuntungan:</strong> Sistem lebih fleksibel dan honor/bonus dihitung
+                                            otomatis berdasarkan tindakan yang dilakukan.
+                                        </small>
+                                    </div>
                                 </div>
-                                <input type="hidden" name="dokter_per_encounter" id="dokter_per_encounter"
-                                    value="{{ old('dokter_per_encounter', isset($settings['dokter_per_encounter']) ? (int) $settings['dokter_per_encounter'] : '') }}">
-                                <div class="form-text">
-                                    <i class="ri-information-line"></i>
-                                    Nominal yang diberikan kepada dokter yang menangani 1 pasien hingga selesai
-                                </div>
-                                @error('dokter_per_encounter')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
                         </div>
 
-                        <!-- Fee Layanan Penunjang -->
-                        <div class="setting-section">
-                            <div class="section-header">
-                                <div class="section-icon icon-success">
-                                    <i class="ri-microscope-line"></i>
-                                </div>
-                                <div class="section-title">
-                                    <h5>Fee Layanan Penunjang</h5>
-                                    <small>Fee untuk pemeriksaan laboratorium dan radiologi</small>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="ri-test-tube-line text-success"></i> Fee Laboratorium
-                                </label>
-                                <div class="row g-2">
-                                    <div class="col-md-5">
-                                        <select class="form-select" name="fee_lab_mode" id="fee_lab_mode">
-                                            <option value="0"
-                                                {{ old('fee_lab_mode', $settings['fee_lab_mode'] ?? 1) == 0 ? 'selected' : '' }}>
-                                                💰 Flat (Rp)</option>
-                                            <option value="1"
-                                                {{ old('fee_lab_mode', $settings['fee_lab_mode'] ?? 1) == 1 ? 'selected' : '' }}>
-                                                📊 Persentase (%)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-7">
-                                        <div class="input-group">
-                                            <span class="input-group-text"
-                                                id="lab-prefix">{{ old('fee_lab_mode', $settings['fee_lab_mode'] ?? 1) == 0 ? 'Rp' : '%' }}</span>
-                                            <input type="number" step="0.01" min="0" class="form-control"
-                                                name="fee_lab_value"
-                                                value="{{ old('fee_lab_value', $settings['fee_lab_value'] ?? 10) }}"
-                                                placeholder="Masukkan nilai" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-text">
+                        <!-- Info: Fee Penunjang telah dipindahkan ke Master Data -->
+                        <div class="setting-section" style="background: #e3f2fd; border-left: 4px solid #2196f3;">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3" style="font-size: 32px; color: #2196f3;">
                                     <i class="ri-information-line"></i>
-                                    Fee diberikan untuk setiap pemeriksaan laboratorium yang dilakukan
                                 </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="ri-image-line text-success"></i> Fee Radiologi (Dokter)
-                                </label>
-                                <div class="row g-2">
-                                    <div class="col-md-5">
-                                        <select class="form-select" name="fee_radiologi_mode" id="fee_radiologi_mode">
-                                            <option value="0"
-                                                {{ old('fee_radiologi_mode', $settings['fee_radiologi_mode'] ?? 1) == 0 ? 'selected' : '' }}>
-                                                💰 Flat (Rp)</option>
-                                            <option value="1"
-                                                {{ old('fee_radiologi_mode', $settings['fee_radiologi_mode'] ?? 1) == 1 ? 'selected' : '' }}>
-                                                📊 Persentase (%)</option>
-                                        </select>
+                                <div>
+                                    <h5 class="mb-2" style="color: #1565c0;">
+                                        <i class="ri-arrow-right-line"></i> Fee Layanan Penunjang Telah Dipindahkan
+                                    </h5>
+                                    <p class="mb-2" style="color: #0d47a1;">
+                                        <strong>Fee Laboratorium</strong> dan <strong>Fee Radiologi</strong> sekarang diatur
+                                        langsung di <strong>Master Data Jenis Pemeriksaan Penunjang</strong> pada menu:
+                                    </p>
+                                    <div class="ms-3 mb-2">
+                                        <p class="mb-1" style="color: #0d47a1;">
+                                            <i class="ri-corner-down-right-line"></i>
+                                            <strong>Master Data → Jenis Pemeriksaan Penunjang</strong>
+                                        </p>
                                     </div>
-                                    <div class="col-md-7">
-                                        <div class="input-group">
-                                            <span class="input-group-text"
-                                                id="radiologi-prefix">{{ old('fee_radiologi_mode', $settings['fee_radiologi_mode'] ?? 1) == 0 ? 'Rp' : '%' }}</span>
-                                            <input type="number" step="0.01" min="0" class="form-control"
-                                                name="fee_radiologi_value"
-                                                value="{{ old('fee_radiologi_value', $settings['fee_radiologi_value'] ?? 10) }}"
-                                                placeholder="Masukkan nilai" />
-                                        </div>
+                                    <p class="mb-2" style="color: #0d47a1;">
+                                        Setiap jenis pemeriksaan dapat memiliki struktur harga yang berbeda mencakup:
+                                    </p>
+                                    <ul class="mb-2" style="color: #0d47a1;">
+                                        <li><strong>Fee Dokter Penunjang</strong> - untuk dokter yang request</li>
+                                        <li><strong>Fee Perawat Penunjang</strong> - untuk perawat yang membantu</li>
+                                        <li><strong>Fee Pelaksana</strong> - untuk petugas lab/radiologi</li>
+                                        <li><strong>Biaya Bahan</strong> - biaya bahan habis pakai</li>
+                                        <li><strong>Jasa Sarana</strong> - jasa rumah sakit/klinik</li>
+                                    </ul>
+                                    <div class="alert alert-info mb-0 mt-3" style="border-left: 3px solid #2196f3;">
+                                        <small>
+                                            <i class="ri-lightbulb-line"></i>
+                                            <strong>Keuntungan:</strong> Sistem lebih fleksibel dan fee dihitung
+                                            otomatis berdasarkan jenis pemeriksaan yang dilakukan. Harga pemeriksaan
+                                            otomatis menyesuaikan dengan total struktur harga.
+                                        </small>
                                     </div>
-                                </div>
-                                <div class="form-text">
-                                    <i class="ri-information-line"></i>
-                                    Fee diberikan untuk setiap pemeriksaan radiologi (Rontgen, USG, CT Scan, dll)
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">
-                                    <i class="ri-nurse-line text-success"></i> Fee Radiologi Echo/USG (Perawat)
-                                </label>
-                                <div class="row g-2">
-                                    <div class="col-md-5">
-                                        <select class="form-select" name="perawat_fee_radiologi_mode"
-                                            id="perawat_fee_radiologi_mode">
-                                            <option value="0"
-                                                {{ old('perawat_fee_radiologi_mode', $settings['perawat_fee_radiologi_mode'] ?? 1) == 0 ? 'selected' : '' }}>
-                                                💰 Flat (Rp)</option>
-                                            <option value="1"
-                                                {{ old('perawat_fee_radiologi_mode', $settings['perawat_fee_radiologi_mode'] ?? 1) == 1 ? 'selected' : '' }}>
-                                                📊 Persentase (%)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-7">
-                                        <div class="input-group">
-                                            <span class="input-group-text"
-                                                id="perawat-radiologi-prefix">{{ old('perawat_fee_radiologi_mode', $settings['perawat_fee_radiologi_mode'] ?? 1) == 0 ? 'Rp' : '%' }}</span>
-                                            <input type="number" step="0.01" min="0" class="form-control"
-                                                name="perawat_fee_radiologi_value"
-                                                value="{{ old('perawat_fee_radiologi_value', $settings['perawat_fee_radiologi_value'] ?? 5) }}"
-                                                placeholder="Masukkan nilai" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-text">
-                                    <i class="ri-information-line"></i>
-                                    Fee diberikan kepada perawat untuk pemeriksaan Echo dan USG
-                                </div>
-                            </div>
-
-                            <div class="mb-0">
-                                <label class="form-label">
-                                    <i class="ri-nurse-line text-success"></i> Fee Radiologi Lainnya (Perawat) - Per
-                                    Tindakan
-                                </label>
-                                <div class="row g-2">
-                                    <div class="col-md-12">
-                                        <div class="input-group">
-                                            <span class="input-group-text">Rp</span>
-                                            <input type="number" step="1" min="0"
-                                                class="form-control currency-input"
-                                                name="perawat_fee_radiologi_pertindakan_value"
-                                                value="{{ old('perawat_fee_radiologi_pertindakan_value', $settings['perawat_fee_radiologi_pertindakan_value'] ?? 15000) }}"
-                                                placeholder="Masukkan nominal" />
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-text">
-                                    <i class="ri-information-line"></i>
-                                    Fee flat per tindakan untuk radiologi selain Echo/USG (Rontgen, CT Scan, MRI, dll)
                                 </div>
                             </div>
                         </div>
@@ -465,10 +301,11 @@
                                         <div class="input-group">
                                             <span class="input-group-text"
                                                 id="obat-prefix">{{ old('fee_obat_mode', $settings['fee_obat_mode'] ?? 1) == 0 ? 'Rp' : '%' }}</span>
-                                            <input type="number" step="0.01" min="0" class="form-control"
-                                                name="fee_obat_value"
-                                                value="{{ old('fee_obat_value', $settings['fee_obat_value'] ?? 5) }}"
+                                            <input type="text" class="form-control" id="fee_obat_value_display"
+                                                value="{{ old('fee_obat_mode', $settings['fee_obat_mode'] ?? 1) == 0 ? number_format(old('fee_obat_value', $settings['fee_obat_value'] ?? 5), 0, ',', '.') : old('fee_obat_value', $settings['fee_obat_value'] ?? 5) }}"
                                                 placeholder="Masukkan nilai" />
+                                            <input type="hidden" name="fee_obat_value" id="fee_obat_value_hidden"
+                                                value="{{ old('fee_obat_value', $settings['fee_obat_value'] ?? 5) }}" />
                                         </div>
                                     </div>
                                 </div>
@@ -516,8 +353,7 @@
                                     <span class="input-group-text"><i class="ri-calendar-line"></i></span>
                                     <input type="text" class="form-control @error('cutoff_day') is-invalid @enderror"
                                         id="cutoff_day" name="cutoff_day"
-                                        value="{{ old('cutoff_day', $settings['cutoff_day'] ?? 25) }}"
-                                        placeholder="1-28">
+                                        value="{{ old('cutoff_day', $settings['cutoff_day'] ?? 25) }}" placeholder="1-28">
                                     <span class="input-group-text">setiap bulan</span>
                                 </div>
                                 <div class="form-text">
@@ -613,67 +449,48 @@
                 return rupiah;
             }
 
-            // Format currency for all nurse incentive fields
-            $('#perawat_per_encounter_rawat_jalan_display').on('keyup', function() {
-                let displayValue = $(this).val();
-                let realValue = displayValue.replace(/\./g, '');
-                $(this).val(formatRupiah(displayValue));
-                $('#perawat_per_encounter_rawat_jalan').val(realValue);
-            });
+            function unformatRupiah(angka) {
+                return angka.replace(/\./g, '');
+            }
 
-            $('#perawat_per_encounter_igd_display').on('keyup', function() {
-                let displayValue = $(this).val();
-                let realValue = displayValue.replace(/\./g, '');
-                $(this).val(formatRupiah(displayValue));
-                $('#perawat_per_encounter_igd').val(realValue);
-            });
-
-            $('#perawat_per_encounter_rawat_inap_display').on('keyup', function() {
-                let displayValue = $(this).val();
-                let realValue = displayValue.replace(/\./g, '');
-                $(this).val(formatRupiah(displayValue));
-                $('#perawat_per_encounter_rawat_inap').val(realValue);
-            });
-
-            $('#dokter_per_encounter_display').on('keyup', function() {
-                let displayValue = $(this).val();
-                let realValue = displayValue.replace(/\./g, '');
-                $(this).val(formatRupiah(displayValue));
-                $('#dokter_per_encounter').val(realValue);
-            });
-
-            // Update prefix saat mode berubah
-            $('#fee_lab_mode').on('change', function() {
-                if ($(this).val() == '0') {
-                    $('#lab-prefix').text('Rp');
-                } else {
-                    $('#lab-prefix').text('%');
-                }
-            });
-
-            $('#fee_radiologi_mode').on('change', function() {
-                if ($(this).val() == '0') {
-                    $('#radiologi-prefix').text('Rp');
-                } else {
-                    $('#radiologi-prefix').text('%');
-                }
-            });
-
-            $('#perawat_fee_radiologi_mode').on('change', function() {
-                if ($(this).val() == '0') {
-                    $('#perawat-radiologi-prefix').text('Rp');
-                } else {
-                    $('#perawat-radiologi-prefix').text('%');
-                }
-            });
-
+            // Update prefix dan format saat mode berubah
             $('#fee_obat_mode').on('change', function() {
+                var currentValue = $('#fee_obat_value_hidden').val();
+
                 if ($(this).val() == '0') {
+                    // Mode Flat (Rp) - tampilkan format ribuan
                     $('#obat-prefix').text('Rp');
+                    $('#fee_obat_value_display').val(formatRupiah(currentValue));
                 } else {
+                    // Mode Persentase - tampilkan angka biasa
                     $('#obat-prefix').text('%');
+                    $('#fee_obat_value_display').val(currentValue);
                 }
             });
+
+            // Format input saat mengetik
+            $('#fee_obat_value_display').on('keyup', function() {
+                var mode = $('#fee_obat_mode').val();
+                var input = $(this).val();
+
+                if (mode == '0') {
+                    // Mode Flat - format sebagai rupiah
+                    var formatted = formatRupiah(input);
+                    $(this).val(formatted);
+                    $('#fee_obat_value_hidden').val(unformatRupiah(formatted));
+                } else {
+                    // Mode Persentase - simpan langsung
+                    $(this).val(input.replace(/[^0-9]/g, ''));
+                    $('#fee_obat_value_hidden').val(input.replace(/[^0-9]/g, ''));
+                }
+            });
+
+            // Set nilai awal berdasarkan mode
+            var initialMode = $('#fee_obat_mode').val();
+            if (initialMode == '0') {
+                var currentDisplay = $('#fee_obat_value_display').val();
+                $('#fee_obat_value_display').val(formatRupiah(unformatRupiah(currentDisplay)));
+            }
         });
     </script>
 @endpush

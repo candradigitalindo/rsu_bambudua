@@ -538,12 +538,8 @@ class ObservasiRepository
         $resepDetail->total_harga = $resepDetail->harga * $resepDetail->qty;
         $resepDetail->save();
 
-        // Update total_resep encounter hanya sekali
-        \App\Models\Encounter::where('id', $id)
-            ->update([
-                'total_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga'),
-                'total_bayar_resep' => \App\Models\ResepDetail::where('resep_id', $resep->id)->sum('total_harga')
-            ]);
+        // Update total_resep encounter dengan function yang memperhitungkan diskon
+        $this->updateEncounterTotalResep($id);
 
         return [
             'success' => true,
@@ -555,13 +551,12 @@ class ObservasiRepository
     {
         $resepDetail = \App\Models\ResepDetail::find($id);
         if ($resepDetail) {
+            $encounterId = $resepDetail->resep->encounter_id;
             $resepDetail->delete();
-            // Update total_resep encounter hanya sekali
-            \App\Models\Encounter::where('id', $resepDetail->resep->encounter_id)
-                ->update([
-                    'total_resep' => \App\Models\ResepDetail::where('resep_id', $resepDetail->resep_id)->sum('total_harga'),
-                    'total_bayar_resep' => \App\Models\ResepDetail::where('resep_id', $resepDetail->resep_id)->sum('total_harga')
-                ]);
+
+            // Update total_resep encounter dengan function yang memperhitungkan diskon
+            $this->updateEncounterTotalResep($encounterId);
+
             return [
                 'success' => true,
                 'message' => 'Resep detail berhasil dihapus.'
@@ -912,6 +907,9 @@ class ObservasiRepository
         $count = Encounter::whereDate('created_at', now()->toDateString())->count();
         $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
 
+        // Copy dpjp_id dari encounter sebelumnya
+        $dpjpId = $encounter->dpjp_id;
+
         $newEncounter = Encounter::create([
             'no_encounter'        => $noEncounter,
             'rekam_medis'         => $encounter->rekam_medis,
@@ -920,7 +918,8 @@ class ObservasiRepository
             'type'                => 2, // Rawat Inap
             'jenis_jaminan'       => $encounter->jenis_jaminan,
             'tujuan_kunjungan'    => $encounter->tujuan_kunjungan,
-            'created_by'          => Auth::id()
+            'created_by'          => Auth::id(),
+            'dpjp_id'             => $dpjpId
         ]);
 
         // Buat data admisi rawat inap
@@ -937,66 +936,118 @@ class ObservasiRepository
 
     private function processIncentives(Encounter $encounter, array $perawatIds)
     {
-        $settings = IncentiveSetting::whereIn('setting_key', [
-            'perawat_per_encounter_rawat_jalan',
-            'perawat_per_encounter_igd',
-            'perawat_per_encounter_rawat_inap',
-            'dokter_per_encounter'
-        ])->pluck('setting_value', 'setting_key');
-
-        $amountPerawatRJ = $settings['perawat_per_encounter_rawat_jalan'] ?? 0;
-        $amountPerawatIGD = $settings['perawat_per_encounter_igd'] ?? 0;
-        $amountPerawatInap = $settings['perawat_per_encounter_rawat_inap'] ?? 0;
-        $amountDokter = $settings['dokter_per_encounter'] ?? 0;
         $now = now();
         $incentivesToCreate = [];
 
-        // Insentif Perawat Rawat Jalan (type 1)
-        if ($encounter->type == 1 && $amountPerawatRJ > 0 && !empty($perawatIds)) {
+        // Insentif Perawat Rawat Jalan (type 1) - dari bonus_perawat tindakan
+        if ($encounter->type == 1 && !empty($perawatIds)) {
+            $tindakanEncounters = \App\Models\TindakanEncounter::where('encounter_id', $encounter->id)
+                ->with('tindakan:id,name,bonus_perawat')
+                ->get();
+
             foreach ($perawatIds as $perawatId) {
-                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawatRJ, 'encounter_rawat_jalan', $encounter, $now);
-            }
-        }
-
-        // Insentif Perawat IGD (type 3)
-        if ($encounter->type == 3 && $amountPerawatIGD > 0 && !empty($perawatIds)) {
-            foreach ($perawatIds as $perawatId) {
-                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawatIGD, 'encounter_igd', $encounter, $now);
-            }
-        }
-
-        // Insentif Dokter (Rawat Jalan/IGD)
-        if ($amountDokter > 0 && in_array($encounter->type, [1, 3])) {
-            $practitioner = $encounter->practitioner()->with('user')->first();
-            if ($practitioner && $practitioner->user) {
-                $incentivesToCreate[] = $this->buildIncentiveData($practitioner->user->id, $amountDokter, 'encounter', $encounter, $now);
-            }
-        }
-
-        // Insentif Rawat Inap (type 2)
-        if ($encounter->type == 2) {
-            $inpatientAdmission = InpatientAdmission::where('encounter_id', $encounter->id)->first();
-            if ($inpatientAdmission) {
-                // Insentif Perawat (Tindakan Rawat Inap)
-                if ($amountPerawatInap > 0) {
-                    $treatments = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
-                        ->whereHas('performedBy', fn($q) => $q->where('role', 3)) // Perawat
-                        ->get();
-                    foreach ($treatments as $treatment) {
-                        $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $amountPerawatInap, 'treatment_inap', $encounter, $now);
+                $totalBonus = 0;
+                foreach ($tindakanEncounters as $te) {
+                    if ($te->tindakan && $te->tindakan->bonus_perawat > 0) {
+                        $totalBonus += ($te->tindakan->bonus_perawat * $te->qty);
                     }
                 }
 
-                // Insentif Dokter (Visit Rawat Inap)
-                if ($amountDokter > 0) {
-                    $visits = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
-                        ->where('request_type', 'Visit')
-                        ->whereHas('performedBy', function ($query) {
-                            $query->where('role', '!=', 3); // Hanya untuk yang BUKAN Perawat (misal: Dokter)
-                        })
-                        ->get();
-                    foreach ($visits as $visit) {
-                        $incentivesToCreate[] = $this->buildIncentiveData($visit->performed_by, $amountDokter, 'visit_inap', $encounter, $now);
+                if ($totalBonus > 0) {
+                    $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $totalBonus, 'encounter_rawat_jalan', $encounter, $now);
+                }
+            }
+        }
+
+        // Insentif Perawat IGD (type 3) - dari bonus_perawat tindakan
+        if ($encounter->type == 3 && !empty($perawatIds)) {
+            $tindakanEncounters = \App\Models\TindakanEncounter::where('encounter_id', $encounter->id)
+                ->with('tindakan:id,name,bonus_perawat')
+                ->get();
+
+            foreach ($perawatIds as $perawatId) {
+                $totalBonus = 0;
+                foreach ($tindakanEncounters as $te) {
+                    if ($te->tindakan && $te->tindakan->bonus_perawat > 0) {
+                        $totalBonus += ($te->tindakan->bonus_perawat * $te->qty);
+                    }
+                }
+
+                if ($totalBonus > 0) {
+                    $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $totalBonus, 'encounter_igd', $encounter, $now);
+                }
+            }
+        }
+
+        // Insentif Dokter (Rawat Jalan/IGD) - dari honor_dokter tindakan
+        if (in_array($encounter->type, [1, 3])) {
+            // Prioritas: dpjp_id, fallback ke practitioner pertama
+            $userId = null;
+            if ($encounter->dpjp_id) {
+                $userId = $encounter->dpjp_id;
+            } else {
+                $practitioner = $encounter->practitioner()->first();
+                if ($practitioner && $practitioner->id_petugas) {
+                    $userId = $practitioner->id_petugas;
+                }
+            }
+
+            if ($userId) {
+                $tindakanEncounters = \App\Models\TindakanEncounter::where('encounter_id', $encounter->id)
+                    ->with('tindakan:id,name,honor_dokter')
+                    ->get();
+
+                $totalHonor = 0;
+                foreach ($tindakanEncounters as $te) {
+                    if ($te->tindakan && $te->tindakan->honor_dokter > 0) {
+                        $totalHonor += ($te->tindakan->honor_dokter * $te->qty);
+                    }
+                }
+
+                if ($totalHonor > 0) {
+                    $incentivesToCreate[] = $this->buildIncentiveData($userId, $totalHonor, 'encounter', $encounter, $now);
+                }
+            }
+        }
+
+        // Insentif Rawat Inap (type 2) - dari honor_dokter dan bonus_perawat tindakan
+        if ($encounter->type == 2) {
+            $inpatientAdmission = InpatientAdmission::where('encounter_id', $encounter->id)->first();
+            if ($inpatientAdmission) {
+                // Insentif Perawat (Tindakan Rawat Inap) - ambil dari bonus_perawat per tindakan
+                $treatments = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
+                    ->with(['performedBy', 'tindakan:id,name,bonus_perawat'])
+                    ->whereHas('performedBy', fn($q) => $q->where('role', 3)) // Perawat
+                    ->get();
+
+                foreach ($treatments as $treatment) {
+                    $bonusAmount = 0;
+                    if ($treatment->tindakan && $treatment->tindakan->bonus_perawat > 0) {
+                        $bonusAmount = $treatment->tindakan->bonus_perawat * ($treatment->quantity ?? 1);
+                    }
+
+                    if ($bonusAmount > 0) {
+                        $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $bonusAmount, 'treatment_inap', $encounter, $now);
+                    }
+                }
+
+                // Insentif Dokter (Visit Rawat Inap) - ambil dari honor_dokter per tindakan
+                $visits = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
+                    ->where('request_type', 'Visit')
+                    ->with(['performedBy', 'tindakan:id,name,honor_dokter'])
+                    ->whereHas('performedBy', function ($query) {
+                        $query->where('role', '!=', 3); // Hanya untuk yang BUKAN Perawat (misal: Dokter)
+                    })
+                    ->get();
+
+                foreach ($visits as $visit) {
+                    $honorAmount = 0;
+                    if ($visit->tindakan && $visit->tindakan->honor_dokter > 0) {
+                        $honorAmount = $visit->tindakan->honor_dokter * ($visit->quantity ?? 1);
+                    }
+
+                    if ($honorAmount > 0) {
+                        $incentivesToCreate[] = $this->buildIncentiveData($visit->performed_by, $honorAmount, 'visit_inap', $encounter, $now);
                     }
                 }
             }
@@ -1013,6 +1064,7 @@ class ObservasiRepository
         return [
             'id' => \Illuminate\Support\Str::uuid(),
             'user_id' => $userId,
+            'encounter_id' => $encounter->id,
             'year' => $timestamp->year,
             'month' => $timestamp->month,
             'amount' => $amount,
@@ -1022,6 +1074,155 @@ class ObservasiRepository
             'created_at' => $timestamp,
             'updated_at' => $timestamp,
         ];
+    }
+
+    /**
+     * Process incentives untuk pemeriksaan penunjang (Lab & Radiologi)
+     * Dipanggil saat lab/radiologi request completed
+     */
+    public function processPenunjangIncentives($requestId, $type = 'lab')
+    {
+        $now = now();
+        $incentivesToCreate = [];
+
+        if ($type === 'lab') {
+            $request = \App\Models\LabRequest::with(['encounter', 'items.jenisPemeriksaan', 'requester'])
+                ->find($requestId);
+
+            if (!$request || $request->status !== 'completed') {
+                return;
+            }
+
+            $encounter = $request->encounter;
+            if (!$encounter) {
+                return;
+            }
+
+            // Fee untuk dokter yang request
+            $totalFeeDokter = 0;
+            foreach ($request->items as $item) {
+                if ($item->jenisPemeriksaan && $item->jenisPemeriksaan->fee_dokter_penunjang > 0) {
+                    $totalFeeDokter += $item->jenisPemeriksaan->fee_dokter_penunjang;
+                }
+            }
+
+            if ($totalFeeDokter > 0 && $request->requester) {
+                $incentivesToCreate[] = $this->buildIncentiveData(
+                    $request->requested_by,
+                    $totalFeeDokter,
+                    'fee_penunjang',
+                    $encounter,
+                    $now
+                );
+            }
+
+            // Fee untuk perawat yang membantu (jika ada assigned nurses)
+            $nurses = $encounter->nurses;
+            if ($nurses->count() > 0) {
+                foreach ($nurses as $nurse) {
+                    $totalFeePerawat = 0;
+                    foreach ($request->items as $item) {
+                        if ($item->jenisPemeriksaan && $item->jenisPemeriksaan->fee_perawat_penunjang > 0) {
+                            $totalFeePerawat += $item->jenisPemeriksaan->fee_perawat_penunjang;
+                        }
+                    }
+
+                    if ($totalFeePerawat > 0) {
+                        $incentivesToCreate[] = $this->buildIncentiveData(
+                            $nurse->id,
+                            $totalFeePerawat,
+                            'fee_perawat_penunjang',
+                            $encounter,
+                            $now
+                        );
+                    }
+                }
+            }
+
+            // Fee untuk pelaksana lab (user yang complete request - bisa tambahkan kolom performed_by di LabRequest)
+            // Untuk sekarang, gunakan user yang login saat ini atau bisa disimpan di field tersendiri
+            $totalFeePelaksana = 0;
+            foreach ($request->items as $item) {
+                if ($item->jenisPemeriksaan && $item->jenisPemeriksaan->fee_pelaksana > 0) {
+                    $totalFeePelaksana += $item->jenisPemeriksaan->fee_pelaksana;
+                }
+            }
+
+            if ($totalFeePelaksana > 0) {
+                // TODO: Perlu tambah kolom performed_by di lab_requests untuk tracking siapa yang melaksanakan
+                // Untuk sementara bisa gunakan auth user atau request->requester
+                $pelaksanaId = Auth::id(); // atau bisa disimpan di field performed_by
+                if ($pelaksanaId) {
+                    $incentivesToCreate[] = $this->buildIncentiveData(
+                        $pelaksanaId,
+                        $totalFeePelaksana,
+                        'fee_pelaksana_lab',
+                        $encounter,
+                        $now
+                    );
+                }
+            }
+        } elseif ($type === 'radiologi') {
+            $request = \App\Models\RadiologyRequest::with(['encounter', 'jenis', 'dokter'])
+                ->find($requestId);
+
+            if (!$request || $request->status !== 'completed') {
+                return;
+            }
+
+            $encounter = $request->encounter;
+            if (!$encounter) {
+                return;
+            }
+
+            $jenis = $request->jenis;
+            if (!$jenis) {
+                return;
+            }
+
+            // Fee untuk dokter yang request
+            if ($jenis->fee_dokter_penunjang > 0 && $request->dokter_id) {
+                $incentivesToCreate[] = $this->buildIncentiveData(
+                    $request->dokter_id,
+                    $jenis->fee_dokter_penunjang,
+                    'fee_penunjang',
+                    $encounter,
+                    $now
+                );
+            }
+
+            // Fee untuk perawat yang membantu
+            $nurses = $encounter->nurses;
+            if ($nurses->count() > 0 && $jenis->fee_perawat_penunjang > 0) {
+                foreach ($nurses as $nurse) {
+                    $incentivesToCreate[] = $this->buildIncentiveData(
+                        $nurse->id,
+                        $jenis->fee_perawat_penunjang,
+                        'fee_perawat_penunjang',
+                        $encounter,
+                        $now
+                    );
+                }
+            }
+
+            // Fee untuk pelaksana radiologi
+            if ($jenis->fee_pelaksana > 0) {
+                $pelaksanaId = Auth::id(); // atau bisa disimpan di field performed_by
+                if ($pelaksanaId) {
+                    $incentivesToCreate[] = $this->buildIncentiveData(
+                        $pelaksanaId,
+                        $jenis->fee_pelaksana,
+                        'fee_pelaksana_radiologi',
+                        $encounter,
+                        $now
+                    );
+                }
+            }
+        }
+
+        if (!empty($incentivesToCreate)) {
+            \App\Models\Incentive::insert($incentivesToCreate);
+        }
     }
 
     // Show InpantientAdmission
@@ -1305,6 +1506,42 @@ class ObservasiRepository
     }
 
     /**
+     * Update total resep encounter
+     * Menghitung total dari ResepDetail dan update total_resep serta total_bayar_resep
+     *
+     * @param string $encounterId
+     * @return void
+     */
+    public function updateEncounterTotalResep($encounterId)
+    {
+        $encounter = \App\Models\Encounter::find($encounterId);
+        if (!$encounter) {
+            return;
+        }
+
+        // Hitung total resep dari ResepDetail
+        $totalResep = \App\Models\ResepDetail::whereHas('resep', function ($q) use ($encounterId) {
+            $q->where('encounter_id', $encounterId);
+        })
+            ->sum('total_harga');
+
+        // Update encounter dengan total yang benar
+        $encounter->total_resep = $totalResep;
+
+        // Jika belum ada diskon, total_bayar_resep sama dengan total_resep
+        if (is_null($encounter->diskon_persen_resep) || $encounter->diskon_persen_resep == 0) {
+            $encounter->total_bayar_resep = $totalResep;
+        } else {
+            // Jika ada diskon, hitung ulang total bayar
+            $diskonAmount = $totalResep * ($encounter->diskon_persen_resep / 100);
+            $encounter->diskon_resep = $diskonAmount;
+            $encounter->total_bayar_resep = $totalResep - $diskonAmount;
+        }
+
+        $encounter->save();
+    }
+
+    /**
      * Membuat insentif untuk dokter yang meminta pemeriksaan penunjang.
      *
      * @param \App\Models\Encounter $encounter
@@ -1337,6 +1574,7 @@ class ObservasiRepository
         \App\Models\Incentive::create([
             'id' => \Illuminate\Support\Str::uuid(),
             'user_id' => $dokter->id,
+            'encounter_id' => $encounter->id,
             'amount' => $amount,
             'type' => 'fee_penunjang',
             'description' => $description,
@@ -1376,6 +1614,7 @@ class ObservasiRepository
         \App\Models\Incentive::create([
             'id' => \Illuminate\Support\Str::uuid(),
             'user_id' => $pelaksana->id,
+            'encounter_id' => $encounter->id,
             'amount' => $amount,
             'type' => 'fee_pelaksana_' . $tipe,
             'description' => $description,
@@ -1434,6 +1673,32 @@ class ObservasiRepository
         ]);
     }
 
+    /**
+     * Create nurse incentive for laboratory examination
+     */
+    public function createNurseLabIncentive(\App\Models\Encounter $encounter, \App\Models\User $perawat, string $namaPemeriksaan, float $hargaPemeriksaan): void
+    {
+        // Use flat per tindakan for lab nurse fee
+        $amount = (float)(\App\Models\IncentiveSetting::where('setting_key', 'perawat_fee_lab_pertindakan_value')->value('setting_value') ?? 0);
+
+        if ($amount <= 0) {
+            return;
+        }
+
+        $description = "Fee Laboratorium Perawat ($namaPemeriksaan) untuk " . $encounter->name_pasien;
+
+        \App\Models\Incentive::create([
+            'id' => \Illuminate\Support\Str::uuid(),
+            'user_id' => $perawat->id,
+            'amount' => $amount,
+            'type' => 'fee_perawat_lab',
+            'description' => $description,
+            'year' => now()->year,
+            'month' => now()->month,
+            'status' => 'pending',
+        ]);
+    }
+
     private function createPharmacyIncentiveForInpatient(\App\Models\InpatientDailyMedication $medication): void
     {
         try {
@@ -1452,14 +1717,22 @@ class ObservasiRepository
             if ($target === 1 && $medication->authorized_by) {
                 $userId = $medication->authorized_by;
             } else if ($encounter) {
-                $pr = $encounter->practitioner()->with('user')->first();
-                $userId = optional(optional($pr)->user)->id;
+                // Prioritas: dpjp_id, fallback ke practitioner pertama
+                if ($encounter->dpjp_id) {
+                    $userId = $encounter->dpjp_id;
+                } else {
+                    $pr = $encounter->practitioner()->first();
+                    if ($pr && $pr->id_petugas) {
+                        $userId = $pr->id_petugas;
+                    }
+                }
             }
             if (!$userId) return;
 
             \App\Models\Incentive::create([
                 'id' => \Illuminate\Support\Str::uuid(),
                 'user_id' => $userId,
+                'encounter_id' => optional($encounter)->id,
                 'amount' => $amount,
                 'type' => 'fee_obat_inap',
                 'description' => 'Fee Obat (Inap) pasien ' . (optional($encounter)->name_pasien ?? ''),

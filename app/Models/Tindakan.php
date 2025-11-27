@@ -12,6 +12,10 @@ class Tindakan extends Model
         'name',
         'description',
         'harga',
+        'honor_dokter',
+        'bonus_perawat',
+        'biaya_bahan',
+        'jasa_sarana',
         'status'
     ];
     public function getHargaFormattedAttribute()

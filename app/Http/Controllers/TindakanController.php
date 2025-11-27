@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 class TindakanController extends Controller
 {
     public $tindakanRepository;
-    public function __construct(TindakanRepository $tindakanRepository) {
+    public function __construct(TindakanRepository $tindakanRepository)
+    {
         $this->tindakanRepository = $tindakanRepository;
     }
     /**
@@ -38,6 +39,10 @@ class TindakanController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'harga' => 'required|string',
+            'honor_dokter' => 'nullable|string',
+            'bonus_perawat' => 'nullable|string',
+            'biaya_bahan' => 'nullable|string',
+            'jasa_sarana' => 'nullable|string',
             'status' => 'required|boolean',
         ], [
             'name.required' => 'Nama tindakan tidak boleh kosong.',
@@ -54,11 +59,15 @@ class TindakanController extends Controller
             'status' => $request->status,
             'description' => $request->description,
             'harga' => str_replace(".", "", $request->harga),
+            'honor_dokter' => $request->honor_dokter ? str_replace(".", "", $request->honor_dokter) : 0,
+            'bonus_perawat' => $request->bonus_perawat ? str_replace(".", "", $request->bonus_perawat) : 0,
+            'biaya_bahan' => $request->biaya_bahan ? str_replace(".", "", $request->biaya_bahan) : 0,
+            'jasa_sarana' => $request->jasa_sarana ? str_replace(".", "", $request->jasa_sarana) : 0,
         ];
 
         $tindakan = $this->tindakanRepository->create($data);
 
-        return redirect()->route('tindakan.index')->with('success', 'Tindakan '.$tindakan->name.' berhasil dibuat.');
+        return redirect()->route('tindakan.index')->with('success', 'Tindakan ' . $tindakan->name . ' berhasil dibuat.');
     }
 
     /**
@@ -87,6 +96,10 @@ class TindakanController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'harga' => 'required|string',
+            'honor_dokter' => 'nullable|string',
+            'bonus_perawat' => 'nullable|string',
+            'biaya_bahan' => 'nullable|string',
+            'jasa_sarana' => 'nullable|string',
             'status' => 'required|numeric',
         ], [
             'name.required' => 'Nama tindakan tidak boleh kosong.',
@@ -103,11 +116,15 @@ class TindakanController extends Controller
             'status' => (int) $request->status,
             'description' => $request->description,
             'harga' => str_replace(".", "", $request->harga),
+            'honor_dokter' => $request->honor_dokter ? str_replace(".", "", $request->honor_dokter) : 0,
+            'bonus_perawat' => $request->bonus_perawat ? str_replace(".", "", $request->bonus_perawat) : 0,
+            'biaya_bahan' => $request->biaya_bahan ? str_replace(".", "", $request->biaya_bahan) : 0,
+            'jasa_sarana' => $request->jasa_sarana ? str_replace(".", "", $request->jasa_sarana) : 0,
         ];
 
         $tindakan = $this->tindakanRepository->update($id, $data);
 
-        return redirect()->route('tindakan.index')->with('success', 'Tindakan '.$tindakan->name.' berhasil diperbarui.');
+        return redirect()->route('tindakan.index')->with('success', 'Tindakan ' . $tindakan->name . ' berhasil diperbarui.');
     }
 
     /**
@@ -116,7 +133,7 @@ class TindakanController extends Controller
     public function destroy(string $id)
     {
         $tindakan = $this->tindakanRepository->destroy($id);
-        return redirect()->route('tindakan.index')->with('success', 'Tindakan '.$tindakan->name.' berhasil dihapus.');
+        return redirect()->route('tindakan.index')->with('success', 'Tindakan ' . $tindakan->name . ' berhasil dihapus.');
     }
     public function getBahan($id)
     {
@@ -140,7 +157,7 @@ class TindakanController extends Controller
             'quantity' => $request->quantity,
         ];
         $tindakan = $this->tindakanRepository->storeBahan($id, $data);
-        return redirect()->route('tindakan.getBahan', $id)->with('success', 'Bahan tindakan '.$tindakan->name.' berhasil diperbarui.');
+        return redirect()->route('tindakan.getBahan', $id)->with('success', 'Bahan tindakan ' . $tindakan->name . ' berhasil diperbarui.');
     }
     public function destroyBahan($id)
     {

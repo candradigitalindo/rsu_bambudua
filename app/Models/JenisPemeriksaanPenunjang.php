@@ -12,7 +12,7 @@ use App\Models\RadiologyRequest;
 class JenisPemeriksaanPenunjang extends Model
 {
     use HasFactory, HasUuids;
-    protected $fillable = ['name', 'type', 'harga'];
+    protected $fillable = ['name', 'type', 'harga', 'fee_dokter_penunjang', 'fee_perawat_penunjang', 'fee_pelaksana', 'biaya_bahan', 'jasa_sarana'];
 
     public function templateFields()
     {

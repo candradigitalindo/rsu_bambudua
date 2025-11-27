@@ -60,7 +60,7 @@
                                 </thead>
                                 <tbody>
                                     @forelse ($encounters as $encounter)
-                                        <tr>
+                                        <tr id="reminder-row-{{ $encounter->id }}">
                                             <td>{{ ucwords($encounter->name_pasien) }}</td>
                                             <td class="text-center">
                                                 @php
@@ -134,7 +134,9 @@
                                                 <div class="btn-group mb-1">
                                                     @if ($encounter->whatsapp_url)
                                                         <a href="{{ $encounter->whatsapp_url }}" target="_blank"
-                                                            class="btn btn-sm btn-success">
+                                                            class="btn btn-sm btn-success btn-wa-reminder"
+                                                            data-log-id="{{ $encounter->reminder_log_id ?? '' }}"
+                                                            data-row-id="reminder-row-{{ $encounter->id }}">
                                                             <i class="ri-whatsapp-line"></i> Kirim WhatsApp
                                                         </a>
                                                     @else
@@ -253,6 +255,45 @@
             $('#pesanNamaPasien').text(nama);
             $('#pesanReminderText').text(message);
             $('#modalLihatPesan').modal('show');
+        });
+
+        // Track WhatsApp click
+        $(document).on('click', '.btn-wa-reminder', function(e) {
+            var logId = $(this).data('log-id');
+            var rowId = $(this).data('row-id');
+
+            if (!logId) {
+                return; // Jika tidak ada log ID, skip tracking
+            }
+
+            // Mark as clicked via AJAX
+            $.ajax({
+                url: "{{ url('loket/reminder') }}/" + logId + "/mark-clicked",
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Fade out the row after marking as clicked
+                        setTimeout(function() {
+                            $('#' + rowId).fadeOut(500, function() {
+                                $(this).remove();
+
+                                // Check if table is empty
+                                if ($('tbody tr:visible').length === 0) {
+                                    $('tbody').html(
+                                        '<tr><td colspan="8" class="text-center">Data tidak ada</td></tr>'
+                                        );
+                                }
+                            });
+                        }, 1000); // Delay 1 detik agar user sempat buka WA
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Error marking reminder as clicked:', xhr);
+                }
+            });
         });
     </script>
 @endpush

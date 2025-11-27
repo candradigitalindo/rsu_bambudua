@@ -11,6 +11,8 @@ use App\Models\Diagnosis;
 use App\Models\TindakanEncounter;
 use App\Models\LabRequest;
 use App\Models\Resep;
+use App\Models\MedicalRecordFile;
+use Illuminate\Support\Facades\Auth;
 
 class MedicalRecordsController extends Controller
 {
@@ -228,6 +230,22 @@ class MedicalRecordsController extends Controller
             ];
         })->values();
 
+        // Ambil file dokumen pasien
+        $files = MedicalRecordFile::where('rekam_medis', $pasien->rekam_medis)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($file) {
+                return [
+                    'id' => $file->id,
+                    'file_name' => $file->file_name,
+                    'file_type' => $file->file_type,
+                    'file_size' => $file->file_size,
+                    'description' => $file->description,
+                    'url' => Storage::url($file->file_path),
+                    'uploaded_at' => optional($file->created_at)->format('d M Y H:i'),
+                ];
+            });
+
         return response()->json([
             'status' => true,
             'pasien' => [
@@ -240,6 +258,7 @@ class MedicalRecordsController extends Controller
                 'alamat' => $pasien->alamat,
             ],
             'encounters' => $data,
+            'files' => $files,
             'pagination' => [
                 'current_page' => $encounters->currentPage(),
                 'last_page' => $encounters->lastPage(),
@@ -426,31 +445,77 @@ class MedicalRecordsController extends Controller
     {
         $request->validate([
             'file' => 'required|file|max:10240', // 10MB
+            'rekam_medis' => 'required|string|exists:pasiens,rekam_medis',
+            'description' => 'nullable|string|max:500',
         ]);
-        $path = $request->file('file')->store('medical-records-archive', 'public');
-        return response()->json(['status' => true, 'path' => $path, 'url' => Storage::url($path)]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $extension = $file->getClientOriginalExtension();
+        $fileName = $request->rekam_medis . '_' . time() . '_' . $originalName;
+        $path = $file->storeAs('medical-records-archive', $fileName, 'public');
+
+        $medicalFile = MedicalRecordFile::create([
+            'rekam_medis' => $request->rekam_medis,
+            'file_name' => $originalName,
+            'file_path' => $path,
+            'file_type' => $extension,
+            'file_size' => $file->getSize(),
+            'description' => $request->description,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'File berhasil diupload',
+            'data' => $medicalFile
+        ]);
     }
 
-    public function arsipList()
+    public function arsipList(Request $request)
     {
-        $files = collect(Storage::disk('public')->files('medical-records-archive'))
-            ->map(fn($f) => [
-                'name' => basename($f),
-                'path' => $f,
-                'url' => Storage::url($f),
-                'size' => Storage::disk('public')->size($f),
-                'last_modified' => optional(now()->createFromTimestamp(Storage::disk('public')->lastModified($f)))->format('d M Y H:i'),
-            ])->sortByDesc('last_modified')->values();
+        $rekamMedis = $request->get('rekam_medis');
+
+        $query = MedicalRecordFile::with(['pasien', 'uploader']);
+
+        if ($rekamMedis) {
+            $query->where('rekam_medis', $rekamMedis);
+        }
+
+        $files = $query->orderByDesc('created_at')->get()->map(function ($file) {
+            return [
+                'id' => $file->id,
+                'rekam_medis' => $file->rekam_medis,
+                'pasien_name' => optional($file->pasien)->name,
+                'file_name' => $file->file_name,
+                'file_type' => $file->file_type,
+                'file_size' => $file->file_size,
+                'description' => $file->description,
+                'url' => Storage::url($file->file_path),
+                'uploaded_by' => optional($file->uploader)->name,
+                'uploaded_at' => optional($file->created_at)->format('d M Y H:i'),
+            ];
+        });
+
         return response()->json(['data' => $files]);
     }
 
-    public function arsipDelete(string $filename)
+    public function arsipDelete($id)
     {
-        $full = 'medical-records-archive/' . $filename;
-        if (!Storage::disk('public')->exists($full)) {
+        $file = MedicalRecordFile::find($id);
+
+        if (!$file) {
             return response()->json(['status' => false, 'message' => 'File tidak ditemukan'], 404);
         }
-        Storage::disk('public')->delete($full);
-        return response()->json(['status' => true, 'message' => 'Berhasil dihapus']);
+
+        // Delete physical file
+        if (Storage::disk('public')->exists($file->file_path)) {
+            Storage::disk('public')->delete($file->file_path);
+        }
+
+        // Delete database record
+        $file->delete();
+
+        return response()->json(['status' => true, 'message' => 'File berhasil dihapus']);
     }
 }

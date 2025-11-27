@@ -261,9 +261,32 @@ class LoketRepository
             }
         }
 
+        // Create/update reminder logs dan filter yang sudah diklik
+        $filteredEncounters = $encounters->filter(function ($encounter) use ($today) {
+            // Create or get existing log untuk hari ini
+            $log = \App\Models\ReminderLog::firstOrCreate(
+                [
+                    'rekam_medis' => $encounter->rekam_medis,
+                    'reminder_type' => $encounter->reminder_type,
+                    'reminder_date' => $today,
+                ],
+                [
+                    'encounter_id' => $encounter->id,
+                    'wa_clicked' => false,
+                ]
+            );
+
+            // Attach log ke encounter untuk tracking
+            $encounter->reminder_log_id = $log->id;
+            $encounter->wa_clicked = $log->wa_clicked;
+
+            // Filter: hanya tampilkan yang belum diklik
+            return !$log->wa_clicked;
+        });
+
         // Return unique encounters per rekam_medis + reminder_type
         // Pasien bisa punya 2 reminder: obat DAN checkup
-        return $encounters->unique(function ($item) {
+        return $filteredEncounters->unique(function ($item) {
             return $item->rekam_medis . '-' . $item->reminder_type;
         })->values();
     }

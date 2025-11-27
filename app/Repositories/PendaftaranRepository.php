@@ -473,7 +473,7 @@ class PendaftaranRepository
     {
         $pasien = Pasien::findOrFail($id);
         $count = Encounter::whereDate('created_at', now()->toDateString())->count();
-        $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+        $noEncounter = now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
         // Set dpjp_id ke dokter pertama yang dipilih
         $dpjpId = null;
         if ($request->filled('dokter') && is_array($request->dokter) && count($request->dokter) > 0) {
@@ -545,7 +545,7 @@ class PendaftaranRepository
     {
         $pasien = Pasien::findOrFail($id);
         $count = Encounter::whereDate('created_at', now()->toDateString())->count();
-        $noEncounter = 'E-' . now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+        $noEncounter = now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
         // Set dpjp_id ke dokter pertama yang dipilih
         $dpjpId = null;
         if ($request->filled('dokter') && is_array($request->dokter) && count($request->dokter) > 0) {

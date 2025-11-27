@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\LogsActivity;
 
 use App\Models\User;
 use App\Models\Clinic;
+use App\Models\Pasien;
 use App\Repositories\PendaftaranRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -180,6 +181,27 @@ class PendaftaranController extends Controller
         }
 
         return response()->json($output);
+    }
+
+    public function cariPasienJson(Request $request)
+    {
+        $term = $request->input('term', '');
+
+        if (strlen($term) < 2) {
+            return response()->json([]);
+        }
+
+        $pasiens = Pasien::where(function ($query) use ($term) {
+            $query->where('name', 'like', '%' . $term . '%')
+                ->orWhere('rekam_medis', $term)
+                ->orWhere('no_identitas', $term)
+                ->orWhere('no_hp', $term);
+        })
+            ->select('rekam_medis', 'name')
+            ->limit(20)
+            ->get();
+
+        return response()->json($pasiens);
     }
 
     public function store_pasien(Request $request)

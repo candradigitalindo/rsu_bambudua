@@ -237,12 +237,41 @@ Untuk bantuan teknis atau pertanyaan pengembangan:
 
 ## Changelog & Bug Fixes
 
+### Reminder Tracking System (27 Nov 2025)
+
+**Feature:** Pasien yang belum diklik WA-nya tetap muncul di data reminder
+
+**Implementation:**
+
+-   Created `reminder_logs` table untuk tracking WA clicks
+-   Auto-create log saat query reminder
+-   Filter hanya pasien yang belum diklik WA
+-   Auto-mark sebagai "clicked" saat tombol WhatsApp diklik
+-   Row hilang otomatis setelah WA diklik (fade out animation)
+
+**How it works:**
+
+1. Saat akses halaman reminder, system create log untuk setiap reminder hari ini
+2. Hanya tampilkan reminder yang `wa_clicked = false`
+3. Saat user klik tombol WhatsApp:
+    - Browser buka WA (new tab)
+    - AJAX mark log sebagai clicked
+    - Row fade out dan hilang dari list
+4. Next day: Reminder baru akan muncul lagi jika memenuhi kriteria
+
+**Benefits:**
+
+-   No duplicate reminders di hari yang sama
+-   Track siapa yang klik & kapan
+-   Persistent: Pasien tetap muncul sampai WA benar-benar diklik
+-   Clean UI: Auto-remove setelah action
+
 ### Kasir Calculation Fix (27 Nov 2025)
 
 **Problem:** Perhitungan total di kasir/pembayaran tidak akurat
 
--   E-25112705: DB menunjukkan Rp 513k (seharusnya Rp 363k)
--   E-25111801: DB menunjukkan Rp 210k (seharusnya Rp 213k)
+-   Contoh: Encounter tertentu menunjukkan total Rp 513k di DB (seharusnya Rp 363k)
+-   Contoh: Encounter lain menunjukkan total Rp 210k di DB (seharusnya Rp 213k)
 
 **Root Cause:**
 

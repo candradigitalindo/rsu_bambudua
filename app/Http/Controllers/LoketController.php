@@ -6,6 +6,7 @@ use App\Models\Berita;
 use App\Models\Encounter;
 use App\Repositories\LoketRepository;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use RealRashid\SweetAlert\Facades\Alert;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\TransaksiTindakanExport;
@@ -163,5 +164,22 @@ class LoketController extends Controller
     {
         $encounters = $this->loketRepository->getReminderEncounter();
         return view('pages.loket.reminder_encounter', compact('encounters'));
+    }
+
+    // Mark reminder as clicked
+    public function markReminderClicked($logId)
+    {
+        $log = \App\Models\ReminderLog::findOrFail($logId);
+
+        $log->update([
+            'wa_clicked' => true,
+            'clicked_at' => now(),
+            'clicked_by' => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reminder marked as clicked'
+        ]);
     }
 }

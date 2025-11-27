@@ -344,6 +344,10 @@
                             $('#kode_resep').html(
                                 `<i class="ri-file-text-line me-1"></i>${data.kode_resep} <span class="badge bg-info ms-2">${data.masa_pemakaian_hari || 0} hari</span>`
                             );
+                            // Set masa_pemakaian_hari di input form jika belum ada
+                            if ($('#masa_pemakaian_hari').val() === '' || $('#masa_pemakaian_hari').val() === '0') {
+                                $('#masa_pemakaian_hari').val(data.masa_pemakaian_hari || 0);
+                            }
                         } else {
                             $('#resep').slideUp();
                             $('#kode_resep').html('<span class="badge bg-secondary">Belum ada resep</span>');

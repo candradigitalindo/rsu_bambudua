@@ -150,6 +150,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('pendaftaran')->group(function () {
         Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran.index');
         Route::get('/caripasien', [PendaftaranController::class, 'cariPasien'])->name('pendaftaran.caripasien');
+        Route::get('/caripasien-json', [PendaftaranController::class, 'cariPasienJson'])->name('pendaftaran.caripasien.json');
         Route::post('/antrian', [PendaftaranController::class, 'update_antrian'])->name('pendaftaran.update_antrian');
 
         // Patient routes
@@ -387,6 +388,7 @@ Route::middleware(['auth'])->group(function () {
 
         // getReminderEncounter
         Route::get('/reminder/getReminderEncounter', [\App\Http\Controllers\LoketController::class, 'getReminderEncounter'])->name('loket.getReminderEncounter');
+        Route::post('/reminder/{logId}/mark-clicked', [\App\Http\Controllers\LoketController::class, 'markReminderClicked'])->name('loket.reminder.markClicked');
     });
 
     // Radiologi
@@ -453,7 +455,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/arsip', [MedicalRecordsController::class, 'arsip'])->name('arsip');
         Route::post('/arsip/upload', [MedicalRecordsController::class, 'arsipUpload'])->name('arsip.upload');
         Route::get('/arsip/list', [MedicalRecordsController::class, 'arsipList'])->name('arsip.list');
-        Route::delete('/arsip/{filename}', [MedicalRecordsController::class, 'arsipDelete'])->name('arsip.delete');
+        Route::delete('/arsip/{id}', [MedicalRecordsController::class, 'arsipDelete'])->name('arsip.delete');
     });
 
     Route::prefix('keuangan')->group(function () {

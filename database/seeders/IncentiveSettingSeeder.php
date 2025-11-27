@@ -13,10 +13,20 @@ class IncentiveSettingSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            ['setting_key' => 'perawat_per_encounter', 'setting_value' => '10000', 'description' => 'Insentif untuk perawat per encounter (RJ/IGD) - flat Rupiah'],
+            // Insentif Perawat per Jenis Pelayanan
+            ['setting_key' => 'perawat_per_encounter_rawat_jalan', 'setting_value' => '10000', 'description' => 'Insentif untuk perawat per encounter Rawat Jalan'],
+            ['setting_key' => 'perawat_per_encounter_igd', 'setting_value' => '15000', 'description' => 'Insentif untuk perawat per encounter IGD'],
+            ['setting_key' => 'perawat_per_encounter_rawat_inap', 'setting_value' => '20000', 'description' => 'Insentif untuk perawat per tindakan Rawat Inap'],
+
+            // Insentif Dokter
             ['setting_key' => 'dokter_per_encounter', 'setting_value' => '25000', 'description' => 'Insentif untuk dokter per encounter (RJ/IGD) - flat Rupiah'],
             ['setting_key' => 'visit_inap', 'setting_value' => '50000', 'description' => 'Insentif untuk dokter per visit rawat inap - flat Rupiah'],
+
+            // Pengaturan Umum
             ['setting_key' => 'cutoff_day', 'setting_value' => '25', 'description' => 'Tanggal batas (cut-off) untuk perhitungan gaji dan insentif bulanan.'],
+
+            // Backward compatibility (deprecated)
+            ['setting_key' => 'perawat_per_encounter', 'setting_value' => '10000', 'description' => 'DEPRECATED: Gunakan perawat_per_encounter_rawat_jalan'],
             // Penunjang - dukung flat / persen per jenis
             ['setting_key' => 'fee_lab_mode', 'setting_value' => '1', 'description' => 'Mode fee Lab: 0=flat, 1=percent'],
             ['setting_key' => 'fee_lab_value', 'setting_value' => '10', 'description' => 'Nilai fee Lab (Rupiah jika flat, persen jika percent)'],

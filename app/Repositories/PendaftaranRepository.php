@@ -631,14 +631,26 @@ class PendaftaranRepository
     {
         $encounter = Encounter::findOrFail($id);
         Practitioner::where('encounter_id', $encounter->id)->delete();
-        if ($request->filled('dokter') && is_array($request->dokter)) {
-            $dokters = User::whereIn('id', $request->dokter)->get();
-            foreach ($dokters as $dokter) {
+
+        // Get the selected dokter spesialis (DPJP)
+        $dokterSpesialisId = $request->dokter;
+        $dokterSpesialis = null;
+
+        if ($dokterSpesialisId) {
+            $dokterSpesialis = User::find($dokterSpesialisId);
+
+            if ($dokterSpesialis) {
+                // Set DPJP on encounter
+                $encounter->update([
+                    'dpjp_id' => $dokterSpesialis->id
+                ]);
+
+                // Create Practitioner entry for the dokter spesialis
                 Practitioner::create([
                     'encounter_id' => $encounter->id,
-                    'name'         => $dokter->name,
-                    'id_petugas'   => $dokter->id,
-                    'satusehat_id' => $dokter->satusehat_id
+                    'name'         => $dokterSpesialis->name,
+                    'id_petugas'   => $dokterSpesialis->id,
+                    'satusehat_id' => $dokterSpesialis->satusehat_id
                 ]);
             }
         }
@@ -646,8 +658,9 @@ class PendaftaranRepository
         $encounter->admission->update([
             'ruang_id' => $request->ruang_id,
             'ruangan_id' => $request->ruangan,
-            'nama_dokter' => isset($dokters) ? $dokters->pluck('name')->implode(', ') : ($encounter->admission->nama_dokter ?? null),
+            'nama_dokter' => $dokterSpesialis ? $dokterSpesialis->name : ($encounter->admission->nama_dokter ?? null),
         ]);
+
         $patient_companions = PatientCompanion::where('admission_id', $encounter->admission->id)->first();
         if (!$patient_companions) {
             PatientCompanion::create([

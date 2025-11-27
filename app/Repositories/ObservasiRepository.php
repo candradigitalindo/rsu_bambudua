@@ -850,7 +850,7 @@ class ObservasiRepository
         $originalStatus = $encounter->status;
 
         if ($request->status_pulang == 3) {
-            $this->handleRujukanRawatInap($encounter);
+            $this->handleRujukanRawatInap($encounter, $request->dokter_spesialis_id);
         } else {
             Pasien::where('rekam_medis', $encounter->rekam_medis)
                 ->update(['status' => 0]);
@@ -895,7 +895,7 @@ class ObservasiRepository
         ];
     }
 
-    private function handleRujukanRawatInap(Encounter $encounter)
+    private function handleRujukanRawatInap(Encounter $encounter, $dokterSpesialisId = null)
     {
         $pasien = Pasien::where('rekam_medis', $encounter->rekam_medis)->first();
         if (!$pasien) {
@@ -907,8 +907,8 @@ class ObservasiRepository
         $count = Encounter::whereDate('created_at', now()->toDateString())->count();
         $noEncounter = now()->format('ymd') . str_pad($count + 1, 2, '0', STR_PAD_LEFT);
 
-        // Copy dpjp_id dari encounter sebelumnya
-        $dpjpId = $encounter->dpjp_id;
+        // Gunakan dokter spesialis yang dipilih, fallback ke dpjp_id dari encounter sebelumnya
+        $dpjpId = $dokterSpesialisId ?: $encounter->dpjp_id;
 
         $newEncounter = Encounter::create([
             'no_encounter'        => $noEncounter,
@@ -921,6 +921,19 @@ class ObservasiRepository
             'created_by'          => Auth::id(),
             'dpjp_id'             => $dpjpId
         ]);
+
+        // Tambahkan practitioner untuk dokter spesialis
+        if ($dpjpId) {
+            $dokter = \App\Models\User::find($dpjpId);
+            if ($dokter) {
+                \App\Models\Practitioner::create([
+                    'encounter_id' => $newEncounter->id,
+                    'name'         => $dokter->name,
+                    'id_petugas'   => $dokter->id,
+                    'satusehat_id' => $dokter->satusehat_id
+                ]);
+            }
+        }
 
         // Buat data admisi rawat inap
         InpatientAdmission::create([
@@ -939,43 +952,28 @@ class ObservasiRepository
         $now = now();
         $incentivesToCreate = [];
 
-        // Insentif Perawat Rawat Jalan (type 1) - dari bonus_perawat tindakan
-        if ($encounter->type == 1 && !empty($perawatIds)) {
-            $tindakanEncounters = \App\Models\TindakanEncounter::where('encounter_id', $encounter->id)
-                ->with('tindakan:id,name,bonus_perawat')
-                ->get();
+        // Ambil setting insentif
+        $settings = IncentiveSetting::whereIn('setting_key', [
+            'perawat_per_encounter_rawat_jalan',
+            'perawat_per_encounter_igd',
+            'perawat_per_encounter_rawat_inap'
+        ])->pluck('setting_value', 'setting_key');
 
+        $amountPerawatRJ = $settings['perawat_per_encounter_rawat_jalan'] ?? 0;
+        $amountPerawatIGD = $settings['perawat_per_encounter_igd'] ?? 0;
+        $amountPerawatInap = $settings['perawat_per_encounter_rawat_inap'] ?? 0;
+
+        // Insentif Perawat Rawat Jalan (type 1) - fixed amount per encounter
+        if ($encounter->type == 1 && $amountPerawatRJ > 0 && !empty($perawatIds)) {
             foreach ($perawatIds as $perawatId) {
-                $totalBonus = 0;
-                foreach ($tindakanEncounters as $te) {
-                    if ($te->tindakan && $te->tindakan->bonus_perawat > 0) {
-                        $totalBonus += ($te->tindakan->bonus_perawat * $te->qty);
-                    }
-                }
-
-                if ($totalBonus > 0) {
-                    $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $totalBonus, 'encounter_rawat_jalan', $encounter, $now);
-                }
+                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawatRJ, 'encounter_rawat_jalan', $encounter, $now);
             }
         }
 
-        // Insentif Perawat IGD (type 3) - dari bonus_perawat tindakan
-        if ($encounter->type == 3 && !empty($perawatIds)) {
-            $tindakanEncounters = \App\Models\TindakanEncounter::where('encounter_id', $encounter->id)
-                ->with('tindakan:id,name,bonus_perawat')
-                ->get();
-
+        // Insentif Perawat IGD (type 3) - fixed amount per encounter
+        if ($encounter->type == 3 && $amountPerawatIGD > 0 && !empty($perawatIds)) {
             foreach ($perawatIds as $perawatId) {
-                $totalBonus = 0;
-                foreach ($tindakanEncounters as $te) {
-                    if ($te->tindakan && $te->tindakan->bonus_perawat > 0) {
-                        $totalBonus += ($te->tindakan->bonus_perawat * $te->qty);
-                    }
-                }
-
-                if ($totalBonus > 0) {
-                    $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $totalBonus, 'encounter_igd', $encounter, $now);
-                }
+                $incentivesToCreate[] = $this->buildIncentiveData($perawatId, $amountPerawatIGD, 'encounter_igd', $encounter, $now);
             }
         }
 
@@ -1010,25 +1008,18 @@ class ObservasiRepository
             }
         }
 
-        // Insentif Rawat Inap (type 2) - dari honor_dokter dan bonus_perawat tindakan
-        if ($encounter->type == 2) {
+        // Insentif Rawat Inap (type 2) - fixed amount per tindakan
+        if ($encounter->type == 2 && $amountPerawatInap > 0) {
             $inpatientAdmission = InpatientAdmission::where('encounter_id', $encounter->id)->first();
             if ($inpatientAdmission) {
-                // Insentif Perawat (Tindakan Rawat Inap) - ambil dari bonus_perawat per tindakan
+                // Insentif Perawat (Tindakan Rawat Inap) - fixed amount per treatment
                 $treatments = InpatientTreatment::where('admission_id', $inpatientAdmission->id)
-                    ->with(['performedBy', 'tindakan:id,name,bonus_perawat'])
+                    ->with('performedBy')
                     ->whereHas('performedBy', fn($q) => $q->where('role', 3)) // Perawat
                     ->get();
 
                 foreach ($treatments as $treatment) {
-                    $bonusAmount = 0;
-                    if ($treatment->tindakan && $treatment->tindakan->bonus_perawat > 0) {
-                        $bonusAmount = $treatment->tindakan->bonus_perawat * ($treatment->quantity ?? 1);
-                    }
-
-                    if ($bonusAmount > 0) {
-                        $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $bonusAmount, 'treatment_inap', $encounter, $now);
-                    }
+                    $incentivesToCreate[] = $this->buildIncentiveData($treatment->performed_by, $amountPerawatInap, 'treatment_inap', $encounter, $now);
                 }
 
                 // Insentif Dokter (Visit Rawat Inap) - ambil dari honor_dokter per tindakan

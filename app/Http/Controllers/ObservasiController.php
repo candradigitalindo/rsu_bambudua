@@ -842,9 +842,13 @@ class ObservasiController extends Controller
             // Validasi perawat_ids, wajib jika tipe encounter adalah 1 (RJ) atau 3 (IGD)
             'perawat_ids' => 'required_if:encounter.type,1,3|array',
             'perawat_ids.*' => 'exists:users,id',
+            // Validasi dokter_spesialis_id, wajib jika status_pulang = 3 (Rujukan Rawat Inap)
+            'dokter_spesialis_id' => 'required_if:status_pulang,3|exists:users,id',
         ], [
             'perawat_ids.required_if' => 'Perawat harus dipilih untuk Rawat Jalan atau Rawat Darurat.',
-            'perawat_ids.array' => 'Format data perawat tidak valid.'
+            'perawat_ids.array' => 'Format data perawat tidak valid.',
+            'dokter_spesialis_id.required_if' => 'Dokter Spesialis harus dipilih untuk rujukan rawat inap.',
+            'dokter_spesialis_id.exists' => 'Dokter Spesialis tidak valid.',
         ]);
         $result = $this->observasiRepository->postCatatanEncounter($request, $id);
         return response()->json($result);

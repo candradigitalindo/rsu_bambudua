@@ -444,7 +444,7 @@ class PendaftaranController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'jenis_jaminan'     => 'required|string',
-            'dokter'            => 'required|array',
+            'dokter'            => 'required|exists:users,id',
             'name_companion'   => 'required|string',
             'nik_companion'     => 'nullable|string',
             'phone_companion'   => 'required|string',
@@ -453,7 +453,8 @@ class PendaftaranController extends Controller
 
         ], [
             'jenis_jaminan.required'    => 'Kolom Jenis Jaminan masih kosong',
-            'dokter.required'           => 'Kolom Dokter harus dipilih',
+            'dokter.required'           => 'Kolom Dokter Spesialis (DPJP) harus dipilih',
+            'dokter.exists'             => 'Dokter Spesialis yang dipilih tidak valid',
             'phone_companion.required'  => 'Kolom Telepon Pendamping masih kosong',
             'relation_companion.required' => 'Kolom Hubungan Pendamping masih kosong',
             'name_companion.required'   => 'Kolom Nama Pendamping masih kosong',

@@ -805,12 +805,15 @@
                                         </div>
                                         <div class="col-xxl-4 col-lg-4 col-sm-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="dokter_rawatRinap">Dokter</label>
+                                                <label class="form-label" for="dokter_rawatRinap">
+                                                    <i class="ri-stethoscope-line me-1 text-primary"></i>
+                                                    Dokter Spesialis (DPJP)
+                                                </label>
                                                 <span class="text-danger">*</span>
                                                 <div class="input-group">
                                                     <select class="form-select" name="dokter_rawatRinap"
                                                         id="dokter_rawatRinap">
-                                                        <option value="">-- Pilih Dokter --</option>
+                                                        <option value="">-- Pilih Dokter Spesialis --</option>
                                                         @foreach ($doctors as $doctor)
                                                             <option value="{{ $doctor->id }}">{{ $doctor->name }}
                                                             </option>
@@ -1040,9 +1043,13 @@
                                                     </div>
                                                     <!-- Alternatif pemilihan cepat: checkbox + pencarian -->
                                                     <div class="mt-2">
-                                                        <input type="text" id="igdDoctorSearch" class="form-control form-control-sm mb-2" placeholder="Cari dokter...">
-                                                        <div id="igdDoctorList" class="border rounded p-2" style="max-height: 180px; overflow-y: auto;"></div>
-                                                        <small class="text-muted">Centang untuk memilih. Pilihan tersinkron dengan dropdown di atas.</small>
+                                                        <input type="text" id="igdDoctorSearch"
+                                                            class="form-control form-control-sm mb-2"
+                                                            placeholder="Cari dokter...">
+                                                        <div id="igdDoctorList" class="border rounded p-2"
+                                                            style="max-height: 180px; overflow-y: auto;"></div>
+                                                        <small class="text-muted">Centang untuk memilih. Pilihan tersinkron
+                                                            dengan dropdown di atas.</small>
                                                     </div>
                                                 </div>
 
@@ -1622,45 +1629,56 @@
             // Muat dokter IGD via AJAX ketika modal dibuka dan sinkronkan dengan checkbox
             function syncIgdCheckboxWithSelect() {
                 const selected = [];
-                $('#igdDoctorList input[type="checkbox"]:checked').each(function(){ selected.push($(this).val()); });
+                $('#igdDoctorList input[type="checkbox"]:checked').each(function() {
+                    selected.push($(this).val());
+                });
                 $('#dokter_rawatDarurat').val(selected).trigger('change');
             }
+
             function renderIgdDoctorCheckboxes(list) {
                 const $box = $('#igdDoctorList');
                 $box.empty();
-                (list || []).forEach(function(d){
+                (list || []).forEach(function(d) {
                     const id = 'igd-doc-' + d.id;
-                    const checked = ($('#dokter_rawatDarurat').val() || []).includes(String(d.id)) ? 'checked' : '';
-                    $box.append('<div class="form-check form-check-sm"><input class="form-check-input" type="checkbox" value="'+d.id+'" id="'+id+'" '+checked+'><label class="form-check-label" for="'+id+'">'+d.name+'</label></div>');
+                    const checked = ($('#dokter_rawatDarurat').val() || []).includes(String(d.id)) ?
+                        'checked' : '';
+                    $box.append(
+                        '<div class="form-check form-check-sm"><input class="form-check-input" type="checkbox" value="' +
+                        d.id + '" id="' + id + '" ' + checked +
+                        '><label class="form-check-label" for="' + id + '">' + d.name + '</label></div>'
+                        );
                 });
                 // Bind change handler
                 $('#igdDoctorList input[type="checkbox"]').off('change').on('change', syncIgdCheckboxWithSelect);
                 // Filter by search
-                $('#igdDoctorSearch').off('keyup').on('keyup', function(){
+                $('#igdDoctorSearch').off('keyup').on('keyup', function() {
                     const q = $(this).val().toLowerCase();
-                    $('#igdDoctorList .form-check').each(function(){
+                    $('#igdDoctorList .form-check').each(function() {
                         const txt = $(this).text().toLowerCase();
                         $(this).toggle(txt.indexOf(q) !== -1);
                     });
                 });
             }
+
             function loadIgdDoctors() {
                 const $sel = $('#dokter_rawatDarurat');
                 $.get("{{ route('pendaftaran.getAllDoctors') }}")
-                    .done(function(list){
+                    .done(function(list) {
                         $sel.find('option:not(:first)').remove();
-                        (list || []).forEach(function(d){ $sel.append(new Option(d.name, d.id)); });
+                        (list || []).forEach(function(d) {
+                            $sel.append(new Option(d.name, d.id));
+                        });
                         $sel.trigger('change.select2');
                         renderIgdDoctorCheckboxes(list || []);
                     })
-                    .fail(function(xhr){
+                    .fail(function(xhr) {
                         console.error('Gagal memuat daftar dokter IGD:', xhr.status, xhr.responseText);
                     });
             }
             $('#modal-rawatDarurat').on('shown.bs.modal', loadIgdDoctors);
-            $('#dokter_rawatDarurat').on('change', function(){
+            $('#dokter_rawatDarurat').on('change', function() {
                 const values = $(this).val() || [];
-                $('#igdDoctorList input[type="checkbox"]').each(function(){
+                $('#igdDoctorList input[type="checkbox"]').each(function() {
                     $(this).prop('checked', values.includes($(this).val()));
                 });
             });

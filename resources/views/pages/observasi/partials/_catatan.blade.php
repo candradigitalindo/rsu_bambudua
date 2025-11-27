@@ -271,6 +271,40 @@
                     </div>
                 </div>
 
+                <!-- Field Dokter Spesialis untuk Rujukan Rawat Inap -->
+                <div class="row gx-3 mb-4 d-none" id="dokter-spesialis-section">
+                    <div class="col-12">
+                        <div class="alert alert-info border-0 shadow-sm">
+                            <i class="ri-hospital-line me-2"></i>
+                            <strong>Rujukan ke Rawat Inap</strong> - Pilih dokter spesialis yang akan menangani pasien
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold" for="dokter_spesialis_id">
+                            <i class="ri-user-star-line text-primary me-1"></i>Dokter Spesialis
+                            <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select select2" id="dokter_spesialis_id" name="dokter_spesialis_id"
+                            style="width: 100%;">
+                            <option value="">-- Pilih Dokter Spesialis --</option>
+                            @foreach ($dokters['dokters'] as $dokter)
+                                @if ($dokter->role == 2)
+                                    <option value="{{ $dokter->id }}">
+                                        [{{ $dokter->id_petugas }}] {{ $dokter->name }}
+                                        @if ($dokter->spesialis)
+                                            - {{ $dokter->spesialis->name }}
+                                        @endif
+                                    </option>
+                                @endif
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">
+                            <i class="ri-information-line"></i> Dokter yang akan bertanggung jawab di rawat inap
+                        </small>
+                        <p class="text-danger mb-0" id="error-dokter-spesialis"></p>
+                    </div>
+                </div>
+
                 <hr class="my-4">
                 <div class="d-flex justify-content-end gap-2">
                     <button type="button" class="btn btn-outline-secondary">
@@ -448,6 +482,11 @@
                         allowClear: true,
                         width: '100%'
                     });
+                    $('#dokter_spesialis_id').select2({
+                        placeholder: 'Pilih Dokter Spesialis',
+                        allowClear: true,
+                        width: '100%'
+                    });
                 }
                 loadEncounterSummary();
             });
@@ -516,16 +555,43 @@
                     });
             });
 
+            // Toggle Dokter Spesialis Section
+            $('#status_pulang').on('change', function() {
+                const statusPulang = $(this).val();
+                if (statusPulang == '3') { // Rujukan Rawat Inap
+                    $('#dokter-spesialis-section').removeClass('d-none');
+                    $('#dokter_spesialis_id').prop('required', true);
+                } else {
+                    $('#dokter-spesialis-section').addClass('d-none');
+                    $('#dokter_spesialis_id').prop('required', false);
+                    $('#dokter_spesialis_id').val('').trigger('change');
+                    $('#error-dokter-spesialis').text('');
+                }
+            });
+
             // Selesai Pemeriksaan (Simpan Catatan)
             $(document).on('click', '#btn-simpan-catatan', function(e) {
                 e.preventDefault();
                 const status_pulang = $('#status_pulang').val();
                 const perawat_ids = $('#perawat_ids').val();
+                const dokter_spesialis_id = $('#dokter_spesialis_id').val();
                 const catatan = (window.quillCatatan && quillCatatan.root) ? quillCatatan.root.innerHTML : '';
+
                 if (!status_pulang) {
                     alert('Status Pulang tidak boleh kosong');
                     return;
                 }
+
+                // Validasi dokter spesialis jika rujukan rawat inap
+                if (status_pulang == '3' && !dokter_spesialis_id) {
+                    $('#error-dokter-spesialis').text(
+                    'Dokter Spesialis harus dipilih untuk rujukan rawat inap');
+                    $('#dokter_spesialis_id').focus();
+                    return;
+                } else {
+                    $('#error-dokter-spesialis').text('');
+                }
+
                 $('#spinner-simpan-catatan').removeClass('d-none');
                 $('#text-simpan-catatan').addClass('d-none');
                 $('#btn-simpan-catatan').prop('disabled', true);
@@ -536,7 +602,8 @@
                             _token: "{{ csrf_token() }}",
                             catatan,
                             status_pulang,
-                            perawat_ids
+                            perawat_ids,
+                            dokter_spesialis_id
                         }
                     })
                     .done(function(resp) {

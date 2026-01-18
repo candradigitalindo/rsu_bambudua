@@ -611,13 +611,28 @@
                                                             name="payment_methods[0][method]" required>
                                                             <option value="" disabled selected>Pilih Metode</option>
                                                             @forelse(($paymentMethods ?? []) as $pm)
-                                                                <option value="{{ $pm->code }}">{{ $pm->name }}
+                                                                <option value="{{ $pm->code }}"
+                                                                    data-fee-type="{{ $pm->fee_type }}"
+                                                                    data-fee-percentage="{{ $pm->fee_percentage }}"
+                                                                    data-fee-fixed="{{ $pm->fee_fixed }}">
+                                                                    {{ $pm->name }}
+                                                                    @if ($pm->fee_type === 'percentage' && $pm->fee_percentage > 0)
+                                                                        (Fee {{ $pm->fee_percentage }}%)
+                                                                    @elseif($pm->fee_type === 'fixed' && $pm->fee_fixed > 0)
+                                                                        (Fee Rp
+                                                                        {{ number_format($pm->fee_fixed, 0, ',', '.') }})
+                                                                    @elseif($pm->fee_type === 'both')
+                                                                        (Fee {{ $pm->fee_percentage }}% + Rp
+                                                                        {{ number_format($pm->fee_fixed, 0, ',', '.') }})
+                                                                    @endif
                                                                 </option>
                                                             @empty
                                                                 <option value="" disabled>Belum ada metode pembayaran
                                                                 </option>
                                                             @endforelse
                                                         </select>
+                                                        <div class="fee-info-display small text-muted mt-1"
+                                                            style="display:none;"></div>
                                                     </div>
                                                     <div class="col-md-6 mb-2">
                                                         <label class="form-label small">Jumlah Bayar</label>
@@ -654,11 +669,21 @@
                                             <span>Total Tagihan:</span>
                                             <strong id="billTotal">Rp 0</strong>
                                         </div>
+                                        <div class="d-flex justify-content-between mb-2" id="feeRow"
+                                            style="display:none;">
+                                            <span>Biaya Admin/Fee:</span>
+                                            <strong id="feeTotal" class="text-warning">Rp 0</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-2" id="grandTotalRow"
+                                            style="display:none;">
+                                            <span><strong>Grand Total:</strong></span>
+                                            <strong id="grandTotal" class="text-danger">Rp 0</strong>
+                                        </div>
+                                        <hr>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span>Total Dibayar:</span>
                                             <strong id="paidTotal" class="text-primary">Rp 0</strong>
                                         </div>
-                                        <hr>
                                         <div class="d-flex justify-content-between mb-3">
                                             <strong>Kembalian / Kurang:</strong>
                                             <strong id="changeAmount" class="text-success">Rp 0</strong>
@@ -740,6 +765,18 @@
             let splitCounter = 1;
             let billTotal = 0;
 
+            // Data metode pembayaran dengan fee dari backend
+            const paymentMethodsData = {!! json_encode(
+                $paymentMethods->keyBy('code')->map(function ($pm) {
+                    return [
+                        'name' => $pm->name,
+                        'fee_type' => $pm->fee_type,
+                        'fee_percentage' => $pm->fee_percentage,
+                        'fee_fixed' => $pm->fee_fixed,
+                    ];
+                }),
+            ) !!};
+
             // Format number to Rupiah
             function formatRupiah(number) {
                 return 'Rp ' + number.toLocaleString('id-ID');
@@ -748,6 +785,46 @@
             // Parse Rupiah to number
             function parseRupiah(rupiah) {
                 return parseInt(rupiah.replace(/[^0-9]/g, '')) || 0;
+            }
+
+            // Calculate fee for a payment method
+            function calculateFee(paymentCode, amount) {
+                if (!paymentMethodsData[paymentCode]) {
+                    return 0;
+                }
+
+                const method = paymentMethodsData[paymentCode];
+                let fee = 0;
+
+                if (method.fee_type === 'percentage') {
+                    fee = amount * (method.fee_percentage / 100);
+                } else if (method.fee_type === 'fixed') {
+                    fee = method.fee_fixed;
+                } else if (method.fee_type === 'both') {
+                    fee = (amount * (method.fee_percentage / 100)) + method.fee_fixed;
+                }
+
+                return Math.round(fee);
+            }
+
+            // Calculate total fee from all payment methods based on bill total
+            function calculateTotalFee() {
+                let totalFee = 0;
+                const allPaymentRows = document.querySelectorAll('.payment-split-row');
+                const currentBillTotal = calculateBillTotal();
+
+                // Hitung fee berdasarkan total tagihan, bukan dari pembayaran
+                allPaymentRows.forEach(row => {
+                    const selectEl = row.querySelector('.payment-method-select');
+
+                    if (selectEl && selectEl.value) {
+                        // Fee dihitung dari total tagihan
+                        const fee = calculateFee(selectEl.value, currentBillTotal);
+                        totalFee += fee;
+                    }
+                });
+
+                return totalFee;
             }
 
             // Format input sebagai Rupiah saat user mengetik
@@ -791,9 +868,50 @@
             function updateCalculations() {
                 const currentBillTotal = calculateBillTotal();
                 const currentPaidTotal = calculatePaidTotal();
-                const difference = currentPaidTotal - currentBillTotal;
+                const currentTotalFee = calculateTotalFee();
+                const currentGrandTotal = currentBillTotal + currentTotalFee;
+                const difference = currentPaidTotal - currentGrandTotal;
+
+                // Update fee display
+                const feeRowEl = document.getElementById('feeRow');
+                const feeTotalEl = document.getElementById('feeTotal');
+                const grandTotalRowEl = document.getElementById('grandTotalRow');
+                const grandTotalEl = document.getElementById('grandTotal');
+
+                if (currentTotalFee > 0) {
+                    feeRowEl.style.display = 'flex';
+                    grandTotalRowEl.style.display = 'flex';
+                    feeTotalEl.textContent = formatRupiah(currentTotalFee);
+                    grandTotalEl.textContent = formatRupiah(currentGrandTotal);
+                } else {
+                    feeRowEl.style.display = 'none';
+                    grandTotalRowEl.style.display = 'none';
+                }
 
                 changeAmountEl.textContent = formatRupiah(Math.abs(difference));
+
+                // Auto-fill payment amount jika ada fee
+                if (currentTotalFee > 0) {
+                    const firstAmountInput = document.querySelector('.payment-amount-input');
+                    const firstAmountHidden = document.querySelector('.payment-amount-hidden');
+                    if (firstAmountInput && firstAmountHidden) {
+                        // Set ke grand total
+                        firstAmountInput.value = formatRupiah(currentGrandTotal).replace('Rp ', '');
+                        firstAmountHidden.value = currentGrandTotal;
+
+                        // Update paidTotal display langsung
+                        paidTotalEl.textContent = formatRupiah(currentGrandTotal);
+
+                        // Kembalian = 0 (pas)
+                        changeDisplayEl.style.display = 'none';
+                        insufficientDisplayEl.style.display = 'none';
+                        changeAmountEl.className = 'text-success';
+
+                        // Update validate form
+                        validateForm();
+                        return; // Skip normal difference display logic
+                    }
+                }
 
                 // Show appropriate display
                 if (difference > 0) {
@@ -823,6 +941,8 @@
             function validateForm() {
                 const currentBillTotal = calculateBillTotal();
                 const currentPaidTotal = calculatePaidTotal();
+                const currentTotalFee = calculateTotalFee();
+                const currentGrandTotal = currentBillTotal + currentTotalFee;
 
                 // Cek apakah ada item yang dipilih
                 const hasCheckedItems = Array.from(paymentItems).some(item => item.checked);
@@ -831,8 +951,16 @@
                 const allMethodSelects = document.querySelectorAll('.payment-method-select');
                 const allMethodsSelected = Array.from(allMethodSelects).every(select => select.value !== '');
 
-                // Cek apakah pembayaran sudah mencukupi
-                const paymentSufficient = currentPaidTotal >= currentBillTotal;
+                // Jika ada fee (fee > 0), langsung bisa proses tanpa input jumlah bayar
+                // Jika tidak ada fee, cek apakah pembayaran sudah mencukupi
+                let paymentSufficient = false;
+                if (currentTotalFee > 0) {
+                    // Ada fee, langsung bisa proses
+                    paymentSufficient = true;
+                } else {
+                    // Tidak ada fee, cek pembayaran harus >= grand total
+                    paymentSufficient = currentPaidTotal >= currentGrandTotal;
+                }
 
                 // Tombol aktif jika: ada item dipilih, semua metode terpilih, dan pembayaran cukup
                 btnProcessPayment.disabled = !hasCheckedItems || !allMethodsSelected || !paymentSufficient ||
@@ -878,6 +1006,11 @@
                 if (e.target.classList.contains('payment-amount-input')) {
                     formatInputRupiah(e.target);
                     updateCalculations();
+                    // Update fee info display for this row
+                    const row = e.target.closest('.payment-split-row');
+                    if (row) {
+                        updateFeeInfoDisplay(row);
+                    }
                 }
             });
 
@@ -889,11 +1022,40 @@
                     const row = e.target.closest('.payment-split-row');
                     if (e.target.value) {
                         row.classList.add('active');
+                        // Update fee info display
+                        updateFeeInfoDisplay(row);
                     } else {
                         row.classList.remove('active');
+                        const feeInfoEl = row.querySelector('.fee-info-display');
+                        if (feeInfoEl) feeInfoEl.style.display = 'none';
                     }
                 }
             });
+
+            // Function to update fee info display for a payment row
+            function updateFeeInfoDisplay(row) {
+                const selectEl = row.querySelector('.payment-method-select');
+                const feeInfoEl = row.querySelector('.fee-info-display');
+
+                if (!selectEl || !selectEl.value || !feeInfoEl) return;
+
+                // Fee dihitung dari total tagihan, bukan dari jumlah pembayaran
+                const currentBillTotal = calculateBillTotal();
+                if (currentBillTotal === 0) {
+                    feeInfoEl.style.display = 'none';
+                    return;
+                }
+
+                const fee = calculateFee(selectEl.value, currentBillTotal);
+
+                if (fee > 0) {
+                    feeInfoEl.innerHTML =
+                        `<i class="ri-information-line"></i> Fee untuk tagihan ${formatRupiah(currentBillTotal)}: <strong>${formatRupiah(fee)}</strong>`;
+                    feeInfoEl.style.display = 'block';
+                } else {
+                    feeInfoEl.style.display = 'none';
+                }
+            }
 
             // Add new split payment row
             addSplitPaymentBtn.addEventListener('click', function() {
@@ -911,9 +1073,22 @@
                                 <select class="form-select payment-method-select" name="payment_methods[${splitCounter}][method]">
                                     <option value="" disabled selected>Pilih Metode</option>
                                     @foreach ($paymentMethods ?? [] as $pm)
-                                        <option value="{{ $pm->code }}">{{ $pm->name }}</option>
+                                        <option value="{{ $pm->code }}"
+                                            data-fee-type="{{ $pm->fee_type }}"
+                                            data-fee-percentage="{{ $pm->fee_percentage }}"
+                                            data-fee-fixed="{{ $pm->fee_fixed }}">
+                                            {{ $pm->name }}
+                                            @if ($pm->fee_type === 'percentage' && $pm->fee_percentage > 0)
+                                                (Fee {{ $pm->fee_percentage }}%)
+                                            @elseif ($pm->fee_type === 'fixed' && $pm->fee_fixed > 0)
+                                                (Fee Rp {{ number_format($pm->fee_fixed, 0, ',', '.') }})
+                                            @elseif ($pm->fee_type === 'both')
+                                                (Fee {{ $pm->fee_percentage }}% + Rp {{ number_format($pm->fee_fixed, 0, ',', '.') }})
+                                            @endif
+                                        </option>
                                     @endforeach
                                 </select>
+                                <div class="fee-info-display small text-muted mt-1" style="display:none;"></div>
                             </div>
                             <div class="col-md-6 mb-2">
                                 <label class="form-label small">Jumlah Bayar</label>
@@ -959,15 +1134,25 @@
             // Form submission validation
             document.getElementById('paymentForm').addEventListener('submit', function(e) {
                 const currentBillTotal = calculateBillTotal();
-                const currentPaidTotal = calculatePaidTotal();
+                let currentPaidTotal = calculatePaidTotal();
+                const currentTotalFee = calculateTotalFee();
+                const currentGrandTotal = currentBillTotal + currentTotalFee;
 
-                if (currentPaidTotal < currentBillTotal) {
+                if (currentPaidTotal < currentGrandTotal) {
                     e.preventDefault();
                     Swal.fire({
                         icon: 'error',
                         title: 'Pembayaran Kurang',
-                        text: 'Jumlah pembayaran masih kurang ' + formatRupiah(currentBillTotal -
-                            currentPaidTotal),
+                        html: `
+                            <div class="text-start">
+                                <p>Total Tagihan: ${formatRupiah(currentBillTotal)}</p>
+                                ${currentTotalFee > 0 ? `<p>Biaya Admin/Fee: ${formatRupiah(currentTotalFee)}</p>` : ''}
+                                ${currentTotalFee > 0 ? `<p><strong>Grand Total: ${formatRupiah(currentGrandTotal)}</strong></p>` : ''}
+                                <p>Total Dibayar: ${formatRupiah(currentPaidTotal)}</p>
+                                <hr>
+                                <p class="text-danger"><strong>Kurang: ${formatRupiah(currentGrandTotal - currentPaidTotal)}</strong></p>
+                            </div>
+                        `,
                         confirmButtonText: 'OK'
                     });
                     return false;
@@ -985,7 +1170,7 @@
                 }
 
                 // Konfirmasi pembayaran untuk semua kasus
-                const kembalian = currentPaidTotal - currentBillTotal;
+                const kembalian = currentPaidTotal - currentGrandTotal;
                 e.preventDefault();
 
                 Swal.fire({
@@ -993,6 +1178,9 @@
                     html: `
                         <div class="text-start">
                             <p><strong>Total Tagihan:</strong> ${formatRupiah(currentBillTotal)}</p>
+                            ${currentTotalFee > 0 ? `<p><strong>Biaya Admin/Fee:</strong> ${formatRupiah(currentTotalFee)}</p>` : ''}
+                            ${currentTotalFee > 0 ? `<p class="text-danger"><strong>Grand Total:</strong> ${formatRupiah(currentGrandTotal)}</p>` : ''}
+                            <hr>
                             <p><strong>Total Dibayar:</strong> ${formatRupiah(currentPaidTotal)}</p>
                             ${kembalian > 0 ? `<p class="text-success"><strong>Kembalian:</strong> ${formatRupiah(kembalian)}</p>` : ''}
                             ${kembalian === 0 ? `<p class="text-info"><strong>Status:</strong> Pembayaran Pas</p>` : ''}

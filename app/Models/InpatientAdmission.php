@@ -46,6 +46,12 @@ class InpatientAdmission extends Model
     {
         return $this->belongsTo(Ruangan::class, 'ruangan_id', 'id');
     }
+
+    public function ruangan()
+    {
+        return $this->belongsTo(Ruangan::class, 'ruangan_id', 'id');
+    }
+
     public function treatments()
     {
         return $this->hasMany(InpatientTreatment::class, 'admission_id');

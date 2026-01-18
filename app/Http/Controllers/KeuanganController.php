@@ -15,6 +15,7 @@ use App\Models\SalaryPayment;
 use Illuminate\Support\Facades\DB;
 use RealRashid\SweetAlert\Facades\Alert;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
 
 class KeuanganController extends Controller
 {
@@ -86,68 +87,113 @@ class KeuanganController extends Controller
             'gaji_dan_insentif' => 'Gaji & Insentif',
         ];
 
-        // Inisialisasi semua data dengan 0
-        foreach ($seriesNames as $key => $name) {
-            $data[$key] = array_fill(0, 12, 0);
+        // Cek role user: jika bukan owner (role != 1), batasi hanya 3 bulan terakhir
+        $isOwner = Auth::check() && Auth::user()->role == 1;
+        $monthsToShow = 12;
+        $startMonth = 1;
+        $currentMonth = now()->month; // Deklarasi di luar agar bisa diakses di semua scope
+
+        if (!$isOwner) {
+            // Batasi hanya 3 bulan terakhir
+            $monthsToShow = 3;
+            $startMonth = max(1, $currentMonth - 2); // 3 bulan terakhir
+
+            // Filter nama bulan untuk 3 bulan terakhir
+            $namaBulan = array_slice($namaBulan, $startMonth - 1, $monthsToShow);
         }
 
-        // Ambil data dari DB
+        // Inisialisasi semua data dengan 0
+        foreach ($seriesNames as $key => $name) {
+            $data[$key] = array_fill(0, $monthsToShow, 0);
+        }
+
+        // Ambil data dari DB dengan filter bulan jika bukan owner
         $pendapatanTindakan = Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_tindakan) as total')
             ->where('status_bayar_tindakan', 1)
             ->whereYear('updated_at', $year)
+            ->when(!$isOwner, function ($query) use ($startMonth, $currentMonth) {
+                $query->whereRaw('MONTH(updated_at) >= ? AND MONTH(updated_at) <= ?', [$startMonth, $currentMonth]);
+            })
             ->groupBy('bulan')
             ->get();
 
         $pendapatanFarmasi = Encounter::selectRaw('MONTH(updated_at) as bulan, SUM(total_bayar_resep) as total')
             ->where('status_bayar_resep', 1)
             ->whereYear('updated_at', $year)
+            ->when(!$isOwner, function ($query) use ($startMonth, $currentMonth) {
+                $query->whereRaw('MONTH(updated_at) >= ? AND MONTH(updated_at) <= ?', [$startMonth, $currentMonth]);
+            })
             ->groupBy('bulan')
             ->get();
 
         $pendapatanLainnya = OtherIncome::selectRaw('MONTH(income_date) as bulan, SUM(amount) as total')
             ->whereYear('income_date', $year)
+            ->when(!$isOwner, function ($query) use ($startMonth, $currentMonth) {
+                $query->whereRaw('MONTH(income_date) >= ? AND MONTH(income_date) <= ?', [$startMonth, $currentMonth]);
+            })
             ->groupBy('bulan')
             ->get();
 
         $pengeluaranOperasional = OperationalExpense::selectRaw('MONTH(expense_date) as bulan, SUM(amount) as total')
             ->whereYear('expense_date', $year)
+            ->when(!$isOwner, function ($query) use ($startMonth, $currentMonth) {
+                $query->whereRaw('MONTH(expense_date) >= ? AND MONTH(expense_date) <= ?', [$startMonth, $currentMonth]);
+            })
             ->groupBy('bulan')
             ->get();
 
         $gajiTahunan = SalaryPayment::selectRaw('month as bulan, SUM(amount) as total')
             ->where('status', 'paid')
             ->where('year', $year)
+            ->when(!$isOwner, function ($query) use ($startMonth, $currentMonth) {
+                $query->whereRaw('month >= ? AND month <= ?', [$startMonth, $currentMonth]);
+            })
             ->groupBy('bulan')
             ->get();
 
         // Isi data yang ada dari DB
         foreach ($pendapatanTindakan as $result) {
             if ($result->bulan) {
-                $data['pendapatan_tindakan'][$result->bulan - 1] = (float)$result->total;
+                $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
+                if ($index >= 0 && $index < $monthsToShow) {
+                    $data['pendapatan_tindakan'][$index] = (float)$result->total;
+                }
             }
         }
 
         foreach ($pendapatanFarmasi as $result) {
             if ($result->bulan) {
-                $data['pendapatan_farmasi'][$result->bulan - 1] = (float)$result->total;
+                $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
+                if ($index >= 0 && $index < $monthsToShow) {
+                    $data['pendapatan_farmasi'][$index] = (float)$result->total;
+                }
             }
         }
 
         foreach ($pendapatanLainnya as $result) {
             if ($result->bulan) {
-                $data['pendapatan_lainnya'][$result->bulan - 1] = (float)$result->total;
+                $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
+                if ($index >= 0 && $index < $monthsToShow) {
+                    $data['pendapatan_lainnya'][$index] = (float)$result->total;
+                }
             }
         }
 
         foreach ($pengeluaranOperasional as $result) {
             if ($result->bulan) {
-                $data['pengeluaran_operasional'][$result->bulan - 1] = (float)$result->total;
+                $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
+                if ($index >= 0 && $index < $monthsToShow) {
+                    $data['pengeluaran_operasional'][$index] = (float)$result->total;
+                }
             }
         }
 
         foreach ($gajiTahunan as $result) {
             if ($result->bulan) {
-                $data['gaji_dan_insentif'][$result->bulan - 1] = (float)$result->total;
+                $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
+                if ($index >= 0 && $index < $monthsToShow) {
+                    $data['gaji_dan_insentif'][$index] = (float)$result->total;
+                }
             }
         }
 
@@ -450,5 +496,89 @@ class KeuanganController extends Controller
             'payment_month' => $paymentMonth,
             'payment_year' => $paymentYear,
         ];
+    }
+
+    public function getDetailPendapatan(Request $request)
+    {
+        $query = Encounter::select([
+            'encounters.id',
+            'encounters.no_encounter',
+            'encounters.name_pasien',
+            'encounters.type',
+            'encounters.total_bayar_tindakan',
+            'encounters.total_bayar_resep',
+            'encounters.status_bayar_tindakan',
+            'encounters.status_bayar_resep',
+            'encounters.created_at',
+            DB::raw('(COALESCE(encounters.total_bayar_tindakan, 0) + COALESCE(encounters.total_bayar_resep, 0)) as total_pendapatan')
+        ])
+            ->where(function ($q) {
+                $q->where('status_bayar_tindakan', 1)
+                    ->orWhere('status_bayar_resep', 1);
+            });
+
+        // Filter berdasarkan role (non-owner hanya 3 bulan terakhir)
+        $isOwner = Auth::user()->role == 1;
+
+        if (!$isOwner) {
+            // Non-owner: maksimal 3 bulan terakhir
+            $threeMonthsAgo = now()->subMonths(2)->startOfMonth();
+            $query->where('encounters.created_at', '>=', $threeMonthsAgo);
+        }
+
+        // Filter tanggal dari request (date range picker)
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+
+            // Validasi untuk non-owner: maksimal 3 bulan
+            if (!$isOwner) {
+                $threeMonthsAgo = now()->subMonths(2)->startOfMonth();
+                $requestStartDate = \Carbon\Carbon::parse($startDate);
+
+                // Jika tanggal awal yang diminta lebih awal dari 3 bulan terakhir, paksa ke 3 bulan terakhir
+                if ($requestStartDate->lt($threeMonthsAgo)) {
+                    $startDate = $threeMonthsAgo->format('Y-m-d');
+                }
+            }
+
+            $query->whereBetween('encounters.created_at', [
+                $startDate . ' 00:00:00',
+                $endDate . ' 23:59:59'
+            ]);
+        }
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('pasien', function ($row) {
+                return $row->name_pasien ?? '-';
+            })
+            ->addColumn('tanggal', function ($row) {
+                return $row->created_at->format('d/m/Y H:i');
+            })
+            ->addColumn('tipe', function ($row) {
+                return $row->type;
+            })
+            ->addColumn('pendapatan_tindakan', function ($row) {
+                return $row->total_bayar_tindakan ?? 0;
+            })
+            ->addColumn('pendapatan_farmasi', function ($row) {
+                return $row->total_bayar_resep ?? 0;
+            })
+            ->addColumn('total_pendapatan', function ($row) {
+                return $row->total_pendapatan;
+            })
+            ->addColumn('status_bayar', function ($row) {
+                $badges = [];
+                if ($row->status_bayar_tindakan == 1) {
+                    $badges[] = '<span class="badge bg-success">Tindakan Lunas</span>';
+                }
+                if ($row->status_bayar_resep == 1) {
+                    $badges[] = '<span class="badge bg-success">Farmasi Lunas</span>';
+                }
+                return implode(' ', $badges);
+            })
+            ->rawColumns(['status_bayar'])
+            ->make(true);
     }
 }

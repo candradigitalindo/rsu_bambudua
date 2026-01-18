@@ -189,8 +189,19 @@
 
                     {{-- Detail Tindakan --}}
                     @if ($hasTindakan)
+                        @php
+                            $paidTindakanItems = $paidItems['tindakan_items'] ?? [];
+                        @endphp
                         @foreach ($enc->tindakan as $tindakan)
                             @php
+                                // Cek apakah tindakan ini dibayar
+                                $itemKey = 'tindakan-' . $enc->id . '-' . $tindakan->id;
+                                $isPaid = empty($paidTindakanItems) || in_array($itemKey, $paidTindakanItems);
+
+                                if (!$isPaid) {
+                                    continue;
+                                } // Skip jika tidak dibayar
+
                                 $hargaSatuan =
                                     $tindakan->tindakan_harga ?? $tindakan->total_harga / ($tindakan->qty ?: 1);
                                 $subtotal = $tindakan->total_harga ?? $hargaSatuan * $tindakan->qty;
@@ -210,6 +221,14 @@
                         @foreach ($enc->labRequests as $labReq)
                             @foreach ($labReq->items as $item)
                                 @php
+                                    // Cek apakah lab item ini dibayar
+                                    $itemKey = 'lab-' . $enc->id . '-' . $item->id;
+                                    $isPaid = empty($paidTindakanItems) || in_array($itemKey, $paidTindakanItems);
+
+                                    if (!$isPaid) {
+                                        continue;
+                                    } // Skip jika tidak dibayar
+
                                     $hargaLab = $item->price ?? 0;
                                     $grandTotal += $hargaLab;
                                 @endphp
@@ -227,6 +246,14 @@
                     @if ($hasTindakan)
                         @foreach ($enc->radiologyRequests as $radReq)
                             @php
+                                // Cek apakah radiologi item ini dibayar
+                                $itemKey = 'radiologi-' . $enc->id . '-' . $radReq->id;
+                                $isPaid = empty($paidTindakanItems) || in_array($itemKey, $paidTindakanItems);
+
+                                if (!$isPaid) {
+                                    continue;
+                                } // Skip jika tidak dibayar
+
                                 $hargaRad = $radReq->price ?? 0;
                                 $grandTotal += $hargaRad;
                                 $namaRadiologi = $radReq->jenis->name ?? 'Radiologi';
@@ -242,8 +269,19 @@
 
                     {{-- Detail Resep/Obat --}}
                     @if ($hasResep && $enc->resep)
+                        @php
+                            $paidResepItems = $paidItems['resep_items'] ?? [];
+                        @endphp
                         @foreach ($enc->resep->details as $detail)
                             @php
+                                // Cek apakah resep ini dibayar (format: resep-encounter_id-resep_id)
+                                $itemKey = 'resep-' . $enc->id . '-' . $enc->resep->id;
+                                $isPaid = empty($paidResepItems) || in_array($itemKey, $paidResepItems);
+
+                                if (!$isPaid) {
+                                    continue;
+                                } // Skip jika tidak dibayar
+
                                 $hargaObat = $detail->harga ?? 0;
                                 $qty = $detail->qty ?? 1;
                                 $subtotalObat = $hargaObat * $qty;
@@ -260,12 +298,67 @@
                 @endforeach
             </tbody>
             <tfoot>
+                @php
+                    // Hitung total fee dari semua encounter yang dibayar
+                    $totalFee = 0;
+                    foreach ($encounters as $enc) {
+                        $paidItems = $paid[$enc->id] ?? [];
+                        if (isset($paidItems['tindakan_fee'])) {
+                            $totalFee += $paidItems['tindakan_fee'];
+                        }
+                        if (isset($paidItems['resep_fee'])) {
+                            $totalFee += $paidItems['resep_fee'];
+                        }
+                    }
+                    $finalGrandTotal = $grandTotal + $totalFee;
+                @endphp
+
                 <tr>
-                    <th colspan="3" class="text-end">TOTAL DIBAYAR</th>
+                    <th colspan="3" class="text-end">SUBTOTAL</th>
                     <th class="text-end">Rp {{ number_format($grandTotal, 0, ',', '.') }}</th>
                 </tr>
+
+                @if ($totalFee > 0)
+                    <tr>
+                        <th colspan="3" class="text-end">BIAYA ADMIN/FEE</th>
+                        <th class="text-end">Rp {{ number_format($totalFee, 0, ',', '.') }}</th>
+                    </tr>
+                    <tr style="background-color: #f8f9fa;">
+                        <th colspan="3" class="text-end">GRAND TOTAL</th>
+                        <th class="text-end">Rp {{ number_format($finalGrandTotal, 0, ',', '.') }}</th>
+                    </tr>
+                @else
+                    <tr>
+                        <th colspan="3" class="text-end">TOTAL DIBAYAR</th>
+                        <th class="text-end">Rp {{ number_format($grandTotal, 0, ',', '.') }}</th>
+                    </tr>
+                @endif
             </tfoot>
         </table>
+
+        {{-- Metode Pembayaran --}}
+        @php
+            // Kumpulkan semua metode pembayaran dari encounters yang dibayar
+            $paymentMethodsUsed = [];
+            foreach ($encounters as $enc) {
+                if ($enc->status_bayar_tindakan && $enc->metode_pembayaran_tindakan) {
+                    $paymentMethodsUsed[] = $enc->metode_pembayaran_tindakan;
+                }
+                if ($enc->status_bayar_resep && $enc->metode_pembayaran_resep) {
+                    $paymentMethodsUsed[] = $enc->metode_pembayaran_resep;
+                }
+            }
+            $paymentMethodsUsed = array_unique($paymentMethodsUsed);
+        @endphp
+
+        @if (count($paymentMethodsUsed) > 0)
+            <div style="margin-top: 16px; padding: 12px; background-color: #f8f9fa; border-radius: 4px;">
+                <div style="font-weight: 600; margin-bottom: 8px;">METODE PEMBAYARAN</div>
+                @foreach ($paymentMethodsUsed as $method)
+                    <div style="margin-bottom: 4px;">{{ $method }}</div>
+                @endforeach
+            </div>
+        @endif
 
         {{-- Tagihan Belum Terbayar --}}
         @if (isset($unpaidEncounters) && $unpaidEncounters->count() > 0)

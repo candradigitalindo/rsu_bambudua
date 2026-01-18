@@ -50,6 +50,7 @@
                                     <tr>
                                         <th>No. Kunjungan</th>
                                         <th>Nama Pasien</th>
+                                        <th>Status Kerabat</th>
                                         <th>Jenis Jaminan</th>
                                         <th>Tujuan Kunjungan</th>
                                         <th class="text-center">Status</th>
@@ -61,6 +62,37 @@
                                         <tr>
                                             <td>{{ $encounter->no_encounter }}</td>
                                             <td>{{ $encounter->name_pasien }}</td>
+                                            <td>
+                                                @if ($encounter->pasien)
+                                                    @if ($encounter->pasien->is_kerabat_dokter)
+                                                        <span class="badge bg-primary text-white">
+                                                            <i class="ri-user-heart-line"></i> Kerabat Dokter
+                                                        </span>
+                                                    @endif
+                                                    @if ($encounter->pasien->is_kerabat_karyawan)
+                                                        <span class="badge bg-success text-white">
+                                                            <i class="ri-user-smile-line"></i> Kerabat Karyawan
+                                                        </span>
+                                                    @endif
+                                                    @if ($encounter->pasien->is_kerabat_owner)
+                                                        <span class="badge bg-warning text-dark">
+                                                            <i class="ri-vip-crown-line"></i> Kerabat Owner
+                                                        </span>
+                                                    @endif
+                                                    @if (
+                                                        !$encounter->pasien->is_kerabat_dokter &&
+                                                            !$encounter->pasien->is_kerabat_karyawan &&
+                                                            !$encounter->pasien->is_kerabat_owner)
+                                                        <span class="badge bg-primary text-white">
+                                                            <i class="ri-user-line"></i> Reguler
+                                                        </span>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-secondary text-white">
+                                                        <i class="ri-user-line"></i> Reguler
+                                                    </span>
+                                                @endif
+                                            </td>
                                             <td>{{ $encounter->jenis_jaminan }}</td>
                                             <td>{{ $encounter->tujuan_kunjungan }}</td>
                                             <td class="text-center">

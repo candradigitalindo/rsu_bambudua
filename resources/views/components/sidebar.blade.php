@@ -190,6 +190,10 @@
                             <a class="{{ request()->is('masterdata/reminder-settings*') ? 'active-sub' : '' }}"
                                 href="{{ route('reminder-settings.index') }}">Pengaturan Reminder</a>
                         </li>
+                        <li>
+                            <a class="{{ request()->is('masterdata/payment-methods*') ? 'active-sub' : '' }}"
+                                href="{{ route('payment-methods.index') }}">Metode Pembayaran</a>
+                        </li>
 
                     </ul>
                 </li>
@@ -218,7 +222,7 @@
                             <a class="{{ request()->is('kunjungan/rawatDarurat*') ? 'active-sub' : '' }}"
                                 href="{{ route('kunjungan.rawatDarurat') }}">IGD</a>
                         </li>
-                        @if (in_array(auth()->user()->role, [3, 1]))
+                        @if (in_array(auth()->user()->role, [2, 3, 1]))
                             <li>
                                 <a class="{{ request()->is('kunjungan/dashboard-bed-perawat') ? 'active-sub' : '' }}"
                                     href="{{ route('kunjungan.nurse-bed-dashboard') }}">

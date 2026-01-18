@@ -8,6 +8,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Pasien;
 use Illuminate\Support\Facades\DB;
 use App\Models\PaymentMethod;
+use App\Models\TindakanEncounter;
+use App\Models\LabRequestItem;
+use App\Models\RadiologyRequest;
+use App\Models\Resep;
 use Illuminate\Http\Request;
 
 class KasirController extends Controller
@@ -124,7 +128,7 @@ class KasirController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Ambil juga encounter yang sudah dibayar (riwayat) untuk ditampilkan
+        // Ambil encounter yang sudah dibayar terakhir (riwayat) untuk ditampilkan
         $paidEncounters = Encounter::with([
             'tindakan',
             'resep.details',
@@ -138,6 +142,7 @@ class KasirController extends Controller
                     ->orWhere(fn($q) => $q->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 1));
             })
             ->orderBy('updated_at', 'desc')
+            ->limit(1)
             ->get();
 
         $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
@@ -192,8 +197,7 @@ class KasirController extends Controller
             'encounters_keys' => $encounters->keys()->toArray()
         ]);
 
-        // Hitung total tagihan dari encounter yang dipilih
-        // Group items by type untuk menentukan apakah ada tindakan atau resep
+        // Hitung total tagihan dari items yang BENAR-BENAR DIPILIH (item-by-item)
         $totalBill = 0;
         $itemsByType = collect($itemsToPay)->map(function ($item) {
             // Ambil type saja (bagian pertama sebelum dash pertama)
@@ -201,28 +205,49 @@ class KasirController extends Controller
             return $firstDash !== false ? substr($item, 0, $firstDash) : $item;
         });
 
-        foreach ($encounters as $encounterId => $encounter) {
-            $hasTindakan = $itemsByType->contains(function ($type) {
-                return in_array($type, ['tindakan', 'lab', 'radiologi']);
-            });
+        // Parse dan hitung dari setiap item yang dipilih
+        foreach ($itemsToPay as $itemKey) {
+            // Format: type-encounter_id-item_id (contoh: tindakan-123-456)
+            $parts = explode('-', $itemKey);
+            if (count($parts) >= 3) {
+                $type = $parts[0];
+                $encounterId = $parts[1];
+                $itemId = $parts[2];
 
-            $hasResep = $itemsByType->contains('resep');
+                $itemAmount = 0;
 
-            \Illuminate\Support\Facades\Log::info('Encounter check', [
-                'encounter_id' => $encounterId,
-                'hasTindakan' => $hasTindakan,
-                'hasResep' => $hasResep,
-                'status_bayar_tindakan' => $encounter->status_bayar_tindakan,
-                'status_bayar_resep' => $encounter->status_bayar_resep,
-                'total_bayar_tindakan' => $encounter->total_bayar_tindakan,
-                'total_bayar_resep' => $encounter->total_bayar_resep,
-            ]);
+                // Hitung amount berdasarkan tipe item
+                if ($type === 'tindakan') {
+                    $tindakan = TindakanEncounter::find($itemId);
+                    if ($tindakan) {
+                        $itemAmount = ($tindakan->tarif_tindakan ?? 0) * ($tindakan->kuantitas ?? 1);
+                    }
+                } elseif ($type === 'lab') {
+                    $labItem = LabRequestItem::find($itemId);
+                    if ($labItem) {
+                        $itemAmount = $labItem->price ?? 0;
+                    }
+                } elseif ($type === 'radiologi') {
+                    $radRequest = RadiologyRequest::find($itemId);
+                    if ($radRequest) {
+                        $itemAmount = $radRequest->price ?? 0;
+                    }
+                } elseif ($type === 'resep') {
+                    $resep = Resep::find($itemId);
+                    if ($resep) {
+                        $itemAmount = $resep->subtotal ?? 0;
+                    }
+                }
 
-            if ($hasTindakan && !$encounter->status_bayar_tindakan) {
-                $totalBill += $encounter->total_bayar_tindakan;
-            }
-            if ($hasResep && !$encounter->status_bayar_resep) {
-                $totalBill += $encounter->total_bayar_resep;
+                $totalBill += $itemAmount;
+
+                \Illuminate\Support\Facades\Log::info('Item calculated', [
+                    'itemKey' => $itemKey,
+                    'type' => $type,
+                    'itemId' => $itemId,
+                    'amount' => $itemAmount,
+                    'runningTotal' => $totalBill
+                ]);
             }
         }
 
@@ -231,24 +256,62 @@ class KasirController extends Controller
             'totalPaymentReceived' => $totalPaymentReceived
         ]);
 
-        // Validasi: Pembayaran harus >= total tagihan
-        if ($totalPaymentReceived < $totalBill) {
-            \Illuminate\Support\Facades\Log::warning('Payment insufficient', [
-                'totalBill' => $totalBill,
-                'totalPaymentReceived' => $totalPaymentReceived
-            ]);
-            return redirect()->back()->with('error', 'Total pembayaran (Rp ' . number_format($totalPaymentReceived, 0, ',', '.') . ') kurang dari total tagihan (Rp ' . number_format($totalBill, 0, ',', '.') . ')')->withInput();
-        }
-
-        // Gabungkan metode pembayaran untuk disimpan
-        $paymentMethodsCombined = collect($paymentMethods)
+        // Hitung fee berdasarkan total tagihan (BUKAN dari jumlah pembayaran)
+        $totalFee = 0;
+        $paymentMethodsWithFee = collect($paymentMethods)
             ->filter(fn($pm) => isset($pm['method']) && $pm['amount_raw'] > 0)
-            ->map(fn($pm) => $pm['method'] . ':' . number_format($pm['amount_raw'], 0, ',', '.'))
+            ->map(function ($pm) use (&$totalFee, $totalBill) {
+                $paymentMethodModel = PaymentMethod::where('code', $pm['method'])->first();
+                $amount = $pm['amount_raw'];
+                $fee = 0;
+
+                if ($paymentMethodModel) {
+                    // Fee dihitung dari total tagihan, bukan dari jumlah pembayaran
+                    $fee = $paymentMethodModel->calculateFee($totalBill);
+                    $totalFee += $fee;
+                }
+
+                return [
+                    'code' => $pm['method'],
+                    'name' => $paymentMethodModel ? $paymentMethodModel->name : $pm['method'],
+                    'amount' => $amount,
+                    'fee' => $fee,
+                    'total_with_fee' => $amount + $fee
+                ];
+            });
+
+        // Gabungkan metode pembayaran untuk disimpan (dengan informasi fee)
+        $paymentMethodsCombined = $paymentMethodsWithFee
+            ->map(fn($pm) => $pm['name'] . ': Rp ' . number_format($pm['amount'], 0, ',', '.') .
+                ($pm['fee'] > 0 ? ' (Fee: Rp ' . number_format($pm['fee'], 0, ',', '.') . ')' : ''))
             ->implode('; ');
 
-        \Illuminate\Support\Facades\Log::info('Starting DB transaction');
+        // Hitung grand total (tagihan + fee) untuk validasi
+        $grandTotalForValidation = $totalBill + $totalFee;
 
-        DB::transaction(function () use ($itemsToPay, $paymentMethodsCombined, $encounterIds, &$totalPaidAmount, &$paidItemsInfo) {
+        // Validasi: Pembayaran harus >= grand total (tagihan + fee)
+        if ($totalPaymentReceived < $grandTotalForValidation) {
+            \Illuminate\Support\Facades\Log::warning('Payment insufficient', [
+                'totalBill' => $totalBill,
+                'totalFee' => $totalFee,
+                'grandTotal' => $grandTotalForValidation,
+                'totalPaymentReceived' => $totalPaymentReceived
+            ]);
+            $errorMsg = 'Total pembayaran (Rp ' . number_format($totalPaymentReceived, 0, ',', '.') . ') kurang dari total yang harus dibayar (Tagihan: Rp ' . number_format($totalBill, 0, ',', '.');
+            if ($totalFee > 0) {
+                $errorMsg .= ' + Biaya Admin/Fee: Rp ' . number_format($totalFee, 0, ',', '.') . ' = Rp ' . number_format($grandTotalForValidation, 0, ',', '.');
+            } else {
+                $errorMsg .= ').';
+            }
+            return redirect()->back()->with('error', $errorMsg)->withInput();
+        }
+
+        \Illuminate\Support\Facades\Log::info('Starting DB transaction', [
+            'totalFee' => $totalFee,
+            'paymentMethodsWithFee' => $paymentMethodsWithFee->toArray()
+        ]);
+
+        DB::transaction(function () use ($itemsToPay, $paymentMethodsCombined, $paymentMethodsWithFee, $totalFee, $encounterIds, &$totalPaidAmount, &$paidItemsInfo) {
             \Illuminate\Support\Facades\Log::info('Inside DB transaction');
 
             // Get types from items
@@ -263,6 +326,39 @@ class KasirController extends Controller
 
             $hasResep = $itemsByType->contains('resep');
 
+            // Hitung proporsi fee untuk tindakan dan resep
+            $feeTindakan = 0;
+            $feeResep = 0;
+            $totalBillWithoutFee = 0;
+
+            // Hitung total tagihan tindakan dan resep dari encounter yang dipilih
+            $totalTindakanBill = 0;
+            $totalResepBill = 0;
+
+            foreach ($encounterIds as $encounterId) {
+                $enc = Encounter::find($encounterId);
+                if (!$enc) continue;
+
+                if ($hasTindakan && !$enc->status_bayar_tindakan) {
+                    $totalTindakanBill += $enc->total_bayar_tindakan;
+                }
+                if ($hasResep && !$enc->status_bayar_resep) {
+                    $totalResepBill += $enc->total_bayar_resep;
+                }
+            }
+
+            $totalBillWithoutFee = $totalTindakanBill + $totalResepBill;
+
+            // Proporsi fee berdasarkan tagihan
+            if ($totalBillWithoutFee > 0) {
+                if ($totalTindakanBill > 0) {
+                    $feeTindakan = ($totalTindakanBill / $totalBillWithoutFee) * $totalFee;
+                }
+                if ($totalResepBill > 0) {
+                    $feeResep = ($totalResepBill / $totalBillWithoutFee) * $totalFee;
+                }
+            }
+
             foreach ($encounterIds as $encounterId) {
                 // Re-fetch encounter dalam transaction untuk memastikan data fresh
                 $encounter = Encounter::find($encounterId);
@@ -272,8 +368,31 @@ class KasirController extends Controller
                 if ($hasTindakan && !$encounter->status_bayar_tindakan) {
                     $encounter->status_bayar_tindakan      = 1;
                     $encounter->metode_pembayaran_tindakan = $paymentMethodsCombined;
+
+                    // Simpan fee tindakan (proporsi dari total fee)
+                    $encounter->payment_fee_tindakan = $feeTindakan;
+                    $encounter->grand_total_tindakan = $encounter->total_bayar_tindakan + $feeTindakan;
+
+                    // Simpan detail items tindakan yang dibayar
+                    $paidTindakanItems = collect($itemsToPay)
+                        ->filter(function ($item) use ($encounterId) {
+                            $parts = explode('-', $item);
+                            if (count($parts) >= 3) {
+                                $type = $parts[0];
+                                $itemEncounterId = $parts[1];
+                                return in_array($type, ['tindakan', 'lab', 'radiologi']) && $itemEncounterId == $encounterId;
+                            }
+                            return false;
+                        })
+                        ->values()
+                        ->toArray();
+
+                    $encounter->paid_tindakan_items = json_encode($paidTindakanItems);
+
                     $totalPaidAmount += $encounter->total_bayar_tindakan;
                     $paidItemsInfo[$encounterId]['tindakan'] = $encounter->total_bayar_tindakan;
+                    $paidItemsInfo[$encounterId]['tindakan_fee'] = $feeTindakan;
+                    $paidItemsInfo[$encounterId]['tindakan_grand_total'] = $encounter->grand_total_tindakan;
 
                     \Illuminate\Support\Facades\Log::info('Updating tindakan payment', [
                         'encounter_id' => $encounterId,
@@ -289,8 +408,31 @@ class KasirController extends Controller
                 if ($hasResep && !$encounter->status_bayar_resep) {
                     $encounter->status_bayar_resep      = 1;
                     $encounter->metode_pembayaran_resep = $paymentMethodsCombined;
+
+                    // Simpan fee resep (proporsi dari total fee)
+                    $encounter->payment_fee_resep = $feeResep;
+                    $encounter->grand_total_resep = $encounter->total_bayar_resep + $feeResep;
+
+                    // Simpan detail items resep yang dibayar
+                    $paidResepItems = collect($itemsToPay)
+                        ->filter(function ($item) use ($encounterId) {
+                            $parts = explode('-', $item);
+                            if (count($parts) >= 3) {
+                                $type = $parts[0];
+                                $itemEncounterId = $parts[1];
+                                return $type === 'resep' && $itemEncounterId == $encounterId;
+                            }
+                            return false;
+                        })
+                        ->values()
+                        ->toArray();
+
+                    $encounter->paid_resep_items = json_encode($paidResepItems);
+
                     $totalPaidAmount += $encounter->total_bayar_resep;
                     $paidItemsInfo[$encounterId]['resep'] = $encounter->total_bayar_resep;
+                    $paidItemsInfo[$encounterId]['resep_fee'] = $feeResep;
+                    $paidItemsInfo[$encounterId]['resep_grand_total'] = $encounter->grand_total_resep;
 
                     \Illuminate\Support\Facades\Log::info('Updating resep payment', [
                         'encounter_id' => $encounterId,
@@ -355,6 +497,9 @@ class KasirController extends Controller
         session(['last_paid_patient_id' => $pasien_id]);
         session(['last_paid_patient_name' => $pasien->name]);
 
+        // Hitung grand total (tagihan + fee)
+        $grandTotal = $totalBill + $totalFee;
+
         $this->activity(
             'Memproses Pembayaran — ' . ($pasien->name ?? '-') . ' (RM ' . ($pasien->rekam_medis ?? '-') . ')',
             [
@@ -362,16 +507,23 @@ class KasirController extends Controller
                 'rekam_medis' => $pasien->rekam_medis ?? null,
                 'metode'      => $paymentMethodsCombined,
                 'total_tagihan' => $totalBill,
+                'total_fee' => $totalFee,
+                'grand_total' => $grandTotal,
                 'total_bayar' => $totalPaymentReceived,
-                'kembalian'   => $totalPaymentReceived - $totalBill,
+                'kembalian'   => $totalPaymentReceived - $grandTotal,
                 'items'       => $paidItemsInfo,
+                'payment_methods_detail' => $paymentMethodsWithFee->toArray(),
             ],
             'kasir'
         );
 
-        $successMessage = 'Pembayaran berhasil diproses. Total tagihan: Rp ' . number_format($totalBill, 0, ',', '.') . ', Total dibayar: Rp ' . number_format($totalPaymentReceived, 0, ',', '.');
-        if ($totalPaymentReceived > $totalBill) {
-            $successMessage .= ' Kembalian: Rp ' . number_format($totalPaymentReceived - $totalBill, 0, ',', '.');
+        $successMessage = 'Pembayaran berhasil diproses. Total tagihan: Rp ' . number_format($totalBill, 0, ',', '.');
+        if ($totalFee > 0) {
+            $successMessage .= ' + Biaya Admin/Fee: Rp ' . number_format($totalFee, 0, ',', '.') . ' = Rp ' . number_format($grandTotal, 0, ',', '.');
+        }
+        $successMessage .= ' Total dibayar: Rp ' . number_format($totalPaymentReceived, 0, ',', '.');
+        if ($totalPaymentReceived > $grandTotal) {
+            $successMessage .= ' Kembalian: Rp ' . number_format($totalPaymentReceived - $grandTotal, 0, ',', '.');
         }
 
         return redirect()->route('kasir.index')->with('success', $successMessage)->with('show_print_button', true);
@@ -557,13 +709,27 @@ class KasirController extends Controller
 
         $pasien = $encounter->pasien;
 
-        // Build paid items info
+        // Build paid items info dengan detail items yang dibayar
         $paidItemsInfo = [];
         if ($encounter->status_bayar_tindakan) {
             $paidItemsInfo[$encounter->id]['tindakan'] = $encounter->total_bayar_tindakan;
+            $paidItemsInfo[$encounter->id]['tindakan_fee'] = $encounter->payment_fee_tindakan ?? 0;
+
+            // Parse paid items dari JSON
+            $paidTindakanItems = $encounter->paid_tindakan_items
+                ? json_decode($encounter->paid_tindakan_items, true)
+                : [];
+            $paidItemsInfo[$encounter->id]['tindakan_items'] = $paidTindakanItems;
         }
         if ($encounter->status_bayar_resep) {
             $paidItemsInfo[$encounter->id]['resep'] = $encounter->total_bayar_resep;
+            $paidItemsInfo[$encounter->id]['resep_fee'] = $encounter->payment_fee_resep ?? 0;
+
+            // Parse paid items dari JSON
+            $paidResepItems = $encounter->paid_resep_items
+                ? json_decode($encounter->paid_resep_items, true)
+                : [];
+            $paidItemsInfo[$encounter->id]['resep_items'] = $paidResepItems;
         }
 
         $total = ($encounter->status_bayar_tindakan ? $encounter->total_bayar_tindakan : 0) +

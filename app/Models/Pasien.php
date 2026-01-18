@@ -35,13 +35,19 @@ class Pasien extends Model
         'city_code',
         'city',
         'satusehat_id',
-        'status'
+        'status',
+        'is_kerabat_dokter',
+        'is_kerabat_karyawan',
+        'is_kerabat_owner'
     ];
 
     protected $casts = [
         'tgl_lahir' => 'date',
         'is_identitas' => 'boolean',
         'status' => 'boolean',
+        'is_kerabat_dokter' => 'boolean',
+        'is_kerabat_karyawan' => 'boolean',
+        'is_kerabat_owner' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -1,43 +1,48 @@
 <div class="card border-0 shadow-sm mt-3 patient-card" style="border-left: 4px solid #17a2b8 !important;">
     <div class="card-body py-3">
         <style>
-        .patient-card .btn {
-            transition: all 0.2s ease;
-            font-weight: 500;
-        }
-        .patient-card .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-        }
-        .patient-card .btn-primary:hover {
-            background-color: #0056b3;
-        }
-        .patient-card .btn-danger:hover {
-            background-color: #c82333;
-        }
-        .patient-card .btn-warning:hover {
-            background-color: #e0a800;
-        }
-        .patient-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
-            transform: translateY(-2px);
-            transition: all 0.3s ease;
-        }
+            .patient-card .btn {
+                transition: all 0.2s ease;
+                font-weight: 500;
+            }
+
+            .patient-card .btn:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            }
+
+            .patient-card .btn-primary:hover {
+                background-color: #0056b3;
+            }
+
+            .patient-card .btn-danger:hover {
+                background-color: #c82333;
+            }
+
+            .patient-card .btn-warning:hover {
+                background-color: #e0a800;
+            }
+
+            .patient-card:hover {
+                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+                transform: translateY(-2px);
+                transition: all 0.3s ease;
+            }
         </style>
         @php
             // Status berdasarkan encounter terakhir atau kunjungan terakhir
             $hasEncounter = !empty($d->no_encounter) && $d->no_encounter !== '-';
             $statusText = null;
             $badgeClass = 'bg-secondary-subtle text-secondary';
-            
+
             if ($hasEncounter && !empty($d->type) && $d->type !== '-') {
                 // Jika ada encounter, gunakan jenis encounter sebagai status
                 $statusText = $d->type;
-                $badgeClass = match($d->type) {
+                $badgeClass = match ($d->type) {
                     'Rawat Jalan' => 'bg-primary-subtle text-primary',
                     'Rawat Inap' => 'bg-info-subtle text-info',
                     'IGD' => 'bg-danger-subtle text-danger',
-                    default => 'bg-secondary-subtle text-secondary'
+                    default => 'bg-secondary-subtle text-secondary',
                 };
             } else {
                 // Jika tidak ada encounter, tampilkan status pasien baru
@@ -45,13 +50,71 @@
                 $badgeClass = 'bg-success-subtle text-success';
             }
         @endphp
-        
-        @if ($statusText)
-            <span class="badge {{ $badgeClass }} rounded-pill">
-                <i class="ri-circle-fill me-1"></i>Status : {{ $statusText }}
-            </span>
-            <hr>
-        @endif
+
+        <div class="d-flex flex-wrap gap-2 mb-2">
+            @if ($statusText)
+                <span class="badge {{ $badgeClass }} rounded-pill">
+                    <i class="ri-circle-fill me-1"></i>Status : {{ $statusText }}
+                </span>
+            @endif
+
+            {{-- Badge Kerabat --}}
+            @php
+                $hasKerabatFlag = false;
+                $kerabatBadges = [];
+
+                if (isset($d->is_kerabat_dokter) && $d->is_kerabat_dokter) {
+                    $kerabatBadges[] = [
+                        'label' => 'Kerabat Dokter',
+                        'icon' => 'ri-stethoscope-line',
+                        'class' => 'bg-primary text-white',
+                    ];
+                    $hasKerabatFlag = true;
+                }
+
+                if (isset($d->is_kerabat_karyawan) && $d->is_kerabat_karyawan) {
+                    $kerabatBadges[] = [
+                        'label' => 'Kerabat Karyawan',
+                        'icon' => 'ri-team-line',
+                        'class' => 'bg-success text-white',
+                    ];
+                    $hasKerabatFlag = true;
+                }
+
+                if (isset($d->is_kerabat_owner) && $d->is_kerabat_owner) {
+                    $kerabatBadges[] = [
+                        'label' => 'Kerabat Owner',
+                        'icon' => 'ri-vip-crown-line',
+                        'class' => 'bg-warning text-dark',
+                    ];
+                    $hasKerabatFlag = true;
+                }
+
+                // Debug: Log nilai kerabat flags
+                \Log::info('Kerabat Flags for ' . $d->name, [
+                    'is_kerabat_dokter' => $d->is_kerabat_dokter ?? 'not set',
+                    'is_kerabat_karyawan' => $d->is_kerabat_karyawan ?? 'not set',
+                    'is_kerabat_owner' => $d->is_kerabat_owner ?? 'not set',
+                    'hasKerabatFlag' => $hasKerabatFlag,
+                ]);
+
+                // Jika tidak ada flag kerabat, tampilkan Reguler
+                if (!$hasKerabatFlag) {
+                    $kerabatBadges[] = [
+                        'label' => 'Reguler',
+                        'icon' => 'ri-user-line',
+                        'class' => 'bg-primary text-white',
+                    ];
+                }
+            @endphp
+
+            @foreach ($kerabatBadges as $badge)
+                <span class="badge {{ $badge['class'] }} rounded-pill">
+                    <i class="{{ $badge['icon'] }} me-1"></i>{{ $badge['label'] }}
+                </span>
+            @endforeach
+        </div>
+        <hr>
         <div class="row justify-content-between">
             <div class="col-4">
                 <div class="d-flex flex-column mw-100">
@@ -90,7 +153,8 @@
                             <tr>
                                 <td class="pe-2">Alamat</td>
                                 <td class="pe-2">:</td>
-                                <td class="fw-semibold text-dark" style="max-width: 150px; word-wrap: break-word;">{{ $d->alamat ?? '-' }}</td>
+                                <td class="fw-semibold text-dark" style="max-width: 150px; word-wrap: break-word;">
+                                    {{ $d->alamat ?? '-' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -100,7 +164,7 @@
                 <div class="d-flex flex-column mw-100">
                     <div class="text-primary fw-semibold mb-2">Kunjungan Terakhir</div>
                     <div>
-                        @if($hasEncounter)
+                        @if ($hasEncounter)
                             <table class="table-sm">
                                 <tr>
                                     <td class="pe-2" style="min-width: 80px;">No. Kunjungan</td>

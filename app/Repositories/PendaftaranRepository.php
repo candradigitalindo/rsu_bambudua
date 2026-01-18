@@ -360,6 +360,15 @@ class PendaftaranRepository
     public function store_pasien($request)
     {
         $count = Pasien::whereDate('created_at', date('Y-m-d'))->count();
+
+        // Debug log
+        \Illuminate\Support\Facades\Log::info('Create Pasien - Kerabat Flags Received', [
+            'name' => $request->name_pasien,
+            'is_kerabat_dokter' => $request->is_kerabat_dokter ?? 'not set',
+            'is_kerabat_karyawan' => $request->is_kerabat_karyawan ?? 'not set',
+            'is_kerabat_owner' => $request->is_kerabat_owner ?? 'not set',
+        ]);
+
         $pasien = Pasien::create([
             'rekam_medis'       => date('ymd') . ($count == 0 ? 0 : $count + 1),
             'name'              => strtoupper($request->name_pasien),
@@ -377,7 +386,10 @@ class PendaftaranRepository
             'mr_lama'           => $request->mr_lama,
             'alamat'            => $request->alamat,
             'province_code'     => $request->province,
-            'city_code'         => $request->city
+            'city_code'         => $request->city,
+            'is_kerabat_dokter' => $request->input('is_kerabat_dokter', 0) == 1,
+            'is_kerabat_karyawan' => $request->input('is_kerabat_karyawan', 0) == 1,
+            'is_kerabat_owner'  => $request->input('is_kerabat_owner', 0) == 1,
         ]);
 
         return $pasien;
@@ -396,6 +408,16 @@ class PendaftaranRepository
     public function updatePasien($request, $id)
     {
         $pasien = Pasien::findOrFail($id);
+
+        // Debug log
+        \Illuminate\Support\Facades\Log::info('Update Pasien - Kerabat Flags Received', [
+            'pasien_id' => $id,
+            'name' => $request->name_pasien,
+            'is_kerabat_dokter' => $request->is_kerabat_dokter ?? 'not set',
+            'is_kerabat_karyawan' => $request->is_kerabat_karyawan ?? 'not set',
+            'is_kerabat_owner' => $request->is_kerabat_owner ?? 'not set',
+        ]);
+
         $pasien->update([
             'name'              => strtoupper($request->name_pasien),
             'jenis_identitas'   => $request->jenis_identitas,
@@ -412,7 +434,10 @@ class PendaftaranRepository
             'mr_lama'           => $request->mr_lama,
             'alamat'            => $request->alamat,
             'province_code'     => $request->province,
-            'city_code'         => $request->city
+            'city_code'         => $request->city,
+            'is_kerabat_dokter' => $request->input('is_kerabat_dokter', 0) == 1,
+            'is_kerabat_karyawan' => $request->input('is_kerabat_karyawan', 0) == 1,
+            'is_kerabat_owner'  => $request->input('is_kerabat_owner', 0) == 1,
         ]);
 
         return $pasien;
@@ -655,10 +680,14 @@ class PendaftaranRepository
             }
         }
 
+        // ALUR BARU: Tidak set ruangan di sini, biarkan NULL
+        // Perawat yang akan assign ruangan dari dashboard
         $encounter->admission->update([
-            'ruang_id' => $request->ruang_id,
-            'ruangan_id' => $request->ruangan,
+            'ruang_id' => null, // Tidak set ruang_id
+            'ruangan_id' => null, // Tidak set ruangan_id (pending assignment)
+            'dokter_id' => $dokterSpesialis ? $dokterSpesialis->id : ($encounter->admission->dokter_id ?? null),
             'nama_dokter' => $dokterSpesialis ? $dokterSpesialis->name : ($encounter->admission->nama_dokter ?? null),
+            'admission_reason' => $request->admission_reason ?? 'Rawat Inap', // Tambah alasan masuk
         ]);
 
         $patient_companions = PatientCompanion::where('admission_id', $encounter->admission->id)->first();

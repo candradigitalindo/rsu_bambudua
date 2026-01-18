@@ -100,49 +100,189 @@ class ApotekController extends Controller
     // Permintaan Obat Rawat Inap
     public function permintaanObatInap()
     {
-        // Ambil semua permintaan obat rawat inap, lalu kelompokkan berdasarkan admisi
+        // Ambil semua resep rawat inap dari PrescriptionOrder
         $startDate = request('start_date');
         $endDate = request('end_date');
+        $status = request('status', 'all');
 
-        $query = \App\Models\InpatientDailyMedication::with('admission.encounter', 'authorized');
+        $query = \App\Models\PrescriptionOrder::with([
+            'encounter.inpatientAdmission.patient',
+            'encounter.inpatientAdmission.ruangan',
+            'doctor',
+            'medications'
+        ])->whereHas('encounter.inpatientAdmission');
 
+        // Filter by date
         if ($startDate && $endDate) {
             $query->whereDate('created_at', '>=', $startDate)
                 ->whereDate('created_at', '<=', $endDate);
         } else {
-            // Default: tampilkan data 30 hari terakhir jika tidak ada filter tanggal
-            $query->where('created_at', '>=', now()->subDays(30));
+            // Default: tampilkan data 7 hari terakhir
+            $query->where('created_at', '>=', now()->subDays(7));
         }
 
-        $permintaanGrouped = $query
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->groupBy('inpatient_admission_id');
+        // Filter by pharmacy status
+        if ($status !== 'all') {
+            $query->where('pharmacy_status', $status);
+        }
 
-        // Paginate hasil yang sudah dikelompokkan secara manual
-        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
-        $perPage = 15;
-        $currentItems = $permintaanGrouped->slice(($currentPage - 1) * $perPage, $perPage);
-        $permintaan = new \Illuminate\Pagination\LengthAwarePaginator($currentItems, $permintaanGrouped->count(), $perPage, $currentPage, ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]);
+        $prescriptions = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return view('pages.apotek.permintaan_inap', compact('permintaan'));
+        // Count by status
+        $statusCounts = [
+            'all' => \App\Models\PrescriptionOrder::whereHas('encounter.inpatientAdmission')->count(),
+            'Pending' => \App\Models\PrescriptionOrder::whereHas('encounter.inpatientAdmission')->where('pharmacy_status', 'Pending')->count(),
+            'Verified' => \App\Models\PrescriptionOrder::whereHas('encounter.inpatientAdmission')->where('pharmacy_status', 'Verified')->count(),
+            'Ready' => \App\Models\PrescriptionOrder::whereHas('encounter.inpatientAdmission')->where('pharmacy_status', 'Ready')->count(),
+            'Dispensed' => \App\Models\PrescriptionOrder::whereHas('encounter.inpatientAdmission')->where('pharmacy_status', 'Dispensed')->count(),
+        ];
+
+        return view('pages.apotek.permintaan_inap', compact('prescriptions', 'statusCounts'));
     }
 
-    // Detail Permintaan Obat Inap (untuk modal)
+    // Detail Resep Obat Inap
     public function permintaanObatInapDetail($id)
     {
-        $permintaan = \App\Models\InpatientDailyMedication::with('authorized')->findOrFail($id);
-        return view('pages.apotek._permintaan_inap_detail', compact('permintaan'))->render();
+        $prescription = \App\Models\PrescriptionOrder::with([
+            'encounter.inpatientAdmission.patient',
+            'encounter.inpatientAdmission.ruangan',
+            'doctor',
+            'medications'
+        ])->findOrFail($id);
+
+        // Ambil nama obat yang sebenarnya dari product_apoteks
+        foreach ($prescription->medications as $medication) {
+            $product = \DB::table('product_apoteks')
+                ->where('id', $medication->medication_name)
+                ->first();
+
+            if ($product) {
+                $medication->medication_name = $product->name;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $prescription
+        ]);
     }
 
-    // Detail Permintaan Obat Inap (untuk modal, dikelompokkan berdasarkan admisi)
-    public function permintaanObatInapDetailGrouped($admissionId)
+    // Update Pharmacy Status
+    public function updatePharmacyStatus(Request $request, $id)
     {
-        $permintaan = \App\Models\InpatientDailyMedication::with('authorized', 'administered')
-            ->where('inpatient_admission_id', $admissionId)
-            ->orderBy('created_at', 'asc')
-            ->get();
-        return view('pages.apotek._permintaan_inap_detail_grouped', compact('permintaan'))->render();
+        $validated = $request->validate([
+            'pharmacy_status' => 'required|in:Pending,Verified,Ready,Dispensed',
+            'notes' => 'nullable|string'
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            $prescription = \App\Models\PrescriptionOrder::with('medications')->findOrFail($id);
+
+            // Jika status menjadi "Dispensed", kurangi stok obat
+            if ($validated['pharmacy_status'] === 'Dispensed' && $prescription->pharmacy_status !== 'Dispensed') {
+                foreach ($prescription->medications as $medication) {
+                    // Cari product berdasarkan nama obat
+                    // Jika medication_name adalah UUID (data lama), cari by ID
+                    // Jika bukan UUID (data baru), cari by name
+                    $isUuid = preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $medication->medication_name);
+
+                    if ($isUuid) {
+                        $product = \App\Models\ProductApotek::where('id', $medication->medication_name)
+                            ->lockForUpdate()
+                            ->first();
+                    } else {
+                        $product = \App\Models\ProductApotek::where('name', $medication->medication_name)
+                            ->lockForUpdate()
+                            ->first();
+                    }
+
+                    if (!$product) {
+                        throw new \Exception("Obat '{$medication->medication_name}' tidak ditemukan");
+                    }
+
+                    // Hitung total kebutuhan obat (durasi hari * frekuensi per hari)
+                    $frequency = $this->parseFrequency($medication->frequency);
+                    $totalNeeded = $medication->duration_days * $frequency;
+
+                    // Validasi stok mencukupi
+                    if ($product->stok < $totalNeeded) {
+                        throw new \Exception("Stok {$product->name} tidak mencukupi. Tersedia: {$product->stok}, Dibutuhkan: {$totalNeeded}");
+                    }
+
+                    // Kurangi stok produk utama
+                    $product->decrement('stok', $totalNeeded);
+
+                    // Update stok detail (FIFO - First In First Out berdasarkan expired date)
+                    $remainingQty = $totalNeeded;
+                    $stoks = \App\Models\ApotekStok::where('product_apotek_id', $product->id)
+                        ->where('status', 0) // Available
+                        ->orderBy('expired_at', 'asc')
+                        ->get();
+
+                    foreach ($stoks as $stok) {
+                        if ($remainingQty <= 0) break;
+
+                        // Tandai stok sebagai used (status = 1)
+                        $stok->update(['status' => 1]);
+                        $remainingQty--;
+                    }
+
+                    // Catat histori apotek (stok keluar)
+                    \App\Models\HistoriApotek::create([
+                        'product_apotek_id' => $product->id,
+                        'jumlah' => $totalNeeded,
+                        'type' => 1, // 1 = Keluar
+                        'keterangan' => "Pengeluaran Obat Rawat Inap untuk pasien {$prescription->encounter->inpatientAdmission->patient->name} (RM: {$prescription->encounter->inpatientAdmission->patient->rekam_medis})"
+                    ]);
+
+                    // Log activity
+                    $this->activity(
+                        "Pengeluaran Obat Rawat Inap: {$product->name} x{$totalNeeded} untuk pasien {$prescription->encounter->inpatientAdmission->patient->name}",
+                        [
+                            'prescription_id' => $prescription->id,
+                            'product_id' => $product->id,
+                            'product_name' => $product->name,
+                            'quantity' => $totalNeeded,
+                            'patient_name' => $prescription->encounter->inpatientAdmission->patient->name
+                        ],
+                        'Apotek'
+                    );
+                }
+            }
+
+            $prescription->update([
+                'pharmacy_status' => $validated['pharmacy_status'],
+                'pharmacy_notes' => $validated['notes'] ?? null,
+                'pharmacy_processed_at' => now(),
+                'pharmacy_processed_by' => auth()->id()
+            ]);
+
+            \DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status berhasil diupdate' . ($validated['pharmacy_status'] === 'Dispensed' ? ' dan stok obat telah dikurangi' : '')
+            ]);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal update status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Helper function untuk parsing frekuensi
+    private function parseFrequency($frequency)
+    {
+        // Contoh: "3x sehari" = 3, "2x sehari" = 2, "1x sehari" = 1
+        if (preg_match('/(\d+)x?\s*sehari/i', $frequency, $matches)) {
+            return (int) $matches[1];
+        }
+        // Default 3x jika tidak bisa di-parse
+        return 3;
     }
 
     // Siapkan Obat Rawat Inap

@@ -137,6 +137,14 @@ class ObservasiRepository
     // post tanda vital
     public function postTandaVital($request, $id)
     {
+        // Simpan keluhan utama ke anamnesis jika ada
+        if ($request->has('keluhan_utama') && !empty($request->keluhan_utama)) {
+            \App\Models\Anamnesis::updateOrCreate(
+                ['encounter_id' => $id],
+                ['keluhan_utama' => $request->keluhan_utama]
+            );
+        }
+
         // Gunakan updateOrCreate untuk menyederhanakan logika
         $tandaVital = \App\Models\TandaVital::updateOrCreate(
             ['encounter_id' => $id],
@@ -864,7 +872,7 @@ class ObservasiRepository
 
         // Simpan perawat yang menangani
         $perawatIds = $request->input('perawat_ids', []);
-        if ($request->has('perawat_ids')) {
+        if (!empty($perawatIds) && is_array($perawatIds)) {
             $encounter->nurses()->sync($perawatIds);
         }
 
@@ -936,12 +944,25 @@ class ObservasiRepository
         }
 
         // Buat data admisi rawat inap
-        InpatientAdmission::create([
+        $dokterData = [];
+        if ($dpjpId) {
+            $dokter = \App\Models\User::find($dpjpId);
+            if ($dokter) {
+                $dokterData['dokter_id'] = $dokter->id;
+                $dokterData['nama_dokter'] = $dokter->name;
+            }
+        }
+
+        // ALUR BARU: Admission dibuat tanpa ruangan (pending)
+        // Perawat rawat inap akan assign ruangan dari dashboard
+        InpatientAdmission::create(array_merge([
             'encounter_id'      => $newEncounter->id,
             'pasien_id'         => $pasien->id,
-            'bed_number'        => 0,
-            'admission_date'    => now(),
-        ]);
+            'ruangan_id'        => null, // Tidak set ruangan (pending assignment)
+            'bed_number'        => null, // Tidak set bed
+            'admission_date'    => null, // Akan di-set saat ruangan di-assign
+            'admission_reason'  => 'Rujukan dari IGD', // Alasan masuk
+        ], $dokterData));
 
         // Update status pasien
         $pasien->update(['status' => 2]); // Status Rawat Inap

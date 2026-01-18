@@ -7,6 +7,11 @@ use App\Http\Controllers\Concerns\LogsActivity;
 use App\Models\JenisPemeriksaanPenunjang;
 use App\Models\LabRequest;
 use App\Models\LabRequestItem;
+use App\Models\PrescriptionOrder;
+use App\Models\PrescriptionMedication;
+use App\Models\MedicationAdministration;
+use App\Models\Encounter;
+use App\Models\InpatientAdmission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\ObservasiRepository;
@@ -843,7 +848,7 @@ class ObservasiController extends Controller
             'perawat_ids' => 'required_if:encounter.type,1,3|array',
             'perawat_ids.*' => 'exists:users,id',
             // Validasi dokter_spesialis_id, wajib jika status_pulang = 3 (Rujukan Rawat Inap)
-            'dokter_spesialis_id' => 'required_if:status_pulang,3|exists:users,id',
+            'dokter_spesialis_id' => 'nullable|required_if:status_pulang,3|exists:users,id',
         ], [
             'perawat_ids.required_if' => 'Perawat harus dipilih untuk Rawat Jalan atau Rawat Darurat.',
             'perawat_ids.array' => 'Format data perawat tidak valid.',
@@ -1200,6 +1205,220 @@ class ObservasiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memuat hasil radiologi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // ============ NEW PRESCRIPTION ORDER METHODS ============
+
+    /**
+     * Get all prescription orders for an encounter
+     */
+    public function getPrescriptionOrders($encounterId)
+    {
+        try {
+            $encounter = Encounter::findOrFail($encounterId);
+
+            $prescriptionOrders = PrescriptionOrder::with([
+                'doctor',
+                'medications'
+            ])
+                ->where('encounter_id', $encounterId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $prescriptionOrders
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load prescription orders: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Create new prescription order
+     */
+    public function createPrescriptionOrder(Request $request, $encounterId)
+    {
+        try {
+            $request->validate([
+                'notes' => 'nullable|string|max:1000'
+            ]);
+
+            $encounter = Encounter::findOrFail($encounterId);
+
+            $prescriptionOrder = PrescriptionOrder::create([
+                'encounter_id' => $encounterId,
+                'doctor_id' => Auth::id(),
+                'status' => 'active',
+                'pharmacy_status' => 'Pending',
+                'notes' => $request->notes
+            ]);
+
+            $prescriptionOrder->load('doctor');
+
+            // Log activity
+            $this->logActivity(
+                'prescription_order_created',
+                "Created prescription order for patient: {$encounter->name_pasien}",
+                $request
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Prescription order created successfully',
+                'data' => $prescriptionOrder
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create prescription order: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get prescription order detail with medications
+     */
+    public function getPrescriptionOrderDetail($orderId)
+    {
+        try {
+            $prescriptionOrder = PrescriptionOrder::with([
+                'doctor',
+                'encounter',
+                'medications'
+            ])->findOrFail($orderId);
+
+            return response()->json([
+                'success' => true,
+                'data' => $prescriptionOrder
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load prescription order: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Add medication to prescription order
+     */
+    public function addMedicationToPrescription(Request $request, $orderId)
+    {
+        try {
+            $request->validate([
+                'medication_name' => 'required|string|max:255',
+                'dosage' => 'required|string|max:100',
+                'route' => 'required|string|max:50',
+                'frequency' => 'required|string|max:50',
+                'scheduled_times' => 'required|array',
+                'scheduled_times.*' => 'string|regex:/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/',
+                'instructions' => 'nullable|string|max:500',
+                'duration_days' => 'nullable|integer|min:1|max:365'
+            ]);
+
+            $prescriptionOrder = PrescriptionOrder::findOrFail($orderId);
+
+            $medication = PrescriptionMedication::create([
+                'prescription_order_id' => $orderId,
+                'medication_name' => $request->medication_name,
+                'dosage' => $request->dosage,
+                'route' => $request->route,
+                'frequency' => $request->frequency,
+                'scheduled_times' => $request->scheduled_times,
+                'instructions' => $request->instructions,
+                'duration_days' => $request->duration_days
+            ]);
+
+            // Log activity
+            $this->logActivity(
+                'prescription_medication_added',
+                "Added medication: {$request->medication_name} to prescription order",
+                $request
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Medication added to prescription successfully',
+                'data' => $medication
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add medication: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove medication from prescription
+     */
+    public function removeMedicationFromPrescription($medicationId)
+    {
+        try {
+            $medication = PrescriptionMedication::findOrFail($medicationId);
+            $medicationName = $medication->medication_name;
+
+            $medication->delete();
+
+            // Log activity
+            $this->logActivity(
+                'prescription_medication_removed',
+                "Removed medication: {$medicationName} from prescription order",
+                request()
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Medication removed from prescription successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to remove medication: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update prescription order status (for pharmacy workflow)
+     */
+    public function updatePrescriptionOrderStatus(Request $request, $orderId)
+    {
+        try {
+            $request->validate([
+                'pharmacy_status' => 'required|in:Pending,Verified,Ready,Dispensed',
+                'notes' => 'nullable|string|max:500'
+            ]);
+
+            $prescriptionOrder = PrescriptionOrder::findOrFail($orderId);
+
+            $prescriptionOrder->update([
+                'pharmacy_status' => $request->pharmacy_status,
+                'notes' => $request->notes ?: $prescriptionOrder->notes
+            ]);
+
+            // Log activity
+            $this->logActivity(
+                'prescription_status_updated',
+                "Updated prescription order status to: {$request->pharmacy_status}",
+                $request
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Prescription order status updated successfully',
+                'data' => $prescriptionOrder
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update prescription status: ' . $e->getMessage()
             ], 500);
         }
     }

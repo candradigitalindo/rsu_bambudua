@@ -62,26 +62,6 @@
                             </tr>
                             <tr>
                                 <td colspan="3" class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #dc3545;">
-                                    <i class="ri-discount-percent-line me-1"></i>Diskon Tindakan Medis
-                                </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-tindakan-diskon" class="fw-bold text-danger"
-                                        style="font-size: 14px;">0</span>
-                                </td>
-                            </tr>
-                            <tr style="background-color: #f1f3f5;">
-                                <td colspan="3" class="text-end"
-                                    style="padding: 12px; font-weight: 700; color: #212529;">
-                                    <i class="ri-money-dollar-box-line me-1 text-success"></i>Subtotal Tindakan Medis
-                                </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-tindakan-harga" class="fw-bold text-success"
-                                        style="font-size: 15px;">0</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td colspan="3" class="text-end"
                                     style="padding: 12px; font-weight: 600; color: #495057;">
                                     <i class="ri-stethoscope-line me-1 text-info"></i>Penunjang (Lab + Radiologi)
                                 </td>
@@ -90,10 +70,20 @@
                                         style="font-size: 14px;">0</span>
                                 </td>
                             </tr>
+                            <tr>
+                                <td colspan="3" class="text-end"
+                                    style="padding: 12px; font-weight: 600; color: #dc3545;">
+                                    <i class="ri-discount-percent-line me-1"></i>Diskon Tindakan Medis
+                                </td>
+                                <td class="text-end" style="padding: 12px;">
+                                    <span id="total-tindakan-diskon" class="fw-bold text-danger"
+                                        style="font-size: 14px;">0</span>
+                                </td>
+                            </tr>
                             <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <td colspan="3" class="text-end"
                                     style="padding: 16px; font-weight: 700; color: white; font-size: 16px;">
-                                    <i class="ri-shopping-cart-2-line me-2"></i>TOTAL KESELURUHAN
+                                    <i class="ri-shopping-cart-2-line me-2"></i>TOTAL
                                 </td>
                                 <td class="text-end" style="padding: 16px;">
                                     <span id="total-tindakan-akhir" class="fw-bold"
@@ -488,6 +478,26 @@
                         width: '100%'
                     });
                 }
+
+                // Inisialisasi Quill Editor untuk catatan dokter
+                if (typeof Quill !== 'undefined' && !window.quillCatatan) {
+                    window.quillCatatan = new Quill('#catatanEditor', {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: [
+                                ['bold', 'italic', 'underline'],
+                                [{
+                                    'list': 'ordered'
+                                }, {
+                                    'list': 'bullet'
+                                }],
+                                ['clean']
+                            ]
+                        },
+                        placeholder: 'Tulis catatan dokter di sini...'
+                    });
+                }
+
                 loadEncounterSummary();
             });
 
@@ -585,7 +595,7 @@
                 // Validasi dokter spesialis jika rujukan rawat inap
                 if (status_pulang == '3' && !dokter_spesialis_id) {
                     $('#error-dokter-spesialis').text(
-                    'Dokter Spesialis harus dipilih untuk rujukan rawat inap');
+                        'Dokter Spesialis harus dipilih untuk rujukan rawat inap');
                     $('#dokter_spesialis_id').focus();
                     return;
                 } else {

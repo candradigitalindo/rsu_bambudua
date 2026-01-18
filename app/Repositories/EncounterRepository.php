@@ -19,7 +19,8 @@ class EncounterRepository
     protected function mapEncounter($encounter)
     {
         $encounter->status = $encounter->status == 1 ? "Progress" : "Finish";
-        $encounter->jenis_jaminan = $encounter->jenis_jaminan == 1 ? "Umum" : "Lainnya";
+        // Ambil nama jenis jaminan dari relasi
+        $encounter->jenis_jaminan = $encounter->jenisJaminan ? $encounter->jenisJaminan->name : 'Lainnya';
         $encounter->tujuan_kunjungan = match ($encounter->tujuan_kunjungan) {
             1 => "Kunjungan Sehat (Promotif/Preventif)",
             2 => "Rehabilitatif",
@@ -36,6 +37,7 @@ class EncounterRepository
     public function getAllRawatJalan()
     {
         $query = Encounter::query()
+            ->with(['jenisJaminan', 'pasien']) // Eager load relasi jenis jaminan dan pasien
             ->where('type', 1) // hanya rawat jalan
             ->where(function ($q) {
                 $q->where('status', 1)
@@ -82,6 +84,7 @@ class EncounterRepository
     public function getAllRawatDarurat()
     {
         $query = Encounter::query()
+            ->with(['jenisJaminan', 'pasien']) // Eager load relasi jenis jaminan dan pasien
             ->where('type', 3) // hanya rawat darurat
             ->where(function ($q) {
                 $q->where('status', 1)
@@ -122,7 +125,8 @@ class EncounterRepository
             'labRequests.items',
             'labRequests.requester',
             'radiologyRequests.jenis',
-            'radiologyRequests.dokter'
+            'radiologyRequests.dokter',
+            'jenisJaminan' // Tambah eager load jenis jaminan
         ])->findOrFail($id);
         return $this->mapEncounter($encounter);
     }

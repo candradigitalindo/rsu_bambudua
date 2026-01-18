@@ -232,6 +232,38 @@
                                 </div>
                             </div>
 
+                            <div class="row gx-3">
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Status Kerabat</label>
+                                        <div class="d-flex gap-4 flex-wrap">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="is_kerabat_dokter_edit" name="is_kerabat_dokter" value="1">
+                                                <label class="form-check-label" for="is_kerabat_dokter_edit">
+                                                    <i class="ri-stethoscope-line text-primary"></i> Kerabat Dokter
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="is_kerabat_karyawan_edit" name="is_kerabat_karyawan"
+                                                    value="1">
+                                                <label class="form-check-label" for="is_kerabat_karyawan_edit">
+                                                    <i class="ri-team-line text-success"></i> Kerabat Karyawan
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox"
+                                                    id="is_kerabat_owner_edit" name="is_kerabat_owner" value="1">
+                                                <label class="form-check-label" for="is_kerabat_owner_edit">
+                                                    <i class="ri-vip-crown-line text-warning"></i> Kerabat Owner
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <input type="hidden" id="id">
                         </form>
 
@@ -506,6 +538,42 @@
                                                         </select>
                                                     </div>
 
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row gx-3">
+                                            <div class="col-12">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Status Kerabat</label>
+                                                    <div class="d-flex gap-4 flex-wrap">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="is_kerabat_dokter" name="is_kerabat_dokter"
+                                                                value="1">
+                                                            <label class="form-check-label" for="is_kerabat_dokter">
+                                                                <i class="ri-stethoscope-line text-primary"></i> Kerabat
+                                                                Dokter
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="is_kerabat_karyawan" name="is_kerabat_karyawan"
+                                                                value="1">
+                                                            <label class="form-check-label" for="is_kerabat_karyawan">
+                                                                <i class="ri-team-line text-success"></i> Kerabat Karyawan
+                                                            </label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                id="is_kerabat_owner" name="is_kerabat_owner"
+                                                                value="1">
+                                                            <label class="form-check-label" for="is_kerabat_owner">
+                                                                <i class="ri-vip-crown-line text-warning"></i> Kerabat
+                                                                Owner
+                                                            </label>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1646,7 +1714,7 @@
                         '<div class="form-check form-check-sm"><input class="form-check-input" type="checkbox" value="' +
                         d.id + '" id="' + id + '" ' + checked +
                         '><label class="form-check-label" for="' + id + '">' + d.name + '</label></div>'
-                        );
+                    );
                 });
                 // Bind change handler
                 $('#igdDoctorList input[type="checkbox"]').off('change').on('change', syncIgdCheckboxWithSelect);
@@ -2039,7 +2107,10 @@
                         mr_lama: $("#mr_lama").val(),
                         alamat: $("#alamat").val(),
                         province: $("#province").val(),
-                        city: $("#city").val()
+                        city: $("#city").val(),
+                        is_kerabat_dokter: $("#is_kerabat_dokter").is(':checked') ? 1 : 0,
+                        is_kerabat_karyawan: $("#is_kerabat_karyawan").is(':checked') ? 1 : 0,
+                        is_kerabat_owner: $("#is_kerabat_owner").is(':checked') ? 1 : 0
                     },
 
                     success: function(res) {
@@ -2069,6 +2140,9 @@
                                 $("#alamat").val(null);
                                 $("#province").val("");
                                 $("city").val(null);
+                                $("#is_kerabat_dokter").prop('checked', false);
+                                $("#is_kerabat_karyawan").prop('checked', false);
+                                $("#is_kerabat_owner").prop('checked', false);
                                 $("#btn-kembali").click();
 
                             }
@@ -2391,6 +2465,14 @@
                     $("#mr_lama_edit").val(data.mr_lama || '');
                     $("#alamat_edit").val(data.alamat);
 
+                    // Set checkbox kerabat
+                    $("#is_kerabat_dokter_edit").prop('checked', data.is_kerabat_dokter == 1 || data
+                        .is_kerabat_dokter === true);
+                    $("#is_kerabat_karyawan_edit").prop('checked', data.is_kerabat_karyawan == 1 || data
+                        .is_kerabat_karyawan === true);
+                    $("#is_kerabat_owner_edit").prop('checked', data.is_kerabat_owner == 1 || data
+                        .is_kerabat_owner === true);
+
                     // [FIX] Comprehensive province-city handling
                     const provinceDropdown = $('#province_edit');
                     const cityDropdown = $('#city_edit');
@@ -2582,7 +2664,10 @@
                     mr_lama: $("#mr_lama_edit").val(),
                     alamat: $("#alamat_edit").val(),
                     province: $("#province_edit").val(),
-                    city: $("#city_edit").val()
+                    city: $("#city_edit").val(),
+                    is_kerabat_dokter: $("#is_kerabat_dokter_edit").is(':checked') ? 1 : 0,
+                    is_kerabat_karyawan: $("#is_kerabat_karyawan_edit").is(':checked') ? 1 : 0,
+                    is_kerabat_owner: $("#is_kerabat_owner_edit").is(':checked') ? 1 : 0
                 },
 
                 success: function(res) {

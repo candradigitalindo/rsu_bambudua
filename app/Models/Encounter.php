@@ -31,9 +31,20 @@ class Encounter extends Model
         'metode_pembayaran_resep',
         'status_bayar_tindakan',
         'metode_pembayaran_tindakan',
+        'payment_fee_tindakan',
+        'payment_fee_resep',
+        'grand_total_tindakan',
+        'grand_total_resep',
+        'paid_tindakan_items',
+        'paid_resep_items',
         'clinic_id',
         'created_by',
         'dpjp_id'
+    ];
+
+    protected $casts = [
+        'paid_tindakan_items' => 'array',
+        'paid_resep_items' => 'array',
     ];
 
     public function practitioner()
@@ -75,6 +86,11 @@ class Encounter extends Model
     }
     // admission
     public function admission()
+    {
+        return $this->hasOne(InpatientAdmission::class);
+    }
+
+    public function inpatientAdmission()
     {
         return $this->hasOne(InpatientAdmission::class);
     }
@@ -156,5 +172,15 @@ class Encounter extends Model
     public function incentives()
     {
         return $this->hasMany(Incentive::class, 'encounter_id', 'id');
+    }
+
+    public function jenisJaminan()
+    {
+        return $this->belongsTo(Jenisjaminan::class, 'jenis_jaminan', 'id');
+    }
+
+    public function prescriptionOrders()
+    {
+        return $this->hasMany(PrescriptionOrder::class, 'encounter_id', 'id');
     }
 }

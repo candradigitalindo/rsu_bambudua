@@ -217,14 +217,42 @@ Route::middleware(['auth'])->group(function () {
 
         // API endpoints untuk nurse dashboard
         Route::get('/nurse-dashboard/refresh', [RuanganController::class, 'refreshNurseDashboard'])->name('api.nurse-dashboard.refresh');
+        Route::get('/nurse-dashboard/admission/{admissionId}', [RuanganController::class, 'getAdmissionData'])->name('api.nurse-dashboard.admission-data');
+        Route::get('/nurse-dashboard/room-patients/{roomId}', [RuanganController::class, 'getRoomPatients'])->name('api.nurse-dashboard.room-patients');
+        Route::post('/nurse-dashboard/assign-room', [RuanganController::class, 'assignRoomToAdmission'])->name('api.nurse-dashboard.assign-room');
         Route::get('/nurse-dashboard/patient/{roomNumber}/{patientId?}', [RuanganController::class, 'getPatientDetail'])->name('api.nurse-dashboard.patient-detail');
         Route::post('/nurse-dashboard/nursing-note', [RuanganController::class, 'addNursingNote'])->name('api.nurse-dashboard.add-nursing-note');
         Route::post('/nurse-dashboard/emergency-call', [RuanganController::class, 'emergencyCall'])->name('api.nurse-dashboard.emergency-call');
         Route::post('/nurse-dashboard/vital-signs', [RuanganController::class, 'recordVitalSigns'])->name('api.nurse-dashboard.vital-signs');
+        Route::post('/nurse-dashboard/store-vital-signs', [RuanganController::class, 'storeVitalSigns'])->name('kunjungan.nurse-dashboard.store-vital-signs');
+        Route::get('/nurse-dashboard/vital-signs-history/{admissionId}', [RuanganController::class, 'getVitalSignsHistory'])->name('kunjungan.nurse-dashboard.vital-signs-history');
+        Route::get('/nurse-dashboard/all-inpatients', [RuanganController::class, 'getAllInpatients'])->name('kunjungan.nurse-dashboard.all-inpatients');
         Route::post('/nurse-dashboard/complete-task', [RuanganController::class, 'completeTask'])->name('api.nurse-dashboard.complete-task');
         Route::get('/nurse-dashboard/occupied-rooms', [RuanganController::class, 'getOccupiedRoomsForTransfer'])->name('api.nurse-dashboard.occupied-rooms');
         Route::post('/nurse-dashboard/transfer-patient', [RuanganController::class, 'transferPatient'])->name('api.nurse-dashboard.transfer-patient');
         Route::get('/nurse-dashboard/nursing-notes', [RuanganController::class, 'getTodayNursingNotes'])->name('api.nurse-dashboard.nursing-notes');
+
+        // Prescription Orders Routes
+        Route::post('/prescription-orders', [RuanganController::class, 'storePrescriptionOrder'])->name('kunjungan.prescription-orders.store');
+        Route::get('/prescription-orders/patient/{encounterId}', [RuanganController::class, 'getPatientPrescriptions'])->name('kunjungan.prescription-orders.patient');
+        Route::get('/prescription-orders/schedule/{encounterId}', [RuanganController::class, 'getMedicationSchedule'])->name('kunjungan.prescription-orders.schedule');
+        Route::patch('/prescription-orders/{id}/status', [RuanganController::class, 'updatePrescriptionStatus'])->name('kunjungan.prescription-orders.update-status');
+        Route::delete('/prescription-orders/{id}', [RuanganController::class, 'deletePrescriptionOrder'])->name('kunjungan.prescription-orders.delete');
+
+        // Medication Administration Routes
+        Route::post('/medication-administration', [RuanganController::class, 'recordAdministration'])->name('kunjungan.medication-administration.record');
+        Route::get('/medication-administration/history/{medicationId}', [RuanganController::class, 'getMedicationHistory'])->name('kunjungan.medication-administration.history');
+
+        // Helper Routes
+        Route::get('/api/doctors', [RuanganController::class, 'getDoctorsList'])->name('api.doctors');
+        Route::get('/api/medications', [RuanganController::class, 'getMedicationsList'])->name('api.medications');
+        Route::get('/api/product-name/{id}', [RuanganController::class, 'getProductName'])->name('api.product-name');
+
+        // Medication Management Routes
+        Route::get('/nurse-dashboard/medication-schedule', [RuanganController::class, 'getMedicationScheduleAll'])->name('kunjungan.nurse-dashboard.medication-schedule');
+        Route::get('/nurse-dashboard/prescription-order/{prescriptionOrderId}', [RuanganController::class, 'getPrescriptionOrder'])->name('kunjungan.nurse-dashboard.prescription-order');
+        Route::post('/nurse-dashboard/record-medication-administration', [RuanganController::class, 'recordMedicationAdministration'])->name('kunjungan.nurse-dashboard.record-medication-administration');
+        Route::get('/nurse-dashboard/patient-pending-medications/{admissionId}', [RuanganController::class, 'getPatientPendingMedications'])->name('kunjungan.nurse-dashboard.patient-pending-medications');
 
         // Legacy endpoints (keep for compatibility)
         Route::get('/nurse-assignments', [RuanganController::class, 'getNurseAssignments'])->name('kunjungan.nurse-assignments');
@@ -307,6 +335,14 @@ Route::middleware(['auth'])->group(function () {
         //updateInpatientDailyMedicationStatus
         Route::post('/observasi/{id}/updateInpatientDailyMedicationStatus', [ObservasiController::class, 'updateInpatientDailyMedicationStatus'])->name('observasi.updateInpatientDailyMedicationStatus');
 
+        // Prescription Orders - New Medication Management System
+        Route::get('/observasi/{encounterId}/prescription-orders', [ObservasiController::class, 'getPrescriptionOrders'])->name('observasi.getPrescriptionOrders');
+        Route::post('/observasi/{encounterId}/prescription-orders', [ObservasiController::class, 'createPrescriptionOrder'])->name('observasi.createPrescriptionOrder');
+        Route::get('/observasi/prescription-orders/{orderId}', [ObservasiController::class, 'getPrescriptionOrderDetail'])->name('observasi.getPrescriptionOrderDetail');
+        Route::post('/observasi/prescription-orders/{orderId}/medications', [ObservasiController::class, 'addMedicationToPrescription'])->name('observasi.addMedicationToPrescription');
+        Route::delete('/observasi/prescription-medications/{medicationId}', [ObservasiController::class, 'removeMedicationFromPrescription'])->name('observasi.removeMedicationFromPrescription');
+        Route::patch('/observasi/prescription-orders/{orderId}/status', [ObservasiController::class, 'updatePrescriptionOrderStatus'])->name('observasi.updatePrescriptionOrderStatus');
+
         Route::get('/dashboard-dokter', [DokterController::class, 'index'])->name('dokter.index');
         Route::get('/histori-pasien', [DokterController::class, 'historiPasien'])->name('dokter.histori-pasien');
         Route::get('/histori-pendapatan', [DokterController::class, 'historiPendapatan'])->name('dokter.histori-pendapatan');
@@ -360,8 +396,7 @@ Route::middleware(['auth'])->group(function () {
         // Permintaan Obat Inap
         Route::get('/permintaan-inap', [ApotekController::class, 'permintaanObatInap'])->name('apotek.permintaan-inap');
         Route::get('/permintaan-inap/detail/{id}', [ApotekController::class, 'permintaanObatInapDetail'])->name('apotek.permintaan-inap.detail');
-        Route::get('/permintaan-inap/detail-grouped/{admissionId}', [ApotekController::class, 'permintaanObatInapDetailGrouped'])->name('apotek.permintaan-inap.detail-grouped');
-        Route::post('/permintaan-inap/siapkan/{id}', [ApotekController::class, 'siapkanObatInap'])->name('apotek.siapkan-inap');
+        Route::post('/permintaan-inap/update-status/{id}', [ApotekController::class, 'updatePharmacyStatus'])->name('apotek.permintaan-inap.update-status');
         // Route untuk Penyiapan Resep (Rawat Jalan & Pulang)
         Route::get('/penyiapan-resep', [ApotekController::class, 'penyiapanResepIndex'])->name('apotek.penyiapan-resep');
         Route::get('/penyiapan-resep/detail/{id}', [ApotekController::class, 'penyiapanResepDetail'])->name('apotek.penyiapan-resep.detail');
@@ -460,6 +495,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('keuangan')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\KeuanganController::class, 'index'])->name('keuangan.index');
+        Route::get('/detail-pendapatan', [\App\Http\Controllers\KeuanganController::class, 'getDetailPendapatan'])->name('keuangan.detail.pendapatan');
         Route::get('/gaji', [\App\Http\Controllers\KeuanganController::class, 'gaji'])->name('keuangan.gaji');
         Route::get('/pengaturan-insentif', [\App\Http\Controllers\KeuanganController::class, 'pengaturanIncentive'])->name('keuangan.incentive.settings');
         Route::post('/pengaturan-insentif', [\App\Http\Controllers\KeuanganController::class, 'simpanPengaturanIncentive'])->name('keuangan.incentive.settings.simpan');

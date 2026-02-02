@@ -19,7 +19,7 @@ Sebelumnya, formulir pendaftaran rawat inap memiliki field "Dokter" yang:
 
 **File:** `resources/views/pages/pendaftaran/index.blade.php`
 
-#### Label Update (Line ~808)
+#### Label t Update (Line ~808)
 
 ```blade
 <!-- BEFORE -->

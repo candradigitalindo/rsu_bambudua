@@ -22,6 +22,8 @@
     
     <!-- Critical CSS -->
     <link rel="stylesheet" href="{{ asset('css/main.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     
     <!-- Custom Stack Styles -->
     @stack('style')
@@ -68,7 +70,6 @@
             }
         }
     </style>
-    @stack('style')
 </head>
 
 <body>
@@ -221,7 +222,15 @@
     <script src="{{ asset('js/jquery.min.js') }}"></script>
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('js/moment.min.js') }}"></script>
+    <script src="{{ asset('vendor/sweetalert/sweetalert.all.js') }}"></script>
     
+    <!-- Shared Libraries -->
+    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
+    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
+    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
+    <script src="{{ asset('js/custom.js') }}"></script>
+    <script src="{{ asset('js/validations.js') }}"></script>
+
     <!-- Page specific scripts -->
     @stack('scripts')
     

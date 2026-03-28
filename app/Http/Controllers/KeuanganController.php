@@ -10,6 +10,7 @@ use App\Models\OperationalExpense;
 use App\Models\IncentiveSetting;
 use App\Models\SalaryAdjustment;
 use App\Models\User;
+use App\Models\PaketPasien;
 use Illuminate\Http\Request;
 use App\Models\SalaryPayment;
 use Illuminate\Support\Facades\DB;
@@ -36,11 +37,16 @@ class KeuanganController extends Controller
 
         $pendapatanOperasionalBulanIni = ($pendapatan->total_tindakan ?? 0) + ($pendapatan->total_resep ?? 0);
 
+        // Pendapatan paket pemeriksaan bulan ini
+        $pendapatanPaketBulanIni = PaketPasien::where('status_bayar', true)
+            ->whereBetween('paid_at', [$startOfMonth, $endOfMonth])
+            ->sum('harga_bayar');
+
         // Ambil pendapatan lainnya bulan ini
         $pendapatanLainnyaBulanIni = OtherIncome::whereBetween('income_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
-        $totalPendapatanBulanIni = $pendapatanOperasionalBulanIni + $pendapatanLainnyaBulanIni;
+        $totalPendapatanBulanIni = $pendapatanOperasionalBulanIni + $pendapatanPaketBulanIni + $pendapatanLainnyaBulanIni;
 
         // 2. Pengeluaran, Gaji, Laba/Rugi
         $pengeluaranOperasionalBulanIni = OperationalExpense::whereBetween('expense_date', [$startOfMonth, $endOfMonth])
@@ -68,6 +74,7 @@ class KeuanganController extends Controller
             'gajiInsentifBulanIni',
             'labaRugiBulanIni',
             'pengeluaranOperasionalBulanIni',
+            'pendapatanPaketBulanIni',
             'pendapatanLainnyaBulanIni',
             'grafikData',
             'beritaTerbaru'
@@ -82,6 +89,7 @@ class KeuanganController extends Controller
         $seriesNames = [
             'pendapatan_tindakan' => 'Pendapatan Tindakan',
             'pendapatan_farmasi' => 'Pendapatan Farmasi',
+            'pendapatan_paket' => 'Pendapatan Paket',
             'pendapatan_lainnya' => 'Pendapatan Lainnya',
             'pengeluaran_operasional' => 'Pengeluaran Operasional',
             'gaji_dan_insentif' => 'Gaji & Insentif',
@@ -151,6 +159,15 @@ class KeuanganController extends Controller
             ->groupBy('bulan')
             ->get();
 
+        $pendapatanPaket = PaketPasien::selectRaw('MONTH(paid_at) as bulan, SUM(harga_bayar) as total')
+            ->where('status_bayar', true)
+            ->whereYear('paid_at', $year)
+            ->when(!$isOwner, function ($query) use ($startMonth, $currentMonth) {
+                $query->whereRaw('MONTH(paid_at) >= ? AND MONTH(paid_at) <= ?', [$startMonth, $currentMonth]);
+            })
+            ->groupBy('bulan')
+            ->get();
+
         // Isi data yang ada dari DB
         foreach ($pendapatanTindakan as $result) {
             if ($result->bulan) {
@@ -193,6 +210,15 @@ class KeuanganController extends Controller
                 $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
                 if ($index >= 0 && $index < $monthsToShow) {
                     $data['gaji_dan_insentif'][$index] = (float)$result->total;
+                }
+            }
+        }
+
+        foreach ($pendapatanPaket as $result) {
+            if ($result->bulan) {
+                $index = $isOwner ? $result->bulan - 1 : $result->bulan - $startMonth;
+                if ($index >= 0 && $index < $monthsToShow) {
+                    $data['pendapatan_paket'][$index] = (float)$result->total;
                 }
             }
         }

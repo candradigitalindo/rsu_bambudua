@@ -2,7 +2,6 @@
 
 @section('title', 'Permintaan Radiologi')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
 <div class="row">
@@ -52,7 +51,4 @@ $(document).ready(function() {
 @endpush
 
 @push('scripts')
-<script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-<script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-<script src="{{ asset('js/custom.js') }}"></script>
 @endpush

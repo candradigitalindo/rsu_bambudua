@@ -2,10 +2,8 @@
 @section('title', 'Jenis Jaminan')
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
     <!-- Uploader CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -29,9 +27,9 @@
                         <div class="row gx-3">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label" for="a5">Maksimal Diskon Tindakan (%)</label>
+                                    <label class="form-label" for="diskon-tindakan-persen">Maksimal Diskon Tindakan (%)</label>
                                     <div class="input-group">
-                                        <input name="diskon_tindakan" type="number" class="form-control" id="a5"
+                                        <input name="diskon_tindakan" type="number" class="form-control" id="diskon-tindakan-persen"
                                             value="{{ old('diskon_tindakan') ?? $discounts->diskon_tindakan }}">
                                         <div class="input-group-text">%</div>
                                     </div>
@@ -39,13 +37,35 @@
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label" for="a7">Maksimal Diskon Resep (%)</label>
+                                <label class="form-label" for="diskon-tindakan-nominal">Maksimal Diskon Tindakan (Rp)</label>
                                 <div class="input-group">
-                                    <input name="diskon_resep" type="number" class="form-control" id="a7"
-                                        value="{{ old('diskon_resep') ?? $discounts->diskon_resep }}">
-                                    <div class="input-group-text">%</div>
+                                    <div class="input-group-text">Rp</div>
+                                    <input name="diskon_tindakan_nominal" type="number" class="form-control"
+                                        id="diskon-tindakan-nominal"
+                                        value="{{ old('diskon_tindakan_nominal') ?? $discounts->diskon_tindakan_nominal }}">
                                 </div>
-                                <p class="text-danger">{{ $errors->first('diskon_resep') }}</p>
+                                <p class="text-danger">{{ $errors->first('diskon_tindakan_nominal') }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label" for="diskon-resep-persen">Maksimal Diskon Resep (%)</label>
+                                    <div class="input-group">
+                                        <input name="diskon_resep" type="number" class="form-control" id="diskon-resep-persen"
+                                            value="{{ old('diskon_resep') ?? $discounts->diskon_resep }}">
+                                        <div class="input-group-text">%</div>
+                                    </div>
+                                    <p class="text-danger">{{ $errors->first('diskon_resep') }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="diskon-resep-nominal">Maksimal Diskon Resep (Rp)</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">Rp</div>
+                                    <input name="diskon_resep_nominal" type="number" class="form-control"
+                                        id="diskon-resep-nominal"
+                                        value="{{ old('diskon_resep_nominal') ?? $discounts->diskon_resep_nominal }}">
+                                </div>
+                                <p class="text-danger">{{ $errors->first('diskon_resep_nominal') }}</p>
                             </div>
                         </div>
                         <!-- Row ends -->
@@ -70,15 +90,10 @@
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Dropzone JS -->
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/validations.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#submit").submit(function() {

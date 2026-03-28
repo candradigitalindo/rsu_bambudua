@@ -1,33 +1,23 @@
 <div class="row gx-3">
-    <div class="col-xxl-6 col-sm-6">
-        <div class="card mb-1 shadow-sm">
-            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <h5 class="card-title text-white mb-0">
-                    <i class="ri-stethoscope-line me-2"></i>Form Tindakan Medis
-                </h5>
+    <div class="col-xxl-4 col-lg-5 col-sm-12">
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 pb-0">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-stethoscope-line me-1 text-primary"></i>Form Tindakan
+                </h6>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body pt-3">
                 <form id="form-tindakan-medis">
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold" for="jenis_tindakan">
-                            <i class="ri-medical-book-line text-primary me-1"></i>Jenis Tindakan
-                            <span class="text-danger">*</span>
-                        </label>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted" for="jenis_tindakan">Jenis Tindakan</label>
                         <select name="jenis_tindakan" id="jenis_tindakan" class="form-select" required>
                             <option value="">-- Pilih Jenis Tindakan --</option>
                         </select>
-                        <div class="invalid-feedback">Silakan pilih jenis tindakan</div>
-                        <small class="form-text text-muted">
-                            <i class="ri-information-line"></i> Pilih tindakan medis yang akan dilakukan
-                        </small>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold" for="qty">
-                            <i class="ri-add-circle-line text-success me-1"></i>Jumlah
-                            <span class="text-danger">*</span>
-                        </label>
-                        <div class="input-group">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-muted" for="qty">Jumlah</label>
+                        <div class="input-group input-group-sm">
                             <button class="btn btn-outline-secondary" type="button" id="btn-qty-minus">
                                 <i class="ri-subtract-line"></i>
                             </button>
@@ -37,78 +27,96 @@
                                 <i class="ri-add-line"></i>
                             </button>
                         </div>
-                        <div class="invalid-feedback">Jumlah minimal 1</div>
-                        <small class="form-text text-muted">
-                            <i class="ri-information-line"></i> Jumlah tindakan yang akan dilakukan
-                        </small>
                     </div>
 
-                    <div class="alert alert-info alert-dismissible fade show" role="alert" id="info-harga"
-                        style="display: none;">
-                        <i class="ri-price-tag-3-line me-2"></i>
-                        <strong>Estimasi Biaya:</strong> <span id="estimasi-biaya">Rp 0</span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <div class="alert alert-info py-2 px-3 small" role="alert" id="info-harga" style="display: none;">
+                        <i class="ri-price-tag-3-line me-1"></i>
+                        <strong>Estimasi:</strong> <span id="estimasi-biaya">Rp 0</span>
                     </div>
 
-                    <div class="d-flex gap-2 justify-content-end mt-4">
-                        <button type="reset" class="btn btn-outline-secondary" id="btn-reset-tindakan">
-                            <i class="ri-refresh-line me-1"></i>Reset
-                        </button>
-                        <button type="submit" class="btn btn-primary px-4" id="btn-tindakan-medis">
-                            <span class="btn-txt" id="text-tindakan-medis">
-                                <i class="ri-save-line me-1"></i>Simpan Tindakan
-                            </span>
-                            <span class="spinner-border spinner-border-sm d-none me-1"
-                                id="spinner-tindakan-medis"></span>
-                            <span class="d-none" id="text-loading-tindakan">Menyimpan...</span>
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="btn-tindakan-medis">
+                        <i class="ri-add-line me-1"></i>
+                        <span class="btn-txt" id="text-tindakan-medis">Tambah Tindakan</span>
+                        <span class="spinner-border spinner-border-sm d-none" id="spinner-tindakan-medis"></span>
+                    </button>
                 </form>
             </div>
         </div>
     </div>
-    <div class="col-xxl-6 col-sm-12">
-        <div class="card mb-3 shadow-sm">
-            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <h5 class="card-title text-white mb-0">
-                    <i class="ri-file-list-3-line me-2"></i>Data Tindakan Medis
-                </h5>
+    <div class="col-xxl-8 col-lg-7 col-sm-12">
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-file-list-3-line me-1 text-primary"></i>Data Tindakan Medis
+                </h6>
+                <span class="badge bg-primary-subtle text-primary rounded-pill" id="tindakan-count"></span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle m-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-center" width="80">Aksi</th>
-                                <th>Nama Tindakan</th>
-                                <th class="text-center" width="60">Qty</th>
-                                <th class="text-end" width="120">Harga</th>
-                                <th class="text-end" width="120">Sub Total</th>
-                                <th width="150">Dokter</th>
+                    <table class="table table-hover align-middle mb-0" id="tbl-tindakan">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-3" style="min-width: 200px;">Tindakan</th>
+                                <th class="text-center" style="width: 60px;">Qty</th>
+                                <th class="text-end" style="width: 110px;">Harga</th>
+                                <th class="text-end" style="width: 120px;">Sub Total</th>
+                                <th style="width: 130px;">Dokter</th>
+                                <th class="text-center pe-3" style="width: 60px;"></th>
                             </tr>
                         </thead>
                         <tbody id="tbody-tindakan"></tbody>
-                        <tfoot class="table-light">
-                            <tr class="fw-bold">
-                                <td colspan="4" class="text-end">
-                                    <i class="ri-calculator-line me-2"></i>Total Biaya
+                        <tfoot id="tfoot-tindakan">
+                            <tr>
+                                <td colspan="3" class="text-end fw-semibold text-muted ps-3" style="font-size: .85rem;">
+                                    Total Biaya
                                 </td>
-                                <td class="text-end text-primary fs-5">
+                                <td class="text-end fw-bold text-primary" style="font-size: .95rem;">
                                     Rp <span id="total-harga">0</span>
                                 </td>
-                                <td></td>
+                                <td colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-                <div id="empty-state-tindakan" class="text-center py-5" style="display: none;">
-                    <i class="ri-inbox-line" style="font-size: 4rem; color: #e0e0e0;"></i>
-                    <p class="text-muted mt-3 mb-0">Belum ada tindakan medis yang ditambahkan</p>
+                <div id="empty-state-tindakan" class="text-center py-4" style="display: none;">
+                    <div class="text-muted">
+                        <i class="ri-stethoscope-line fs-2 d-block mb-2 opacity-50"></i>
+                        <span class="small">Belum ada tindakan medis</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@push('style')
+<style>
+    #tbl-tindakan thead th {
+        font-size: .75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #fff;
+        border-bottom: none;
+        padding: .6rem .5rem;
+    }
+    #tbl-tindakan tbody tr {
+        transition: background-color .15s ease;
+    }
+    #tbl-tindakan tbody tr:hover {
+        background-color: #f8f9ff;
+    }
+    #tbl-tindakan tbody td {
+        padding: .6rem .5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    #tfoot-tindakan td {
+        padding: .6rem .5rem;
+        border-top: 2px solid #e9ecef;
+    }
+</style>
+@endpush
 
 @push('scripts')
     <script>
@@ -192,52 +200,53 @@
                     .done(function(data) {
                         const tbody = $('#tbody-tindakan');
                         const emptyState = $('#empty-state-tindakan');
+                        const countBadge = $('#tindakan-count');
+                        const tfoot = $('#tfoot-tindakan');
                         tbody.empty();
                         let total_harga = 0;
-                        // Ensure data is an array
                         const items = Array.isArray(data) ? data : (data ? [data] : []);
-
-                        // Filter out items without required fields
                         const validItems = items.filter(item => item && item.id && item.tindakan_name);
 
                         if (validItems.length === 0) {
                             emptyState.show();
                             tbody.closest('table').hide();
+                            tfoot.hide();
+                            countBadge.hide();
                             $('#total-harga').text('0');
                             return;
                         }
 
                         emptyState.hide();
                         tbody.closest('table').show();
+                        tfoot.show();
+                        countBadge.text(validItems.length + ' item').show();
 
-                        validItems.forEach(function(item, index) {
+                        validItems.forEach(function(item) {
                             const itemTotal = parseFloat(item.total_harga) || (parseFloat(item
                                 .tindakan_harga) * parseInt(item.qty));
                             total_harga += (itemTotal || 0);
                             tbody.append(`
-            <tr class="animate-fade-in" style="animation-delay: ${index * 0.05}s">
-              <td class="text-center">
-                <button class="btn btn-danger btn-sm btn-hapus-tindakan" data-id="${item.id}" title="Hapus tindakan">
-                  <i class="ri-delete-bin-line"></i>
-                </button>
-              </td>
-              <td>
-                <div class="fw-semibold">${item.tindakan_name}</div>
-                ${item.tindakan_description ? `<small class="text-muted">${item.tindakan_description}</small>` : ''}
-              </td>
-              <td class="text-center">
-                <span class="badge bg-light text-dark">${item.qty || 0}</span>
-              </td>
-              <td class="text-end">Rp ${formatRupiah(item.tindakan_harga || 0)}</td>
-              <td class="text-end fw-semibold text-primary">Rp ${formatRupiah(itemTotal)}</td>
-              <td>
-                <div class="d-flex align-items-center">
-                  <i class="ri-user-line me-2 text-muted"></i>
-                  <span class="text-truncate">${item.petugas_name || '-'}</span>
-                </div>
-              </td>
-            </tr>
-          `);
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold text-dark" style="font-size: .85rem; line-height: 1.3;">${item.tindakan_name} ${item.paket_pasien_id ? '<span class="badge bg-success-subtle text-success" style="font-size: .6rem; vertical-align: middle;">Paket</span>' : ''}</div>
+                                        ${item.tindakan_description ? `<div class="text-muted" style="font-size: .75rem;">${item.tindakan_description}</div>` : ''}
+                                    </td>
+                                    <td class="text-center fw-medium">${item.qty || 0}</td>
+                                    <td class="text-end text-muted" style="font-size: .85rem;">${formatRupiah(item.tindakan_harga || 0)}</td>
+                                    <td class="text-end fw-semibold" style="font-size: .85rem;">${formatRupiah(itemTotal)}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-1" style="font-size: .8rem;">
+                                            <i class="ri-user-line text-muted"></i>
+                                            <span class="text-truncate">${item.petugas_name || '-'}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center pe-3">
+                                        <button class="btn btn-sm btn-soft-danger btn-hapus-tindakan" data-id="${item.id}" title="Hapus">
+                                            <i class="ri-delete-bin-6-line"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `);
                         });
                         $('#total-harga').text(formatRupiah(total_harga));
                     });

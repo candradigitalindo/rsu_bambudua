@@ -80,8 +80,9 @@ class MedicalRecordsController extends Controller
                 });
             })
             ->withCount('encounters')
-            ->orderBy('updated_at', 'desc')
-            ->paginate(20);
+            ->orderByRaw('CAST(rekam_medis AS UNSIGNED) ASC')
+            ->paginate(20)
+            ->appends($request->query());
 
         return view('pages.medical-records.riwayat', compact('patients'));
     }

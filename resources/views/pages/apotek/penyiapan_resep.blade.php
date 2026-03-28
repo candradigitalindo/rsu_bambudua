@@ -4,7 +4,6 @@
 
 @push('style')
     <!-- CSS Libraries -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         /* Hapus backdrop, buat modal dengan shadow saja */
@@ -149,10 +148,7 @@
 @push('scripts')
     <!-- JS Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <!-- Page Specific JS File -->
     <script>

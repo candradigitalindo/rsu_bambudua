@@ -4,8 +4,6 @@
     <!-- Existing CSS -->
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     <style>
         /* Fix for modal backdrop issues - prevent persistent black overlay */
         .modal-backdrop {
@@ -99,18 +97,32 @@
 
                         </button>
                     </div>
-                    {{-- Modal Pencarian Pasien dengan Komponen Baru --}}
+                    {{-- Modal Pencarian Pasien Modern --}}
                     <x-modal id="modal-pasien" title="Data Pasien" icon="ri-folder-user-fill" size="modal-xl" scrollable
-                        backdrop="false" keyboard="false">
+                        backdrop="false" keyboard="false" header-class="bg-primary text-white border-0"
+                        body-class="bg-light p-4">
 
-                        {{-- Advanced Search Component --}}
-                        <x-search.advanced name="q" placeholder="Cari Nama, RM, RM Lama, No HP, KTP..."
-                            ajax-url="{{ route('pendaftaran.caripasien') }}" result-container="data" :show-button="false"
-                            debounce="300" min-length="2" input-class="form-control-lg" container-class="mb-4" />
+                        {{-- Hero Search Area --}}
+                        <div class="search-hero text-center mb-4">
+                            <div class="search-hero-icon mb-3">
+                                <i class="ri-search-eye-line"></i>
+                            </div>
+                            <h6 class="text-muted mb-3">Cari pasien berdasarkan Nama, Rekam Medis, No HP, atau KTP</h6>
+                            <x-search.advanced name="q" placeholder="Ketik minimal 2 karakter untuk mencari..."
+                                ajax-url="{{ route('pendaftaran.caripasien') }}" result-container="data" :show-button="false"
+                                debounce="300" min-length="2" input-class="form-control-lg search-input-modern" container-class="mb-0 px-lg-5" />
+                        </div>
 
                         {{-- Search Results --}}
                         <div id="data" class="search-results">
-                            {{-- Results will be populated via AJAX --}}
+                            {{-- Empty state --}}
+                            <div class="empty-state text-center py-5">
+                                <div class="empty-state-icon mb-3">
+                                    <i class="ri-user-search-line"></i>
+                                </div>
+                                <h6 class="text-muted fw-normal">Mulai ketik untuk mencari data pasien</h6>
+                                <small class="text-muted">Hasil pencarian akan muncul di sini</small>
+                            </div>
                         </div>
 
                         {{-- Loading Component --}}
@@ -121,13 +133,13 @@
                         ])
 
                         <x-slot name="footerButtons">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            <button type="button" class="btn btn-primary px-4" data-bs-toggle="modal"
                                 data-bs-target="#form-pasien" id="btn-buatPasienBaru">
-                                <i class="ri-user-add-fill"></i>
+                                <i class="ri-user-add-fill me-1"></i>
                                 <span class="btn-text">Buat Data Pasien Baru</span>
                                 <span class="spinner-border spinner-border-sm d-none"></span>
                             </button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                            <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Tutup</button>
                         </x-slot>
                     </x-modal>
                     {{-- Modal Edit Pasien dengan Komponen Baru --}}
@@ -664,6 +676,9 @@
                                         </div>
                                     </div>
 
+                                    <!-- Paket Pemeriksaan Section -->
+                                    @include('pages.pendaftaran._paket_section', ['modalSuffix' => 'rawatJalan'])
+
                                     <!-- Error Alert -->
                                     <div class="alert alert-danger d-none" id="error-rawatJalan">
                                         <div class="d-flex align-items-center">
@@ -850,6 +865,10 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Paket Pemeriksaan Section -->
+                                    @include('pages.pendaftaran._paket_section', ['modalSuffix' => 'rawatInap'])
+
                                     <div class="alert alert-danger print-error-msg mt-2 mb-2" style="display:none"
                                         id="error-rawatRinap">
                                         <ul></ul>
@@ -1053,6 +1072,9 @@
                                             </div>
                                         </div>
                                     </div>
+
+                                    <!-- Paket Pemeriksaan Section -->
+                                    @include('pages.pendaftaran._paket_section', ['modalSuffix' => 'rawatDarurat'])
 
                                     <!-- Error Alert -->
                                     <div class="alert alert-danger d-none" id="error-rawatDarurat">
@@ -1577,6 +1599,213 @@
             vertical-align: top;
         }
     </style>
+
+    {{-- Modern Patient Search Modal Styles --}}
+    <style>
+        /* Modal Header */
+        #modal-pasien .modal-header.bg-primary.text-white {
+            background: linear-gradient(135deg, #238781 0%, #1a6b66 100%) !important;
+        }
+        #modal-pasien .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        /* Search Hero */
+        .search-hero {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .search-hero .row.g-2 {
+            justify-content: center;
+        }
+        .search-hero .row.g-2 > .col-md-6 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+        .search-hero-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #238781 0%, #1a6b66 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .search-hero-icon i {
+            font-size: 24px;
+            color: white;
+        }
+        .search-input-modern {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            padding: 14px 20px !important;
+            font-size: 15px !important;
+            transition: all 0.2s ease !important;
+            background: #f8fafc !important;
+        }
+        .search-input-modern:focus {
+            border-color: #238781 !important;
+            box-shadow: 0 0 0 4px rgba(35, 135, 129, 0.1) !important;
+            background: white !important;
+        }
+
+        /* Empty State & Not Found */
+        .empty-state, .not-found-state {
+            padding: 48px 24px;
+        }
+        .empty-state-icon, .not-found-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .empty-state-icon i, .not-found-icon i {
+            font-size: 32px;
+            color: #94a3b8;
+        }
+        .not-found-icon {
+            background: #fef2f2;
+        }
+        .not-found-icon i {
+            color: #f87171;
+        }
+
+        /* Patient Result Card */
+        .patient-result-card {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+        }
+        .patient-result-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+            transform: translateY(-1px);
+        }
+
+        /* Card Header */
+        .prc-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px 12px;
+            flex-wrap: wrap;
+        }
+        .prc-avatar {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        .prc-identity {
+            flex: 1;
+            min-width: 180px;
+        }
+        .prc-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.3;
+        }
+        .prc-rm {
+            font-size: 12.5px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .prc-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .prc-badges .badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+        }
+
+        /* Card Body - Info Grid */
+        .prc-body {
+            padding: 0 20px 12px;
+        }
+        .prc-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .prc-info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .prc-info-icon {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 8px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #238781;
+            font-size: 15px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .prc-info-label {
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        .prc-info-value {
+            font-size: 13px;
+            color: #334155;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* Card Actions */
+        .prc-actions {
+            display: flex;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #f8fafc;
+            border-top: 1px solid #f1f5f9;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+        }
+        .prc-actions .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 12.5px;
+            padding: 6px 16px;
+            transition: all 0.15s ease;
+        }
+        .prc-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+
+        /* Modal footer polish */
+        #modal-pasien .modal-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
 @endpush
 
 @push('scripts')
@@ -1584,15 +1813,10 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Dropzone JS -->
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/validations.js') }}"></script>
     <script src="https://code.responsivevoice.org/responsivevoice.js?key=Pqiovi6G"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
@@ -2748,6 +2972,9 @@
                     $("#no_encounter_rawatJalan").text(res.data.no_encounter || '-');
                     $("#created_rawatJalan").text(res.data.tgl_encounter || '-');
                     $("#type_rawatJalan").text(res.data.type || '-');
+
+                    // Load paket pasien
+                    loadPaketPasien(id, 'rawatJalan');
                 }
             })
         });
@@ -3195,6 +3422,9 @@
                     $("#no_encounter_rawatDarurat").text(res.data.no_encounter || '-');
                     $("#created_rawatDarurat").text(res.data.tgl_encounter || '-');
                     $("#type_rawatDarurat").text(res.data.type || '-');
+
+                    // Load paket pasien
+                    loadPaketPasien(id, 'rawatDarurat');
                 }
             }).always(function() {
                 // [FIX] Initialize Select2 after the modal is fully populated and ready
@@ -3414,6 +3644,9 @@
                     $("#no_encounter_rawatRinap").text(res.data.no_encounter || '-');
                     $("#created_rawatRinap").text(res.data.tgl_encounter || '-');
                     $("#type_rawatRinap").text(res.data.type || '-');
+
+                    // Load paket pasien
+                    loadPaketPasien(id, 'rawatInap');
                 }
             });
         });
@@ -4204,6 +4437,202 @@
                 setTimeout(() => cityDropdown.val(selectedCity).trigger('change'), 200);
                 cityDropdown.removeData('selected-city'); // Clean up
             }
+        });
+
+        // ============================================================
+        // PAKET PEMERIKSAAN - Beli Paket di Pendaftaran
+        // ============================================================
+
+        /**
+         * Load paket pasien data into the paket section of a modal
+         */
+        function loadPaketPasien(pasienId, suffix) {
+            let url = "{{ route('pendaftaran.getPaketPasien', ':id') }}".replace(':id', pasienId);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(res) {
+                    if (!res.success) return;
+
+                    let pakets = res.data;
+                    let tbody = $('#paket-tbody-' + suffix);
+                    let emptyEl = $('#paket-empty-' + suffix);
+                    let tableWrap = $('#paket-table-wrap-' + suffix);
+                    let countEl = $('#paket-count-' + suffix);
+
+                    tbody.empty();
+                    countEl.text(pakets.length + ' paket');
+
+                    if (pakets.length === 0) {
+                        emptyEl.removeClass('d-none');
+                        tableWrap.addClass('d-none');
+                        return;
+                    }
+
+                    emptyEl.addClass('d-none');
+                    tableWrap.removeClass('d-none');
+
+                    pakets.forEach(function(p) {
+                        let statusBadge = '';
+                        if (p.is_gratis) {
+                            statusBadge = '<span class="badge bg-success-subtle text-success">GRATIS</span>';
+                        } else if (p.status_bayar) {
+                            statusBadge = '<span class="badge bg-success-subtle text-success">Lunas</span>';
+                        } else {
+                            statusBadge = '<span class="badge bg-warning-subtle text-warning">Belum Bayar</span>';
+                        }
+
+                        let statusPaket = '';
+                        if (p.status === 'aktif') {
+                            statusPaket = '<span class="badge bg-primary-subtle text-primary ms-1">Aktif</span>';
+                        } else if (p.status === 'pending') {
+                            statusPaket = '<span class="badge bg-warning-subtle text-warning ms-1">Pending</span>';
+                        } else if (p.status === 'selesai') {
+                            statusPaket = '<span class="badge bg-dark-subtle text-dark ms-1">Selesai</span>';
+                        }
+
+                        let deleteBtn = '';
+                        if (!p.status_bayar) {
+                            deleteBtn = '<button type="button" class="btn btn-sm btn-outline-danger btn-hapusPaket" ' +
+                                'data-paket-pasien-id="' + p.id + '" data-suffix="' + suffix + '" title="Hapus">' +
+                                '<i class="ri-delete-bin-line"></i></button>';
+                        }
+
+                        let hargaText = p.is_gratis ? 'GRATIS' : 'Rp ' + Number(p.harga).toLocaleString('id-ID');
+
+                        tbody.append(
+                            '<tr>' +
+                                '<td>' + p.name + '</td>' +
+                                '<td class="text-center">' + p.sesi_terpakai + '/' + p.total_sesi + '</td>' +
+                                '<td class="text-end">' + hargaText + '</td>' +
+                                '<td class="text-center">' + statusBadge + statusPaket + '</td>' +
+                                '<td class="text-center">' + deleteBtn + '</td>' +
+                            '</tr>'
+                        );
+                    });
+                }
+            });
+        }
+
+        /**
+         * Beli paket button handler
+         */
+        $(document).on('click', '.btn-beliPaket', function() {
+            let suffix = $(this).data('suffix');
+            let selectEl = $('#selectPaket-' + suffix);
+            let paketId = selectEl.val();
+
+            if (!paketId) {
+                swal('Pilih paket terlebih dahulu.', { icon: 'warning' });
+                return;
+            }
+
+            // Get the patient ID from the corresponding hidden input
+            let pasienId = '';
+            if (suffix === 'rawatJalan') {
+                pasienId = $('#id-rawatJalan').val();
+            } else if (suffix === 'rawatInap') {
+                pasienId = $('#id-rawatRinap').val();
+            } else if (suffix === 'rawatDarurat') {
+                pasienId = $('#id-rawatDarurat').val();
+            }
+
+            if (!pasienId) {
+                swal('Data pasien tidak ditemukan.', { icon: 'error' });
+                return;
+            }
+
+            let isGratis = selectEl.find(':selected').data('gratis') == '1';
+            let confirmText = isGratis
+                ? 'Paket GRATIS akan langsung aktif untuk pasien ini.'
+                : 'Paket akan ditambahkan dan harus dibayar di kasir agar aktif.';
+
+            swal({
+                title: 'Beli Paket?',
+                text: confirmText,
+                icon: 'info',
+                buttons: {
+                    cancel: { text: 'Batal', value: null, visible: true },
+                    confirm: { text: 'Ya, Beli', value: true, visible: true }
+                },
+            }).then((confirmed) => {
+                if (!confirmed) return;
+
+                let url = "{{ route('pendaftaran.beliPaket', ':id') }}".replace(':id', pasienId);
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        paket_pemeriksaan_id: paketId
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            swal(res.message, { icon: 'success', timer: 2000 });
+                            selectEl.val('');
+                            loadPaketPasien(pasienId, suffix);
+                        } else {
+                            swal(res.message || 'Gagal menambahkan paket.', { icon: 'error' });
+                        }
+                    },
+                    error: function(xhr) {
+                        swal('Terjadi kesalahan saat menambahkan paket.', { icon: 'error' });
+                    }
+                });
+            });
+        });
+
+        /**
+         * Hapus paket button handler
+         */
+        $(document).on('click', '.btn-hapusPaket', function() {
+            let paketPasienId = $(this).data('paket-pasien-id');
+            let suffix = $(this).data('suffix');
+
+            let pasienId = '';
+            if (suffix === 'rawatJalan') {
+                pasienId = $('#id-rawatJalan').val();
+            } else if (suffix === 'rawatInap') {
+                pasienId = $('#id-rawatRinap').val();
+            } else if (suffix === 'rawatDarurat') {
+                pasienId = $('#id-rawatDarurat').val();
+            }
+
+            swal({
+                title: 'Hapus Paket?',
+                text: 'Paket yang belum dibayar akan dihapus.',
+                icon: 'warning',
+                buttons: {
+                    cancel: { text: 'Batal', value: null, visible: true },
+                    confirm: { text: 'Ya, Hapus', value: true, visible: true, className: 'btn-danger' }
+                },
+                dangerMode: true,
+            }).then((confirmed) => {
+                if (!confirmed) return;
+
+                let url = "{{ route('pendaftaran.hapusPaket', [':id', ':pid']) }}"
+                    .replace(':id', pasienId)
+                    .replace(':pid', paketPasienId);
+
+                $.ajax({
+                    url: url,
+                    type: 'DELETE',
+                    data: { _token: '{{ csrf_token() }}' },
+                    success: function(res) {
+                        if (res.success) {
+                            swal(res.message, { icon: 'success', timer: 1500 });
+                            loadPaketPasien(pasienId, suffix);
+                        } else {
+                            swal(res.message || 'Gagal menghapus paket.', { icon: 'error' });
+                        }
+                    },
+                    error: function(xhr) {
+                        swal('Terjadi kesalahan saat menghapus paket.', { icon: 'error' });
+                    }
+                });
+            });
         });
     </script>
 

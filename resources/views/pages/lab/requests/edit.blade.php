@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Hasil & Status Permintaan Lab')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <style>
         .examination-group-card {
             border: 2px solid #dee2e6 !important;
@@ -134,9 +133,6 @@
     </div>
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush
 @push('scripts')
     <script>

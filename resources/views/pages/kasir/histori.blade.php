@@ -3,7 +3,6 @@
 @section('title', 'Histori Transaksi Pembayaran')
 
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 
 @section('content')
@@ -90,7 +89,7 @@
                                             <br>
                                             <small class="text-muted">{{ $enc->metode_pembayaran_tindakan }}</small>
                                         @else
-                                            <span class="badge bg-secondary">-</span>
+                                            <span class="badge bg-warning text-dark">-</span>
                                         @endif
                                     </td>
                                     <td class="text-end">
@@ -101,7 +100,7 @@
                                             <br>
                                             <small class="text-muted">{{ $enc->metode_pembayaran_resep }}</small>
                                         @else
-                                            <span class="badge bg-secondary">-</span>
+                                            <span class="badge bg-warning text-dark">-</span>
                                         @endif
                                     </td>
                                     <td class="text-end">
@@ -139,11 +138,73 @@
                 </div>
             </div>
         </div>
+
+        {{-- Paket Transactions Table --}}
+        @if (isset($paidPakets) && $paidPakets->isNotEmpty())
+        <div class="card mt-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="ri-gift-line"></i> Transaksi Paket Pemeriksaan
+                    <span class="badge bg-success ms-2">{{ $paidPakets->count() }} transaksi</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Tanggal Bayar</th>
+                                <th>Pasien</th>
+                                <th>No. RM</th>
+                                <th>Nama Paket</th>
+                                <th>Sesi</th>
+                                <th class="text-end">Harga</th>
+                                <th class="text-end">Fee</th>
+                                <th class="text-end">Grand Total</th>
+                                <th>Metode</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $noPaket = 1; @endphp
+                            @foreach ($paidPakets as $pp)
+                                <tr>
+                                    <td>{{ $noPaket++ }}</td>
+                                    <td><small>{{ $pp->paid_at ? \Carbon\Carbon::parse($pp->paid_at)->format('d/m/Y H:i') : '-' }}</small></td>
+                                    <td>{{ optional($pp->pasien)->name ?? '-' }}</td>
+                                    <td>{{ optional($pp->pasien)->rekam_medis ?? '-' }}</td>
+                                    <td>{{ optional($pp->paketPemeriksaan)->name ?? '-' }}</td>
+                                    <td>{{ $pp->total_sesi }} sesi</td>
+                                    <td class="text-end">Rp {{ number_format($pp->harga_bayar, 0, ',', '.') }}</td>
+                                    <td class="text-end">
+                                        @if ($pp->payment_fee > 0)
+                                            Rp {{ number_format($pp->payment_fee, 0, ',', '.') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td class="text-end"><strong>Rp {{ number_format($pp->grand_total ?? $pp->harga_bayar, 0, ',', '.') }}</strong></td>
+                                    <td><small>{{ $pp->metode_pembayaran ?? '-' }}</small></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <th colspan="6" class="text-end">TOTAL PAKET</th>
+                                <th class="text-end">Rp {{ number_format($paidPakets->sum('harga_bayar'), 0, ',', '.') }}</th>
+                                <th class="text-end">Rp {{ number_format($paidPakets->sum('payment_fee'), 0, ',', '.') }}</th>
+                                <th class="text-end">Rp {{ number_format($paidPakets->sum('grand_total') ?: $paidPakets->sum('harga_bayar'), 0, ',', '.') }}</th>
+                                <th></th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

@@ -4,7 +4,6 @@
 @endsection
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <style>
         a.disabled {
             /* Make the disabled links grayish*/
@@ -88,7 +87,7 @@
                                                         </span>
                                                     @endif
                                                 @else
-                                                    <span class="badge bg-secondary text-white">
+                                                    <span class="badge bg-warning text-dark">
                                                         <i class="ri-user-line"></i> Reguler
                                                     </span>
                                                 @endif
@@ -146,10 +145,7 @@
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#createTindakan").click(function() {

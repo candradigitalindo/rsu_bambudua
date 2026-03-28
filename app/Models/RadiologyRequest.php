@@ -10,6 +10,7 @@ class RadiologyRequest extends Model
     use HasUuids;
 
     protected $fillable = [
+        'encounter_id',
         'pasien_id',
         'jenis_pemeriksaan_id',
         'dokter_id',
@@ -17,6 +18,7 @@ class RadiologyRequest extends Model
         'status',
         'price',
         'created_by',
+        'paket_pasien_id',
     ];
 
     public function pasien()

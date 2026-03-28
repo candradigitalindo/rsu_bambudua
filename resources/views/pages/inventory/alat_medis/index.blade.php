@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title','Alat Medis')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/daterange/daterange.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5-custom.css') }}">
@@ -86,7 +85,7 @@
                   <td>{{ $eq->serial_number }}</td>
                   <td>{{ $eq->asset_tag }}</td>
                   <td>{{ $eq->location }}</td>
-                  <td><span class="badge bg-secondary text-uppercase">{{ $eq->status }}</span></td>
+                  <td><span class="badge bg-warning text-dark text-uppercase">{{ $eq->status }}</span></td>
                   <td>{{ $eq->vendor }}</td>
                   <td>{{ optional($eq->next_calibration_due)->format('Y-m-d') }}</td>
                   <td class="text-center">
@@ -110,14 +109,11 @@
 </div>
 @endsection
 @push('scripts')
-  <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-  <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
   <script src="{{ asset('vendor/daterange/daterange.js') }}"></script>
   <script src="{{ asset('vendor/daterange/custom-daterange.js') }}"></script>
   <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>
   <script src="{{ asset('vendor/datatables/dataTables.bootstrap.min.js') }}"></script>
   <script src="{{ asset('vendor/datatables/custom/custom-datatables.js') }}"></script>
-  <script src="{{ asset('js/custom.js') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function(){
       if (window.jQuery && jQuery.fn.DataTable) {

@@ -3,7 +3,6 @@
     Dashboard Rekam Medis
 @endsection
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <style>
         .stat-card {
             transition: transform 0.2s, box-shadow 0.2s;
@@ -172,10 +171,7 @@
     </div>
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <script src="{{ asset('vendor/apex/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         var options = {
             chart: {

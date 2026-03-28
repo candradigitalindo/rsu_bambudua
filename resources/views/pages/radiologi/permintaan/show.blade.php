@@ -2,7 +2,6 @@
 
 @section('title', 'Detail Permintaan Radiologi')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
     <div class="row">
@@ -45,7 +44,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="text-muted small">Status</div>
-                            <div><span class="badge bg-secondary">{{ ucfirst($req->status ?? '-') }}</span></div>
+                            <div><span class="badge bg-warning text-dark">{{ ucfirst($req->status ?? '-') }}</span></div>
                         </div>
                         <div class="col-md-6">
                             <div class="text-muted small">Dokter Pengirim</div>
@@ -395,7 +394,4 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

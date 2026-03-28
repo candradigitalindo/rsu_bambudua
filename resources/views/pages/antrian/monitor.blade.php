@@ -18,7 +18,6 @@
   ************* -->
     <link rel="stylesheet" href="{{ asset('fonts/remix/remixicon.css') }}">
     <link rel="stylesheet" href="{{ asset('css/main.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
 </head>
 
@@ -41,7 +40,6 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('js/moment.min.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
     <script>
         var pusher = new Pusher("mf2n4zlwdsh4ogrkobrv", {
@@ -56,7 +54,6 @@
             console.log(data)
         });
     </script>
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
 </body>
 

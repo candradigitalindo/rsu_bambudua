@@ -3,8 +3,6 @@
     Arsip Dokumen RM
 @endsection
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
@@ -73,12 +71,8 @@
     </div>
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         Dropzone.autoDiscover = false;
         const dz = new Dropzone('#dropzoneArsip', {
@@ -163,7 +157,7 @@
                 <div>
                     <div class="file-name">
                         <i class="ri-file-text-line"></i> ${item.file_name}
-                        <span class="badge bg-secondary ms-2">${item.rekam_medis}</span>
+                        <span class="badge bg-warning text-dark ms-2">${item.rekam_medis}</span>
                     </div>
                     <small class="text-muted">${item.pasien_name || ''}</small><br>
                     <small class="text-muted">${item.uploaded_at || ''} • ${fmtBytes(item.file_size)} • ${item.uploaded_by || ''}</small>

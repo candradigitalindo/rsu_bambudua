@@ -24,6 +24,7 @@ class LabRequest extends Model
         'notes',
         'total_charge',
         'charged',
+        'paket_pasien_id',
     ];
 
     protected $casts = [

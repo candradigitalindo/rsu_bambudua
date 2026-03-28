@@ -2,10 +2,8 @@
 @section('title', 'Buat Ruangan Baru')
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
     <!-- Uploader CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -152,15 +150,10 @@
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Dropzone JS -->
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/validations.js') }}"></script>
     <script>
         $(document).ready(function() {
             $("#submit").submit(function() {

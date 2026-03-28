@@ -4,7 +4,6 @@
 @endsection
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <!-- Quill Editor -->
     <link rel="stylesheet" href="{{ asset('vendor/quill/quill.core.css') }}">
     <style>
@@ -84,6 +83,38 @@
     <!-- Row starts -->
     <div class="row gx-3">
         <div class="col-xxl-12 col-sm-12">
+
+            {{-- Banner Paket Pemeriksaan Aktif --}}
+            @if (isset($paketAktifs) && $paketAktifs->count() > 0)
+                <div class="card mb-3 border-0" style="background: linear-gradient(135deg, #238781 0%, #1a6b66 100%); border-radius: 10px;">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div class="d-flex align-items-center gap-2 text-white">
+                                <i class="ri-gift-2-line fs-4"></i>
+                                <div>
+                                    <div class="fw-bold" style="font-size: 0.95rem;">Paket Pemeriksaan Aktif</div>
+                                    <small style="opacity: 0.85;">Pasien memiliki {{ $paketAktifs->count() }} paket aktif yang bisa diterapkan</small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                @foreach ($paketAktifs as $pp)
+                                    <button type="button" class="btn btn-sm btn-light btn-apply-paket"
+                                        data-paket-pasien-id="{{ $pp->id }}"
+                                        data-paket-name="{{ $pp->paketPemeriksaan->name }}"
+                                        data-sesi-terpakai="{{ $pp->sesi_terpakai }}"
+                                        data-total-sesi="{{ $pp->total_sesi }}"
+                                        data-tanggal-expired="{{ \Carbon\Carbon::parse($pp->tanggal_expired)->translatedFormat('d F Y') }}">
+                                        <i class="ri-play-circle-line me-1"></i>
+                                        {{ $pp->paketPemeriksaan->name }}
+                                        <span class="badge bg-success ms-1">{{ $pp->sesi_terpakai }}/{{ $pp->total_sesi }} sesi</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="card mb-3">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
@@ -114,7 +145,7 @@
                                     </span>
                                 @endif
                             @else
-                                <span class="badge bg-secondary text-white">
+                                <span class="badge bg-warning text-dark">
                                     <i class="ri-user-line"></i> Reguler
                                 </span>
                             @endif
@@ -293,15 +324,12 @@
 @endsection
 @prepend('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Sweet Alert JS -->
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <!-- Quill Editor JS -->
     <script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
     <script src="{{ asset('vendor/quill/custom.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
@@ -315,6 +343,60 @@
                 const modal = $(this);
                 modal.css('z-index', 10600);
                 modal.find('.modal-dialog').css('z-index', 10700);
+            });
+
+            // Terapkan Paket Pemeriksaan
+            $('.btn-apply-paket').on('click', function() {
+                var btn = $(this);
+                var paketPasienId = btn.data('paket-pasien-id');
+                var paketName = btn.data('paket-name');
+                var sesiTerpakai = btn.data('sesi-terpakai');
+                var totalSesi = btn.data('total-sesi');
+                var tanggalExpired = btn.data('tanggal-expired');
+                var sesiKe = parseInt(sesiTerpakai) + 1;
+
+                swal({
+                    title: 'Terapkan Paket?',
+                    text: 'Terapkan "' + paketName + '" sesi ke-' + sesiKe + ' dari ' + totalSesi + '?\nExp: ' + tanggalExpired + '\n\nItem tindakan, lab, radiologi, dan obat akan otomatis ditambahkan.',
+                    icon: 'info',
+                    buttons: {
+                        cancel: { text: 'Batal', visible: true },
+                        confirm: { text: 'Ya, Terapkan', className: 'btn-success' }
+                    }
+                }).then(function(confirmed) {
+                    if (!confirmed) return;
+
+                    btn.prop('disabled', true).html('<i class="ri-loader-4-line ri-spin me-1"></i> Memproses...');
+
+                    $.ajax({
+                        url: '{{ route("observasi.applyPaket", $observasi) }}',
+                        method: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            paket_pasien_id: paketPasienId
+                        },
+                        dataType: 'json'
+                    }).done(function(res) {
+                        if (res.success) {
+                            swal({
+                                title: 'Berhasil!',
+                                text: res.message,
+                                icon: 'success',
+                                timer: 2000,
+                                buttons: false
+                            });
+                            // Reload halaman setelah 1.5 detik agar semua tab ter-update
+                            setTimeout(function() { location.reload(); }, 1500);
+                        } else {
+                            swal({ title: 'Gagal', text: res.message, icon: 'error' });
+                            btn.prop('disabled', false).html('<i class="ri-play-circle-line me-1"></i> ' + paketName + ' <span class="badge bg-success ms-1">' + sesiTerpakai + '/' + totalSesi + ' sesi</span>');
+                        }
+                    }).fail(function(xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan pada server';
+                        swal({ title: 'Error', text: msg, icon: 'error' });
+                        btn.prop('disabled', false).html('<i class="ri-play-circle-line me-1"></i> ' + paketName + ' <span class="badge bg-success ms-1">' + sesiTerpakai + '/' + totalSesi + ' sesi</span>');
+                    });
+                });
             });
         });
     </script>

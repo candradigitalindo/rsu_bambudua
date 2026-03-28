@@ -2,7 +2,6 @@
 
 @section('title', 'Permintaan Radiologi')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
     <div class="row">
@@ -41,7 +40,7 @@
                                         <td>{{ optional($r->pasien)->name }}</td>
                                         <td>{{ optional($r->jenis)->name }}</td>
                                         <td>{{ $r->created_at?->format('d M Y H:i') }}</td>
-                                        <td><span class="badge bg-secondary">{{ ucfirst($r->status) }}</span></td>
+                                        <td><span class="badge bg-warning text-dark">{{ ucfirst($r->status) }}</span></td>
                                         <td>{{ optional($r->dokter)->name }}</td>
                                         <td>
                                             <div class="d-flex flex-wrap align-items-center gap-1">
@@ -104,7 +103,4 @@
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

@@ -22,6 +22,7 @@ class ObservasiRepository
     {
         //
     }
+
     public function riwayatPenyakit($id)
     {
         // Ambil riwayat penyakit berdasarkan rekam_medis di encounter
@@ -178,6 +179,7 @@ class ObservasiRepository
                         'total_harga' => (int) $item->price,
                         'status' => $request->status,
                         'type' => 'lab',
+                        'is_paket' => !empty($request->paket_pasien_id),
                         'created_at' => optional($request->created_at)->toDateTimeString(),
                     ];
                 });
@@ -197,6 +199,7 @@ class ObservasiRepository
                     'total_harga' => (int) $request->price,
                     'status' => $request->status,
                     'type' => 'radiologi',
+                    'is_paket' => !empty($request->paket_pasien_id),
                     'created_at' => optional($request->created_at)->toDateTimeString(),
                 ];
             });
@@ -611,6 +614,7 @@ class ObservasiRepository
                     'qty' => 1,
                     'harga' => (int)($it->price ?? 0),
                     'total_harga' => (int)($it->price ?? 0),
+                    'is_paket' => !empty($req->paket_pasien_id),
                 ];
             }
         }
@@ -625,6 +629,7 @@ class ObservasiRepository
                 'qty' => 1,
                 'harga' => (int)($rq->price ?? 0),
                 'total_harga' => (int)($rq->price ?? 0),
+                'is_paket' => !empty($rq->paket_pasien_id),
             ];
         }
 
@@ -776,22 +781,33 @@ class ObservasiRepository
             ];
         }
 
-        if ($request->diskon_tindakan > $diskon->diskon_tindakan) {
-            return [
-                'success' => false,
-                'message' => 'Diskon tindakan tidak boleh melebihi ' . $diskon->diskon_tindakan . '%'
-            ];
+        $diskonType = $request->diskon_tindakan_type === 'nominal' ? 'nominal' : 'percent';
+        $diskonTindakan = $request->diskon_tindakan;
+        $medisNominal = \App\Models\TindakanEncounter::where('encounter_id', $id)->whereNull('paket_pasien_id')->sum('total_harga');
+
+        if ($diskonType === 'percent') {
+            if ($request->diskon_tindakan > $diskon->diskon_tindakan) {
+                return [
+                    'success' => false,
+                    'message' => 'Diskon tindakan tidak boleh melebihi ' . $diskon->diskon_tindakan . '%'
+                ];
+            }
+            $diskonNominal = $medisNominal * ($diskonTindakan / 100);
+            $encounter->diskon_persen_tindakan = $diskonTindakan;
+        } else {
+            $maxNominal = $diskon->diskon_tindakan_nominal ?? 0;
+            if ($maxNominal > 0 && $diskonTindakan > $maxNominal) {
+                return [
+                    'success' => false,
+                    'message' => 'Diskon tindakan tidak boleh melebihi Rp ' . number_format($maxNominal, 0, ',', '.')
+                ];
+            }
+            $diskonNominal = min($diskonTindakan, $medisNominal);
+            $encounter->diskon_persen_tindakan = 0;
         }
 
-        // nominal diskon dari request (hanya untuk tindakan medis)
-        $diskonTindakan = $request->diskon_tindakan;
-        $medisNominal = \App\Models\TindakanEncounter::where('encounter_id', $id)->sum('total_harga');
-        $encounter->diskon_tindakan = $medisNominal * ($diskonTindakan / 100);
-        $encounter->diskon_persen_tindakan = $diskonTindakan;
-
-        // Total bayar tindakan medis saja = medisNominal - diskon
-        $totalSetelahDiskon = $medisNominal - ($medisNominal * ($encounter->diskon_persen_tindakan / 100));
-        $encounter->total_bayar_tindakan = $totalSetelahDiskon;
+        $encounter->diskon_tindakan = $diskonNominal;
+        $encounter->total_bayar_tindakan = max(0, $medisNominal - $diskonNominal);
         $encounter->save();
 
         return [
@@ -819,21 +835,33 @@ class ObservasiRepository
             ];
         }
 
-        if ($request->diskon_resep > $diskon->diskon_resep) {
-            return [
-                'success' => false,
-                'message' => 'Diskon resep tidak boleh melebihi ' . $diskon->diskon_resep . '%'
-            ];
+        $diskonType = $request->diskon_resep_type === 'nominal' ? 'nominal' : 'percent';
+        $diskonResep = $request->diskon_resep;
+        $totalResep = $encounter->total_resep;
+
+        if ($diskonType === 'percent') {
+            if ($request->diskon_resep > $diskon->diskon_resep) {
+                return [
+                    'success' => false,
+                    'message' => 'Diskon resep tidak boleh melebihi ' . $diskon->diskon_resep . '%'
+                ];
+            }
+            $diskonNominal = $totalResep * ($diskonResep / 100);
+            $encounter->diskon_persen_resep = $diskonResep;
+        } else {
+            $maxNominal = $diskon->diskon_resep_nominal ?? 0;
+            if ($maxNominal > 0 && $diskonResep > $maxNominal) {
+                return [
+                    'success' => false,
+                    'message' => 'Diskon resep tidak boleh melebihi Rp ' . number_format($maxNominal, 0, ',', '.')
+                ];
+            }
+            $diskonNominal = min($diskonResep, $totalResep);
+            $encounter->diskon_persen_resep = 0;
         }
 
-        // nominal diskon dari request
-        $diskonResep = $request->diskon_resep;
-        $encounter->diskon_resep = $encounter->total_resep * ($diskonResep / 100);
-        $encounter->diskon_persen_resep = $diskonResep;
-
-        // Jika ingin return total setelah diskon:
-        $totalSetelahDiskon = $encounter->total_resep - ($encounter->total_resep * ($encounter->diskon_persen_resep / 100));
-        $encounter->total_bayar_resep = $totalSetelahDiskon;
+        $encounter->diskon_resep = $diskonNominal;
+        $encounter->total_bayar_resep = max(0, $totalResep - $diskonNominal);
         $encounter->save();
 
         return [
@@ -1478,22 +1506,24 @@ class ObservasiRepository
             return;
         }
 
-        // Hitung total tindakan medis
+        // Hitung total tindakan medis (exclude item paket - sudah dibayar via paket)
         $totalTindakanMedis = \App\Models\TindakanEncounter::where('encounter_id', $encounterId)
+            ->whereNull('paket_pasien_id')
             ->sum('total_harga');
 
         // Hitung total pemeriksaan penunjang (lokal)
         $totalPemeriksaanPenunjangLokal = \App\Models\PemeriksaanPenunjang::where('encounter_id', $encounterId)
             ->sum('total_harga');
 
-        // Hitung total permintaan lab (LabRequestItem) berdasarkan encounter
+        // Hitung total permintaan lab (exclude item paket)
         $totalLabRequests = \App\Models\LabRequestItem::whereHas('request', function ($q) use ($encounterId) {
-            $q->where('encounter_id', $encounterId);
+            $q->where('encounter_id', $encounterId)->whereNull('paket_pasien_id');
         })
             ->sum('price');
 
-        // Hitung total permintaan radiologi
+        // Hitung total permintaan radiologi (exclude item paket)
         $totalRadiologyRequests = \App\Models\RadiologyRequest::where('encounter_id', $encounterId)
+            ->whereNull('paket_pasien_id')
             ->sum('price');
 
         // Total gabungan (medis + penunjang lokal + lab requests + radiology requests)
@@ -1505,13 +1535,16 @@ class ObservasiRepository
         $encounter->total_tindakan = $totalKeseluruhan;
 
         // Jika belum ada diskon, total_bayar_tindakan sama dengan total_tindakan
-        if (is_null($encounter->diskon_persen_tindakan) || $encounter->diskon_persen_tindakan == 0) {
-            $encounter->total_bayar_tindakan = $totalKeseluruhan;
-        } else {
-            // Jika ada diskon, hitung ulang total bayar
+        if (!empty($encounter->diskon_persen_tindakan)) {
             $diskonAmount = $totalKeseluruhan * ($encounter->diskon_persen_tindakan / 100);
             $encounter->diskon_tindakan = $diskonAmount;
             $encounter->total_bayar_tindakan = $totalKeseluruhan - $diskonAmount;
+        } elseif (!empty($encounter->diskon_tindakan)) {
+            $diskonAmount = min($encounter->diskon_tindakan, $totalKeseluruhan);
+            $encounter->diskon_tindakan = $diskonAmount;
+            $encounter->total_bayar_tindakan = $totalKeseluruhan - $diskonAmount;
+        } else {
+            $encounter->total_bayar_tindakan = $totalKeseluruhan;
         }
 
         $encounter->save();
@@ -1531,23 +1564,27 @@ class ObservasiRepository
             return;
         }
 
-        // Hitung total resep dari ResepDetail
+        // Hitung total resep dari ResepDetail (exclude item paket - sudah dibayar via paket)
         $totalResep = \App\Models\ResepDetail::whereHas('resep', function ($q) use ($encounterId) {
             $q->where('encounter_id', $encounterId);
         })
+            ->whereNull('paket_pasien_id')
             ->sum('total_harga');
 
         // Update encounter dengan total yang benar
         $encounter->total_resep = $totalResep;
 
         // Jika belum ada diskon, total_bayar_resep sama dengan total_resep
-        if (is_null($encounter->diskon_persen_resep) || $encounter->diskon_persen_resep == 0) {
-            $encounter->total_bayar_resep = $totalResep;
-        } else {
-            // Jika ada diskon, hitung ulang total bayar
+        if (!empty($encounter->diskon_persen_resep)) {
             $diskonAmount = $totalResep * ($encounter->diskon_persen_resep / 100);
             $encounter->diskon_resep = $diskonAmount;
             $encounter->total_bayar_resep = $totalResep - $diskonAmount;
+        } elseif (!empty($encounter->diskon_resep)) {
+            $diskonAmount = min($encounter->diskon_resep, $totalResep);
+            $encounter->diskon_resep = $diskonAmount;
+            $encounter->total_bayar_resep = $totalResep - $diskonAmount;
+        } else {
+            $encounter->total_bayar_resep = $totalResep;
         }
 
         $encounter->save();

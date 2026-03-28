@@ -4,7 +4,6 @@
 @endsection
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <style>
         /* Real-time Dashboard Styles */
         .ri-loader-4-line {
@@ -261,23 +260,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-4 col-12">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="p-2 border border-primary rounded-circle me-3">
-                                    <div class="icon-box md bg-primary-lighten rounded-5">
-                                        <i class="ri-wallet-3-line fs-4 text-primary"></i>
-                                    </div>
-                                </div>
-                                <div class="d-flex flex-column">
-                                    <h3 class="lh-1">{{ formatPrice($totalPendapatanBulanIni) }}</h3>
-                                    <p class="m-0">Total Pendapatan</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
             <!-- Row ends -->
         </div>
@@ -289,7 +271,7 @@
         <div class="col-12">
             <h5 class="mb-3"><i class="ri-dashboard-line"></i> Key Performance Indicators (KPI)</h5>
         </div>
-        <div class="col-lg-3 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12">
             <div class="card mb-3 border-start border-primary border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -305,7 +287,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12">
             <div class="card mb-3 border-start border-success border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -321,23 +303,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-12">
-            <div class="card mb-3 border-start border-info border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h4 class="text-info">{{ $kpiData['patient_satisfaction'] }}%</h4>
-                            <p class="m-0 small">Patient Satisfaction</p>
-                            <small class="text-muted">Target: &gt; 90%</small>
-                        </div>
-                        <div class="text-info">
-                            <i class="ri-emotion-happy-line fs-2"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-md-6 col-12">
+        <div class="col-lg-4 col-md-6 col-12">
             <div class="card mb-3 border-start border-warning border-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -348,70 +314,6 @@
                         </div>
                         <div class="text-warning">
                             <i class="ri-money-dollar-circle-line fs-2"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Row ends -->
-
-    <!-- Row starts - Bed Management Summary -->
-    <div class="row gx-3 mt-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0"><i class="ri-hotel-bed-line"></i> Status Bed Rumah Sakit</h5>
-
-            </div>
-        </div>
-
-        <!-- Simple Bed Summary Cards -->
-        <div class="col-lg-4 col-md-6 col-12">
-            <div class="card mb-3 border-start border-primary border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="text-primary mb-1">{{ $bedAnalytics['summary']['total_beds'] }}</h3>
-                            <p class="m-0 small">Total Bed</p>
-                            <small class="text-muted">Kapasitas rumah sakit</small>
-                        </div>
-                        <div class="text-primary">
-                            <i class="ri-hotel-bed-fill fs-2"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6 col-12">
-            <div class="card mb-3 border-start border-success border-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="text-success mb-1">{{ $bedAnalytics['summary']['available_beds'] }}</h3>
-                            <p class="m-0 small">Bed Kosong</p>
-                            <small class="text-muted">Siap untuk pasien baru</small>
-                        </div>
-                        <div class="text-success">
-                            <i class="ri-check-double-line fs-2"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6 col-12">
-            <div class="card mb-3 border-start border-warning border-4" style="cursor: pointer;"
-                onclick="showOccupiedBedsModal()">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="text-warning mb-1">{{ $bedAnalytics['summary']['occupied_beds'] }}</h3>
-                            <p class="m-0 small">Bed Terpakai</p>
-                            <small class="text-muted">Klik untuk lihat detail pasien</small>
-                        </div>
-                        <div class="text-warning">
-                            <i class="ri-user-3-line fs-2"></i>
                         </div>
                     </div>
                 </div>
@@ -809,51 +711,6 @@
     </div>
     <!-- Row ends -->
 
-    <!-- Row starts - Financial Summary -->
-    <div class="row gx-3 mt-4">
-        <div class="col-12">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5 class="card-title">Executive Summary - Financial Health</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-lg-3 col-md-6 col-12">
-                            <div class="text-center">
-                                <h3 class="text-{{ $financialHealth['cash_flow'] >= 0 ? 'success' : 'danger' }}">
-                                    {{ formatPrice($financialHealth['cash_flow']) }}</h3>
-                                <p class="m-0 small">Net Cash Flow</p>
-                                <small class="text-muted">Bulan ini</small>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 col-12">
-                            <div class="text-center">
-                                <h3 class="text-primary">{{ $financialHealth['profit_margin'] }}%</h3>
-                                <p class="m-0 small">Profit Margin</p>
-                                <small class="text-muted">Target: > 15%</small>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 col-12">
-                            <div class="text-center">
-                                <h3 class="text-info">{{ $financialHealth['operating_ratio'] }}%</h3>
-                                <p class="m-0 small">Operating Ratio</p>
-                                <small class="text-muted">Target: < 85%</small>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 col-12">
-                            <div class="text-center">
-                                <h3 class="text-warning">{{ $financialHealth['days_in_ar'] }} hari</h3>
-                                <p class="m-0 small">Days in A/R</p>
-                                <small class="text-muted">Target: < 30 hari</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Row ends -->
-
     <!-- Modal untuk Data Pasien Bed Terpakai -->
     <div class="modal fade" id="occupiedBedsModal" tabindex="-1" aria-labelledby="occupiedBedsModalLabel"
         aria-hidden="true">
@@ -879,15 +736,6 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-info" onclick="testBedLogic()">
-                        <i class="ri-bug-line me-1"></i> Test Logic
-                    </button>
-                    <button type="button" class="btn btn-warning" onclick="cleanupAdmissionData()">
-                        <i class="ri-tools-line me-1"></i> Cleanup Data
-                    </button>
-                    <button type="button" class="btn btn-success" onclick="testKPIAccuracy()">
-                        <i class="ri-bar-chart-line me-1"></i> Test KPI
-                    </button>
                     <button type="button" class="btn btn-primary" onclick="refreshOccupiedBeds()">
                         <i class="ri-refresh-line me-1"></i> Refresh Data
                     </button>
@@ -898,14 +746,11 @@
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Apex Charts -->
     <script src="{{ asset('vendor/apex/apexcharts.min.js') }}"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <script>
         var options = {
@@ -1382,7 +1227,7 @@
                             <td><code>${patient.medical_record}</code></td>
                             <td>${patient.doctor_name}</td>
                             <td>${admissionDate}</td>
-                            <td><span class="badge bg-secondary">${daysInHospital} hari</span></td>
+                            <td><span class="badge bg-warning text-dark">${daysInHospital} hari</span></td>
                             <td>${statusBadge}</td>
                         </tr>
                     `;
@@ -1441,170 +1286,9 @@
             loadOccupiedBedsData();
         }
 
-        // Function untuk testing bed logic
-        function testBedLogic() {
-            $.ajax({
-                url: '{{ route('ruangan.test-bed-logic') }}',
-                method: 'GET',
-                beforeSend: function() {
-                    console.log('Testing bed logic...');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        console.log('=== BED LOGIC TEST RESULTS ==');
-                        console.log('Timestamp:', response.timestamp);
-                        console.log('Total Admissions:', response.debug_data.total_admissions);
-                        console.log('Active Admissions:', response.debug_data.active_admissions);
-                        console.log('Discharged Admissions:', response.debug_data.discharged_admissions);
-                        console.log('Bed Summary:', response.debug_data.bed_summary);
-                        console.log('Active Patients:', response.debug_data.active_patients_detail);
-                        console.log('Discharged Patients:', response.debug_data.discharged_patients_detail);
-
-                        // Show alert with summary
-                        alert(`BED LOGIC TEST RESULTS:\n\n` +
-                            `Total Admissions: ${response.debug_data.total_admissions}\n` +
-                            `Active Admissions: ${response.debug_data.active_admissions}\n` +
-                            `Discharged Admissions: ${response.debug_data.discharged_admissions}\n\n` +
-                            `CURRENT BED STATUS:\n` +
-                            `Total Beds: ${response.debug_data.bed_summary.total_beds}\n` +
-                            `Occupied Beds: ${response.debug_data.bed_summary.occupied_beds}\n` +
-                            `Available Beds: ${response.debug_data.bed_summary.available_beds}\n` +
-                            `Occupancy Rate: ${response.debug_data.bed_summary.occupancy_rate}%\n\n` +
-                            `✅ Check browser console for detailed data!`);
-                    } else {
-                        alert('Test failed: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Test bed logic error:', error);
-                    alert('Error running test: ' + error);
-                }
-            });
-        }
-
-        // Function untuk cleanup admission data
-        function cleanupAdmissionData() {
-            if (!confirm('This will cleanup invalid admission data automatically. Continue?')) {
-                return;
-            }
-
-            $.ajax({
-                url: '{{ route('ruangan.cleanup-admission-data') }}',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                beforeSend: function() {
-                    console.log('Cleaning up admission data...');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        console.log('=== DATA CLEANUP RESULTS ===');
-                        console.log('Timestamp:', response.timestamp);
-                        console.log('Results:', response.results);
-
-                        let message = `DATA CLEANUP COMPLETED:\n\n`;
-                        message += `Invalid Admissions Found: ${response.results.invalid_admissions_found}\n`;
-                        message += `Orphaned Admissions: ${response.results.orphaned_admissions}\n`;
-                        message += `Wrong Type Admissions: ${response.results.wrong_type_admissions}\n\n`;
-                        message += `AFTER CLEANUP:\n`;
-                        message += `Total Beds: ${response.results.current_bed_summary.total_beds}\n`;
-                        message += `Occupied Beds: ${response.results.current_bed_summary.occupied_beds}\n`;
-                        message += `Available Beds: ${response.results.current_bed_summary.available_beds}\n`;
-                        message +=
-                            `Occupancy Rate: ${response.results.current_bed_summary.occupancy_rate}%\n\n`;
-                        message += `✅ Check browser console for detailed data!`;
-
-                        alert(message);
-
-                        // Refresh the modal data
-                        loadOccupiedBedsData();
-
-                        // Refresh the page to show updated bed counts
-                        setTimeout(() => {
-                            location.reload();
-                        }, 2000);
-
-                    } else {
-                        alert('Cleanup failed: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Cleanup error:', error);
-                    alert('Error running cleanup: ' + error);
-                }
-            });
-        }
-
-        // Function untuk testing KPI accuracy
-        function testKPIAccuracy() {
-            $.ajax({
-                url: '{{ route('ruangan.test-kpi-accuracy') }}',
-                method: 'GET',
-                beforeSend: function() {
-                    console.log('Testing KPI accuracy...');
-                },
-                success: function(response) {
-                    if (response.success) {
-                        console.log('=== KPI ACCURACY TEST RESULTS ===');
-                        console.log('Timestamp:', response.timestamp);
-                        console.log('Current KPI Data:', response.current_kpi_data);
-                        console.log('Test Results:', response.test_results);
-
-                        let message = `KPI ACCURACY TEST RESULTS:\n\n`;
-
-                        // Bed Occupancy
-                        const bedOcc = response.test_results.bed_occupancy;
-                        message += `BED OCCUPANCY:\n`;
-                        message += `Rate: ${bedOcc.from_kpi_method}% (${bedOcc.status})\n`;
-                        message += `Occupied: ${bedOcc.occupied_beds}/${bedOcc.total_beds} beds\n\n`;
-
-                        // Average LOS
-                        const avgLos = response.test_results.average_los;
-                        message += `AVERAGE LENGTH OF STAY:\n`;
-                        message += `${avgLos.calculated_los} days\n`;
-                        message += `Based on ${avgLos.discharged_patients_this_month} discharged patients\n\n`;
-
-                        // Revenue per Patient
-                        const revPerPatient = response.test_results.revenue_per_patient;
-                        message += `REVENUE PER PATIENT:\n`;
-                        message += `${revPerPatient.formatted_rev_per_patient}\n`;
-                        message += `From ${revPerPatient.total_patients} patients\n\n`;
-
-                        // Patient Satisfaction
-                        const satisfaction = response.test_results.patient_satisfaction;
-                        message += `PATIENT SATISFACTION:\n`;
-                        message += `${satisfaction.calculated_satisfaction}%\n`;
-                        message +=
-                            `Based on ${satisfaction.completed_encounters_this_month} completed encounters\n\n`;
-
-                        // Operational Status Verification
-                        const operational = response.test_results.operational_status;
-                        message += `OPERATIONAL STATUS VERIFICATION:\n`;
-                        message +=
-                            `Inpatient matches bed summary: ${operational.verification.inpatient_matches_bed_summary ? 'YES' : 'NO'}\n\n`;
-
-                        message += `✅ Check browser console for detailed data!`;
-
-                        alert(message);
-
-                    } else {
-                        alert('KPI test failed: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('KPI test error:', error);
-                    alert('Error running KPI test: ' + error);
-                }
-            });
-        }
-
         // Make functions global
         window.showOccupiedBedsModal = showOccupiedBedsModal;
         window.refreshOccupiedBeds = refreshOccupiedBeds;
-        window.testBedLogic = testBedLogic;
-        window.cleanupAdmissionData = cleanupAdmissionData;
-        window.testKPIAccuracy = testKPIAccuracy;
 
         // Initialize tooltips for department cards and other elements
         $(document).ready(function() {
@@ -1613,75 +1297,6 @@
             var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
-
-            // Add smooth scroll behavior for better UX
-            $('html').css('scroll-behavior', 'smooth');
-
-            // Initialize department card animations
-            $('.department-card').on('mouseenter', function() {
-                $(this).find('.progress-bar').addClass('animate__animated animate__pulse');
-            }).on('mouseleave', function() {
-                $(this).find('.progress-bar').removeClass('animate__animated animate__pulse');
-            });
-
-            // Debug Remix Icon font loading
-            console.log('🔍 Checking Remix Icon font loading...');
-
-            // Check if remixicon font is loaded
-            if (document.fonts) {
-                document.fonts.ready.then(() => {
-                    console.log('📝 All fonts loaded. Checking icons...');
-                    checkIconsLoading();
-                });
-            } else {
-                // Fallback for older browsers
-                setTimeout(checkIconsLoading, 1000);
-            }
-
-            function checkIconsLoading() {
-                // Debug all remix icons on page
-                const allRemixIcons = $('[class*="ri-"]');
-                console.log(`🎯 Found ${allRemixIcons.length} Remix Icon elements`);
-
-                // Specifically check IGD icon
-                const igdIcon = $('.ri-first-aid-kit-line');
-                if (igdIcon.length > 0) {
-                    console.log('🏥 IGD Icon element found:', igdIcon.length);
-
-                    // Check computed style
-                    try {
-                        const element = igdIcon[0];
-                        const computedStyle = window.getComputedStyle(element, ':before');
-                        const content = computedStyle.getPropertyValue('content');
-                        const fontFamily = computedStyle.getPropertyValue('font-family');
-
-                        console.log('🔍 IGD Icon Debug Info:');
-                        console.log('   - Content:', content);
-                        console.log('   - Font Family:', fontFamily);
-                        console.log('   - Element classes:', element.className);
-
-                        if (content && content !== 'none' && content !== '""') {
-                            console.log('✅ IGD Icon loaded successfully!');
-                            igdIcon.addClass('icon-loaded');
-                        } else {
-                            console.warn('⚠️ IGD Icon not loading properly. Using emoji fallback.');
-                            // Replace with emoji as fallback
-                            igdIcon.removeClass('ri-first-aid-kit-line')
-                                .addClass('fallback-icon')
-                                .html('🏥');
-                        }
-                    } catch (error) {
-                        console.error('❌ Error checking IGD icon:', error);
-                        igdIcon.removeClass('ri-first-aid-kit-line')
-                            .addClass('fallback-icon')
-                            .html('🏥');
-                    }
-                } else {
-                    console.error('❌ IGD Icon element not found in DOM!');
-                }
-            }
-
-            console.log('✨ Owner Dashboard initialized successfully!');
         });
     </script>
 @endpush

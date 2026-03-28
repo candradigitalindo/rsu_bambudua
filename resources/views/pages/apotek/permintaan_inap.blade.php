@@ -3,7 +3,6 @@
 @section('title', 'Permintaan Obat Rawat Inap')
 
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
@@ -141,7 +140,7 @@
                                                 'icon' => 'check-double',
                                             ],
                                             default => [
-                                                'class' => 'bg-secondary',
+                                                'class' => 'bg-warning text-dark',
                                                 'text' => $prescription->pharmacy_status,
                                                 'icon' => 'question',
                                             ],
@@ -290,10 +289,7 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         function viewDetail(id) {
             const modal = new bootstrap.Modal(document.getElementById('modalDetail'), {

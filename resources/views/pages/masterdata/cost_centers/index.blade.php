@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title','Master Cost Center')
 @push('style')
-  <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
   <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
 @endpush
 @section('content')
@@ -27,7 +26,7 @@
                   <td>{{ $item->name }}</td>
                   <td>{{ $item->code }}</td>
                   <td>{{ $item->description }}</td>
-                  <td>{!! $item->is_active ? '<span class="badge bg-success">Ya</span>' : '<span class="badge bg-secondary">Tidak</span>' !!}</td>
+                  <td>{!! $item->is_active ? '<span class="badge bg-success">Ya</span>' : '<span class="badge bg-warning text-dark">Tidak</span>' !!}</td>
                   <td class="text-end">
                     <a href="{{ route('master.cost-centers.edit', $item) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                     <form method="POST" action="{{ route('master.cost-centers.destroy', $item) }}" class="d-inline" onsubmit="return confirm('Hapus cost center?')">
@@ -47,11 +46,8 @@
 </div>
 @endsection
 @push('scripts')
-  <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-  <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
   <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>
   <script src="{{ asset('vendor/datatables/dataTables.bootstrap.min.js') }}"></script>
-  <script src="{{ asset('js/custom.js') }}"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function(){
       if (window.jQuery && jQuery.fn.DataTable) {

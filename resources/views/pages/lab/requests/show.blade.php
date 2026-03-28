@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Detail Permintaan Lab')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -27,7 +26,7 @@
                             <div>{{ $req->created_at->format('d M Y H:i') }}</div>
                         </div>
                         <div class="col-md-6"><small class="text-muted">Status</small>
-                            <div><span class="badge bg-secondary">{{ ucfirst($req->status) }}</span></div>
+                            <div><span class="badge bg-warning text-dark">{{ ucfirst($req->status) }}</span></div>
                         </div>
                     </div>
                     <div class="row g-2 mb-3">
@@ -150,7 +149,4 @@
     </div>
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

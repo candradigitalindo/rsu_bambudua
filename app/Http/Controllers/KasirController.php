@@ -6,6 +6,8 @@ use App\Http\Controllers\Concerns\LogsActivity;
 use App\Models\Encounter;
 use Illuminate\Pagination\LengthAwarePaginator;
 use App\Models\Pasien;
+use App\Models\PaketPasien;
+use App\Models\PaketPemeriksaan;
 use Illuminate\Support\Facades\DB;
 use App\Models\PaymentMethod;
 use App\Models\TindakanEncounter;
@@ -13,6 +15,7 @@ use App\Models\LabRequestItem;
 use App\Models\RadiologyRequest;
 use App\Models\Resep;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class KasirController extends Controller
 {
@@ -91,9 +94,47 @@ class KasirController extends Controller
                 'has_unpaid_bills' => $hasUnpaidBills,
                 'unpaid_tindakan' => $unpaidTindakan->count(),
                 'unpaid_resep'    => $unpaidResep->count(),
+                'unpaid_paket'    => 0,
                 'jenis_kunjungan' => $encounterTypes,
             ];
         })->sortByDesc('last_visit');
+
+        // 3b. Tambahkan pasien yang punya paket belum bayar
+        $unpaidPaketPasiens = PaketPasien::with('pasien')
+            ->where('status_bayar', false)
+            ->whereIn('status', ['aktif', 'pending'])
+            ->get()
+            ->groupBy(fn($pp) => optional($pp->pasien)->rekam_medis);
+
+        foreach ($unpaidPaketPasiens as $rm => $pakets) {
+            if (!$rm) continue;
+            $paketTotal = $pakets->sum('harga_bayar');
+            if (isset($patientsWithBills[$rm])) {
+                // Pasien sudah ada di list, tambah total tagihan paket
+                $existing = $patientsWithBills[$rm];
+                $existing->total_tagihan += $paketTotal;
+                $existing->unpaid_paket = $pakets->count();
+            } else {
+                // Pasien baru (hanya punya tagihan paket, bukan encounter)
+                $firstPaket = $pakets->first();
+                $pasien = $firstPaket->pasien;
+                if (!$pasien) continue;
+                $patientsWithBills[$rm] = (object) [
+                    'pasien_id'       => $pasien->id,
+                    'rekam_medis'     => $rm,
+                    'name_pasien'     => $pasien->name,
+                    'last_visit'      => $pakets->max('created_at'),
+                    'total_tagihan'   => $paketTotal,
+                    'has_unpaid_bills' => true,
+                    'unpaid_tindakan' => 0,
+                    'unpaid_resep'    => 0,
+                    'unpaid_paket'    => $pakets->count(),
+                    'jenis_kunjungan' => 'Paket Pemeriksaan',
+                ];
+            }
+        }
+
+        $patientsWithBills = $patientsWithBills->sortByDesc('last_visit');
 
         // 4. Buat instance Paginator baru dengan data yang sudah diproses.
         $paginatedPatients = new LengthAwarePaginator(
@@ -145,8 +186,90 @@ class KasirController extends Controller
             ->limit(1)
             ->get();
 
+        // Paket belum bayar untuk pasien ini
+        $unpaidPakets = PaketPasien::with('paketPemeriksaan')
+            ->where('pasien_id', $pasien->id)
+            ->where('status_bayar', false)
+            ->whereIn('status', ['aktif', 'pending'])
+            ->get();
+
+        // Paket sudah dibayar
+        $paidPakets = PaketPasien::with('paketPemeriksaan')
+            ->where('pasien_id', $pasien->id)
+            ->where('status_bayar', true)
+            ->orderByDesc('paid_at')
+            ->get();
+
         $paymentMethods = PaymentMethod::where('active', true)->orderBy('name')->get();
-        return view('pages.kasir.show', compact('pasien', 'unpaidEncounters', 'paymentMethods', 'paidEncounters'));
+        return view('pages.kasir.show', compact('pasien', 'unpaidEncounters', 'paymentMethods', 'paidEncounters', 'unpaidPakets', 'paidPakets'));
+    }
+
+    /**
+     * Tambah paket ke tagihan pasien (buat PaketPasien dengan status_bayar=0)
+     */
+    public function addPaketToBill(Request $request, $pasien_id)
+    {
+        $request->validate([
+            'paket_pemeriksaan_id' => 'required|exists:paket_pemeriksaans,id',
+        ]);
+
+        $pasien = Pasien::findOrFail($pasien_id);
+        $paket = PaketPemeriksaan::findOrFail($request->paket_pemeriksaan_id);
+
+        $paketPasien = PaketPasien::create([
+            'paket_pemeriksaan_id' => $paket->id,
+            'pasien_id'            => $pasien->id,
+            'total_sesi'           => $paket->jumlah_sesi,
+            'sesi_terpakai'        => 0,
+            'harga_bayar'          => $paket->is_gratis ? 0 : $paket->harga,
+            'status_bayar'         => $paket->is_gratis ? true : false,
+            'tanggal_mulai'        => now()->toDateString(),
+            'tanggal_expired'      => now()->addDays($paket->masa_berlaku_hari)->toDateString(),
+            'status'               => $paket->is_gratis ? 'aktif' : 'aktif',
+            'catatan'              => null,
+            'created_by'           => auth()->id(),
+        ]);
+
+        if ($paket->is_gratis) {
+            $paketPasien->update([
+                'paid_at' => now(),
+                'grand_total' => 0,
+            ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Paket GRATIS berhasil diberikan ke pasien.',
+                'is_gratis' => true,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket berhasil ditambahkan ke tagihan.',
+            'paket_pasien' => [
+                'id' => $paketPasien->id,
+                'name' => $paket->name,
+                'harga' => $paketPasien->harga_bayar,
+                'sesi' => $paketPasien->total_sesi,
+            ],
+        ]);
+    }
+
+    /**
+     * Hapus paket dari tagihan (hanya jika belum bayar)
+     */
+    public function removePaketFromBill($pasien_id, $paket_pasien_id)
+    {
+        $paketPasien = PaketPasien::where('id', $paket_pasien_id)
+            ->where('pasien_id', $pasien_id)
+            ->where('status_bayar', false)
+            ->firstOrFail();
+
+        $paketPasien->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket berhasil dihapus dari tagihan.',
+        ]);
     }
 
     public function processPayment(Request $request, $pasien_id)
@@ -163,8 +286,8 @@ class KasirController extends Controller
             'payment_methods' => 'required|array|min:1',
             'payment_methods.*.method' => 'required|string|exists:payment_methods,code',
             'payment_methods.*.amount_raw' => 'required|numeric|min:0',
-            'encounter_ids' => 'required|array|min:1', // Tambahkan validasi untuk encounter_ids
-            'encounter_ids.*' => 'required|string',
+            'encounter_ids' => 'nullable|array',
+            'encounter_ids.*' => 'nullable|string',
         ], [
             'items_to_pay.required' => 'Pilih setidaknya satu item untuk dibayar.',
             'payment_methods.required' => 'Pilih minimal satu metode pembayaran.',
@@ -206,7 +329,26 @@ class KasirController extends Controller
         });
 
         // Parse dan hitung dari setiap item yang dipilih
+        $paketPasienIds = [];
         foreach ($itemsToPay as $itemKey) {
+            // Format paket: paket-{paket_pasien_id} (UUID, mungkin ada banyak dash)
+            if (str_starts_with($itemKey, 'paket-')) {
+                $paketPasienId = substr($itemKey, 6); // setelah 'paket-'
+                $paketPasien = PaketPasien::find($paketPasienId);
+                if ($paketPasien && !$paketPasien->status_bayar) {
+                    $totalBill += $paketPasien->harga_bayar;
+                    $paketPasienIds[] = $paketPasienId;
+
+                    \Illuminate\Support\Facades\Log::info('Paket item calculated', [
+                        'itemKey' => $itemKey,
+                        'paketPasienId' => $paketPasienId,
+                        'amount' => $paketPasien->harga_bayar,
+                        'runningTotal' => $totalBill
+                    ]);
+                }
+                continue;
+            }
+
             // Format: type-encounter_id-item_id (contoh: tindakan-123-456)
             $parts = explode('-', $itemKey);
             if (count($parts) >= 3) {
@@ -311,7 +453,7 @@ class KasirController extends Controller
             'paymentMethodsWithFee' => $paymentMethodsWithFee->toArray()
         ]);
 
-        DB::transaction(function () use ($itemsToPay, $paymentMethodsCombined, $paymentMethodsWithFee, $totalFee, $encounterIds, &$totalPaidAmount, &$paidItemsInfo) {
+        DB::transaction(function () use ($itemsToPay, $paymentMethodsCombined, $paymentMethodsWithFee, $totalFee, $encounterIds, &$totalPaidAmount, &$paidItemsInfo, $paketPasienIds) {
             \Illuminate\Support\Facades\Log::info('Inside DB transaction');
 
             // Get types from items
@@ -325,15 +467,18 @@ class KasirController extends Controller
             });
 
             $hasResep = $itemsByType->contains('resep');
+            $hasPaket = count($paketPasienIds) > 0;
 
-            // Hitung proporsi fee untuk tindakan dan resep
+            // Hitung proporsi fee untuk tindakan, resep, dan paket
             $feeTindakan = 0;
             $feeResep = 0;
+            $feePaket = 0;
             $totalBillWithoutFee = 0;
 
             // Hitung total tagihan tindakan dan resep dari encounter yang dipilih
             $totalTindakanBill = 0;
             $totalResepBill = 0;
+            $totalPaketBill = 0;
 
             foreach ($encounterIds as $encounterId) {
                 $enc = Encounter::find($encounterId);
@@ -347,7 +492,15 @@ class KasirController extends Controller
                 }
             }
 
-            $totalBillWithoutFee = $totalTindakanBill + $totalResepBill;
+            // Hitung total tagihan paket
+            if ($hasPaket) {
+                foreach ($paketPasienIds as $ppId) {
+                    $pp = PaketPasien::find($ppId);
+                    if ($pp) $totalPaketBill += $pp->harga_bayar;
+                }
+            }
+
+            $totalBillWithoutFee = $totalTindakanBill + $totalResepBill + $totalPaketBill;
 
             // Proporsi fee berdasarkan tagihan
             if ($totalBillWithoutFee > 0) {
@@ -356,6 +509,9 @@ class KasirController extends Controller
                 }
                 if ($totalResepBill > 0) {
                     $feeResep = ($totalResepBill / $totalBillWithoutFee) * $totalFee;
+                }
+                if ($totalPaketBill > 0) {
+                    $feePaket = ($totalPaketBill / $totalBillWithoutFee) * $totalFee;
                 }
             }
 
@@ -486,6 +642,39 @@ class KasirController extends Controller
                     'status_bayar_tindakan' => $encounter->status_bayar_tindakan,
                     'status_bayar_resep' => $encounter->status_bayar_resep,
                 ]);
+            }
+
+            // Process paket payment
+            if ($hasPaket) {
+                foreach ($paketPasienIds as $ppId) {
+                    $paketPasien = PaketPasien::find($ppId);
+                    if (!$paketPasien || $paketPasien->status_bayar) continue;
+
+                    $paketFeeShare = ($totalPaketBill > 0 && $paketPasien->harga_bayar > 0)
+                        ? ($paketPasien->harga_bayar / $totalPaketBill) * $feePaket
+                        : 0;
+
+                    $paketPasien->status_bayar = true;
+                    $paketPasien->status = 'aktif';
+                    $paketPasien->metode_pembayaran = $paymentMethodsCombined;
+                    $paketPasien->payment_fee = round($paketFeeShare);
+                    $paketPasien->grand_total = $paketPasien->harga_bayar + round($paketFeeShare);
+                    $paketPasien->paid_at = now();
+                    $paketPasien->save();
+
+                    $totalPaidAmount += $paketPasien->harga_bayar;
+                    $paidItemsInfo['paket-' . $ppId] = [
+                        'paket' => $paketPasien->harga_bayar,
+                        'paket_fee' => round($paketFeeShare),
+                        'paket_name' => optional($paketPasien->paketPemeriksaan)->name,
+                    ];
+
+                    \Illuminate\Support\Facades\Log::info('Paket payment processed', [
+                        'paket_pasien_id' => $ppId,
+                        'harga' => $paketPasien->harga_bayar,
+                        'fee' => round($paketFeeShare),
+                    ]);
+                }
             }
         });
 
@@ -619,7 +808,29 @@ class KasirController extends Controller
             ->orderByDesc('updated_at')
             ->paginate(20);
 
-        return view('pages.kasir.histori', compact('encounters'));
+        // Query paket payments
+        $paketQuery = PaketPasien::with(['paketPemeriksaan', 'pasien'])
+            ->where('status_bayar', true)
+            ->whereNotNull('paid_at');
+
+        if ($request->filled('tanggal_dari')) {
+            $paketQuery->whereDate('paid_at', '>=', $request->tanggal_dari);
+        }
+        if ($request->filled('tanggal_sampai')) {
+            $paketQuery->whereDate('paid_at', '<=', $request->tanggal_sampai);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $paketQuery->whereHas('pasien', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('rekam_medis', 'like', "%{$search}%");
+            });
+        }
+
+        $paidPakets = $paketQuery->orderByDesc('paid_at')->get();
+
+        return view('pages.kasir.histori', compact('encounters', 'paidPakets'));
     }
 
     /**
@@ -687,13 +898,45 @@ class KasirController extends Controller
             }
         }
 
+        // Paket yang sudah dibayar dalam periode ini
+        $paidPakets = PaketPasien::with(['paketPemeriksaan', 'pasien'])
+            ->where('status_bayar', true)
+            ->whereDate('paid_at', '>=', $tanggalDari)
+            ->whereDate('paid_at', '<=', $tanggalSampai)
+            ->orderByDesc('paid_at')
+            ->get();
+
+        $totalPaket = $paidPakets->sum('harga_bayar');
+        $totalPembayaran += $totalPaket;
+        $jumlahTransaksi += $paidPakets->count();
+
+        // Tambahkan metode pembayaran paket ke breakdown
+        foreach ($paidPakets as $pp) {
+            if ($pp->metode_pembayaran) {
+                $methods = explode(';', $pp->metode_pembayaran);
+                foreach ($methods as $method) {
+                    $parts = explode(':', trim($method));
+                    if (count($parts) === 2) {
+                        $methodName = trim($parts[0]);
+                        $amount = (float) str_replace(['.', ','], ['', '.'], trim($parts[1]));
+                        if (!isset($byPaymentMethod[$methodName])) {
+                            $byPaymentMethod[$methodName] = 0;
+                        }
+                        $byPaymentMethod[$methodName] += $amount;
+                    }
+                }
+            }
+        }
+
         return view('pages.kasir.laporan', compact(
             'encounters',
+            'paidPakets',
             'tanggalDari',
             'tanggalSampai',
             'totalPembayaran',
             'totalTindakan',
             'totalResep',
+            'totalPaket',
             'jumlahTransaksi',
             'byPaymentMethod'
         ));

@@ -1,93 +1,71 @@
 <div class="row gx-3">
     <div class="col-xxl-6 col-sm-12">
-        <div class="card mb-3 shadow-sm">
-            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <h5 class="card-title text-white mb-0">
-                    <i class="ri-surgical-mask-line me-2"></i>Ringkasan Tindakan Medis
-                </h5>
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-surgical-mask-line me-1 text-primary"></i>Ringkasan Tindakan Medis
+                </h6>
             </div>
-            <div class="card-body">
-                <div class="alert alert-info border-start border-4 border-info mb-3" role="alert">
-                    <div class="d-flex align-items-start">
-                        <i class="ri-information-line fs-5 me-2"></i>
-                        <div>
-                            <strong>Diskon Tindakan</strong>
-                            <small class="d-block text-muted">Berikan diskon dalam persen untuk biaya tindakan
-                                medis</small>
-                        </div>
-                    </div>
-                </div>
+            <div class="card-body pt-2">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" for="diskon_tindakan">
-                        <i class="ri-percent-line text-primary me-1"></i>Diskon Tindakan (%)
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="ri-discount-percent-line"></i></span>
+                    <label class="form-label small fw-semibold text-muted" for="diskon_tindakan">Diskon Tindakan</label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select" id="diskon_tindakan_type" style="max-width: 120px;">
+                            <option value="percent" selected>Persen (%)</option>
+                            <option value="nominal">Nominal (Rp)</option>
+                        </select>
+                        <span class="input-group-text" id="diskon_tindakan_prefix">%</span>
                         <input type="number" name="diskon_tindakan" class="form-control" placeholder="0"
-                            id="diskon_tindakan" min="0" max="100">
-                        <span class="input-group-text">%</span>
-                        <button class="btn btn-primary px-4" type="submit" id="btn-buat-diskon-tindakan">
-                            <span id="text-buat-diskon-tindakan"><i class="ri-check-line me-1"></i>Terapkan</span>
+                            id="diskon_tindakan" min="0">
+                        <button class="btn btn-primary" type="submit" id="btn-buat-diskon-tindakan">
+                            <span id="text-buat-diskon-tindakan"><i class="ri-check-line"></i></span>
                             <span class="spinner-border spinner-border-sm d-none" id="spinner-buat-diskon-tindakan"
                                 role="status" aria-hidden="true"></span>
                         </button>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle m-0">
-                        <thead
-                            style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #667eea;">
-                            <tr>
-                                <th style="padding: 12px; font-weight: 600; color: #495057;">Nama Tindakan</th>
-                                <th class="text-center"
-                                    style="padding: 12px; font-weight: 600; color: #495057; width: 80px;">Qty</th>
-                                <th class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057; width: 120px;">Harga</th>
-                                <th class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057; width: 130px;">Subtotal</th>
+                    <table class="table table-hover align-middle mb-0 tbl-catatan">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-3" style="min-width: 180px;">Nama Tindakan</th>
+                                <th class="text-center" style="width: 60px;">Qty</th>
+                                <th class="text-end" style="width: 100px;">Harga</th>
+                                <th class="text-end pe-3" style="width: 110px;">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-catatan-tindakan"></tbody>
-                        <tfoot
-                            style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-top: 2px solid #667eea;">
+                        <tfoot class="tfoot-catatan">
                             <tr>
-                                <td colspan="3" class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057;">
-                                    <i class="ri-calculator-line me-1 text-primary"></i>Nominal Tindakan Medis
+                                <td colspan="3" class="text-end fw-semibold text-muted" style="font-size: .8rem;">
+                                    Nominal Tindakan
                                 </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-tindakan" class="fw-bold"
-                                        style="color: #495057; font-size: 14px;">0</span>
+                                <td class="text-end pe-3" style="font-size: .85rem;">
+                                    <span id="total-tindakan" class="fw-semibold">0</span>
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057;">
-                                    <i class="ri-stethoscope-line me-1 text-info"></i>Penunjang (Lab + Radiologi)
+                                <td colspan="3" class="text-end fw-semibold text-muted" style="font-size: .8rem;">
+                                    <i class="ri-flask-line me-1 text-info"></i>Penunjang
                                 </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-penunjang" class="fw-bold text-info"
-                                        style="font-size: 14px;">0</span>
+                                <td class="text-end pe-3" style="font-size: .85rem;">
+                                    <span id="total-penunjang" class="fw-semibold text-info">0</span>
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="3" class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #dc3545;">
-                                    <i class="ri-discount-percent-line me-1"></i>Diskon Tindakan Medis
+                                <td colspan="3" class="text-end fw-semibold text-danger" style="font-size: .8rem;">
+                                    <i class="ri-discount-percent-line me-1"></i>Diskon
                                 </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-tindakan-diskon" class="fw-bold text-danger"
-                                        style="font-size: 14px;">0</span>
+                                <td class="text-end pe-3" style="font-size: .85rem;">
+                                    <span id="total-tindakan-diskon" class="fw-semibold text-danger">0</span>
                                 </td>
                             </tr>
-                            <tr style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                <td colspan="3" class="text-end"
-                                    style="padding: 16px; font-weight: 700; color: white; font-size: 16px;">
-                                    <i class="ri-shopping-cart-2-line me-2"></i>TOTAL
+                            <tr class="bg-primary">
+                                <td colspan="3" class="text-end fw-bold text-white ps-3" style="font-size: .9rem;">
+                                    TOTAL
                                 </td>
-                                <td class="text-end" style="padding: 16px;">
-                                    <span id="total-tindakan-akhir" class="fw-bold"
-                                        style="color: white; font-size: 18px;">0</span>
+                                <td class="text-end pe-3">
+                                    <span id="total-tindakan-akhir" class="fw-bold text-white" style="font-size: 1rem;">0</span>
                                 </td>
                             </tr>
                         </tfoot>
@@ -97,87 +75,65 @@
         </div>
     </div>
     <div class="col-xxl-6 col-sm-12">
-        <div class="card mb-3 shadow-sm">
-            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);">
-                <h5 class="card-title text-white mb-0">
-                    <i class="ri-medicine-bottle-line me-2"></i>Ringkasan Resep Obat
-                </h5>
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-medicine-bottle-line me-1 text-success"></i>Ringkasan Resep Obat
+                </h6>
             </div>
-            <div class="card-body">
-                <div class="alert alert-success border-start border-4 border-success mb-3" role="alert">
-                    <div class="d-flex align-items-start">
-                        <i class="ri-information-line fs-5 me-2"></i>
-                        <div>
-                            <strong>Diskon Resep</strong>
-                            <small class="d-block text-muted">Berikan diskon dalam persen untuk biaya resep
-                                obat</small>
-                        </div>
-                    </div>
-                </div>
+            <div class="card-body pt-2">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" for="diskon_resep">
-                        <i class="ri-percent-line text-success me-1"></i>Diskon Resep (%)
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="ri-discount-percent-line"></i></span>
+                    <label class="form-label small fw-semibold text-muted" for="diskon_resep">Diskon Resep</label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select" id="diskon_resep_type" style="max-width: 120px;">
+                            <option value="percent" selected>Persen (%)</option>
+                            <option value="nominal">Nominal (Rp)</option>
+                        </select>
+                        <span class="input-group-text" id="diskon_resep_prefix">%</span>
                         <input type="number" name="diskon_resep" class="form-control" placeholder="0"
-                            id="diskon_resep" min="0" max="100">
-                        <span class="input-group-text">%</span>
-                        <button class="btn btn-success px-4" type="submit" id="btn-buat-diskon-resep">
-                            <span id="text-buat-diskon-resep"><i class="ri-check-line me-1"></i>Terapkan</span>
+                            id="diskon_resep" min="0">
+                        <button class="btn btn-success" type="submit" id="btn-buat-diskon-resep">
+                            <span id="text-buat-diskon-resep"><i class="ri-check-line"></i></span>
                             <span class="spinner-border spinner-border-sm d-none" id="spinner-buat-diskon-resep"
                                 role="status" aria-hidden="true"></span>
                         </button>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle m-0">
-                        <thead
-                            style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #0ba360;">
-                            <tr>
-                                <th style="padding: 12px; font-weight: 600; color: #495057;">Nama Obat</th>
-                                <th class="text-center"
-                                    style="padding: 12px; font-weight: 600; color: #495057; width: 80px;">Jumlah</th>
-                                <th style="padding: 12px; font-weight: 600; color: #495057; width: 150px;">Aturan Pakai
-                                </th>
-                                <th class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057; width: 110px;">Harga</th>
-                                <th class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057; width: 120px;">Subtotal
-                                </th>
+                    <table class="table table-hover align-middle mb-0 tbl-catatan">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-3" style="min-width: 160px;">Nama Obat</th>
+                                <th class="text-center" style="width: 60px;">Jml</th>
+                                <th style="width: 140px;">Aturan Pakai</th>
+                                <th class="text-end" style="width: 90px;">Harga</th>
+                                <th class="text-end pe-3" style="width: 100px;">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-catatan-resep"></tbody>
-                        <tfoot
-                            style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-top: 2px solid #0ba360;">
+                        <tfoot class="tfoot-catatan">
                             <tr>
-                                <td colspan="4" class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #495057;">
-                                    <i class="ri-calculator-line me-1 text-success"></i>Nominal
+                                <td colspan="4" class="text-end fw-semibold text-muted" style="font-size: .8rem;">
+                                    Nominal
                                 </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-resep-catatan" class="fw-bold"
-                                        style="color: #495057; font-size: 14px;">Rp. 0</span>
+                                <td class="text-end pe-3" style="font-size: .85rem;">
+                                    <span id="total-resep-catatan" class="fw-semibold">Rp. 0</span>
                                 </td>
                             </tr>
                             <tr>
-                                <td colspan="4" class="text-end"
-                                    style="padding: 12px; font-weight: 600; color: #dc3545;">
+                                <td colspan="4" class="text-end fw-semibold text-danger" style="font-size: .8rem;">
                                     <i class="ri-discount-percent-line me-1"></i>Diskon
                                 </td>
-                                <td class="text-end" style="padding: 12px;">
-                                    <span id="total-resep-diskon" class="fw-bold text-danger"
-                                        style="font-size: 14px;">Rp. 0</span>
+                                <td class="text-end pe-3" style="font-size: .85rem;">
+                                    <span id="total-resep-diskon" class="fw-semibold text-danger">Rp. 0</span>
                                 </td>
                             </tr>
-                            <tr style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);">
-                                <td colspan="4" class="text-end"
-                                    style="padding: 16px; font-weight: 700; color: white; font-size: 16px;">
-                                    <i class="ri-shopping-cart-2-line me-2"></i>TOTAL RESEP
+                            <tr class="bg-success">
+                                <td colspan="4" class="text-end fw-bold text-white ps-3" style="font-size: .9rem;">
+                                    TOTAL RESEP
                                 </td>
-                                <td class="text-end" style="padding: 16px;">
-                                    <span id="total-resep-harga" class="fw-bold"
-                                        style="color: white; font-size: 18px;">Rp. 0</span>
+                                <td class="text-end pe-3">
+                                    <span id="total-resep-harga" class="fw-bold text-white" style="font-size: 1rem;">Rp. 0</span>
                                 </td>
                             </tr>
                         </tfoot>
@@ -187,12 +143,11 @@
         </div>
     </div>
     <div class="col-xxl-12 col-sm-12">
-        <div class="card mb-3 shadow-sm">
-            <div class="card-header bg-gradient"
-                style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                <h5 class="card-title text-white mb-0">
-                    <i class="ri-file-text-line me-2"></i>Catatan & Penyelesaian Pemeriksaan
-                </h5>
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-file-text-line me-1 text-danger"></i>Catatan & Penyelesaian Pemeriksaan
+                </h6>
             </div>
             <div class="card-body p-4">
                 <div class="alert alert-warning border-start border-4 border-warning mb-4" role="alert">
@@ -314,6 +269,35 @@
     </div>
 </div>
 
+@push('style')
+<style>
+    .tbl-catatan thead th {
+        font-size: .75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #fff;
+        border-bottom: none;
+        padding: .6rem .5rem;
+    }
+    .tbl-catatan tbody tr {
+        transition: background-color .15s ease;
+    }
+    .tbl-catatan tbody tr:hover {
+        background-color: #f8f9ff;
+    }
+    .tbl-catatan tbody td {
+        padding: .5rem .5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    .tfoot-catatan td {
+        padding: .5rem .5rem;
+        border-top: 1px solid #e9ecef;
+    }
+</style>
+@endpush
+
 @push('scripts')
     <script>
         (function() {
@@ -361,7 +345,8 @@
                                     nama: item.tindakan_name,
                                     qty: item.qty,
                                     harga: item.tindakan_harga,
-                                    total: item.total_harga
+                                    total: item.total_harga,
+                                    is_paket: !!item.paket_pasien_id
                                 };
                             }));
                         }
@@ -372,35 +357,28 @@
                                     nama: item.jenis_pemeriksaan,
                                     qty: item.qty,
                                     harga: item.harga,
-                                    total: item.total_harga
+                                    total: item.total_harga,
+                                    is_paket: !!item.is_paket
                                 };
                             }));
                         }
                         allTindakan.forEach(function(item, index) {
                             tbodyTindakan.append(`
-            <tr style="border-bottom: 1px solid #e9ecef;">
-              <td style="padding: 14px 12px; vertical-align: middle;">
-                <div class="d-flex align-items-center">
-                  <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                    <i class="ri-stethoscope-line text-white" style="font-size: 14px;"></i>
-                  </div>
-                  <span style="color: #212529; font-weight: 500;">${item.nama}</span>
-                </div>
-              </td>
-              <td class="text-center" style="padding: 14px 12px; vertical-align: middle;">
-                <span class="badge" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 5px 12px; border-radius: 6px; font-weight: 600;">${item.qty}</span>
-              </td>
-              <td class="text-end" style="padding: 14px 12px; vertical-align: middle; color: #495057; font-size: 14px;">Rp ${formatRupiah(item.harga)}</td>
-              <td class="text-end" style="padding: 14px 12px; vertical-align: middle;">
-                <span class="fw-bold text-primary" style="font-size: 14px;">Rp ${formatRupiah(item.total)}</span>
-              </td>
-            </tr>
-          `);
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold text-dark" style="font-size: .85rem; line-height: 1.3;">${item.nama} ${item.is_paket ? '<span class="badge bg-success-subtle text-success" style="font-size: .6rem; vertical-align: middle;">Paket</span>' : ''}</div>
+                                    </td>
+                                    <td class="text-center fw-medium">${item.qty}</td>
+                                    <td class="text-end text-muted" style="font-size: .85rem;">${formatRupiah(item.harga)}</td>
+                                    <td class="text-end pe-3 fw-semibold" style="font-size: .85rem;">${formatRupiah(item.total)}</td>
+                                </tr>
+                            `);
                         });
-                        // Hitung footer berdasarkan Tindakan Medis saja (tanpa penunjang)
+                        // Hitung footer berdasarkan Tindakan Medis saja (tanpa penunjang, exclude item paket)
                         let medisNominal = 0;
                         if (data.tindakan && Array.isArray(data.tindakan)) {
                             data.tindakan.forEach(function(it) {
+                                if (it.paket_pasien_id) return; // Skip item paket
                                 const qty = parseInt(it.qty) || 0;
                                 const harga = parseFloat(it.tindakan_harga) || 0;
                                 const total = parseFloat(it.total_harga);
@@ -408,16 +386,23 @@
                             });
                         }
                         const persen = parseFloat(data.diskon_persen_tindakan || 0) || 0;
-                        const diskonNominal = Math.round(medisNominal * (persen / 100.0));
+                        let diskonNominal = 0;
+                        if (persen > 0) {
+                            diskonNominal = Math.round(medisNominal * (persen / 100.0));
+                        } else {
+                            diskonNominal = parseFloat(data.diskon_tindakan || 0) || 0;
+                        }
+                        diskonNominal = Math.min(diskonNominal, medisNominal);
                         const subtotalMedis = Math.max(0, medisNominal - diskonNominal);
                         $('#total-tindakan').text(formatRupiah(medisNominal));
-                        $('#total-tindakan-diskon').text(formatRupiah(diskonNominal) + (diskonNominal ? ' (' +
+                        $('#total-tindakan-diskon').text(formatRupiah(diskonNominal) + (persen > 0 ? ' (' +
                             persen + '%)' : ''));
                         $('#total-tindakan-harga').text(formatRupiah(subtotalMedis));
-                        // Penunjang (Lab + Radiologi)
+                        // Penunjang (Lab + Radiologi, exclude item paket)
                         let penunjangNominal = 0;
                         if (data.pemeriksaan_penunjang && Array.isArray(data.pemeriksaan_penunjang)) {
                             data.pemeriksaan_penunjang.forEach(function(it) {
+                                if (it.is_paket) return; // Skip item paket
                                 const harga = parseFloat(it.harga) || 0;
                                 const total = parseFloat(it.total_harga);
                                 penunjangNominal += (isNaN(total) ? harga : total);
@@ -432,35 +417,32 @@
                         if (data.resep && data.resep.details && Array.isArray(data.resep.details)) {
                             data.resep.details.forEach(function(item, index) {
                                 tbodyResep.append(`
-              <tr style="border-bottom: 1px solid #e9ecef;">
-                <td style="padding: 14px 12px; vertical-align: middle;">
-                  <div class="d-flex align-items-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);">
-                      <i class="ri-medicine-bottle-line text-white" style="font-size: 14px;"></i>
-                    </div>
-                    <span style="color: #212529; font-weight: 500;">${item.nama_obat}</span>
-                  </div>
-                </td>
-                <td class="text-center" style="padding: 14px 12px; vertical-align: middle;">
-                  <span class="badge" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); color: white; padding: 5px 12px; border-radius: 6px; font-weight: 600;">${item.qty}</span>
-                </td>
-                <td style="padding: 14px 12px; vertical-align: middle;">
-                  <div class="d-flex align-items-center">
-                    <i class="ri-time-line text-info me-1" style="font-size: 14px;"></i>
-                    <small style="color: #6c757d;">${item.aturan_pakai}</small>
-                  </div>
-                </td>
-                <td class="text-end" style="padding: 14px 12px; vertical-align: middle; color: #495057; font-size: 14px;">Rp ${formatRupiah(item.harga)}</td>
-                <td class="text-end" style="padding: 14px 12px; vertical-align: middle;">
-                  <span class="fw-bold text-success" style="font-size: 14px;">Rp ${formatRupiah(item.total_harga)}</span>
-                </td>
-              </tr>
-            `);
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-semibold text-dark" style="font-size: .85rem; line-height: 1.3;">${item.nama_obat} ${item.paket_pasien_id ? '<span class="badge bg-success-subtle text-success" style="font-size: .6rem; vertical-align: middle;">Paket</span>' : ''}</div>
+                                        </td>
+                                        <td class="text-center fw-medium">${item.qty}</td>
+                                        <td>
+                                            <span class="text-muted" style="font-size: .8rem;">${item.aturan_pakai}</span>
+                                        </td>
+                                        <td class="text-end text-muted" style="font-size: .85rem;">${formatRupiah(item.harga)}</td>
+                                        <td class="text-end pe-3 fw-semibold" style="font-size: .85rem;">${formatRupiah(item.total_harga)}</td>
+                                    </tr>
+                                `);
                             });
                         }
-                        $('#total-resep-catatan').text(formatRupiah(data.total_resep || 0));
-                        $('#total-resep-diskon').text(formatRupiah(data.diskon_resep || 0) + (data.diskon_resep ?
-                            ' (' + (data.diskon_persen_resep || 0) + '%)' : ''));
+                        const totalResep = parseFloat(data.total_resep || 0) || 0;
+                        const persenResep = parseFloat(data.diskon_persen_resep || 0) || 0;
+                        let diskonResepNominal = 0;
+                        if (persenResep > 0) {
+                            diskonResepNominal = Math.round(totalResep * (persenResep / 100.0));
+                        } else {
+                            diskonResepNominal = parseFloat(data.diskon_resep || 0) || 0;
+                        }
+                        diskonResepNominal = Math.min(diskonResepNominal, totalResep);
+                        $('#total-resep-catatan').text(formatRupiah(totalResep));
+                        $('#total-resep-diskon').text(formatRupiah(diskonResepNominal) + (persenResep > 0 ?
+                            ' (' + persenResep + '%)' : ''));
                         $('#total-resep-harga').text(formatRupiah(data.total_bayar_resep || 0));
                     });
             }
@@ -501,10 +483,21 @@
                 loadEncounterSummary();
             });
 
+            $(document).on('change', '#diskon_tindakan_type', function() {
+                const type = $(this).val() === 'nominal' ? 'nominal' : 'percent';
+                $('#diskon_tindakan_prefix').text(type === 'nominal' ? 'Rp' : '%');
+            });
+
+            $(document).on('change', '#diskon_resep_type', function() {
+                const type = $(this).val() === 'nominal' ? 'nominal' : 'percent';
+                $('#diskon_resep_prefix').text(type === 'nominal' ? 'Rp' : '%');
+            });
+
             // Diskon Tindakan
             $(document).on('click', '#btn-buat-diskon-tindakan', function(e) {
                 e.preventDefault();
                 const diskon_tindakan = $('#diskon_tindakan').val();
+                const diskon_tindakan_type = $('#diskon_tindakan_type').val() || 'percent';
                 if (!diskon_tindakan) {
                     alert('Diskon Tindakan tidak boleh kosong');
                     return;
@@ -517,7 +510,8 @@
                         type: 'POST',
                         data: {
                             _token: "{{ csrf_token() }}",
-                            diskon_tindakan
+                            diskon_tindakan,
+                            diskon_tindakan_type
                         }
                     })
                     .done(function(resp) {
@@ -537,6 +531,7 @@
             $(document).on('click', '#btn-buat-diskon-resep', function(e) {
                 e.preventDefault();
                 const diskon_resep = $('#diskon_resep').val();
+                const diskon_resep_type = $('#diskon_resep_type').val() || 'percent';
                 if (!diskon_resep) {
                     alert('Diskon Resep tidak boleh kosong');
                     return;
@@ -549,7 +544,8 @@
                         type: 'POST',
                         data: {
                             _token: "{{ csrf_token() }}",
-                            diskon_resep
+                            diskon_resep,
+                            diskon_resep_type
                         }
                     })
                     .done(function(resp) {

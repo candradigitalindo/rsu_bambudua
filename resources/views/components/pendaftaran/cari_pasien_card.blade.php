@@ -1,220 +1,124 @@
-<div class="card border-0 shadow-sm mt-3 patient-card" style="border-left: 4px solid #17a2b8 !important;">
-    <div class="card-body py-3">
-        <style>
-            .patient-card .btn {
-                transition: all 0.2s ease;
-                font-weight: 500;
-            }
+@php
+    $hasEncounter = !empty($d->no_encounter) && $d->no_encounter !== '-';
+    $statusText = null;
+    $badgeClass = 'bg-warning-subtle text-warning';
+    $accentColor = '#6c757d';
 
-            .patient-card .btn:hover {
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-            }
+    if ($hasEncounter && !empty($d->type) && $d->type !== '-') {
+        $statusText = $d->type;
+        $badgeClass = match ($d->type) {
+            'Rawat Jalan' => 'bg-primary-subtle text-primary',
+            'Rawat Inap' => 'bg-info-subtle text-info',
+            'IGD' => 'bg-danger-subtle text-danger',
+            default => 'bg-warning-subtle text-warning',
+        };
+        $accentColor = match ($d->type) {
+            'Rawat Jalan' => '#0d6efd',
+            'Rawat Inap' => '#0dcaf0',
+            'IGD' => '#dc3545',
+            default => '#6c757d',
+        };
+    } else {
+        $statusText = 'Pasien Baru';
+        $badgeClass = 'bg-success-subtle text-success';
+        $accentColor = '#198754';
+    }
 
-            .patient-card .btn-primary:hover {
-                background-color: #0056b3;
-            }
+    $hasKerabatFlag = false;
+    $kerabatBadges = [];
 
-            .patient-card .btn-danger:hover {
-                background-color: #c82333;
-            }
+    if (isset($d->is_kerabat_dokter) && $d->is_kerabat_dokter) {
+        $kerabatBadges[] = ['label' => 'Kerabat Dokter', 'icon' => 'ri-stethoscope-line', 'class' => 'bg-primary text-white'];
+        $hasKerabatFlag = true;
+    }
+    if (isset($d->is_kerabat_karyawan) && $d->is_kerabat_karyawan) {
+        $kerabatBadges[] = ['label' => 'Kerabat Karyawan', 'icon' => 'ri-team-line', 'class' => 'bg-success text-white'];
+        $hasKerabatFlag = true;
+    }
+    if (isset($d->is_kerabat_owner) && $d->is_kerabat_owner) {
+        $kerabatBadges[] = ['label' => 'Kerabat Owner', 'icon' => 'ri-vip-crown-line', 'class' => 'bg-warning text-dark'];
+        $hasKerabatFlag = true;
+    }
+@endphp
 
-            .patient-card .btn-warning:hover {
-                background-color: #e0a800;
-            }
-
-            .patient-card:hover {
-                box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
-                transform: translateY(-2px);
-                transition: all 0.3s ease;
-            }
-        </style>
-        @php
-            // Status berdasarkan encounter terakhir atau kunjungan terakhir
-            $hasEncounter = !empty($d->no_encounter) && $d->no_encounter !== '-';
-            $statusText = null;
-            $badgeClass = 'bg-secondary-subtle text-secondary';
-
-            if ($hasEncounter && !empty($d->type) && $d->type !== '-') {
-                // Jika ada encounter, gunakan jenis encounter sebagai status
-                $statusText = $d->type;
-                $badgeClass = match ($d->type) {
-                    'Rawat Jalan' => 'bg-primary-subtle text-primary',
-                    'Rawat Inap' => 'bg-info-subtle text-info',
-                    'IGD' => 'bg-danger-subtle text-danger',
-                    default => 'bg-secondary-subtle text-secondary',
-                };
-            } else {
-                // Jika tidak ada encounter, tampilkan status pasien baru
-                $statusText = 'Pasien Baru';
-                $badgeClass = 'bg-success-subtle text-success';
-            }
-        @endphp
-
-        <div class="d-flex flex-wrap gap-2 mb-2">
-            @if ($statusText)
-                <span class="badge {{ $badgeClass }} rounded-pill">
-                    <i class="ri-circle-fill me-1"></i>Status : {{ $statusText }}
-                </span>
-            @endif
-
-            {{-- Badge Kerabat --}}
-            @php
-                $hasKerabatFlag = false;
-                $kerabatBadges = [];
-
-                if (isset($d->is_kerabat_dokter) && $d->is_kerabat_dokter) {
-                    $kerabatBadges[] = [
-                        'label' => 'Kerabat Dokter',
-                        'icon' => 'ri-stethoscope-line',
-                        'class' => 'bg-primary text-white',
-                    ];
-                    $hasKerabatFlag = true;
-                }
-
-                if (isset($d->is_kerabat_karyawan) && $d->is_kerabat_karyawan) {
-                    $kerabatBadges[] = [
-                        'label' => 'Kerabat Karyawan',
-                        'icon' => 'ri-team-line',
-                        'class' => 'bg-success text-white',
-                    ];
-                    $hasKerabatFlag = true;
-                }
-
-                if (isset($d->is_kerabat_owner) && $d->is_kerabat_owner) {
-                    $kerabatBadges[] = [
-                        'label' => 'Kerabat Owner',
-                        'icon' => 'ri-vip-crown-line',
-                        'class' => 'bg-warning text-dark',
-                    ];
-                    $hasKerabatFlag = true;
-                }
-
-                // Debug: Log nilai kerabat flags
-                \Log::info('Kerabat Flags for ' . $d->name, [
-                    'is_kerabat_dokter' => $d->is_kerabat_dokter ?? 'not set',
-                    'is_kerabat_karyawan' => $d->is_kerabat_karyawan ?? 'not set',
-                    'is_kerabat_owner' => $d->is_kerabat_owner ?? 'not set',
-                    'hasKerabatFlag' => $hasKerabatFlag,
-                ]);
-
-                // Jika tidak ada flag kerabat, tampilkan Reguler
-                if (!$hasKerabatFlag) {
-                    $kerabatBadges[] = [
-                        'label' => 'Reguler',
-                        'icon' => 'ri-user-line',
-                        'class' => 'bg-primary text-white',
-                    ];
-                }
-            @endphp
-
+<div class="patient-result-card" style="border-left: 4px solid {{ $accentColor }};">
+    {{-- Header: Avatar + Name + Badges --}}
+    <div class="prc-header">
+        <div class="prc-avatar" style="background: {{ $accentColor }}15; color: {{ $accentColor }};">
+            <i class="ri-user-3-fill"></i>
+        </div>
+        <div class="prc-identity">
+            <div class="prc-name">{{ $d->name }}</div>
+            <div class="prc-rm">
+                <i class="ri-hashtag me-1"></i>RM: <strong>{{ $d->rekam_medis }}</strong>
+                @if($d->no_identitas)
+                    <span class="mx-1 text-muted">|</span>
+                    <span>{{ $d->jenis_identitas }}: {{ $d->no_identitas }}</span>
+                @endif
+            </div>
+        </div>
+        <div class="prc-badges">
+            <span class="badge {{ $badgeClass }} rounded-pill">
+                <i class="ri-circle-fill me-1" style="font-size: 6px; vertical-align: middle;"></i>{{ $statusText }}
+            </span>
             @foreach ($kerabatBadges as $badge)
                 <span class="badge {{ $badge['class'] }} rounded-pill">
                     <i class="{{ $badge['icon'] }} me-1"></i>{{ $badge['label'] }}
                 </span>
             @endforeach
         </div>
-        <hr>
-        <div class="row justify-content-between">
-            <div class="col-4">
-                <div class="d-flex flex-column mw-100">
-                    <div class="text-primary fw-semibold mb-2">Identitas Pasien</div>
-                    <div>
-                        <table class="table-sm">
-                            <tr>
-                                <td class="pe-2" style="min-width: 60px;">No.RM</td>
-                                <td class="pe-2">:</td>
-                                <td class="fw-semibold text-dark">{{ $d->rekam_medis }}</td>
-                            </tr>
-                            <tr>
-                                <td class="pe-2">Nama</td>
-                                <td class="pe-2">:</td>
-                                <td class="fw-semibold text-dark">{{ $d->name }}</td>
-                            </tr>
-                            <tr>
-                                <td class="pe-2">{{ $d->jenis_identitas }}</td>
-                                <td class="pe-2">:</td>
-                                <td class="fw-semibold text-dark">{{ $d->no_identitas ?? '-' }}</td>
-                            </tr>
-                        </table>
-                    </div>
+    </div>
+
+    {{-- Body: Info Grid --}}
+    <div class="prc-body">
+        <div class="prc-info-grid">
+            <div class="prc-info-item">
+                <div class="prc-info-icon"><i class="ri-phone-line"></i></div>
+                <div>
+                    <div class="prc-info-label">No. Telepon</div>
+                    <div class="prc-info-value">{{ $d->no_hp ?? '-' }}</div>
                 </div>
             </div>
-            <div class="col-4">
-                <div class="d-flex flex-column mw-100">
-                    <div class="text-primary fw-semibold mb-2">Kontak Pasien</div>
-                    <div>
-                        <table class="table-sm">
-                            <tr>
-                                <td class="pe-2" style="min-width: 60px;">No Hp</td>
-                                <td class="pe-2">:</td>
-                                <td class="fw-semibold text-dark">{{ $d->no_hp ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td class="pe-2">Alamat</td>
-                                <td class="pe-2">:</td>
-                                <td class="fw-semibold text-dark" style="max-width: 150px; word-wrap: break-word;">
-                                    {{ $d->alamat ?? '-' }}</td>
-                            </tr>
-                        </table>
-                    </div>
+            <div class="prc-info-item">
+                <div class="prc-info-icon"><i class="ri-map-pin-line"></i></div>
+                <div>
+                    <div class="prc-info-label">Alamat</div>
+                    <div class="prc-info-value text-truncate" style="max-width: 200px;" title="{{ $d->alamat ?? '-' }}">{{ $d->alamat ?? '-' }}</div>
                 </div>
             </div>
-            <div class="col-4">
-                <div class="d-flex flex-column mw-100">
-                    <div class="text-primary fw-semibold mb-2">Kunjungan Terakhir</div>
+            @if($hasEncounter)
+                <div class="prc-info-item">
+                    <div class="prc-info-icon"><i class="ri-calendar-check-line"></i></div>
                     <div>
-                        @if ($hasEncounter)
-                            <table class="table-sm">
-                                <tr>
-                                    <td class="pe-2" style="min-width: 80px;">No. Kunjungan</td>
-                                    <td class="pe-2">:</td>
-                                    <td class="fw-semibold text-dark">{{ $d->no_encounter }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="pe-2">Tanggal</td>
-                                    <td class="pe-2">:</td>
-                                    <td class="fw-semibold text-dark">{{ $d->tgl_encounter }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="pe-2">Jenis</td>
-                                    <td class="pe-2">:</td>
-                                    <td class="fw-semibold text-dark">{{ $d->type }}</td>
-                                </tr>
-                            </table>
-                        @else
-                            <div class="text-muted fst-italic text-center py-3">
-                                <i class="ri-calendar-todo-line fs-4 d-block mb-2"></i>
-                                <small>Belum ada kunjungan</small>
-                            </div>
-                        @endif
+                        <div class="prc-info-label">Kunjungan Terakhir</div>
+                        <div class="prc-info-value">{{ $d->tgl_encounter }} &middot; <span class="badge {{ $badgeClass }} rounded-pill" style="font-size: 10px;">{{ $d->type }}</span></div>
                     </div>
                 </div>
-            </div>
+            @else
+                <div class="prc-info-item">
+                    <div class="prc-info-icon text-muted"><i class="ri-calendar-todo-line"></i></div>
+                    <div>
+                        <div class="prc-info-label">Kunjungan Terakhir</div>
+                        <div class="prc-info-value text-muted fst-italic">Belum ada kunjungan</div>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
-    <div class="card-footer bg-light border-0 py-2">
-        <div class="d-flex gap-2 flex-wrap justify-content-end">
-            <button type="button" class="btn rawatJalan btn-primary btn-sm shadow-sm" data-bs-toggle="modal"
-                data-bs-target="#modal-rawatJalan" id="{{ $d->id }}">
-                <i class="ri-stethoscope-line me-1"></i>
-                Rawat Jalan
-            </button>
-            {{-- <button type="button" class="btn rawatInap btn-info btn-sm shadow-sm" data-bs-toggle="modal"
-                data-bs-target="#modal-rawatInap" id="{{ $d->id }}">
-                <i class="ri-hotel-bed-fill me-1"></i>
-                Rawat Inap
-            </button> --}}
-            <button type="button" class="btn rawatDarurat btn-danger btn-sm shadow-sm" data-bs-toggle="modal"
-                data-bs-target="#modal-rawatDarurat" id="{{ $d->id }}">
-                <i class="ri-alarm-warning-line me-1"></i>
-                IGD
-            </button>
-            <button type="button" class="btn edit btn-warning btn-sm shadow-sm" data-bs-toggle="modal"
-                data-bs-target="#form-edit-pasien" id="{{ $d->id }}">
-                <i class="ri-edit-box-line me-1"></i>
-                Edit Data
-            </button>
-        </div>
+
+    {{-- Footer: Actions --}}
+    <div class="prc-actions">
+        <button type="button" class="btn rawatJalan btn-primary btn-sm" data-bs-toggle="modal"
+            data-bs-target="#modal-rawatJalan" id="{{ $d->id }}">
+            <i class="ri-stethoscope-line me-1"></i>Rawat Jalan
+        </button>
+        <button type="button" class="btn rawatDarurat btn-danger btn-sm" data-bs-toggle="modal"
+            data-bs-target="#modal-rawatDarurat" id="{{ $d->id }}">
+            <i class="ri-alarm-warning-line me-1"></i>IGD
+        </button>
+        <button type="button" class="btn edit btn-outline-secondary btn-sm" data-bs-toggle="modal"
+            data-bs-target="#form-edit-pasien" id="{{ $d->id }}">
+            <i class="ri-edit-box-line me-1"></i>Edit
+        </button>
     </div>
 </div>

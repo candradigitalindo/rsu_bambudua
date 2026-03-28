@@ -18,6 +18,7 @@ class TindakanEncounter extends Model
         'total_harga',
         'id_petugas',
         'petugas_name',
+        'paket_pasien_id',
     ];
     public function encounter()
     {

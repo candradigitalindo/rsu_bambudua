@@ -3,7 +3,6 @@
 @section('title', 'Edit Jenis Pemeriksaan Penunjang')
 
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <style>
         .info-card {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
@@ -336,9 +335,6 @@
 @endsection
 
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <script>
         $(document).ready(function() {

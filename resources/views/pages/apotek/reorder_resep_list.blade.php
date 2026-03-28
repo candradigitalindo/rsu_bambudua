@@ -5,7 +5,6 @@
 @push('style')
     <!-- CSS Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 
 @section('content')
@@ -59,7 +58,7 @@
                                         <td>{{ $resep->encounter?->clinic?->name ?? 'Resep Pulang' }}</td>
                                         <td>{{ \Carbon\Carbon::parse($resep->created_at)->format('d-m-Y H:i') }}</td>
                                         <td class="text-center">
-                                            <span class="badge bg-secondary">{{ $resep->status }}</span>
+                                            <span class="badge bg-warning text-dark">{{ $resep->status }}</span>
                                         </td>
                                         <td>
                                             <form action="{{ route('apotek.penyiapan-resep.reorder.action', $resep->id) }}"
@@ -94,7 +93,5 @@
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

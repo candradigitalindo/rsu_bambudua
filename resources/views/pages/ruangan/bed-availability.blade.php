@@ -5,7 +5,6 @@
 @push('style')
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <!-- Additional CSS for bed status indicators -->
     <style>
         .bed-status-card {
@@ -263,9 +262,7 @@
     <!-- DataTables JS -->
     <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>
     <script src="{{ asset('vendor/datatables/dataTables.bs5.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <script>
         function refreshData() {

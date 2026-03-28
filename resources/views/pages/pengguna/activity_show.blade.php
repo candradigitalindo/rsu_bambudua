@@ -5,7 +5,6 @@
 
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 
 @section('content')
@@ -28,7 +27,7 @@
                     <dd class="col-sm-9">{{ $log->module ?? '-' }}</dd>
 
                     <dt class="col-sm-3">Method</dt>
-                    <dd class="col-sm-9"><span class="badge bg-secondary">{{ $log->method }}</span></dd>
+                    <dd class="col-sm-9"><span class="badge bg-warning text-dark">{{ $log->method }}</span></dd>
 
                     <dt class="col-sm-3">URL</dt>
                     <dd class="col-sm-9"><code>{{ $log->url }}</code></dd>
@@ -68,8 +67,5 @@
 
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

@@ -11,5 +11,7 @@ class Discount extends Model
     protected $fillable = [
         'diskon_tindakan',
         'diskon_resep',
+        'diskon_tindakan_nominal',
+        'diskon_resep_nominal',
     ];
 }

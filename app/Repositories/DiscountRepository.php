@@ -19,6 +19,8 @@ class DiscountRepository
             $discount = \App\Models\Discount::create([
                 'diskon_tindakan' => 0,
                 'diskon_resep' => 0,
+                'diskon_tindakan_nominal' => 0,
+                'diskon_resep_nominal' => 0,
             ]);
         }
         return $discount;

@@ -50,7 +50,9 @@ use App\Http\Controllers\RadiologiController;
 use App\Http\Controllers\RadiologySupplyController;
 use App\Http\Controllers\MedicalRecordsController;
 use App\Http\Controllers\IncentiveController;
+use App\Http\Controllers\PaketPemeriksaanController;
 use App\Http\Controllers\MedicalEquipmentController;
+use App\Http\Controllers\MasterPasienController;
 use App\Models\Subdistrict;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -145,6 +147,21 @@ Route::middleware(['auth'])->group(function () {
         // Reminder Settings
         Route::resource('reminder-settings', \App\Http\Controllers\ReminderSettingController::class)->except(['show']);
         Route::post('reminder-settings/{reminder_setting}/toggle-status', [\App\Http\Controllers\ReminderSettingController::class, 'toggleStatus'])->name('reminder-settings.toggle-status');
+
+        // Paket Pemeriksaan
+        Route::resource('paket-pemeriksaan', PaketPemeriksaanController::class)->except(['show']);
+
+        // Data Pasien
+        Route::resource('pasien', MasterPasienController::class)->except(['show'])->names('master.pasien');
+        Route::get('pasien/cities/{provinceCode}', [MasterPasienController::class, 'getCities'])->name('master.pasien.cities');
+    });
+
+    // Paket Pemeriksaan - Pasien
+    Route::prefix('paket-pemeriksaan/pasien')->group(function () {
+        Route::get('/', [PaketPemeriksaanController::class, 'pasienIndex'])->name('paket-pemeriksaan.pasien.index');
+        Route::get('/{id}', [PaketPemeriksaanController::class, 'pasienShow'])->name('paket-pemeriksaan.pasien.show');
+        Route::post('/{id}/use-sesi', [PaketPemeriksaanController::class, 'pasienUseSesi'])->name('paket-pemeriksaan.pasien.use-sesi');
+        Route::post('/{id}/cancel', [PaketPemeriksaanController::class, 'pasienCancel'])->name('paket-pemeriksaan.pasien.cancel');
     });
 
     Route::prefix('pendaftaran')->group(function () {
@@ -185,6 +202,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/rawatJalan/export', [PendaftaranController::class, 'exportRawatJalan'])->name('pendaftaran.exportRawatJalan');
         Route::get('/rawatDarurat/export', [PendaftaranController::class, 'exportRawatDarurat'])->name('pendaftaran.exportRawatDarurat');
         Route::get('/rawatInap/export', [PendaftaranController::class, 'exportRawatInap'])->name('pendaftaran.exportRawatInap');
+
+        // Paket Pemeriksaan
+        Route::get('/pasien/{id}/pakets', [PendaftaranController::class, 'getPaketPasien'])->name('pendaftaran.getPaketPasien');
+        Route::post('/pasien/{id}/beli-paket', [PendaftaranController::class, 'beliPaket'])->name('pendaftaran.beliPaket');
+        Route::delete('/pasien/{id}/hapus-paket/{paket_pasien_id}', [PendaftaranController::class, 'hapusPaket'])->name('pendaftaran.hapusPaket');
 
         // Route moved outside auth middleware - see line 67
     });
@@ -314,6 +336,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/observasi/{id}/postDiskonTindakan', [ObservasiController::class, 'postDiskonTindakan'])->name('observasi.postDiskonTindakan');
         // diskon_resep
         Route::post('/observasi/{id}/postDiskonResep', [ObservasiController::class, 'postDiskonResep'])->name('observasi.postDiskonResep');
+        // Terapkan Paket Pemeriksaan
+        Route::post('/observasi/{id}/applyPaket', [ObservasiController::class, 'applyPaket'])->name('observasi.applyPaket');
         // post catatan encounter
         Route::post('/observasi/{id}/postCatatanEncounter', [ObservasiController::class, 'postCatatanEncounter'])->name('observasi.postCatatanEncounter');
         // Cetak Encounter
@@ -453,6 +477,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [KasirController::class, 'index'])->name('kasir.index');
         Route::get('/pembayaran/{pasien_id}', [KasirController::class, 'show'])->name('kasir.show');
         Route::post('/pembayaran/{pasien_id}', [KasirController::class, 'processPayment'])->name('kasir.processPayment');
+        Route::post('/pembayaran/{pasien_id}/add-paket', [KasirController::class, 'addPaketToBill'])->name('kasir.addPaket');
+        Route::delete('/pembayaran/{pasien_id}/remove-paket/{paket_pasien_id}', [KasirController::class, 'removePaketFromBill'])->name('kasir.removePaket');
         Route::get('/cetak-terakhir', [KasirController::class, 'cetakStrukTerakhir'])->name('kasir.cetakStrukTerakhir');
         Route::get('/histori', [KasirController::class, 'histori'])->name('kasir.histori');
         Route::get('/laporan', [KasirController::class, 'laporan'])->name('kasir.laporan');

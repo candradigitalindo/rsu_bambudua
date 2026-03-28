@@ -4,7 +4,6 @@
 @endsection
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <!-- Quill Editor -->
     <link rel="stylesheet" href="{{ asset('vendor/quill/quill.core.css') }}">
     <style>
@@ -75,7 +74,7 @@
                                     </span>
                                 @endif
                             @else
-                                <span class="badge bg-secondary text-white">
+                                <span class="badge bg-warning text-dark">
                                     <i class="ri-user-line"></i> Reguler
                                 </span>
                             @endif
@@ -196,14 +195,11 @@
 @endsection
 @prepend('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Sweet Alert JS -->
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <!-- Quill Editor JS -->
     <script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
     <script src="{{ asset('vendor/quill/custom.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endprepend

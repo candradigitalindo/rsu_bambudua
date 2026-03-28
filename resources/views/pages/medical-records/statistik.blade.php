@@ -3,7 +3,6 @@
     Statistik Medis
 @endsection
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -30,10 +29,7 @@
     </div>
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <script src="{{ asset('vendor/apex/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         // Monthly bar
         new ApexCharts(document.querySelector('#chartMonthly'), {

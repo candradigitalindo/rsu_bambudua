@@ -2,10 +2,8 @@
 @section('title', 'Edit Pengguna')
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
     <!-- Uploader CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         .select2-container .select2-selection--multiple {
@@ -323,15 +321,10 @@
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Dropzone JS -->
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/validations.js') }}"></script>
     <script>
         $(document).ready(function() {
             function mapRoleToProfession(role) {

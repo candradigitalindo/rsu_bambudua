@@ -194,6 +194,14 @@
                             <a class="{{ request()->is('masterdata/payment-methods*') ? 'active-sub' : '' }}"
                                 href="{{ route('payment-methods.index') }}">Metode Pembayaran</a>
                         </li>
+                        <li>
+                            <a class="{{ request()->is('masterdata/paket-pemeriksaan*') ? 'active-sub' : '' }}"
+                                href="{{ route('paket-pemeriksaan.index') }}">Paket Pemeriksaan</a>
+                        </li>
+                        <li>
+                            <a class="{{ request()->is('masterdata/pasien*') ? 'active-sub' : '' }}"
+                                href="{{ route('master.pasien.index') }}">Data Pasien</a>
+                        </li>
 
                     </ul>
                 </li>

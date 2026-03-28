@@ -3,7 +3,6 @@
 @push('style')
     <link rel="stylesheet" href="{{ asset('vendor/quill/quill.snow.css') }}">
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 
 @section('content')
@@ -76,10 +75,7 @@
 @push('scripts')
     <script src="{{ asset('vendor/quill/quill.min.js') }}"></script>
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var quill = new Quill('#editor', {

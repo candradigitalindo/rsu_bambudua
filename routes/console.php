@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 
 use App\Models\ProfessionalLicense;
+use App\Models\PaketPasien;
 use App\Models\User;
 use App\Notifications\SipExpirySixMonthNotification;
 
@@ -54,3 +55,24 @@ Artisan::command('sip:remind-expiring', function () {
 
     return 0;
 })->purpose('Remind Admin/Superadmin about SIP expiring in 6 months')->dailyAt('08:00');
+
+// Auto-expire paket pemeriksaan yang sudah lewat tanggal expired
+Artisan::command('paket:expire', function () {
+    $expired = PaketPasien::where('status', 'aktif')
+        ->whereDate('tanggal_expired', '<', now()->toDateString())
+        ->get();
+
+    if ($expired->isEmpty()) {
+        $this->info('No expired pakets found.');
+        return 0;
+    }
+
+    $count = 0;
+    foreach ($expired as $paket) {
+        $paket->update(['status' => 'expired']);
+        $count++;
+    }
+
+    $this->info("Updated {$count} paket(s) to expired status.");
+    return 0;
+})->purpose('Auto-expire paket pemeriksaan yang sudah lewat tanggal')->dailyAt('00:05');

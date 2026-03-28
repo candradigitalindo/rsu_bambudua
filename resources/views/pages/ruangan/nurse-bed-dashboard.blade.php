@@ -8,10 +8,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.0/dist/sweetalert2.min.css">
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
     <!-- Uploader CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     <style>
         /* Main Layout */
         .dashboard-container {
@@ -665,7 +663,7 @@
                                 <i class="ri-exchange-line me-1"></i>
                                 Handover
                             </button>
-                            <span class="badge bg-secondary text-white px-3 py-2 d-flex align-items-center">
+                            <span class="badge bg-warning text-dark px-3 py-2 d-flex align-items-center">
                                 <i class="ri-user-line me-1"></i>
                                 {{ Auth::user()->name }}
                             </span>
@@ -1743,11 +1741,8 @@
 
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Dropzone JS -->
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
 
     <!-- Select2 JS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -1756,7 +1751,6 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         // Auto update time
         setInterval(() => {
@@ -3894,7 +3888,7 @@
                                             statusTooltip =
                                                 'Resep masih berlaku dan sedang dijalankan';
                                         } else if (prescription.status === 'completed') {
-                                            statusBadge = 'bg-secondary';
+                                            statusBadge = 'bg-warning text-dark';
                                             statusText = 'Selesai';
                                             statusTooltip = 'Resep sudah selesai dilaksanakan';
                                         } else if (prescription.status === 'cancelled') {
@@ -5021,7 +5015,7 @@
                                                 statusBadge = 'bg-danger';
                                                 break;
                                             case 'Held':
-                                                statusBadge = 'bg-secondary';
+                                                statusBadge = 'bg-warning text-dark';
                                                 break;
                                             default:
                                                 statusBadge = 'bg-info';

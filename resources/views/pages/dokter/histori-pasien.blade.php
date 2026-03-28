@@ -6,7 +6,6 @@
     <!-- Data Tables -->
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5-custom.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 
 @section('content')
@@ -122,7 +121,7 @@
                                                 class="text-muted">{{ \Carbon\Carbon::parse($pasien['tanggal'])->format('H:i') }}</small>
                                         </td>
                                         <td><span
-                                                class="badge bg-secondary-subtle text-secondary">{{ $pasien['no_encounter'] }}</span>
+                                                class="badge bg-warning-subtle text-warning">{{ $pasien['no_encounter'] }}</span>
                                         </td>
                                         <td><strong>{{ $pasien['rekam_medis'] }}</strong></td>
                                         <td>{{ $pasien['nama_pasien'] }}</td>
@@ -183,7 +182,5 @@
             });
         });
     </script>
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
     <script src="{{ asset('assets/js/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

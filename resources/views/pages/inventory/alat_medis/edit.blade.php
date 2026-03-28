@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title','Edit Alat Medis')
 @push('style')
-  <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
   <link rel="stylesheet" href="{{ asset('vendor/daterange/daterange.css') }}">
 @endpush
 @section('content')
@@ -81,9 +80,6 @@
 </div>
 @endsection
 @push('scripts')
-  <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-  <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
   <script src="{{ asset('vendor/daterange/daterange.js') }}"></script>
   <script src="{{ asset('vendor/daterange/custom-daterange.js') }}"></script>
-  <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

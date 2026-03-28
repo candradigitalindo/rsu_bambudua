@@ -47,7 +47,6 @@
 @endsection
 
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/daterange/daterange.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5-custom.css') }}">
@@ -55,14 +54,11 @@
 @endpush
 
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <script src="{{ asset('vendor/daterange/daterange.js') }}"></script>
     <script src="{{ asset('vendor/daterange/custom-daterange.js') }}"></script>
     <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>
     <script src="{{ asset('vendor/datatables/dataTables.bootstrap.min.js') }}"></script>
     <script src="{{ asset('vendor/datatables/custom/custom-datatables.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function(){
         const table = document.querySelector('.table');

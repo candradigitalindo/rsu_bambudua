@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Master Satuan')
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
     <div class="row gx-3">
@@ -48,7 +47,7 @@
                                             @if ($u->active)
                                                 <span class="badge bg-success">Aktif</span>
                                             @else
-                                                <span class="badge bg-secondary">Nonaktif</span>
+                                                <span class="badge bg-warning text-dark">Nonaktif</span>
                                             @endif
                                         </td>
                                         <td class="text-end">
@@ -78,7 +77,4 @@
 
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

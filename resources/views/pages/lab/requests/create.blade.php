@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title','Buat Permintaan Lab')
 @push('style')
-<link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endpush
 @section('content')
@@ -38,10 +37,7 @@
 </div>
 @endsection
 @push('scripts')
-<script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-<script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="{{ asset('js/custom.js') }}"></script>
 <script>
   function addTestRow(name='', price=''){
     const idx = document.querySelectorAll('.test-row').length;

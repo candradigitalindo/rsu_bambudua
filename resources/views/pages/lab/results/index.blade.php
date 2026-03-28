@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title','Input Hasil Laboratorium')
 @push('style')
-<link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
 <div class="row gx-3">
@@ -46,7 +45,7 @@
                 <td>{{ $r->created_at->format('d M Y H:i') }}</td>
                 <td>{{ $r->encounter->rekam_medis ?? '-' }}</td>
                 <td>{{ $r->encounter->name_pasien ?? '-' }}</td>
-                <td><span class="badge bg-secondary">{{ ucfirst($r->status) }}</span></td>
+                <td><span class="badge bg-warning text-dark">{{ ucfirst($r->status) }}</span></td>
                 <td>{{ 'Rp ' . number_format($r->total_charge,0,',','.') }}</td>
                 <td class="text-end">
                   <a href="{{ route('lab.requests.edit', $r->id) }}" class="btn btn-sm btn-outline-primary">Input Hasil</a>
@@ -65,7 +64,4 @@
 </div>
 @endsection
 @push('scripts')
-<script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-<script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-<script src="{{ asset('js/custom.js') }}"></script>
 @endpush

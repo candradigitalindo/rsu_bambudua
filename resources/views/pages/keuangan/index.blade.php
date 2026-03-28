@@ -8,7 +8,6 @@
                                                                                  ************ -->
 
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
     <!-- Date Range CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/daterange/daterange.css') }}">
@@ -331,8 +330,6 @@
                                                                                   ************* -->
 
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Date Range JS -->
     <script src="{{ asset('vendor/daterange/daterange.js') }}"></script>
@@ -347,7 +344,6 @@
     <script src="{{ asset('vendor/datatables/custom/custom-datatables.js') }}"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <script>
         var options = {
@@ -394,7 +390,7 @@
                     show: false,
                 },
             },
-            colors: ["#238781", "#4f9f9a", "#7bb7b3", "#a7cfcd", "#d3e7e6", "#e9f3f2"],
+            colors: ["#238781", "#4f9f9a", "#e6a532", "#7bb7b3", "#a7cfcd", "#d3e7e6", "#e9f3f2"],
             tooltip: {
                 y: {
                     formatter: function(val, {
@@ -410,7 +406,7 @@
             markers: {
                 size: 0,
                 opacity: 0.3,
-                colors: ["#238781", "#4f9f9a", "#7bb7b3", "#a7cfcd", "#d3e7e6", "#e9f3f2"],
+                colors: ["#238781", "#4f9f9a", "#e6a532", "#7bb7b3", "#a7cfcd", "#d3e7e6", "#e9f3f2"],
                 strokeColor: "#ffffff",
                 strokeWidth: 1,
                 hover: {

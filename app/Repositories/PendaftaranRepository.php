@@ -86,8 +86,24 @@ class PendaftaranRepository
             ->where(function ($query) {
                 $query->where('status', 1)
                     ->orWhere(function ($query) {
+                        // Selesai hari ini, tapi BUKAN yg sudah lunas semua
                         $query->where('status', 2)
-                            ->whereDate('updated_at', Carbon::now()->toDateString());
+                            ->whereDate('updated_at', Carbon::now()->toDateString())
+                            ->where(function ($q) {
+                                $q->where('status_bayar_tindakan', 0)
+                                    ->orWhere('status_bayar_resep', 0);
+                            });
+                    })
+                    ->orWhere(function ($query) {
+                        // Selesai & belum lunas (kapan saja) - tetap tampil
+                        $query->where('status', 2)
+                            ->where(function ($q) {
+                                $q->where(function ($sub) {
+                                    $sub->where('total_bayar_tindakan', '>', 0)->where('status_bayar_tindakan', 0);
+                                })->orWhere(function ($sub) {
+                                    $sub->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 0);
+                                });
+                            });
                     });
             })
             ->when($q, function ($query) use ($q) {
@@ -126,9 +142,10 @@ class PendaftaranRepository
             $e['created_at_fmt'] = $e->created_at ? $e->created_at->format('d M Y H:i') : '-';
 
             // Check if encounter is paid or has examination data
-            $isPaid = ($e->status_bayar_tindakan == 'Paid' || $e->status_bayar_resep == 'Paid');
+            $isPaid = ($e->status_bayar_tindakan || $e->status_bayar_resep);
             $hasExamination = $e->anamnesis || $e->diagnosis->isNotEmpty() || $e->tindakan->isNotEmpty();
             $e['can_delete'] = !($isPaid || $hasExamination);
+            $e['can_edit'] = !$isPaid;
         }
 
         return $encounters;
@@ -146,8 +163,24 @@ class PendaftaranRepository
             ->where(function ($query) {
                 $query->where('status', 1)
                     ->orWhere(function ($query) {
+                        // Selesai hari ini, tapi BUKAN yg sudah lunas semua
                         $query->where('status', 2)
-                            ->whereDate('updated_at', Carbon::now()->toDateString());
+                            ->whereDate('updated_at', Carbon::now()->toDateString())
+                            ->where(function ($q) {
+                                $q->where('status_bayar_tindakan', 0)
+                                    ->orWhere('status_bayar_resep', 0);
+                            });
+                    })
+                    ->orWhere(function ($query) {
+                        // Selesai & belum lunas (kapan saja) - tetap tampil
+                        $query->where('status', 2)
+                            ->where(function ($q) {
+                                $q->where(function ($sub) {
+                                    $sub->where('total_bayar_tindakan', '>', 0)->where('status_bayar_tindakan', 0);
+                                })->orWhere(function ($sub) {
+                                    $sub->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 0);
+                                });
+                            });
                     });
             })
             ->when($q, function ($query) use ($q) {
@@ -185,9 +218,10 @@ class PendaftaranRepository
             $e['created_at_fmt'] = $e->created_at ? $e->created_at->format('d M Y H:i') : '-';
 
             // Check if encounter is paid or has examination data
-            $isPaid = ($e->status_bayar_tindakan == 'Paid' || $e->status_bayar_resep == 'Paid');
+            $isPaid = ($e->status_bayar_tindakan || $e->status_bayar_resep);
             $hasExamination = $e->anamnesis || $e->diagnosis->isNotEmpty() || $e->tindakan->isNotEmpty();
             $e['can_delete'] = !($isPaid || $hasExamination);
+            $e['can_edit'] = !$isPaid;
         }
         return $encounters;
     }
@@ -204,8 +238,24 @@ class PendaftaranRepository
             ->where(function ($query) {
                 $query->where('status', 1)
                     ->orWhere(function ($query) {
+                        // Selesai hari ini, tapi BUKAN yg sudah lunas semua
                         $query->where('status', 2)
-                            ->whereDate('updated_at', Carbon::now()->toDateString());
+                            ->whereDate('updated_at', Carbon::now()->toDateString())
+                            ->where(function ($q) {
+                                $q->where('status_bayar_tindakan', 0)
+                                    ->orWhere('status_bayar_resep', 0);
+                            });
+                    })
+                    ->orWhere(function ($query) {
+                        // Selesai & belum lunas (kapan saja) - tetap tampil
+                        $query->where('status', 2)
+                            ->where(function ($q) {
+                                $q->where(function ($sub) {
+                                    $sub->where('total_bayar_tindakan', '>', 0)->where('status_bayar_tindakan', 0);
+                                })->orWhere(function ($sub) {
+                                    $sub->where('total_bayar_resep', '>', 0)->where('status_bayar_resep', 0);
+                                });
+                            });
                     });
             })
             ->when($q, function ($query) use ($q) {
@@ -243,9 +293,10 @@ class PendaftaranRepository
             $e['created_at_fmt'] = $e->created_at ? $e->created_at->format('d M Y H:i') : '-';
 
             // Check if encounter is paid or has examination data
-            $isPaid = ($e->status_bayar_tindakan == 'Paid' || $e->status_bayar_resep == 'Paid');
+            $isPaid = ($e->status_bayar_tindakan || $e->status_bayar_resep);
             $hasExamination = $e->anamnesis || $e->diagnosis->isNotEmpty() || $e->tindakan->isNotEmpty();
             $e['can_delete'] = !($isPaid || $hasExamination);
+            $e['can_edit'] = !$isPaid;
         }
         return $encounters;
     }
@@ -359,7 +410,8 @@ class PendaftaranRepository
 
     public function store_pasien($request)
     {
-        $count = Pasien::whereDate('created_at', date('Y-m-d'))->count();
+        $maxRm = (int) Pasien::selectRaw('MAX(CAST(rekam_medis AS UNSIGNED)) as max_rm')->value('max_rm');
+        $nextRm = $maxRm + 1;
 
         // Debug log
         \Illuminate\Support\Facades\Log::info('Create Pasien - Kerabat Flags Received', [
@@ -370,7 +422,7 @@ class PendaftaranRepository
         ]);
 
         $pasien = Pasien::create([
-            'rekam_medis'       => date('ymd') . ($count == 0 ? 0 : $count + 1),
+            'rekam_medis'       => (string) $nextRm,
             'name'              => strtoupper($request->name_pasien),
             'jenis_identitas'   => $request->jenis_identitas,
             'no_identitas'      => $request->no_identitas,

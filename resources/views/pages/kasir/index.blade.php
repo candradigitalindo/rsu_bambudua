@@ -3,7 +3,6 @@
 @section('title', 'Pembayaran Kasir')
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <style>
         .table td,
         .table th {
@@ -95,6 +94,11 @@
                                                     Resep: {{ $patient->unpaid_resep }} Belum Lunas
                                                 </span>
                                             @endif
+                                            @if (($patient->unpaid_paket ?? 0) > 0)
+                                                <span class="badge bg-info">
+                                                    Paket: {{ $patient->unpaid_paket }} Belum Bayar
+                                                </span>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             <a href="{{ route('kasir.show', $patient->pasien_id) }}"
@@ -124,8 +128,5 @@
 
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

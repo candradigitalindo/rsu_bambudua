@@ -6,7 +6,10 @@ use App\Http\Controllers\Concerns\LogsActivity;
 
 use App\Models\User;
 use App\Models\Clinic;
+use App\Models\Encounter;
 use App\Models\Pasien;
+use App\Models\PaketPemeriksaan;
+use App\Models\PaketPasien;
 use App\Repositories\PendaftaranRepository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -36,7 +39,8 @@ class PendaftaranController extends Controller
             }])
                 ->get()->pluck('users')->flatten()->unique('id')->sortBy('name')->values();
         }
-        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'jenisjaminan', 'doctors'));
+        $paketPemeriksaans = PaketPemeriksaan::where('status', true)->orderBy('name')->get();
+        return view('pages.pendaftaran.index', compact('antrian', 'pekerjaan', 'agama', 'provinsi', 'clinics', 'ruangan', 'jenisjaminan', 'doctors', 'paketPemeriksaans'));
     }
 
     public function update_antrian()
@@ -160,6 +164,10 @@ class PendaftaranController extends Controller
 
     public function editEncounterRajal($id)
     {
+        $encounter = Encounter::findOrFail($id);
+        if ($encounter->status_bayar_tindakan || $encounter->status_bayar_resep) {
+            return response()->json(['status' => false, 'message' => 'Data yang sudah dibayar tidak dapat diedit'], 403);
+        }
         $encounter = $this->pendaftaranRepository->editEncounterRajal($id);
         return response()->json(['status' => true, 'data' => $encounter], 200);
     }
@@ -390,6 +398,10 @@ class PendaftaranController extends Controller
     // editEncounterRdarurat
     public function editEncounterRdarurat($id)
     {
+        $encounter = Encounter::findOrFail($id);
+        if ($encounter->status_bayar_tindakan || $encounter->status_bayar_resep) {
+            return response()->json(['status' => false, 'message' => 'Data yang sudah dibayar tidak dapat diedit'], 403);
+        }
         $encounter = $this->pendaftaranRepository->editEncounterRdarurat($id);
         return response()->json(['status' => true, 'data' => $encounter], 200);
     }
@@ -437,6 +449,10 @@ class PendaftaranController extends Controller
     // editRawatInap
     public function editEncounterRinap($id)
     {
+        $encounter = Encounter::findOrFail($id);
+        if ($encounter->status_bayar_tindakan || $encounter->status_bayar_resep) {
+            return response()->json(['status' => false, 'message' => 'Data yang sudah dibayar tidak dapat diedit'], 403);
+        }
         $encounter = $this->pendaftaranRepository->editEncounterRinap($id);
         return response()->json(['status' => true, 'data' => $encounter], 200);
     }
@@ -705,5 +721,95 @@ class PendaftaranController extends Controller
             }
             fclose($out);
         }, 200, $headers);
+    }
+
+    /**
+     * Get paket data for a patient (AJAX)
+     */
+    public function getPaketPasien($id)
+    {
+        $pasien = Pasien::findOrFail($id);
+
+        $paketPasiens = PaketPasien::with('paketPemeriksaan')
+            ->where('pasien_id', $pasien->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($pp) {
+                return [
+                    'id'          => $pp->id,
+                    'name'        => $pp->paketPemeriksaan->name ?? '-',
+                    'harga'       => $pp->harga_bayar,
+                    'total_sesi'  => $pp->total_sesi,
+                    'sesi_terpakai' => $pp->sesi_terpakai,
+                    'status'      => $pp->status,
+                    'status_bayar' => $pp->status_bayar,
+                    'tanggal_expired' => optional($pp->tanggal_expired)->format('d/m/Y'),
+                    'is_gratis'   => $pp->harga_bayar == 0,
+                ];
+            });
+
+        return response()->json(['success' => true, 'data' => $paketPasiens]);
+    }
+
+    /**
+     * Beli paket untuk pasien (dari pendaftaran)
+     */
+    public function beliPaket(Request $request, $id)
+    {
+        $request->validate([
+            'paket_pemeriksaan_id' => 'required|exists:paket_pemeriksaans,id',
+        ]);
+
+        $pasien = Pasien::findOrFail($id);
+        $paket = PaketPemeriksaan::findOrFail($request->paket_pemeriksaan_id);
+
+        $paketPasien = PaketPasien::create([
+            'paket_pemeriksaan_id' => $paket->id,
+            'pasien_id'            => $pasien->id,
+            'total_sesi'           => $paket->jumlah_sesi,
+            'sesi_terpakai'        => 0,
+            'harga_bayar'          => $paket->is_gratis ? 0 : $paket->harga,
+            'status_bayar'         => $paket->is_gratis,
+            'tanggal_mulai'        => now()->toDateString(),
+            'tanggal_expired'      => now()->addDays($paket->masa_berlaku_hari)->toDateString(),
+            'status'               => $paket->is_gratis ? 'aktif' : 'pending',
+            'catatan'              => null,
+            'created_by'           => auth()->id(),
+        ]);
+
+        if ($paket->is_gratis) {
+            $paketPasien->update([
+                'paid_at'     => now(),
+                'grand_total' => 0,
+            ]);
+            return response()->json([
+                'success'  => true,
+                'message'  => 'Paket GRATIS berhasil diberikan ke pasien.',
+                'is_gratis' => true,
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket berhasil ditambahkan. Silakan lakukan pembayaran di kasir.',
+        ]);
+    }
+
+    /**
+     * Hapus paket pasien yang belum dibayar
+     */
+    public function hapusPaket($id, $paket_pasien_id)
+    {
+        $paketPasien = PaketPasien::where('id', $paket_pasien_id)
+            ->where('pasien_id', $id)
+            ->where('status_bayar', false)
+            ->firstOrFail();
+
+        $paketPasien->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paket berhasil dihapus.',
+        ]);
     }
 }

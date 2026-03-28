@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title','Detail Alat Medis')
 @push('style')
-  <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
   <link rel="stylesheet" href="{{ asset('vendor/daterange/daterange.css') }}">
   <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
 @endpush
@@ -21,7 +20,7 @@
           <div class="col-6"><small class="text-muted">Asset Tag</small><div class="fw-semibold">{{ $equipment['asset_tag'] }}</div></div>
           <div class="col-6"><small class="text-muted">Lokasi</small><div class="fw-semibold">{{ $equipment['location'] }}</div></div>
           <div class="col-6"><small class="text-muted">Vendor</small><div class="fw-semibold">{{ $equipment['vendor'] }}</div></div>
-          <div class="col-6"><small class="text-muted">Status</small><div><span class="badge bg-secondary text-uppercase">{{ $equipment['status'] }}</span></div></div>
+          <div class="col-6"><small class="text-muted">Status</small><div><span class="badge bg-warning text-dark text-uppercase">{{ $equipment['status'] }}</span></div></div>
           <div class="col-6"><small class="text-muted">Pembelian</small><div class="fw-semibold">{{ $equipment['purchase_date'] }}</div></div>
           <div class="col-6"><small class="text-muted">Garansi</small><div class="fw-semibold">{{ $equipment['warranty_expiry'] }}</div></div>
           <div class="col-6"><small class="text-muted">Kalibrasi Terakhir</small><div class="fw-semibold">{{ $equipment['last_calibration_date'] }}</div></div>
@@ -79,12 +78,9 @@
 </div>
 @endsection
 @push('scripts')
-  <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-  <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
   <script src="{{ asset('vendor/daterange/daterange.js') }}"></script>
   <script src="{{ asset('vendor/daterange/custom-daterange.js') }}"></script>
   <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>
   <script src="{{ asset('vendor/datatables/dataTables.bootstrap.min.js') }}"></script>
   <script src="{{ asset('vendor/datatables/custom/custom-datatables.js') }}"></script>
-  <script src="{{ asset('js/custom.js') }}"></script>
 @endpush

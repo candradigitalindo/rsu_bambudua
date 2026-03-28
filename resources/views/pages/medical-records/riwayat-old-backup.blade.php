@@ -3,7 +3,6 @@
     Riwayat Pasien
 @endsection
 @push('style')
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/dataTables.bs5-custom.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/datatables/buttons/dataTables.bs5-custom.css') }}">
@@ -58,12 +57,9 @@
     </div>
 @endsection
 @push('scripts')
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <script src="{{ asset('vendor/datatables/dataTables.min.js') }}"></script>
     <script src="{{ asset('vendor/datatables/dataTables.bootstrap.min.js') }}"></script>
     <script src="{{ asset('vendor/datatables/custom/custom-datatables.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         function safeHtml(s){ return $('<div>').text(s||'').html(); }
         function badge(text, cls){ return `<span class="badge ${cls||'bg-primary-subtle text-primary border'} me-1">${safeHtml(text)}</span>`; }

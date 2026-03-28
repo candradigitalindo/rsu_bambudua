@@ -21,6 +21,7 @@ class ResepDetail extends Model
         'harga',
         'total_harga',
         'status',
+        'paket_pasien_id',
     ];
 
     public function resep()

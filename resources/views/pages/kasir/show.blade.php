@@ -4,7 +4,6 @@
 
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         .table td,
@@ -86,6 +85,11 @@
             color: #f57c00;
         }
 
+        .category-paket {
+            background: #e0f7fa;
+            color: #00838f;
+        }
+
         .total-display {
             font-size: 2rem;
             font-weight: bold;
@@ -144,7 +148,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if ($unpaidEncounters->isEmpty())
+                    @if ($unpaidEncounters->isEmpty() && $unpaidPakets->isEmpty())
                         <div class="alert alert-info text-center">
                             <i class="ri-information-line fs-3"></i>
                             <p class="mb-0 mt-2">Tidak ada tagihan yang perlu dibayar untuk pasien ini.</p>
@@ -159,7 +163,9 @@
                             @endforeach
 
                             {{-- Detail Tagihan per Encounter --}}
+                            @if ($unpaidEncounters->isNotEmpty())
                             <h5 class="mb-3 mt-4"><i class="ri-file-text-line"></i> Detail Tagihan</h5>
+                            @endif
                             @foreach ($unpaidEncounters as $encounter)
                                 <div class="card mb-3 border">
                                     <div class="card-header bg-light">
@@ -201,12 +207,13 @@
                                             </thead>
                                             <tbody>
                                                 {{-- Tagihan Tindakan --}}
-                                                @if ($encounter->total_bayar_tindakan > 0 && !$encounter->status_bayar_tindakan)
+                                                @if (!$encounter->status_bayar_tindakan && ($encounter->total_bayar_tindakan > 0 || $encounter->tindakan->count() > 0 || $encounter->labRequests->count() > 0 || $encounter->radiologyRequests->count() > 0))
                                                     @php
                                                         $tindakanIndex = 0;
                                                     @endphp
                                                     @foreach ($encounter->tindakan as $tindakan)
                                                         @php
+                                                            $isPaket = !empty($tindakan->paket_pasien_id);
                                                             // Harga satuan dari tindakan_harga, atau hitung dari total_harga / qty
                                                             $hargaSatuan =
                                                                 $tindakan->tindakan_harga ??
@@ -216,8 +223,9 @@
                                                             $subtotal =
                                                                 $tindakan->total_harga ?? $hargaSatuan * $tindakan->qty;
                                                         @endphp
-                                                        <tr>
+                                                        <tr class="{{ $isPaket ? 'table-light' : '' }}">
                                                             <td class="align-middle text-center">
+                                                                @if (!$isPaket)
                                                                 <div class="form-check d-flex justify-content-center">
                                                                     <input class="form-check-input payment-item"
                                                                         type="checkbox" name="items_to_pay[]"
@@ -227,11 +235,12 @@
                                                                         data-type="tindakan"
                                                                         id="tindakan-{{ $encounter->id }}-{{ $tindakan->id }}">
                                                                 </div>
+                                                                @endif
                                                             </td>
                                                             <td>
                                                                 <label
                                                                     for="tindakan-{{ $encounter->id }}-{{ $tindakan->id }}"
-                                                                    class="mb-0 cursor-pointer">
+                                                                    class="mb-0 cursor-pointer {{ $isPaket ? 'text-muted' : '' }}">
                                                                     @if ($tindakanIndex === 0)
                                                                         <span
                                                                             class="category-badge category-tindakan">TINDAKAN</span>
@@ -239,18 +248,26 @@
                                                                     @endif
                                                                     <i class="ri-stethoscope-line text-primary"></i>
                                                                     {{ $tindakan->tindakan_name }}
+                                                                    @if ($isPaket)
+                                                                        <span class="badge bg-success-subtle text-success" style="font-size: .65rem;">Paket</span>
+                                                                    @endif
                                                                 </label>
                                                             </td>
                                                             <td class="text-center align-middle">
                                                                 <span class="badge bg-primary">{{ $tindakan->qty }}</span>
                                                             </td>
                                                             <td class="text-end align-middle">
-                                                                <span class="text-muted">Rp
-                                                                    {{ number_format($hargaSatuan, 0, ',', '.') }}</span>
+                                                                <span class="text-muted">
+                                                                    @if ($isPaket) <s>Rp {{ number_format($hargaSatuan, 0, ',', '.') }}</s> @else Rp {{ number_format($hargaSatuan, 0, ',', '.') }} @endif
+                                                                </span>
                                                             </td>
                                                             <td class="text-end align-middle">
-                                                                <strong class="text-primary">Rp
-                                                                    {{ number_format($subtotal, 0, ',', '.') }}</strong>
+                                                                @if ($isPaket)
+                                                                    <span class="text-muted"><s>Rp {{ number_format($subtotal, 0, ',', '.') }}</s></span>
+                                                                @else
+                                                                    <strong class="text-primary">Rp
+                                                                        {{ number_format($subtotal, 0, ',', '.') }}</strong>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                         @php
@@ -265,10 +282,12 @@
                                                     @foreach ($encounter->labRequests ?? [] as $labRequest)
                                                         @foreach ($labRequest->items ?? [] as $labItem)
                                                             @php
+                                                                $isPaketLab = !empty($labRequest->paket_pasien_id);
                                                                 $labSubtotal = $labItem->price ?? 0;
                                                             @endphp
-                                                            <tr>
+                                                            <tr class="{{ $isPaketLab ? 'table-light' : '' }}">
                                                                 <td class="align-middle text-center">
+                                                                    @if (!$isPaketLab)
                                                                     <div class="form-check d-flex justify-content-center">
                                                                         <input class="form-check-input payment-item"
                                                                             type="checkbox" name="items_to_pay[]"
@@ -278,11 +297,12 @@
                                                                             data-type="tindakan"
                                                                             id="lab-{{ $encounter->id }}-{{ $labItem->id }}">
                                                                     </div>
+                                                                    @endif
                                                                 </td>
                                                                 <td>
                                                                     <label
                                                                         for="lab-{{ $encounter->id }}-{{ $labItem->id }}"
-                                                                        class="mb-0 cursor-pointer">
+                                                                        class="mb-0 cursor-pointer {{ $isPaketLab ? 'text-muted' : '' }}">
                                                                         @if ($labIndex === 0)
                                                                             <span
                                                                                 class="category-badge category-lab">LABORATORIUM</span>
@@ -290,18 +310,26 @@
                                                                         @endif
                                                                         <i class="ri-test-tube-line text-success"></i>
                                                                         {{ $labItem->test_name }}
+                                                                        @if ($isPaketLab)
+                                                                            <span class="badge bg-success-subtle text-success" style="font-size: .65rem;">Paket</span>
+                                                                        @endif
                                                                     </label>
                                                                 </td>
                                                                 <td class="text-center align-middle">
                                                                     <span class="badge bg-primary">1</span>
                                                                 </td>
                                                                 <td class="text-end align-middle">
-                                                                    <span class="text-muted">Rp
-                                                                        {{ number_format($labSubtotal, 0, ',', '.') }}</span>
+                                                                    <span class="text-muted">
+                                                                        @if ($isPaketLab) <s>Rp {{ number_format($labSubtotal, 0, ',', '.') }}</s> @else Rp {{ number_format($labSubtotal, 0, ',', '.') }} @endif
+                                                                    </span>
                                                                 </td>
                                                                 <td class="text-end align-middle">
-                                                                    <strong class="text-success">Rp
-                                                                        {{ number_format($labSubtotal, 0, ',', '.') }}</strong>
+                                                                    @if ($isPaketLab)
+                                                                        <span class="text-muted"><s>Rp {{ number_format($labSubtotal, 0, ',', '.') }}</s></span>
+                                                                    @else
+                                                                        <strong class="text-success">Rp
+                                                                            {{ number_format($labSubtotal, 0, ',', '.') }}</strong>
+                                                                    @endif
                                                                 </td>
                                                             </tr>
                                                             @php
@@ -316,10 +344,12 @@
                                                     @endphp
                                                     @foreach ($encounter->radiologyRequests ?? [] as $radRequest)
                                                         @php
+                                                            $isPaketRad = !empty($radRequest->paket_pasien_id);
                                                             $radSubtotal = $radRequest->price ?? 0;
                                                         @endphp
-                                                        <tr>
+                                                        <tr class="{{ $isPaketRad ? 'table-light' : '' }}">
                                                             <td class="align-middle text-center">
+                                                                @if (!$isPaketRad)
                                                                 <div class="form-check d-flex justify-content-center">
                                                                     <input class="form-check-input payment-item"
                                                                         type="checkbox" name="items_to_pay[]"
@@ -329,11 +359,12 @@
                                                                         data-type="tindakan"
                                                                         id="radiologi-{{ $encounter->id }}-{{ $radRequest->id }}">
                                                                 </div>
+                                                                @endif
                                                             </td>
                                                             <td>
                                                                 <label
                                                                     for="radiologi-{{ $encounter->id }}-{{ $radRequest->id }}"
-                                                                    class="mb-0 cursor-pointer">
+                                                                    class="mb-0 cursor-pointer {{ $isPaketRad ? 'text-muted' : '' }}">
                                                                     @if ($radIndex === 0)
                                                                         <span
                                                                             class="category-badge category-radiologi">RADIOLOGI</span>
@@ -341,18 +372,26 @@
                                                                     @endif
                                                                     <i class="ri-image-line text-warning"></i>
                                                                     {{ optional($radRequest->jenis)->name ?? 'Pemeriksaan Radiologi' }}
+                                                                    @if ($isPaketRad)
+                                                                        <span class="badge bg-success-subtle text-success" style="font-size: .65rem;">Paket</span>
+                                                                    @endif
                                                                 </label>
                                                             </td>
                                                             <td class="text-center align-middle">
                                                                 <span class="badge bg-primary">1</span>
                                                             </td>
                                                             <td class="text-end align-middle">
-                                                                <span class="text-muted">Rp
-                                                                    {{ number_format($radSubtotal, 0, ',', '.') }}</span>
+                                                                <span class="text-muted">
+                                                                    @if ($isPaketRad) <s>Rp {{ number_format($radSubtotal, 0, ',', '.') }}</s> @else Rp {{ number_format($radSubtotal, 0, ',', '.') }} @endif
+                                                                </span>
                                                             </td>
                                                             <td class="text-end align-middle">
-                                                                <strong class="text-warning">Rp
-                                                                    {{ number_format($radSubtotal, 0, ',', '.') }}</strong>
+                                                                @if ($isPaketRad)
+                                                                    <span class="text-muted"><s>Rp {{ number_format($radSubtotal, 0, ',', '.') }}</s></span>
+                                                                @else
+                                                                    <strong class="text-warning">Rp
+                                                                        {{ number_format($radSubtotal, 0, ',', '.') }}</strong>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                         @php
@@ -372,16 +411,18 @@
                                                 @endif
 
                                                 {{-- Tagihan Resep --}}
-                                                @if ($encounter->total_bayar_resep > 0 && !$encounter->status_bayar_resep)
+                                                @if (!$encounter->status_bayar_resep && ($encounter->total_bayar_resep > 0 || ($encounter->resep && $encounter->resep->details->where('paket_pasien_id', '!=', null)->count() > 0)))
                                                     @php
                                                         $resepIndex = 0;
                                                     @endphp
                                                     @foreach ($encounter->resep->details as $detail)
                                                         @php
+                                                            $isPaketResep = !empty($detail->paket_pasien_id);
                                                             $subtotalObat = ($detail->harga ?? 0) * $detail->qty;
                                                         @endphp
-                                                        <tr>
+                                                        <tr class="{{ $isPaketResep ? 'table-light' : '' }}">
                                                             <td class="align-middle text-center">
+                                                                @if (!$isPaketResep)
                                                                 <div class="form-check d-flex justify-content-center">
                                                                     <input class="form-check-input payment-item"
                                                                         type="checkbox" name="items_to_pay[]"
@@ -391,11 +432,12 @@
                                                                         data-type="resep"
                                                                         id="resep-{{ $encounter->id }}-{{ $detail->id }}">
                                                                 </div>
+                                                                @endif
                                                             </td>
                                                             <td>
                                                                 <label
                                                                     for="resep-{{ $encounter->id }}-{{ $detail->id }}"
-                                                                    class="mb-0 cursor-pointer">
+                                                                    class="mb-0 cursor-pointer {{ $isPaketResep ? 'text-muted' : '' }}">
                                                                     @if ($resepIndex === 0)
                                                                         <span class="category-badge category-resep">RESEP
                                                                             OBAT</span>
@@ -405,18 +447,26 @@
                                                                     @endif
                                                                     <i class="ri-capsule-line text-purple"></i>
                                                                     {{ $detail->nama_obat }}
+                                                                    @if ($isPaketResep)
+                                                                        <span class="badge bg-success-subtle text-success" style="font-size: .65rem;">Paket</span>
+                                                                    @endif
                                                                 </label>
                                                             </td>
                                                             <td class="text-center align-middle">
                                                                 <span class="badge bg-primary">{{ $detail->qty }}</span>
                                                             </td>
                                                             <td class="text-end align-middle">
-                                                                <span class="text-muted">Rp
-                                                                    {{ number_format($detail->harga ?? 0, 0, ',', '.') }}</span>
+                                                                <span class="text-muted">
+                                                                    @if ($isPaketResep) <s>Rp {{ number_format($detail->harga ?? 0, 0, ',', '.') }}</s> @else Rp {{ number_format($detail->harga ?? 0, 0, ',', '.') }} @endif
+                                                                </span>
                                                             </td>
                                                             <td class="text-end align-middle">
-                                                                <strong style="color: #7b1fa2;">Rp
-                                                                    {{ number_format($subtotalObat, 0, ',', '.') }}</strong>
+                                                                @if ($isPaketResep)
+                                                                    <span class="text-muted"><s>Rp {{ number_format($subtotalObat, 0, ',', '.') }}</s></span>
+                                                                @else
+                                                                    <strong style="color: #7b1fa2;">Rp
+                                                                        {{ number_format($subtotalObat, 0, ',', '.') }}</strong>
+                                                                @endif
                                                             </td>
                                                         </tr>
                                                         @php
@@ -439,6 +489,92 @@
                                     </div>
                                 </div>
                             @endforeach
+
+                            {{-- Tagihan Paket Pemeriksaan --}}
+                            @if ($unpaidPakets->isNotEmpty())
+                                <div class="card mb-3 border border-info">
+                                    <div class="card-header bg-info-subtle">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong><i class="ri-gift-line"></i> Paket Pemeriksaan</strong>
+                                            </div>
+                                            <span class="badge bg-warning">{{ $unpaidPakets->count() }} Paket Belum Bayar</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <table class="table table-sm table-hover m-0">
+                                            <thead class="table-secondary">
+                                                <tr>
+                                                    <th style="width: 3%;" class="text-center">
+                                                        <div class="form-check d-flex justify-content-center align-items-center">
+                                                            <input class="form-check-input me-1" type="checkbox"
+                                                                id="checkAll-paket" title="Pilih semua paket">
+                                                            <label class="form-check-label small text-nowrap"
+                                                                for="checkAll-paket" style="cursor: pointer; font-size: 0.7rem;">
+                                                                Semua
+                                                            </label>
+                                                        </div>
+                                                    </th>
+                                                    <th style="width: 47%;">Paket</th>
+                                                    <th style="width: 10%;" class="text-center">Sesi</th>
+                                                    <th style="width: 20%;" class="text-end">Berlaku</th>
+                                                    <th style="width: 15%;" class="text-end">Harga</th>
+                                                    <th style="width: 5%;" class="text-center"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($unpaidPakets as $pp)
+                                                    <tr id="paket-row-{{ $pp->id }}">
+                                                        <td class="align-middle text-center">
+                                                            <div class="form-check d-flex justify-content-center">
+                                                                <input class="form-check-input payment-item paket-item"
+                                                                    type="checkbox" name="items_to_pay[]"
+                                                                    value="paket-{{ $pp->id }}"
+                                                                    data-amount="{{ $pp->harga_bayar }}"
+                                                                    data-type="paket"
+                                                                    id="paket-{{ $pp->id }}">
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <label for="paket-{{ $pp->id }}" class="mb-0 cursor-pointer">
+                                                                <span class="category-badge category-paket">PAKET</span><br>
+                                                                <i class="ri-gift-line text-info"></i>
+                                                                {{ optional($pp->paketPemeriksaan)->name }}
+                                                            </label>
+                                                        </td>
+                                                        <td class="text-center align-middle">
+                                                            <span class="badge bg-primary">{{ $pp->total_sesi }} sesi</span>
+                                                        </td>
+                                                        <td class="text-end align-middle">
+                                                            <span class="text-muted small">
+                                                                {{ $pp->tanggal_mulai->format('d/m/Y') }} -
+                                                                {{ $pp->tanggal_expired->format('d/m/Y') }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="text-end align-middle">
+                                                            <strong class="text-info">Rp {{ number_format($pp->harga_bayar, 0, ',', '.') }}</strong>
+                                                        </td>
+                                                        <td class="text-center align-middle">
+                                                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-paket"
+                                                                data-id="{{ $pp->id }}" title="Hapus paket dari tagihan">
+                                                                <i class="ri-delete-bin-line"></i>
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                                <tr class="table-info">
+                                                    <td colspan="4" class="text-end"><strong>TOTAL PAKET</strong></td>
+                                                    <td class="text-end" colspan="2">
+                                                        <strong class="fs-6 text-info">Rp {{ number_format($unpaidPakets->sum('harga_bayar'), 0, ',', '.') }}</strong>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Paket ditambahkan di Pendaftaran, bukan di Kasir --}}
 
                             {{-- Riwayat Pembayaran --}}
                             @if (isset($paidEncounters) && $paidEncounters->isNotEmpty())
@@ -488,7 +624,7 @@
                                                                                 <li class="mb-1">
                                                                                     <i class="ri-arrow-right-s-line"></i>
                                                                                     {{ $tindakan->tindakan_name }}
-                                                                                    <span class="badge bg-secondary">Qty:
+                                                                                    <span class="badge bg-warning text-dark">Qty:
                                                                                         {{ $tindakan->qty }}</span>
                                                                                 </li>
                                                                             @endforeach
@@ -561,7 +697,7 @@
                                                                                 <li class="mb-1">
                                                                                     <i class="ri-arrow-right-s-line"></i>
                                                                                     {{ $detail->nama_obat }}
-                                                                                    <span class="badge bg-secondary">Qty:
+                                                                                    <span class="badge bg-warning text-dark">Qty:
                                                                                         {{ $detail->qty }}</span>
                                                                                 </li>
                                                                             @endforeach
@@ -714,6 +850,73 @@
                             </div>
                         </form>
                     @endif
+
+                    {{-- Riwayat Pembayaran Paket (always shown when exists) --}}
+                    @if (isset($paidPakets) && $paidPakets->isNotEmpty())
+                        <hr class="my-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0"><i class="ri-history-line"></i> Riwayat Pembayaran Paket</h5>
+                        </div>
+                        <div class="card mb-3 border border-success">
+                            <div class="card-header bg-success-subtle">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong><i class="ri-gift-line"></i> Paket Pemeriksaan</strong>
+                                    </div>
+                                    <span class="badge bg-success">{{ $paidPakets->count() }} Paket Lunas</span>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm m-0">
+                                    <tbody>
+                                        @foreach ($paidPakets as $pp)
+                                            <tr>
+                                                <td style="width:5%" class="align-middle">
+                                                    <i class="ri-check-double-line text-success fs-5"></i>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex justify-content-between">
+                                                        <div>
+                                                            <span class="category-badge category-paket">PAKET</span>
+                                                            <span class="badge bg-success ms-2">Lunas</span>
+                                                            @if ($pp->metode_pembayaran)
+                                                                <span class="badge bg-info">{{ $pp->metode_pembayaran }}</span>
+                                                            @endif
+                                                            <ul class="list-unstyled small text-muted mb-0 mt-2">
+                                                                <li class="mb-1">
+                                                                    <i class="ri-arrow-right-s-line"></i>
+                                                                    {{ optional($pp->paketPemeriksaan)->name }}
+                                                                    <span class="badge bg-warning text-dark">{{ $pp->total_sesi }} sesi</span>
+                                                                </li>
+                                                                <li class="mb-1">
+                                                                    <i class="ri-calendar-line"></i>
+                                                                    Berlaku: {{ $pp->tanggal_mulai->format('d/m/Y') }} - {{ $pp->tanggal_expired->format('d/m/Y') }}
+                                                                </li>
+                                                                @if ($pp->paid_at)
+                                                                    <li class="mb-1">
+                                                                        <i class="ri-time-line"></i>
+                                                                        Dibayar: {{ $pp->paid_at->format('d M Y H:i') }}
+                                                                    </li>
+                                                                @endif
+                                                            </ul>
+                                                        </div>
+                                                        <div class="text-end">
+                                                            <h6 class="text-success mb-0">
+                                                                Rp {{ number_format($pp->harga_bayar, 0, ',', '.') }}
+                                                            </h6>
+                                                            @if ($pp->payment_fee > 0)
+                                                                <small class="text-muted">+ Fee Rp {{ number_format($pp->payment_fee, 0, ',', '.') }}</small>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -722,12 +925,9 @@
 
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -1199,6 +1399,68 @@
 
             // Initial calculation
             updateCalculations();
+
+            // === PAKET FUNCTIONALITY ===
+
+            // Check All Paket
+            const checkAllPaket = document.getElementById('checkAll-paket');
+            if (checkAllPaket) {
+                checkAllPaket.addEventListener('change', function() {
+                    const paketItems = document.querySelectorAll('.paket-item');
+                    paketItems.forEach(item => { item.checked = this.checked; });
+                    updateCalculations();
+                });
+            }
+
+            // Update checkAll-paket when individual paket items change
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('paket-item')) {
+                    updateCalculations();
+                    if (checkAllPaket) {
+                        const allPaketItems = document.querySelectorAll('.paket-item');
+                        checkAllPaket.checked = Array.from(allPaketItems).every(i => i.checked);
+                    }
+                }
+            });
+
+            // Paket ditambahkan di Pendaftaran, tidak di Kasir
+
+            // Remove Paket from Bill
+            document.querySelectorAll('.btn-remove-paket').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const paketId = this.dataset.id;
+                    Swal.fire({
+                        title: 'Hapus Paket?',
+                        text: 'Paket akan dihapus dari tagihan.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Hapus',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#dc3545'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/kasir/pembayaran/{{ $pasien->id }}/remove-paket/${paketId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'Accept': 'application/json',
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    location.reload();
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
+                                }
+                            })
+                            .catch(() => {
+                                Swal.fire({ icon: 'error', title: 'Error', text: 'Gagal menghapus paket.' });
+                            });
+                        }
+                    });
+                });
+            });
         });
     </script>
 @endpush

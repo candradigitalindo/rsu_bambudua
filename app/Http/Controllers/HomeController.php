@@ -95,12 +95,9 @@ class HomeController extends Controller
         $topDiagnoses = $this->ownerDashboardService->getTopDiagnoses();
         $departmentPerformance = $this->ownerDashboardService->getDepartmentPerformance();
         $inventoryAlerts = $this->ownerDashboardService->getInventoryAlerts();
-        $financialHealth = $this->ownerDashboardService->getFinancialHealth();
         $bedAnalytics = $this->ownerDashboardService->getBedAnalytics();
 
         return view('pages.dashboard.owner', compact(
-            'totalPendapatanBulanIni',
-            'pendapatanTindakanBulanIni',
             'pendapatanTindakanDanLainnya',
             'pendapatanFarmasiBulanIni',
             'totalPengeluaranBulanIni',
@@ -115,7 +112,6 @@ class HomeController extends Controller
             'topDiagnoses',
             'departmentPerformance',
             'inventoryAlerts',
-            'financialHealth',
             'bedAnalytics'
         ));
     }

@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', 'Konsultasi Spesialis')
 @push('style')
-<link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 @section('content')
 <div class="row gx-3">
@@ -54,7 +53,7 @@
                 <td>{{ $c->encounter->name_pasien ?? '-' }}</td>
                 <td>{{ $c->specialist->name ?? '-' }}</td>
                 <td>{{ $c->scheduled_at ? $c->scheduled_at->format('d M Y H:i') : '-' }}</td>
-                <td><span class="badge bg-secondary">{{ ucfirst($c->status) }}</span></td>
+                <td><span class="badge bg-warning text-dark">{{ ucfirst($c->status) }}</span></td>
                 <td class="text-end">
                   <a href="{{ route('konsultasi.show', $c->id) }}" class="btn btn-sm btn-outline-secondary">Detail</a>
                   <a href="{{ route('konsultasi.edit', $c->id) }}" class="btn btn-sm btn-outline-primary">Kelola</a>
@@ -74,7 +73,4 @@
 </div>
 @endsection
 @push('scripts')
-<script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-<script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-<script src="{{ asset('js/custom.js') }}"></script>
 @endpush

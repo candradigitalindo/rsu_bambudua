@@ -33,8 +33,6 @@
         }
 
     </style>
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
 @endpush
 
 @section('content')
@@ -136,10 +134,6 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
-    <script src="{{ asset('js/custom.js') }}"></script>
     <script>
         let loadedPatients = {};
         let currentPages = {};
@@ -273,7 +267,7 @@
                                     <div class="col-md-12">
                                         <strong>Tim Medis:</strong>
                                         ${enc.doctors.map(d => `<span class="badge bg-info ms-1">${d}</span>`).join('')}
-                                        ${enc.nurses.length > 0 ? enc.nurses.map(n => `<span class="badge bg-secondary ms-1">${n}</span>`).join('') : ''}
+                                        ${enc.nurses.length > 0 ? enc.nurses.map(n => `<span class="badge bg-warning text-dark ms-1">${n}</span>`).join('') : ''}
                                     </div>
 
                                     <!-- Diagnosis -->

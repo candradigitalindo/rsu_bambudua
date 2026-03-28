@@ -167,61 +167,45 @@
         </div>
     </div>
     <div class="col-xxl-6 col-sm-12">
-        <div class="card mb-3 shadow-sm">
-            <div class="card-header bg-gradient"
-                style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="card-title text-white mb-0">
-                        <i class="ri-file-list-3-line me-2"></i>Daftar Obat Resep
-                    </h5>
-                    <span class="badge bg-white text-dark" id="kode_resep"></span>
-                </div>
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-capsule-line me-1 text-success"></i>Daftar Obat Resep
+                </h6>
+                <span class="badge bg-success-subtle text-success rounded-pill" id="kode_resep"></span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle m-0">
-                        <thead style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);">
-                            <tr>
-                                <th class="text-center"
-                                    style="padding: 14px 8px; font-weight: 600; color: white; width: 70px; vertical-align: middle;">
-                                    Aksi</th>
-                                <th class="text-center"
-                                    style="padding: 14px 12px; font-weight: 600; color: white; vertical-align: middle;">
-                                    Nama Obat</th>
-                                <th class="text-center"
-                                    style="padding: 14px 12px; font-weight: 600; color: white; width: 100px; vertical-align: middle;">
-                                    Jumlah</th>
-                                <th class="text-center"
-                                    style="padding: 14px 12px; font-weight: 600; color: white; width: 180px; vertical-align: middle;">
-                                    Aturan
-                                    Pakai</th>
-                                <th class="text-center"
-                                    style="padding: 14px 12px; font-weight: 600; color: white; width: 110px; vertical-align: middle;">
-                                    Harga</th>
-                                <th class="text-center"
-                                    style="padding: 14px 12px; font-weight: 600; color: white; width: 120px; vertical-align: middle;">
-                                    Subtotal
-                                </th>
+                    <table class="table table-hover align-middle mb-0" id="tbl-resep">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-3" style="min-width: 180px;">Nama Obat</th>
+                                <th class="text-center" style="width: 70px;">Jml</th>
+                                <th style="width: 160px;">Aturan Pakai</th>
+                                <th class="text-end" style="width: 100px;">Harga</th>
+                                <th class="text-end" style="width: 110px;">Subtotal</th>
+                                <th class="text-center pe-3" style="width: 50px;"></th>
                             </tr>
                         </thead>
                         <tbody id="tbody-resep"></tbody>
-                        <tfoot
-                            style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-top: 2px solid #0ba360;">
-                            <tr class="fw-bold">
-                                <td colspan="5" class="text-end"
-                                    style="padding: 16px 12px; font-size: 15px; color: #212529;">
-                                    <i class="ri-money-dollar-circle-line me-2 text-success"></i>Total Biaya Resep
+                        <tfoot id="tfoot-resep">
+                            <tr>
+                                <td colspan="4" class="text-end fw-semibold text-muted ps-3" style="font-size: .85rem;">
+                                    Total Biaya Resep
                                 </td>
-                                <td class="text-end text-success" id="total-resep"
-                                    style="padding: 16px 12px; font-size: 18px; font-weight: 700;">Rp 0</td>
+                                <td class="text-end fw-bold text-success" id="total-resep" style="font-size: .95rem;">
+                                    Rp 0
+                                </td>
+                                <td></td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-                <div id="empty-state-resep" class="text-center py-5" style="display: none;">
-                    <i class="ri-medicine-bottle-line" style="font-size: 4rem; color: #e0e0e0;"></i>
-                    <p class="text-muted mt-3 mb-0">Belum ada obat yang ditambahkan</p>
-                    <p class="text-muted small">Buat resep dan tambahkan obat untuk pasien</p>
+                <div id="empty-state-resep" class="text-center py-4" style="display: none;">
+                    <div class="text-muted">
+                        <i class="ri-medicine-bottle-line fs-2 d-block mb-2 opacity-50"></i>
+                        <span class="small">Belum ada obat yang ditambahkan</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -350,7 +334,7 @@
                             }
                         } else {
                             $('#resep').slideUp();
-                            $('#kode_resep').html('<span class="badge bg-secondary">Belum ada resep</span>');
+                            $('#kode_resep').html('<span class="badge bg-warning text-dark">Belum ada resep</span>');
                         }
 
                         tbody.empty();
@@ -361,45 +345,25 @@
                             tbody.closest('table').show();
 
                             data.details.forEach(function(item, index) {
-                                const satuanText = item.satuan ?
-                                    ` <small class="text-muted">${item.satuan}</small>` : '';
                                 tbody.append(`
-              <tr class="animate-fade-in" style="animation-delay: ${index * 0.05}s; border-bottom: 1px solid #e9ecef;">
-                <td class="text-center" style="padding: 14px 8px; vertical-align: middle;">
-                  <button class="btn btn-danger btn-sm btn-hapus-resep" data-id="${item.id}" title="Hapus obat" style="padding: 6px 10px; border-radius: 6px;">
-                    <i class="ri-delete-bin-line"></i>
-                  </button>
-                </td>
-                <td style="padding: 14px 12px; vertical-align: middle;">
-                  <div class="d-flex align-items-center">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%);">
-                      <i class="ri-medicine-bottle-line text-white"></i>
-                    </div>
-                    <div>
-                      <div class="fw-semibold" style="color: #212529; font-size: 14px;">${item.nama_obat}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="text-center" style="padding: 14px 12px; vertical-align: middle;">
-                  <div class="d-inline-flex flex-column align-items-center">
-                    <span class="badge" style="background: linear-gradient(135deg, #0ba360 0%, #3cba92 100%); color: white; font-size: 15px; padding: 6px 14px; border-radius: 8px; font-weight: 600;">${item.qty}</span>
-                    ${item.satuan ? `<small class="text-muted mt-1" style="font-size: 11px;">${item.satuan}</small>` : ''}
-                  </div>
-                </td>
-                <td style="padding: 14px 12px; vertical-align: middle;">
-                  <div class="d-flex align-items-center">
-                    <i class="ri-time-line text-info me-2" style="font-size: 16px;"></i>
-                    <span style="color: #6c757d; font-size: 13px;">${item.aturan_pakai || '-'}</span>
-                  </div>
-                </td>
-                <td class="text-end" style="padding: 14px 12px; vertical-align: middle;">
-                  <span style="color: #495057; font-size: 14px;">Rp ${formatRupiah(item.harga)}</span>
-                </td>
-                <td class="text-end" style="padding: 14px 12px; vertical-align: middle;">
-                  <span class="fw-bold text-success" style="font-size: 15px;">Rp ${formatRupiah(item.total_harga)}</span>
-                </td>
-              </tr>
-            `);
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-semibold text-dark" style="font-size: .85rem; line-height: 1.3;">${item.nama_obat} ${item.paket_pasien_id ? '<span class="badge bg-success-subtle text-success" style="font-size: .6rem; vertical-align: middle;">Paket</span>' : ''}</div>
+                                            ${item.satuan ? `<span class="text-muted" style="font-size: .7rem;">${item.satuan}</span>` : ''}
+                                        </td>
+                                        <td class="text-center fw-medium">${item.qty}</td>
+                                        <td>
+                                            <span class="text-muted" style="font-size: .8rem;">${item.aturan_pakai || '-'}</span>
+                                        </td>
+                                        <td class="text-end text-muted" style="font-size: .85rem;">${formatRupiah(item.harga)}</td>
+                                        <td class="text-end fw-semibold" style="font-size: .85rem;">${formatRupiah(item.total_harga)}</td>
+                                        <td class="text-center pe-3">
+                                            <button class="btn btn-sm btn-soft-danger btn-hapus-resep" data-id="${item.id}" title="Hapus">
+                                                <i class="ri-delete-bin-6-line"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `);
                                 total += parseInt(item.total_harga || 0);
                             });
                             $('#total-resep').text('Rp ' + formatRupiah(total));
@@ -675,64 +639,33 @@
 @endpush
 
 <style>
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    #tbl-resep thead th {
+        font-size: .75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #fff;
+        border-bottom: none;
+        padding: .6rem .5rem;
     }
-
-    .animate-fade-in {
-        animation: fadeIn 0.3s ease-in-out forwards;
-        opacity: 0;
+    #tbl-resep tbody tr {
+        transition: background-color .15s ease;
     }
-
-    .card-header.bg-gradient {
-        border: none;
+    #tbl-resep tbody tr:hover {
+        background-color: #f8f9ff;
+    }
+    #tbl-resep tbody td {
+        padding: .6rem .5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    #tfoot-resep td {
+        padding: .6rem .5rem;
+        border-top: 2px solid #e9ecef;
     }
 
     #product_apotek_id.select2-container {
         width: 100% !important;
-    }
-
-    .table-hover tbody tr:hover {
-        background-color: rgba(11, 163, 96, 0.05);
-        transition: all 0.2s ease;
-    }
-
-    .btn {
-        transition: all 0.2s ease;
-    }
-
-    .btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .alert-info,
-    .alert-warning {
-        border-radius: 0.5rem;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        border-color: #0ba360;
-        box-shadow: 0 0 0 0.2rem rgba(11, 163, 96, 0.25);
-    }
-
-    .badge {
-        padding: 0.35em 0.65em;
-        font-weight: 500;
-    }
-
-    .form-check-input:checked {
-        background-color: #0ba360;
-        border-color: #0ba360;
     }
 
     .select2-container--default .select2-selection--single {
@@ -747,9 +680,5 @@
 
     .select2-container--default .select2-results__option--highlighted {
         background-color: #0ba360 !important;
-    }
-
-    .input-group-text {
-        background-color: #f8f9fa;
     }
 </style>

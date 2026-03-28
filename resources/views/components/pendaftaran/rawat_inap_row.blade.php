@@ -23,7 +23,7 @@
                         $statusText = $isActive ? 'Aktif' : 'Non-Aktif';
                         $badgeClass = $isActive
                             ? 'bg-success-subtle text-success'
-                            : 'bg-secondary-subtle text-secondary';
+                            : 'bg-warning-subtle text-warning';
                     @endphp
                     <span class="badge {{ $badgeClass }} rounded-pill">
                         <i class="ri-circle-fill me-1"></i>Status : {{ $statusText }}
@@ -61,11 +61,13 @@
         </table>
     </td>
     <td>
-        <button type="button" class="btn editrawatInap btn-outline-primary btn-sm" data-bs-toggle="modal"
-            data-bs-target="#modal-rawatInap" id="{{ $d->id }}" title="Edit pendaftaran Rawat Inap">
-            <i class="ri-edit-2-fill"></i>
-            Edit
-        </button>
+        @if ($d->can_edit ?? true)
+            <button type="button" class="btn editrawatInap btn-outline-primary btn-sm" data-bs-toggle="modal"
+                data-bs-target="#modal-rawatInap" id="{{ $d->id }}" title="Edit pendaftaran Rawat Inap">
+                <i class="ri-edit-2-fill"></i>
+                Edit
+            </button>
+        @endif
         @if ($d->can_delete ?? true)
             <button type="button" class="btn destroyEncounterRinap btn-outline-danger btn-sm" id="{{ $d->id }}"
                 title="Hapus pendaftaran Rawat Inap">

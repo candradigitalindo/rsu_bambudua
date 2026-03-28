@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="{{ asset('vendor/datatables/buttons/dataTables.bs5-custom.css') }}">
 
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 @endpush
 
 @section('content')
@@ -132,10 +131,7 @@
     <script src="{{ asset('vendor/datatables/buttons/pdfmake.min.js') }}"></script>
     <script src="{{ asset('vendor/datatables/buttons/vfs_fonts.js') }}"></script>
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
 
     <script>
         $(document).ready(function() {

@@ -192,7 +192,7 @@
                         const code = d.diagnosis_code || '';
                         const desc = d.diagnosis_description || '';
                         const type = d.diagnosis_type ?
-                            `<span class="badge bg-${d.diagnosis_type === 'Primer' ? 'primary' : 'secondary'} ms-1" style="font-size: 0.7rem;">${d.diagnosis_type}</span>` :
+                            `<span class="badge bg-${d.diagnosis_type === 'Primer' ? 'primary' : 'warning text-dark'} ms-1" style="font-size: 0.7rem;">${d.diagnosis_type}</span>` :
                             '';
                         return `
                             <div class="d-flex align-items-start gap-2 mb-2">

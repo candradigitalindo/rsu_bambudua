@@ -1,28 +1,32 @@
 <div class="row gx-3">
-    <div class="col-xxl-6 col-sm-6">
-        <div class="card mb-1">
-            <div class="card-header p-0 border-bottom-0">
+    <div class="col-xxl-4 col-lg-5 col-sm-12">
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 pb-0">
                 <ul class="nav nav-tabs" id="penunjangTab" role="tablist">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active" id="lab-tab" data-bs-toggle="tab"
                             data-bs-target="#lab-request-pane" type="button" role="tab"
-                            aria-controls="lab-request-pane" aria-selected="true">Laboratorium</button>
+                            aria-controls="lab-request-pane" aria-selected="true">
+                            <i class="ri-flask-line me-1"></i>Laboratorium
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="radiologi-tab" data-bs-toggle="tab"
                             data-bs-target="#radiologi-request-pane" type="button" role="tab"
-                            aria-controls="radiologi-request-pane" aria-selected="false">Radiologi</button>
+                            aria-controls="radiologi-request-pane" aria-selected="false">
+                            <i class="ri-heart-pulse-line me-1"></i>Radiologi
+                        </button>
                     </li>
                 </ul>
             </div>
 
-            <div class="card-body">
+            <div class="card-body pt-3">
                 <div class="tab-content" id="penunjangTabContent">
                     {{-- Tab Laboratorium --}}
                     <div class="tab-pane fade show active" id="lab-request-pane" role="tabpanel"
                         aria-labelledby="lab-tab" tabindex="0">
                         <div class="mb-3">
-                            <label class="form-label" for="jenis_pemeriksaan_lab">Jenis Pemeriksaan Lab</label>
+                            <label class="form-label small fw-semibold text-muted" for="jenis_pemeriksaan_lab">Jenis Pemeriksaan Lab</label>
                             <select name="jenis_pemeriksaan_lab" id="jenis_pemeriksaan_lab" class="form-control">
                                 <option value="">Pilih Jenis Pemeriksaan</option>
                                 @foreach ($jenisPemeriksaan->where('type', 'lab') as $item)
@@ -37,8 +41,7 @@
                     <div class="tab-pane fade" id="radiologi-request-pane" role="tabpanel"
                         aria-labelledby="radiologi-tab" tabindex="0">
                         <div class="mb-3">
-                            <label class="form-label" for="jenis_pemeriksaan_radiologi">Jenis Pemeriksaan
-                                Radiologi</label>
+                            <label class="form-label small fw-semibold text-muted" for="jenis_pemeriksaan_radiologi">Jenis Pemeriksaan Radiologi</label>
                             <select name="jenis_pemeriksaan_radiologi" id="jenis_pemeriksaan_radiologi"
                                 class="form-control">
                                 <option value="">Pilih Jenis Pemeriksaan</option>
@@ -50,36 +53,36 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary" id="btn-pemeriksaan">
-                    <span class="btn-txt" id="text-pemeriksaan">Simpan Permintaan</span>
+                <button type="submit" class="btn btn-primary w-100" id="btn-pemeriksaan">
+                    <i class="ri-add-line me-1"></i>
+                    <span class="btn-txt" id="text-pemeriksaan">Tambah Pemeriksaan</span>
                     <span class="spinner-border spinner-border-sm d-none" id="spinner-pemeriksaan"></span>
                 </button>
             </div>
         </div>
     </div>
-    <div class="col-xxl-6 col-sm-12">
-        <div class="card mb-3">
-
-            <div class="card-header">
-                <h5 class="card-title">Data Pemeriksaan Penunjang</h5>
-                <hr class="mb-2">
+    <div class="col-xxl-8 col-lg-7 col-sm-12">
+        <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h6 class="card-title mb-0 fw-bold">
+                    <i class="ri-file-list-3-line me-1 text-primary"></i>Data Pemeriksaan Penunjang
+                </h6>
+                <span class="badge bg-primary-subtle text-primary rounded-pill" id="penunjang-count"></span>
             </div>
-            <div class="card-body">
-                <div class="table-outer">
-                    <div class="table-responsive">
-                        <table class="table truncate m-0">
-                            <thead>
-                                <tr>
-                                    <th>Jenis Pemeriksaan</th>
-                                    <th>Qty</th>
-                                    <th class="text-end">Harga</th>
-                                    <th>Total Harga</th>
-                                    <th class="text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-pendukung"></tbody>
-                        </table>
-                    </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tbl-penunjang">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="ps-3" style="min-width: 220px;">Pemeriksaan</th>
+                                <th class="text-center" style="width: 60px;">Qty</th>
+                                <th class="text-end" style="width: 110px;">Harga</th>
+                                <th class="text-end" style="width: 120px;">Total</th>
+                                <th class="text-center pe-3" style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-pendukung"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -355,6 +358,59 @@
     </div>
 </div>
 
+@push('style')
+<style>
+    #tbl-penunjang thead th {
+        font-size: .75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #fff;
+        border-bottom: none;
+        padding: .6rem .5rem;
+    }
+    #tbl-penunjang tbody tr {
+        transition: background-color .15s ease;
+    }
+    #tbl-penunjang tbody tr:hover {
+        background-color: #f8f9ff;
+    }
+    #tbl-penunjang tbody td {
+        padding: .6rem .5rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f5;
+    }
+    .btn-soft-danger {
+        color: #dc3545;
+        background-color: rgba(220, 53, 69, .1);
+        border: none;
+    }
+    .btn-soft-danger:hover {
+        color: #fff;
+        background-color: #dc3545;
+    }
+    .btn-soft-success {
+        color: #198754;
+        background-color: rgba(25, 135, 84, .1);
+        border: none;
+    }
+    .btn-soft-success:hover {
+        color: #fff;
+        background-color: #198754;
+    }
+    #penunjangTab .nav-link {
+        font-size: .82rem;
+        font-weight: 500;
+        color: #6c757d;
+        padding: .5rem .75rem;
+    }
+    #penunjangTab .nav-link.active {
+        color: #3577f1;
+        font-weight: 600;
+    }
+</style>
+@endpush
+
 @push('scripts')
     <script>
         (function() {
@@ -396,70 +452,77 @@
                 }).done(function(data) {
                     const tbody = $('#tbody-pendukung');
                     tbody.empty();
-                    // Ensure data is an array
                     const items = Array.isArray(data) ? data : (data ? [data] : []);
+
+                    // Update counter badge
+                    const countBadge = $('#penunjang-count');
+                    if (items.length > 0) {
+                        countBadge.text(items.length + ' item').show();
+                    } else {
+                        countBadge.hide();
+                        tbody.append(`
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="ri-file-list-3-line fs-2 d-block mb-2 opacity-50"></i>
+                                        <span class="small">Belum ada pemeriksaan penunjang</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        `);
+                    }
+
                     items.forEach(function(item) {
                         const canDelete = (item.status === 'requested' || item.status === 'canceled');
                         const canPrint = item.status === 'completed';
                         const printUrl = item.type === 'lab' ?
                             `/laboratorium/requests/${item.request_id}/print?auto=1` :
                             `/radiologi/permintaan/${item.request_id}/print?auto=1`;
-                        const printBtn = canPrint ?
-                            `<a class="btn btn-sm btn-success" href="${printUrl}" target="_blank"><i class="ri-printer-line"></i> Cetak</a>` :
-                            '';
-                        const deleteBtn = canDelete ?
-                            `<button class="btn btn-sm btn-danger btn-hapus-pemeriksaan" data-id="${item.id}" data-type="${item.type}">
-                                <i class="ri-delete-bin-6-line"></i> Hapus
-                            </button>` :
-                            '';
-                        // Show delete button for requested/canceled status, print button for completed
-                        const actionsHtml = `${deleteBtn} ${printBtn}`;
 
-                        // Status badge styling
-                        let statusBadge = '';
-                        let statusText = item.status ?? 'Unknown';
-                        switch (statusText.toLowerCase()) {
-                            case 'requested':
-                                statusBadge =
-                                    `<span class="badge rounded-pill bg-warning text-dark"><i class="ri-time-line"></i> Menunggu Pemeriksaan</span>`;
-                                break;
-                            case 'completed':
-                                statusBadge =
-                                    `<span class="badge rounded-pill bg-success"><i class="ri-checkbox-circle-line"></i> Selesai</span>`;
-                                break;
-                            case 'canceled':
-                                statusBadge =
-                                    `<span class="badge rounded-pill bg-danger"><i class="ri-close-circle-line"></i> Dibatalkan</span>`;
-                                break;
-                            case 'in_progress':
-                                statusBadge =
-                                    `<span class="badge rounded-pill bg-info"><i class="ri-loader-4-line"></i> Sedang Dikerjakan</span>`;
-                                break;
-                            default:
-                                statusBadge =
-                                    `<span class="badge rounded-pill bg-secondary">${statusText}</span>`;
+                        let actionsHtml = '';
+                        if (canDelete) {
+                            actionsHtml = `<button class="btn btn-sm btn-soft-danger btn-hapus-pemeriksaan" data-id="${item.id}" data-type="${item.type}" title="Hapus">
+                                <i class="ri-delete-bin-6-line"></i>
+                            </button>`;
+                        } else if (canPrint) {
+                            actionsHtml = `<a class="btn btn-sm btn-soft-success" href="${printUrl}" target="_blank" title="Cetak">
+                                <i class="ri-printer-line"></i>
+                            </a>`;
                         }
 
-                        // Type badge with icon
-                        const typeBadge = item.type === 'lab' ?
-                            `<span class="badge bg-info"><i class="ri-flask-line"></i> Laboratorium</span>` :
-                            `<span class="badge bg-primary"><i class="ri-heart-pulse-line"></i> Radiologi</span>`;
+                        // Status config
+                        const statusMap = {
+                            'requested':    { cls: 'warning',  icon: 'ri-time-line',             label: 'Menunggu' },
+                            'completed':    { cls: 'success',  icon: 'ri-checkbox-circle-line',  label: 'Selesai' },
+                            'canceled':     { cls: 'danger',   icon: 'ri-close-circle-line',     label: 'Dibatalkan' },
+                            'in_progress':  { cls: 'info',     icon: 'ri-loader-4-line',         label: 'Proses' },
+                        };
+                        const st = statusMap[(item.status || '').toLowerCase()] || { cls: 'warning', icon: 'ri-question-line', label: item.status };
+
+                        // Type indicator
+                        const typeIcon = item.type === 'lab' ? 'ri-flask-line' : 'ri-heart-pulse-line';
+                        const typeColor = item.type === 'lab' ? 'info' : 'primary';
+                        const typeLabel = item.type === 'lab' ? 'Lab' : 'Rad';
 
                         tbody.append(`
-          <tr>
-            <td>
-              <div class="fw-semibold mb-1">${item.jenis_pemeriksaan}</div>
-              <div class="d-flex gap-1 align-items-center flex-wrap">
-                ${typeBadge}
-                ${statusBadge}
-              </div>
-            </td>
-            <td class=\"text-center\">${item.qty}</td>
-            <td class="text-end">${formatRupiah(item.harga)}</td>
-            <td class=\"text-end\">${formatRupiah(item.total_harga)}</td>
-            <td class=\"text-center\">${actionsHtml}</td>
-          </tr>
-        `);
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-${typeColor}-subtle text-${typeColor} rounded-pill" style="font-size: .65rem;">${typeLabel}</span>
+                                        <div>
+                                            <div class="fw-semibold text-dark" style="font-size: .85rem; line-height: 1.3;">${item.jenis_pemeriksaan} ${item.is_paket ? '<span class="badge bg-success-subtle text-success" style="font-size: .6rem; vertical-align: middle;">Paket</span>' : ''}</div>
+                                            <span class="badge bg-${st.cls}-subtle text-${st.cls}" style="font-size: .65rem; padding: 2px 6px;">
+                                                <i class="${st.icon}" style="font-size: .6rem;"></i> ${st.label}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center fw-medium">${item.qty}</td>
+                                <td class="text-end text-muted" style="font-size: .85rem;">${formatRupiah(item.harga)}</td>
+                                <td class="text-end fw-semibold" style="font-size: .85rem;">${formatRupiah(item.total_harga)}</td>
+                                <td class="text-center pe-3">${actionsHtml}</td>
+                            </tr>
+                        `);
                     });
                     $('#jenis_pemeriksaan').val(null);
                 });
@@ -571,7 +634,7 @@
                         break;
                     default:
                         statusBadge =
-                            `<span class="badge rounded-pill bg-secondary ms-2">${status.charAt(0).toUpperCase()+ status.slice(1)}</span>`;
+                            `<span class="badge rounded-pill bg-warning text-dark ms-2">${status.charAt(0).toUpperCase()+ status.slice(1)}</span>`;
                 }
 
                 // Group items by category
@@ -794,7 +857,7 @@
                         break;
                     default:
                         statusBadge =
-                            `<span class="badge rounded-pill bg-secondary ms-2">${status.charAt(0).toUpperCase()+ status.slice(1)}</span>`;
+                            `<span class="badge rounded-pill bg-warning text-dark ms-2">${status.charAt(0).toUpperCase()+ status.slice(1)}</span>`;
                 }
 
                 const printBtn = (r.status === 'completed') ?

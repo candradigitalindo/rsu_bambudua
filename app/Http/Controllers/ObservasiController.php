@@ -12,6 +12,8 @@ use App\Models\PrescriptionMedication;
 use App\Models\MedicationAdministration;
 use App\Models\Encounter;
 use App\Models\InpatientAdmission;
+use App\Models\PaketPasien;
+use App\Models\PaketPasienUsage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Repositories\ObservasiRepository;
@@ -21,7 +23,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class ObservasiController extends Controller
 {
     use LogsActivity;
+
     public $observasiRepository;
+
     public function __construct(ObservasiRepository $observasiRepository)
     {
         $this->observasiRepository = $observasiRepository;
@@ -39,7 +43,20 @@ class ObservasiController extends Controller
         $perawats = $this->observasiRepository->getPerawats($id);
         // [LAB] Ambil semua permintaan lab dan hasilnya untuk encounter ini
         $labRequests = \App\Models\LabRequest::with('items.jenisPemeriksaan.templateFields.fieldItems')->where('encounter_id', $id)->orderByDesc('created_at')->get();
-        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats', 'jenisPemeriksaan', 'labRequests'));
+
+        // Ambil paket aktif pasien (hanya yang sudah dibayar)
+        $paketAktifs = collect();
+        if ($encounter->pasien) {
+            $paketAktifs = PaketPasien::with('paketPemeriksaan')
+                ->where('pasien_id', $encounter->pasien->id)
+                ->where('status', 'aktif')
+                ->where('status_bayar', true)
+                ->whereColumn('sesi_terpakai', '<', 'total_sesi')
+                ->get()
+                ->filter(fn($pp) => !$pp->isExpired());
+        }
+
+        return view('pages.observasi.index', compact('observasi', 'encounter', 'dokters', 'perawats', 'jenisPemeriksaan', 'labRequests', 'paketAktifs'));
     }
     public function riwayatPenyakit($id)
     {
@@ -808,11 +825,12 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'diskon_tindakan' => 'required|numeric|min:0',
+            'diskon_tindakan_type' => 'nullable|in:percent,nominal',
         ], [
             'diskon_tindakan.required' => 'Diskon tindakan harus diisi.',
             'diskon_tindakan.numeric' => 'Diskon tindakan harus berupa angka.',
             'diskon_tindakan.min' => 'Diskon tindakan minimal 0.',
-            'diskon_tindakan.max' => 'Diskon tindakan maksimal 100.',
+            'diskon_tindakan_type.in' => 'Tipe diskon tindakan tidak valid.',
         ]);
         $result = $this->observasiRepository->postDiskonTindakan($request, $id);
         return response()->json($result);
@@ -823,11 +841,12 @@ class ObservasiController extends Controller
         // Validasi input
         $request->validate([
             'diskon_resep' => 'required|numeric|min:0',
+            'diskon_resep_type' => 'nullable|in:percent,nominal',
         ], [
             'diskon_resep.required' => 'Diskon resep harus diisi.',
             'diskon_resep.numeric' => 'Diskon resep harus berupa angka.',
             'diskon_resep.min' => 'Diskon resep minimal 0.',
-            'diskon_resep.max' => 'Diskon resep maksimal 100.',
+            'diskon_resep_type.in' => 'Tipe diskon resep tidak valid.',
         ]);
         $result = $this->observasiRepository->postDiskonResep($request, $id);
         return response()->json($result);
@@ -1419,6 +1438,229 @@ class ObservasiController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update prescription status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Terapkan Paket Pemeriksaan ke Encounter.
+     * Auto-insert tindakan, lab, radiologi, resep + kurangi sesi.
+     */
+    public function applyPaket(Request $request, $id)
+    {
+        $request->validate([
+            'paket_pasien_id' => 'required|exists:paket_pasiens,id',
+        ]);
+
+        $encounter = Encounter::findOrFail($id);
+        $paketPasien = PaketPasien::with('paketPemeriksaan')->findOrFail($request->paket_pasien_id);
+        $paket = $paketPasien->paketPemeriksaan;
+
+        // Validasi paket sudah dibayar
+        if (!$paketPasien->status_bayar) {
+            return response()->json(['success' => false, 'message' => 'Paket belum dibayar. Silakan bayar di kasir terlebih dahulu.'], 422);
+        }
+
+        // Validasi paket masih aktif
+        if ($paketPasien->status !== 'aktif') {
+            return response()->json(['success' => false, 'message' => 'Paket sudah tidak aktif.'], 422);
+        }
+        if ($paketPasien->isExpired()) {
+            $paketPasien->update(['status' => 'expired']);
+            return response()->json(['success' => false, 'message' => 'Paket sudah expired.'], 422);
+        }
+        if ($paketPasien->sesi_terpakai >= $paketPasien->total_sesi) {
+            $paketPasien->update(['status' => 'selesai']);
+            return response()->json(['success' => false, 'message' => 'Semua sesi sudah terpakai.'], 422);
+        }
+
+        // Cek sudah pernah apply di encounter ini
+        $alreadyUsed = PaketPasienUsage::where('paket_pasien_id', $paketPasien->id)
+            ->where('encounter_id', $id)
+            ->exists();
+        if ($alreadyUsed) {
+            return response()->json(['success' => false, 'message' => 'Paket sudah diterapkan di encounter ini.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $dokter = Auth::user();
+            $applied = [];
+
+            // 1. Tindakan
+            $tindakanItems = $paket->tindakanList();
+            foreach ($tindakanItems as $tindakan) {
+                $qty = $tindakan->qty ?? 1;
+                $existing = \App\Models\TindakanEncounter::where('encounter_id', $id)
+                    ->where('tindakan_id', $tindakan->id)->first();
+
+                if ($existing) {
+                    $existing->qty += $qty;
+                    $existing->total_harga = $existing->qty * $existing->tindakan_harga;
+                    $existing->paket_pasien_id = $paketPasien->id;
+                    $existing->save();
+                } else {
+                    \App\Models\TindakanEncounter::create([
+                        'encounter_id' => $id,
+                        'tindakan_id' => $tindakan->id,
+                        'tindakan_name' => $tindakan->name,
+                        'tindakan_harga' => $tindakan->harga,
+                        'qty' => $qty,
+                        'total_harga' => $tindakan->harga * $qty,
+                        'id_petugas' => $dokter->id_petugas ?? null,
+                        'petugas_name' => $dokter->name,
+                        'paket_pasien_id' => $paketPasien->id,
+                    ]);
+                }
+
+                // Request bahan tindakan
+                $tindakanBahans = \App\Models\TindakanBahan::where('tindakan_id', $tindakan->id)->with('bahan')->get();
+                foreach ($tindakanBahans as $item) {
+                    $requestBahan = \App\Models\RequestBahan::firstOrNew([
+                        'encounter_id' => $id,
+                        'bahan_id' => $item->bahan_id,
+                        'status' => 0,
+                    ]);
+                    $requestBahan->qty = ($requestBahan->exists ? $requestBahan->qty : 0) + ($item->quantity * $qty);
+                    $requestBahan->nama_bahan = $item->bahan->name;
+                    $requestBahan->keterangan = 'Request Bahan Paket';
+                    $stokBahan = \App\Models\StokBahan::where('bahan_id', $item->bahan_id)
+                        ->where('is_available', true)->orderBy('expired_at', 'asc')->first();
+                    if ($stokBahan) {
+                        $requestBahan->stok_bahan_id = $stokBahan->id;
+                    }
+                    $requestBahan->save();
+                }
+                $applied[] = "Tindakan: {$tindakan->name} x{$qty}";
+            }
+
+            // 2. Lab
+            $labItems = $paket->labList();
+            foreach ($labItems as $lab) {
+                $qty = $lab->qty ?? 1;
+                for ($i = 0; $i < $qty; $i++) {
+                    $req = LabRequest::create([
+                        'encounter_id' => $id,
+                        'requested_by' => $dokter->id,
+                        'status' => 'requested',
+                        'requested_at' => now(),
+                        'total_charge' => (int) $lab->harga,
+                        'charged' => false,
+                        'paket_pasien_id' => $paketPasien->id,
+                    ]);
+                    LabRequestItem::create([
+                        'lab_request_id' => $req->id,
+                        'test_id' => $lab->id,
+                        'test_name' => $lab->name,
+                        'price' => (int) $lab->harga,
+                    ]);
+                }
+                $applied[] = "Lab: {$lab->name} x{$qty}";
+            }
+
+            // 3. Radiologi
+            $radioItems = $paket->radiologiList();
+            foreach ($radioItems as $radio) {
+                $qty = $radio->qty ?? 1;
+                for ($i = 0; $i < $qty; $i++) {
+                    \App\Models\RadiologyRequest::create([
+                        'encounter_id' => $id,
+                        'pasien_id' => $encounter->pasien->id,
+                        'jenis_pemeriksaan_id' => $radio->id,
+                        'dokter_id' => $dokter->id,
+                        'status' => 'processing',
+                        'price' => (float) $radio->harga,
+                        'created_by' => $dokter->id,
+                        'paket_pasien_id' => $paketPasien->id,
+                    ]);
+                }
+                $applied[] = "Radiologi: {$radio->name} x{$qty}";
+            }
+
+            // 4. Obat → Resep + ResepDetail
+            $obatItems = $paket->obatList();
+            if ($obatItems->isNotEmpty()) {
+                // Buat/ambil resep header
+                $resep = \App\Models\Resep::where('encounter_id', $id)->first();
+                if (!$resep) {
+                    $lastKode = \App\Models\Resep::max('kode_resep');
+                    $nextNum = $lastKode ? ((int) substr($lastKode, 3)) + 1 : 1;
+                    $resep = \App\Models\Resep::create([
+                        'encounter_id' => $id,
+                        'kode_resep' => 'RSP' . str_pad($nextNum, 5, '0', STR_PAD_LEFT),
+                        'dokter' => $dokter->name,
+                    ]);
+                }
+
+                foreach ($obatItems as $obat) {
+                    $qty = $obat->qty ?? 1;
+
+                    $stokTerdekat = \App\Models\ApotekStok::where('product_apotek_id', $obat->id)
+                        ->where('status', 0)
+                        ->where(function ($q) {
+                            $q->whereNull('expired_at')->orWhere('expired_at', '>=', now()->toDateString());
+                        })
+                        ->orderBy('expired_at', 'asc')->first();
+
+                    $detail = \App\Models\ResepDetail::firstOrNew([
+                        'resep_id' => $resep->id,
+                        'product_apotek_id' => $obat->id,
+                    ]);
+                    $detail->qty = ($detail->exists ? $detail->qty : 0) + $qty;
+                    $detail->nama_obat = $obat->name;
+                    $detail->satuan = $obat->satuan;
+                    $detail->harga = $obat->harga;
+                    $detail->total_harga = $detail->harga * $detail->qty;
+                    $detail->aturan_pakai = $detail->aturan_pakai ?? 'Sesuai petunjuk dokter';
+                    $detail->expired_at = $stokTerdekat?->expired_at;
+                    $detail->paket_pasien_id = $paketPasien->id;
+                    $detail->save();
+                    $applied[] = "Obat: {$obat->name} x{$qty}";
+                }
+            }
+
+            // 5. Update encounter totals
+            $this->observasiRepository->updateEncounterTotalTindakan($id);
+            if ($obatItems->isNotEmpty()) {
+                $this->observasiRepository->updateEncounterTotalResep($id);
+            }
+
+            // 6. Kurangi sesi + catat usage
+            $sesiKe = $paketPasien->sesi_terpakai + 1;
+            PaketPasienUsage::create([
+                'paket_pasien_id' => $paketPasien->id,
+                'encounter_id' => $id,
+                'sesi_ke' => $sesiKe,
+                'used_by' => $dokter->id,
+                'catatan' => 'Diterapkan dari halaman pemeriksaan',
+            ]);
+            $paketPasien->increment('sesi_terpakai');
+
+            if ($paketPasien->sesi_terpakai >= $paketPasien->total_sesi) {
+                $paketPasien->update(['status' => 'selesai']);
+            }
+
+            DB::commit();
+
+            $this->activity('Menerapkan Paket Pemeriksaan', [
+                'encounter_id' => $id,
+                'paket' => $paket->name,
+                'sesi_ke' => $sesiKe,
+                'items' => $applied,
+            ], 'kunjungan');
+
+            return response()->json([
+                'success' => true,
+                'message' => "Paket \"{$paket->name}\" sesi ke-{$sesiKe} berhasil diterapkan.",
+                'applied' => $applied,
+                'sesi_terpakai' => $paketPasien->sesi_terpakai,
+                'total_sesi' => $paketPasien->total_sesi,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menerapkan paket: ' . $e->getMessage(),
             ], 500);
         }
     }

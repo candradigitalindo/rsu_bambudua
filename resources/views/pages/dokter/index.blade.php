@@ -2,10 +2,8 @@
 @section('title', 'Dashboard Dokter')
 @push('style')
     <!-- Scrollbar CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/overlay-scroll/OverlayScrollbars.min.css') }}">
 
     <!-- Uploader CSS -->
-    <link rel="stylesheet" href="{{ asset('vendor/dropzone/dropzone.min.css') }}">
     <!-- Date Range CSS -->
     <link rel="stylesheet" href="{{ asset('vendor/daterange/daterange.css') }}">
 
@@ -437,11 +435,8 @@
 @endsection
 @push('scripts')
     <!-- Overlay Scroll JS -->
-    <script src="{{ asset('vendor/overlay-scroll/jquery.overlayScrollbars.min.js') }}"></script>
-    <script src="{{ asset('vendor/overlay-scroll/custom-scrollbar.js') }}"></script>
 
     <!-- Dropzone JS -->
-    <script src="{{ asset('vendor/dropzone/dropzone.min.js') }}"></script>
 
     <!-- Apex Charts -->
     <script src="{{ asset('vendor/apex/apexcharts.min.js') }}"></script>
@@ -456,8 +451,6 @@
     <script src="{{ asset('vendor/datatables/custom/custom-datatables.js') }}"></script>
 
     <!-- Custom JS files -->
-    <script src="{{ asset('js/custom.js') }}"></script>
-    <script src="{{ asset('js/validations.js') }}"></script>
     <script>
         $(document).ready(function() {
             var options = {
